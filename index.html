@@ -92,7 +92,7 @@
                 <div class="header-container">
                     <div class="header-side"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
                     <div class="title-stack"><div class="main-title">Billardkrüppel</div><div class="sub-title">Match erfassen</div></div>
-                    <div class="header-side right"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
+                    <div class="header-side right"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
                 </div>
                 <div class="card">
                     <label>Spielmodus</label>
@@ -140,7 +140,7 @@
                 <div class="header-container">
                     <div class="header-side"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
                     <div class="title-stack"><div class="main-title">Historie</div><div class="sub-title">Letzte Partien</div></div>
-                    <div class="header-side right"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
+                    <div class="header-side right"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'"></div>
                 </div>
                 <div id="match-counter" style="text-align:center; font-size:12px; color:#8e8e93; margin-bottom:15px;">Matches: 0</div>
                 <div id="history-list"></div>
@@ -150,7 +150,7 @@
                 <div class="header-container">
                     <div class="header-side"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
                     <div class="title-stack"><div class="main-title" id="stat-title">Statistik</div><div class="sub-title">Analysen</div></div>
-                    <div class="header-side right"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
+                    <div class="header-side right"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'"></div>
                 </div>
                 <div id="stat-content-wrapper">
                     <div class="card"><label>Siegquote %</label><div style="height:160px;"><canvas id="winChart"></canvas></div></div>
@@ -183,27 +183,13 @@
                     <div class="header-container" style="position: relative; background: transparent; backdrop-filter: none; border-bottom: none; margin: 0;">
                         <div class="header-side"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
                         <div class="title-stack"><div class="main-title">Erfolge</div><div class="sub-title">Bestenliste</div></div>
-                        <div class="header-side right"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
+                        <div class="header-side right"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'"></div>
                     </div>
                     <div style="padding: 0 16px 15px 16px;">
                         <button class="btn-save" style="background:rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); font-size: 11px;" onclick="openAchListModal()">Achievement-Übersicht</button>
                     </div>
                 </div>
                 <div id="achievements-alltime"></div>
-            </div>
-
-            <div id="view-export" class="view">
-                <div style="position: sticky; top: 0; z-index: 1000; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(20px); margin: 0 -16px 15px -16px; border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); padding-top: calc(var(--safe-top) + 10px);">
-                    <div class="header-container" style="position: relative; background: transparent; backdrop-filter: none; border-bottom: none; margin: 0;">
-                        <div class="header-side"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
-                        <div class="title-stack"><div class="main-title">System</div><div class="sub-title">Info & Update</div></div>
-                        <div class="header-side right"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
-                    </div>
-                    <div style="padding: 0 16px 15px 16px;">
-                        <button class="btn-save" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); font-size: 11px;" onclick="window.location.href=window.location.href.split('?')[0]+'?update='+new Date().getTime()">App-Inhalt neu laden</button>
-                        <div style="text-align: center; color: #444; font-size: 9px; margin-top: 15px; font-weight: 800;">VERSION 1.0.3</div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -214,7 +200,6 @@
             <div class="tab-item" onclick="switchV('statistik',this)"><span class="tab-icon">📊</span><span>Gesamt</span></div>
             <div class="tab-item" onclick="switchV('erfolge',this)"><span class="tab-icon">🎖️</span><span>Erfolge</span></div>
             <div class="tab-item" onclick="switchV('uebersicht',this)"><span class="tab-icon">📜</span><span>Historie</span></div>
-            <div class="tab-item" onclick="switchV('export',this)"><span class="tab-icon">⚙️</span><span>System</span></div>
         </div>
     </div>
 
@@ -293,6 +278,13 @@
             window.updateAllViews();
             const scrollArea = document.getElementById('scroll-area');
             if (scrollArea) scrollArea.scrollTop = 0;
+        };
+
+        window.forceUpdate = () => {
+            if(confirm("App neu laden, um nach Updates zu suchen?")) {
+                const url = window.location.href.split('?')[0];
+                window.location.href = url + '?u=' + Date.now();
+            }
         };
 
         // Zentrale Funktion zum Rendern der aktiven Ansicht
