@@ -259,6 +259,15 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
+         // hideLoader SOFORT definieren, damit es für Snapshots und Timeouts verfügbar ist
+        window.hideLoader = () => {
+            const l = document.getElementById('loading-overlay');
+            if(l && l.style.display !== 'none') { 
+                l.style.opacity = '0'; 
+                setTimeout(() => l.style.display = 'none', 400); 
+            }
+        };
+
         window.db = db; 
         window.dbFns = { doc, setDoc, getDoc, updateDoc };
         window.stats = []; window.spieler = []; window.dailyAchivs = { days: {} };
@@ -301,7 +310,7 @@
         };
 
         // Sicherheits-Timeout: Falls Firebase hängt, Loader nach 5 Sek trotzdem entfernen
-        setTimeout(() => window.hideLoader(), 5000);
+        setTimeout(() => window.hideLoader(), 6000);
 
         signInAnonymously(auth).then(() => {
             onSnapshot(doc(db, "billard_data", "stats"), (snap) => {

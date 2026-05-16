@@ -626,8 +626,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     const statsBeforeToday = safeStats.filter(g => !g.d.startsWith(todayStr));
     
     const dataToday = window.processData(statsToday, todayStr); // Use global simpler processData for today's stats
-    const dataAll = window.processAllStatsChronologically(safeStats, configuredPlayers);
-    const dataBeforeToday = window.processAllStatsChronologically(statsBeforeToday, configuredPlayers);
+    const dataAll = (safeStats.length > 0) ? window.processAllStatsChronologically(safeStats, configuredPlayers) : { pData: {} };
+    const dataBeforeToday = (statsBeforeToday.length > 0) ? window.processAllStatsChronologically(statsBeforeToday, configuredPlayers) : { pData: {} };
 
     // ELO is already calculated within processAllStatsChronologically, map it to a simpler structure if needed
     try {
