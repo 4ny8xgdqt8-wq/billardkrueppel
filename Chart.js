@@ -510,10 +510,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     }
     
     function saveDailyAchivs() {
-      // sendet JSON an Scriptable (BillardPro.js fängt js-call:daily: ab)
-      try {
-        location.href = "js-call:daily:" + encodeURIComponent(JSON.stringify(window.dailyAchivs));
-      } catch (e) { /* ignore */ }
+      if (window.saveDailyAchivsToFirebase) window.saveDailyAchivsToFirebase(window.dailyAchivs);
     }
 
 
