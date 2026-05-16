@@ -21,13 +21,13 @@
         .view { display: none; flex-direction: column; width: 100%; } 
         .view.active { display: flex; }
         .card { background: var(--card); border-radius: 20px; padding: 15px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
-        .header-container { position: sticky; top: 0; z-index: 1000; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: calc(var(--safe-top) + 10px) 16px 10px 16px; display: flex; align-items: center; justify-content: space-between; margin: 0 -16px 15px -16px; border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); }
+        .header-container { position: sticky; top: 0; z-index: 1000; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: calc(var(--safe-top) + 10px) 16px 10px 16px; display: flex; align-items: center; justify-content: space-between; margin: 0 -16px 15px -16px; border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); }
         .header-side { width: 85px; display: flex; align-items: center; }
         .header-side.right { justify-content: flex-end; }
         .logo-img { height: 30px; width: auto; object-fit: contain; }
         .title-stack { display: flex; flex-direction: column; align-items: center; text-align: center; }
         .main-title { font-weight: 900; font-size: 18px; line-height: 1; letter-spacing: -0.5px; color: var(--accent); text-transform: uppercase; }
-        .sub-title { color: #bfbff9; font-size: 9px; font-weight: 700; margin-top: 2px; text-transform: uppercase; letter-spacing: 1.5px; }
+        .sub-title { color: #8e8e93; font-size: 9px; font-weight: 700; margin-top: 2px; text-transform: uppercase; letter-spacing: 1.5px; }
         
         .tab-bar { position: absolute; bottom: calc(var(--safe-bottom) + 10px); left: 12px; right: 12px; background: rgba(35, 35, 35, 0.1); backdrop-filter: blur(45px) saturate(250%) brightness(1.2); -webkit-backdrop-filter: blur(45px) saturate(250%) brightness(1.2); border: 0.5px solid rgba(255, 255, 255, 0.15); display: flex; border-radius: 38px; height: 70px; z-index: 9999; padding: 0 6px; align-items: center; box-shadow: 0 18px 45px rgba(0,0,0,0.5); }
         .tab-indicator { position: absolute; height: 54px; background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.10)); border-radius: 32px; transition: all 0.45s cubic-bezier(0.25, 0.8, 0.25, 1.2); z-index: 0; }
@@ -36,11 +36,11 @@
         .tab-icon { font-size: 21px; margin-bottom: 2px; }
         
         label { display: block; margin-bottom: 4px; color: #8e8e93; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding-left: 4px; }
-        select, input { width: 100%; padding: 10px; background: rgba(44, 44, 46, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; outline: none; margin-bottom: 6px; }
+        select, input { width: 100%; padding: 12px; background: rgba(44, 44, 46, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: white; outline: none; margin-bottom: 8px; font-size: 15px; -webkit-appearance: none; }
         
-        .swipe-item { position: relative; background: transparent; border-radius: 24px; overflow: hidden; margin-bottom: 12px; }
-        .swipe-content { position: relative; padding: 16px; background: var(--card); z-index: 2; border: 1px solid rgba(255,255,255,0.08); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .swipe-delete-btn { position: absolute; right: 0; top: 0; bottom: 0; background: var(--error); color: white; display: flex; align-items: center; justify-content: center; width: 90px; z-index: 1; font-weight: 800; font-size: 11px; text-transform: uppercase; }
+        .swipe-item { position: relative; background: var(--error); border-radius: 24px; overflow: hidden; margin-bottom: 12px; }
+        .swipe-content { position: relative; padding: 16px; background: var(--card); z-index: 2; border: 1px solid rgba(255,255,255,0.08); transition: transform 0.3s ease; }
+        .swipe-delete-btn { position: absolute; right: 0; top: 0; bottom: 0; color: white; display: flex; align-items: center; justify-content: center; width: 90px; z-index: 1; font-weight: 800; font-size: 11px; text-transform: uppercase; }
         .win-text { color: #34c759; font-weight: 800; }
         .loss-text { color: #ff3b30; font-weight: 800; }
 
@@ -111,13 +111,13 @@
                         </div>
                     </div>
                     <br>
-                    <label>Anstoß</label>
+                    <label>Anstoß (Wer hat angefangen?)</label>
                     <div style="display:flex; gap:10px;">
-                        <button id="btn-breakcalc" class="win-btn" style="flex:1;" onclick="calcBreak()">Zufall</button>
-                        <select id="breakPlayer" style="flex:1.5; margin-bottom:0;"></select>
+                        <button id="btn-breakcalc" class="win-btn" style="flex:1; background: rgba(255,204,0,0.1); color: var(--accent);" onclick="calcBreak()">Zufall</button>
+                        <select id="breakPlayer" style="flex:1.5; margin-bottom:0;" onchange="window.breakLocked=true"></select>
                     </div>
                 </div>
-                <div id="match-prob" class="prob-box"></div>
+                <div id="match-prob" class="prob-box" style="margin-top:-5px;"></div>
                 <div class="card">
                     <label>Gewinner wählen</label>
                     <div style="display:flex; gap:10px; margin-bottom:10px;">
@@ -156,12 +156,12 @@
                         <div id="trendPlayers" style="margin-top:12px;"></div>
                     </div>
                     <div class="stat-grid">
-                        <div class="card"><label>Matches</label><div id="stat-total" style="font-size:20px; font-weight:800;">0</div></div>
-                        <div class="card"><label>Sieg n. Anstoß</label><div id="stat-break-adv" style="font-size:20px; font-weight:800; color:#34c759;">0%</div></div>
-                        <div class="card"><label>Fehler-Siege</label><div id="stat-black" style="font-size:14px; font-weight:800; color:#ff3b30;">0%</div></div>
-                        <div class="card"><label>Pechvogel (Ø-Rest)</label><div id="stat-pechvogel" style="font-size:13px; font-weight:800;">-</div></div>
-                        <div class="card"><label>Clutch Wins</label><div id="stat-clutch" style="font-size:13px; font-weight:800; color:#007aff;">-</div></div>
-                        <div class="card"><label>Killer (Ø-G-Rest)</label><div id="stat-killer" style="font-size:13px; font-weight:800; color:#ff3b30;">-</div></div>
+                        <div class="card"><label>Matches</label><div id="stat-total" style="font-size:18px; font-weight:800;">0</div></div>
+                        <div class="card"><label>Break-Adv.</label><div id="stat-break-adv" style="font-size:18px; font-weight:800; color:#34c759;">0%</div></div>
+                        <div class="card"><label>Fehler-Sieg</label><div id="stat-black" style="font-size:13px; font-weight:800; color:#ff3b30;">0%</div></div>
+                        <div class="card"><label>Pechvogel</label><div id="stat-pechvogel" style="font-size:11px; font-weight:800;">-</div></div>
+                        <div class="card"><label>Clutch</label><div id="stat-clutch" style="font-size:11px; font-weight:800; color:#007aff;">-</div></div>
+                        <div class="card"><label>Killer</label><div id="stat-killer" style="font-size:11px; font-weight:800; color:#ff3b30;">-</div></div>
                         <div class="card" style="grid-column: span 2;"><label>Bestes Team</label><div id="stat-team" style="font-weight:800; color:#5856d6;">-</div></div>
                         <div class="card"><label>Angstgegner</label><div id="stat-angst" style="font-weight:800; font-size:11px; color:#ff9500;">-</div></div>
                         <div class="card"><label>Längste Serie</label><div id="stat-streak" style="font-weight:800; font-size:11px;">-</div></div>
@@ -189,13 +189,15 @@
             </div>
 
             <div id="view-export" class="view">
-                <div class="header-container">
-                    <div class="header-side"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
-                    <div class="title-stack"><div class="main-title">Report</div><div class="sub-title">Teilen</div></div>
-                    <div class="header-side right"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
-                </div>
-                <div style="padding: 0 0 20px 0;">
-                    <button class="btn-save" onclick="startExport()">Bericht als HTML herunterladen</button>
+                <div style="position: sticky; top: 0; z-index: 1000; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(20px); margin: 0 -16px 15px -16px; border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); padding-top: calc(var(--safe-top) + 10px);">
+                    <div class="header-container" style="position: relative; background: transparent; backdrop-filter: none; border-bottom: none; margin: 0;">
+                        <div class="header-side"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
+                        <div class="title-stack"><div class="main-title">Report</div><div class="sub-title">Teilen</div></div>
+                        <div class="header-side right"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
+                    </div>
+                    <div style="padding: 0 16px 15px 16px;">
+                        <button class="btn-save" onclick="startExport()">Bericht (HTML) speichern</button>
+                    </div>
                 </div>
                 <div id="export-preview"></div>
             </div>
@@ -232,23 +234,31 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, setDoc, getDoc, initializeFirestore } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyD7bNfdV48Setz8aRNd4i3kzKO41kNOHio", authDomain: "billardpro-35edb.firebaseapp.com", projectId: "billardpro-35edb", storageBucket: "billardpro-35edb.firebasestorage.app", messagingSenderId: "772454762231", appId: "1:772454762231:web:c8fb5794d5af99b045f5f2" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyD7bNfdV48Setz8aRNd4i3kzKO41kNOHio", 
+            authDomain: "billardpro-35edb.firebaseapp.com", 
+            projectId: "billardpro-35edb", 
+            storageBucket: "billardpro-35edb.firebasestorage.app", 
+            messagingSenderId: "772454762231", 
+            appId: "1:772454762231:web:c8fb5794d5af99b045f5f2" 
+        };
+
         const app = initializeApp(firebaseConfig);
-        const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+        const db = getFirestore(app);
         const auth = getAuth(app);
 
         // Globals befüllen
-        window.db = db; window.dbFns = { doc, setDoc };
+        window.db = db; window.dbFns = { doc, setDoc, getDoc, updateDoc };
         window.stats = [];
         window.spieler = []; window.dailyAchivs = { days: {} };
         window.winnerNum = 0; window.viewId = 'aufzeichnen';
+        window.breakLocked = false;
 
         signInAnonymously(auth).then(() => {
-            // Realtime-Updates für Stats
             onSnapshot(doc(db, "billard_data", "stats"), (snap) => {
                 if (snap.exists()) {
                     window.stats = snap.data().matches || [];
@@ -256,11 +266,12 @@
                 }
                 window.hideLoader();
             });
-            getDoc(doc(db, "billard_data", "spieler")).then(snap => {
-                if (snap.exists()) {
-                    window.spieler = snap.data().names || [];
-                    window.initDropdowns();
-                }
+
+            onSnapshot(doc(db, "billard_data", "spieler"), (snap) => {
+              if (snap.exists()) {
+                  window.spieler = snap.data().names || [];
+                  window.initDropdowns();
+              }
             });
             onSnapshot(doc(db, "billard_data", "daily_achivs"), (snap) => { if (snap.exists()) window.dailyAchivs = snap.data(); });
         });
@@ -274,6 +285,7 @@
             document.querySelectorAll('.player-sel').forEach(s => {
                 s.innerHTML = '<option disabled selected value="">Wählen</option>';
                 window.spieler.forEach(p => s.options.add(new Option(p, p)));
+                s.onchange = () => { window.updateUI(); };
             });
         };
 
@@ -283,22 +295,32 @@
             else if (window.viewId === 'erfolge') window.renderBillardStats(window.stats, false, true, document.getElementById('view-erfolge'));
             else if (window.viewId === 'export') window.generateExportPreview();
         };
+
+        // Globaler Hook für Chart.js damit er an Firebase senden kann
+        window.saveDailyAchivsToFirebase = async (newDailyObj) => {
+          const { doc, setDoc } = window.dbFns;
+          await setDoc(doc(window.db, "billard_data", "daily_achivs"), newDailyObj);
+        };
     </script>
 
     <script src="Chart.js"></script>
     <script>
-        // Logik-Funktionen (Cleaned)
         window.updateUI = () => {
             const m = document.getElementById('mode').value;
             document.getElementById('ui-1-1').style.display = (m==='1:1'?'block':'none');
             document.getElementById('ui-2-2').style.display = (m==='2:2'?'block':'none');
             
-            const b = document.getElementById('breakPlayer');
-            b.innerHTML = '<option value="" selected disabled>Wählen</option>';
-            const names = (m==='1:1') ? [document.getElementById('p1').value, document.getElementById('p2').value] : 
-                          [document.getElementById('t1p1').value+" & "+document.getElementById('t1p2').value, document.getElementById('t2p1').value+" & "+document.getElementById('t2p2').value];
-            names.forEach(n => { if(n && !n.includes('undefined')) b.options.add(new Option(n, n)); });
+            if (!window.breakLocked) {
+              const b = document.getElementById('breakPlayer');
+              b.innerHTML = '<option value="" selected disabled>Wählen</option>';
+              const names = (m==='1:1') ? [document.getElementById('p1').value, document.getElementById('p2').value] : 
+                            [document.getElementById('t1p1').value+" & "+document.getElementById('t1p2').value, document.getElementById('t2p1').value+" & "+document.getElementById('t2p2').value];
+              names.forEach(n => { if(n && !n.includes('undefined')) b.options.add(new Option(n, n)); });
+            }
             
+            const ready = (m==='1:1' ? (document.getElementById('p1').value && document.getElementById('p2').value) : (document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value));
+            document.getElementById('btn-breakcalc').disabled = !ready;
+
             updateMatchProbability();
         };
 
@@ -311,15 +333,17 @@
         window.calcBreak = () => {
             const m = document.getElementById('mode').value;
             const c = (m === '1:1') ? [document.getElementById('p1').value, document.getElementById('p2').value] : [document.getElementById('t1p1').value, document.getElementById('t1p2').value, document.getElementById('t2p1').value, document.getElementById('t2p2').value];
-            const picked = c.filter(Boolean)[Math.floor(Math.random() * c.filter(Boolean).length)];
+            const candidates = c.filter(Boolean);
+            const picked = candidates[Math.floor(Math.random() * candidates.length)];
             if(!picked) return;
             
             let res = picked;
             if(m === '2:2') {
-                if(picked === document.getElementById('t1p1').value || picked === document.getElementById('t1p2').value) res = document.getElementById('t1p1').value + " & " + document.getElementById('t1p2').value;
-                else res = document.getElementById('t2p1').value + " & " + document.getElementById('t2p2').value;
+              if(picked === document.getElementById('t1p1').value || picked === document.getElementById('t1p2').value) res = document.getElementById('t1p1').value + " & " + document.getElementById('t1p2').value;
+              else res = document.getElementById('t2p1').value + " & " + document.getElementById('t2p2').value;
             }
             document.getElementById('breakPlayer').value = res;
+            window.breakLocked = true;
         };
 
         window.doSave = async () => {
@@ -331,14 +355,47 @@
 
             if (!window.winnerNum || !p1 || !p2 || !b) return alert("Bitte alles ausfüllen!");
             
-            const data = { m, p1, p2, w: window.winnerNum, t: document.getElementById('winType').value, a: b, l: parseInt(document.getElementById('leftover').value), d: new Date().toLocaleDateString('de-DE') + ", " + new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) };
+            const now = new Date();
+            const dStr = now.toLocaleDateString('de-DE') + ", " + now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+            const data = { m, p1, p2, w: window.winnerNum, t: document.getElementById('winType').value, a: b, l: parseInt(document.getElementById('leftover').value), d: dStr };
+            
+            // Achievement-Berechnung (wie in BillardPro.js)
+            const todayStr = now.toLocaleDateString('de-DE');
+            const isoDay = now.toISOString().split('T')[0];
+            const todayMatches = [...window.stats, data].filter(g => g.d && g.d.startsWith(todayStr));
+            const procData = window.processAllStatsChronologically(todayMatches, window.spieler);
+            
+            const dayResults = {};
+            Object.keys(procData.pData).forEach(player => {
+              const d = procData.pData[player];
+              // Mapping auf DailyPool Felder
+              d.todayWins = d.wins; d.todayGames = d.games; d.todayMaxStreak = d.maxStreak; d.todayClutchWins = d.clutchWins;
+              d.todayBreakWins = d.breakWins; d.todayBlackWinsCount = d.blackWinsCount; d.todayKillerPoints = d.killerPoints; d.todayRest = d.rest;
+              d.todayAvgRest = (d.games - d.wins) > 0 ? (d.rest / (d.games - d.wins)) : 0;
+
+              const active = [
+                ...window.dailyFamePool.filter(ach => ach.cond(d)),
+                ...window.dailyShamePool.filter(ach => ach.cond(d))
+              ].map(ach => ach.t);
+              
+              if (active.length > 0) dayResults[player] = Array.from(new Set(active));
+            });
+
+            // Firebase Updates
+            const { doc, setDoc } = window.dbFns;
+            if (Object.keys(dayResults).length > 0) {
+              const newDaily = { ...window.dailyAchivs };
+              newDaily.days[isoDay] = dayResults;
+              await setDoc(doc(window.db, "billard_data", "daily_achivs"), newDaily);
+            }
+            
             window.stats.push(data);
             await window.dbFns.setDoc(window.dbFns.doc(window.db, "billard_data", "stats"), { matches: window.stats });
             
-            // Reset
-            document.getElementById('leftover').value = "0"; window.winnerNum = 0;
+            document.getElementById('leftover').value = "0"; window.winnerNum = 0; window.breakLocked = false;
             document.querySelectorAll('.win-btn').forEach(b => b.classList.remove('selected'));
-            alert("Gespeichert!");
+            window.updateUI();
+            alert("Match & Erfolge gespeichert!");
         };
 
         window.requestDelete = async (i) => {
@@ -380,9 +437,11 @@
             if(m==='1:1') { r1 = getE(document.getElementById('p1').value); r2 = getE(document.getElementById('p2').value); }
             else { r1 = (getE(document.getElementById('t1p1').value)+getE(document.getElementById('t1p2').value))/2; r2 = (getE(document.getElementById('t2p1').value)+getE(document.getElementById('t2p2').value))/2; }
             
-            const p1 = Math.round((1 / (1 + Math.pow(10, (r2 - r1) / 400))) * 100);
-            b.innerHTML = `<div class="prob-title">🎯 Prognose</div><div class="prob-row"><div class="prob-pill">${p1}%</div><div class="prob-pill">${100-p1}%</div></div><div class="prob-bar"><div style="width:${p1}%"></div></div>`;
-            window.updateUI(); // Baut Anstoß-Dropdown mit Namen auf
+            const prob1 = Math.round((1 / (1 + Math.pow(10, (r2 - r1) / 400))) * 100);
+            const l1 = (m==='1:1' ? document.getElementById('p1').value : "Team 1");
+            const l2 = (m==='1:1' ? document.getElementById('p2').value : "Team 2");
+
+            b.innerHTML = `<div class="prob-title">🎯 Sieg-Prognose</div><div class="prob-row"><div class="prob-pill">${l1}: ${prob1}%</div><div class="prob-pill">${l2}: ${100-prob1}%</div></div><div class="prob-bar"><div style="width:${prob1}%"></div></div><div style="font-size:9px; color:#8e8e93; margin-top:6px; text-align:center;">Basis: Team-ELO Ø (${Math.round(r1)} vs ${Math.round(r2)})</div>`;
         };
 
         function renderHistory() {
@@ -404,22 +463,44 @@
         }
 
         window.generateExportPreview = () => {
-            const p = document.getElementById('export-preview');
-            p.innerHTML = `<div class="card"><label>HTML Report Vorschau</label><div style="font-size:11px;color:#8e8e93;">Hier würde die Zusammenfassung stehen. Drücke oben auf Senden für die Datei.</div></div>`;
+            const today = new Date().toLocaleDateString('de-DE');
+            window.renderBillardStats(window.stats, true, false, document.getElementById('view-export'));
+            const hGrid = document.querySelector('#view-export .stat-grid').outerHTML;
+            const hAchs = document.getElementById('achievements-today').innerHTML;
+            
+            window.renderBillardStats(window.stats, false, false, document.getElementById('view-export'));
+            const gElo = document.getElementById('eloRanking').outerHTML;
+            
+            document.getElementById('export-preview').innerHTML = `
+                <div class="card"><label>Report vom ${today}</label>
+                <h3 style="color:var(--accent); font-size:12px;">HEUTE</h3>${hGrid}${hAchs}
+                <h3 style="color:var(--accent); font-size:12px; margin-top:20px;">RANKING</h3>${gElo}</div>`;
         };
 
         window.startExport = () => {
-            const h = `<html><body style="background:#000;color:#fff;font-family:sans-serif;"><h1>Billard Report</h1>${document.getElementById('stat-content-wrapper').innerHTML}</body></html>`;
-            const b = new Blob([h], {type:'text/html'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'Billard_Report.html'; a.click();
+            const h = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{background:#000;color:#fff;font-family:sans-serif;padding:20px;}.card{background:#1c1c1e;border-radius:15px;padding:15px;margin-bottom:10px;border:1px solid #333;}label{color:#8e8e93;font-size:10px;text-transform:uppercase;display:block;margin-bottom:5px;}.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}</style></head><body><h1>Billard Report</h1>${document.getElementById('export-preview').innerHTML}</body></html>`;
+            const blob = new Blob([h], {type:'text/html'});
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(blob); 
+            a.download = 'Billard_Report_' + new Date().toLocaleDateString() + '.html'; 
+            a.click();
         };
 
         window.openAchListModal = () => { renderAchList('all'); document.getElementById('achListModal').style.display='flex'; };
         window.closeAchListModal = () => { document.getElementById('achListModal').style.display='none'; };
-        window.renderAchList = (f) => { 
+        window.renderAchList = (filter) => { 
             const c = document.getElementById('achListContainer');
-            const pool = [...window.famePool, ...window.shamePool, ...window.dailyFamePool, ...window.dailyShamePool];
-            c.innerHTML = pool.map(a => `<div class="card" style="margin-bottom:8px;"><div style="display:flex;gap:10px;"><span>${a.i}</span><b>${a.t}</b></div><div style="font-size:10px;color:#8e8e93;">${a.h}</div></div>`).join("");
+            const pills = document.querySelectorAll('.filter-pill');
+            const fNames = ['all', 'fame', 'shame', 'daily'];
+            pills.forEach((p, idx) => p.classList.toggle('active', fNames[idx] === filter));
+
+            let pool = [];
+            if (filter==='all') pool = [...window.famePool, ...window.shamePool, ...window.dailyFamePool, ...window.dailyShamePool];
+            else if (filter==='fame') pool = window.famePool;
+            else if (filter==='shame') pool = window.shamePool;
+            else pool = [...window.dailyFamePool, ...window.dailyShamePool];
+
+            c.innerHTML = pool.map(a => `<div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);"><div style="font-size:24px;">${a.i}</div><div style="flex:1;"><div style="font-size:12px; font-weight:900;">${a.t}</div><div style="font-size:10px; color:#8e8e93;">${a.h}</div></div></div>`).join("");
         };
 
         // Init Tab-Indikator
