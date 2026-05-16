@@ -513,7 +513,7 @@
                 pool = window.famePool.map(a=>({...a,k:'fame'}));
             } else if (filter==='shame') {
                 pool = window.shamePool.map(a=>({...a,k:'shame'}));
-            else pool = [...window.dailyFamePool, ...window.dailyShamePool];
+            } else pool = [...window.dailyFamePool, ...window.dailyShamePool];
 
             c.innerHTML = pool.map(a => {
                 const isShame = (a.k === "shame");
