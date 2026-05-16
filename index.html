@@ -257,11 +257,48 @@
         window.stats = []; window.spieler = []; window.dailyAchivs = { days: {} };
         window.winnerNum = 0; window.viewId = 'aufzeichnen'; window.breakLocked = false;
 
+        // Navigation und Tab-Wechsel
+        window.switchV = (id, el) => {
+            window.viewId = id;
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            
+            // 'heute' und 'statistik' teilen sich die gleiche View, aber mit unterschiedlichen Datenfiltern
+            const targetViewId = (id === 'heute' || id === 'statistik') ? 'view-statistik' : 'view-' + id;
+            const targetView = document.getElementById(targetViewId);
+            if (targetView) targetView.classList.add('active');
+            
+            if (el) el.classList.add('active');
+            
+            // Tab-Indikator (gelber Hintergrund) verschieben
+            if (el) {
+                const ind = document.getElementById('tab-indicator');
+                ind.style.width = el.offsetWidth + "px";
+                ind.style.left = el.offsetLeft + "px";
+            }
+            
+            window.updateAllViews();
+            const scrollArea = document.getElementById('scroll-area');
+            if (scrollArea) scrollArea.scrollTop = 0;
+        };
+
+        // Zentrale Funktion zum Rendern der aktiven Ansicht
+        window.updateAllViews = () => {
+            if (window.viewId === 'uebersicht') renderHistory();
+            if (window.viewId === 'statistik' || window.viewId === 'heute' || window.viewId === 'erfolge') {
+                const isToday = (window.viewId === 'heute');
+                window.renderBillardStats(window.stats, isToday);
+            }
+            if (window.viewId === 'export') window.generateExportPreview();
+        };
+
         signInAnonymously(auth).then(() => {
             onSnapshot(doc(db, "billard_data", "stats"), (snap) => {
                 if (snap.exists()) {
                     window.stats = snap.data().matches || [];
-                    window.updateAllViews();
+                    if (typeof window.updateAllViews === 'function') {
+                        window.updateAllViews();
+                    }
                 }
                 window.hideLoader();
             });
@@ -333,11 +370,17 @@
             else { p1 = document.getElementById('t1p1').value + " & " + document.getElementById('t1p2').value; p2 = document.getElementById('t2p1').value + " & " + document.getElementById('t2p2').value; }
             if (!window.winnerNum || !p1 || !p2 || !b) return alert("Bitte alles ausfüllen!");
             const now = new Date();
-            const dStr = now.toLocaleDateString('de-DE') + ", " + now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+            
+            // Stabiles Datumsformat DD.MM.YYYY erzwingen
+            const pad = (n) => String(n).padStart(2, '0');
+            const todayStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
+            const dStr = todayStr + ", " + now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+
             const data = { m, p1, p2, w: window.winnerNum, t: document.getElementById('winType').value, a: b, l: parseInt(document.getElementById('leftover').value), d: dStr };
             
-            const todayStr = now.toLocaleDateString('de-DE');
             const isoDay = now.toISOString().split('T')[0];
+            
+            // Erfolge für heute berechnen
             const todayMatches = [...window.stats, data].filter(g => g.d && g.d.startsWith(todayStr));
             const procData = window.processAllStatsChronologically(todayMatches, window.spieler);
             const dayResults = {};
