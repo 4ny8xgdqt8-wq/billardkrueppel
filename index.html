@@ -28,8 +28,8 @@
         .view { display: none; flex-direction: column; width: 100%; } 
         .view.active { display: flex; }
         .card { background: var(--card); border-radius: 20px; padding: 15px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
-        .header-container { position: sticky; top: 0; z-index: 1000; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: calc(var(--safe-top) + 10px) 16px 10px 16px; display: flex; align-items: center; justify-content: space-between; margin: 0 -16px 15px -16px; border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); }
-        .header-side { width: 85px; display: flex; align-items: center; }
+        .header-container { position: sticky; top: 0; z-index: 1000; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: calc(var(--safe-top) + 10px) 16px 10px 16px; display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 -16px 15px -16px; border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); }
+        .header-side { display: flex; align-items: center; }
         .header-side.right { justify-content: flex-end; }
         .logo-img { height: 30px; width: auto; object-fit: contain; }
         .title-stack { display: flex; flex-direction: column; align-items: center; text-align: center; }
