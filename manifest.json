@@ -1,6 +1,6 @@
 {
   "name": "Billardkrüppel",
-  "short_name": "Billard",
+  "short_name": "Billardkrüppel",
   "description": "Match Tracker & ELO Statistiken für Billard",
   "start_url": "index.html",
   "display": "standalone",
