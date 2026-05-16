@@ -211,7 +211,7 @@
             <div id="tab-indicator" class="tab-indicator"></div>
             <div class="tab-item active" onclick="switchV('aufzeichnen',this)"><span class="tab-icon">🎱</span><span>Match</span></div>
             <div class="tab-item" onclick="switchV('heute',this)"><span class="tab-icon">📅</span><span>Heute</span></div>
-            <div class="tab-item" onclick="switchV('statistik',this)"><span class="tab-icon">📊</span><span>Stat</span></div>
+            <div class="tab-item" onclick="switchV('statistik',this)"><span class="tab-icon">📊</span><span>Gesamt</span></div>
             <div class="tab-item" onclick="switchV('erfolge',this)"><span class="tab-icon">🎖️</span><span>Erfolge</span></div>
             <div class="tab-item" onclick="switchV('uebersicht',this)"><span class="tab-icon">📜</span><span>Historie</span></div>
             <div class="tab-item" onclick="switchV('export',this)"><span class="tab-icon">📎</span><span>Teilen</span></div>
@@ -350,6 +350,13 @@
             const m = document.getElementById('mode').value;
             document.getElementById('ui-1-1').style.display = (m==='1:1'?'block':'none');
             document.getElementById('ui-2-2').style.display = (m==='2:2'?'block':'none');
+            
+            const getTN = (a, b) => (a && b) ? a + " & " + b : (a || b || "");
+            const n1 = (m==='1:1') ? document.getElementById('p1').value : getTN(document.getElementById('t1p1').value, document.getElementById('t1p2').value);
+            const n2 = (m==='1:1') ? document.getElementById('p2').value : getTN(document.getElementById('t2p1').value, document.getElementById('t2p2').value);
+            document.getElementById('btn-win1').innerText = n1 || "Seite 1";
+            document.getElementById('btn-win2').innerText = n2 || "Seite 2";
+
             if (!window.breakLocked) {
               const b = document.getElementById('breakPlayer');
               b.innerHTML = '<option value="" selected disabled>Wählen</option>';
@@ -357,6 +364,10 @@
                             [document.getElementById('t1p1').value+" & "+document.getElementById('t1p2').value, document.getElementById('t2p1').value+" & "+document.getElementById('t2p2').value];
               names.forEach(n => { if(n && !n.includes('undefined')) b.options.add(new Option(n, n)); });
             }
+            
+            window.winnerNum = 0;
+            document.querySelectorAll('.win-btn').forEach(btn => btn.classList.remove('selected'));
+            
             const ready = (m==='1:1' ? (document.getElementById('p1').value && document.getElementById('p2').value) : (document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value));
             document.getElementById('btn-breakcalc').disabled = !ready;
             window.updateMatchProbability();
@@ -427,8 +438,14 @@
             }
             window.stats = updatedStats;
             await window.dbFns.setDoc(window.dbFns.doc(window.db, "billard_data", "stats"), { matches: updatedStats });
-            document.getElementById('leftover').value = "0"; window.winnerNum = 0; window.breakLocked = false;
+            
+            document.getElementById('leftover').value = "0"; 
+            window.winnerNum = 0; 
+            window.breakLocked = false;
             document.querySelectorAll('.win-btn').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('.player-sel').forEach(s => s.value = "");
+            document.getElementById('breakPlayer').value = "";
+            
             window.updateUI();
             alert("Match & Erfolge gespeichert!");
         };
@@ -444,8 +461,15 @@
             const b = document.getElementById('match-prob');
             const isReady = (m==='1:1' ? (document.getElementById('p1').value && document.getElementById('p2').value) : (document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value));
             
-            if(!isReady) { b.style.display='none'; return; }
+            if(!isReady) { b.style.display='none'; b.innerHTML=''; return; }
             b.style.display='block';
+            
+            const pIds = (m === '1:1') ? ['p1', 'p2'] : ['t1p1', 't1p2', 't2p1', 't2p2'];
+            const pVals = pIds.map(id => document.getElementById(id).value).filter(Boolean);
+            if (new Set(pVals).size !== pVals.length) {
+                b.innerHTML = `<div style="color:var(--error); font-size:10px; text-align:center; padding:10px; font-weight:800;">⚠️ Doppelte Spieler gewählt!</div>`;
+                return;
+            }
             
             const elo = window.computeEloRatings(window.stats);
             const getE = (p) => (elo[p] ? elo[p].elo : 1000);
