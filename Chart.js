@@ -376,8 +376,11 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10), m[4] ? parseInt(m[4], 10) : 0, m[5] ? parseInt(m[5], 10) : 0).getTime();
     };
 
-    const orderedMatches = (allMatches || []).map((g, i) => ({ g, i }))
-        .sort((a, b) => parseSortTime(a.g.d) - parseSortTime(b.g.d) || a.i - b.i)
+    // Filtert ungültige Matches aus, um Abstürze beim Sortieren zu verhindern
+    const orderedMatches = (allMatches || [])
+        .filter(m => m && m.d) 
+        .map((g, i) => ({ g, i }))
+        .sort((a, b) => (parseSortTime(a.g.d) || 0) - (parseSortTime(b.g.d) || 0) || a.i - b.i)
         .map(x => x.g);
 
     let globalBlackWins = 0;
@@ -473,7 +476,13 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
 
 window.renderBillardStats = function(stats, filterToday = false, onlyAchievements = false, rootEl = document) {
     // --- Scope: suche IDs nur innerhalb der aktiven View (wichtig bei doppelten IDs im DOM)
-    const root = rootEl || document;
+    let root = rootEl || document;
+    
+    // Sicherheits-Check: Falls root kein gültiges Element ist (z.B. durch Fehler im Export-Preview)
+    if (!root || typeof root.querySelector !== 'function') {
+        root = document;
+    }
+
     const byId = (id) => (root && root.querySelector) ? root.querySelector('#' + id) : document.getElementById(id);
     
     // --- DAILY ACHIVS LADEN (falls nicht bereits vorhanden) ---

@@ -284,6 +284,7 @@
 
         // Zentrale Funktion zum Rendern der aktiven Ansicht
         window.updateAllViews = () => {
+            if (typeof window.renderBillardStats !== 'function') return;
             if (window.viewId === 'uebersicht') renderHistory();
             if (window.viewId === 'statistik' || window.viewId === 'heute' || window.viewId === 'erfolge') {
                 const isToday = (window.viewId === 'heute');
@@ -292,14 +293,19 @@
             if (window.viewId === 'export') window.generateExportPreview();
         };
 
+        // Sicherheits-Timeout: Falls Firebase hängt, Loader nach 5 Sek trotzdem entfernen
+        setTimeout(() => window.hideLoader(), 5000);
+
         signInAnonymously(auth).then(() => {
             onSnapshot(doc(db, "billard_data", "stats"), (snap) => {
-                if (snap.exists()) {
-                    window.stats = snap.data().matches || [];
-                    if (typeof window.updateAllViews === 'function') {
-                        window.updateAllViews();
+                try {
+                    if (snap.exists()) {
+                        window.stats = snap.data().matches || [];
+                        if (typeof window.updateAllViews === 'function') {
+                            window.updateAllViews();
+                        }
                     }
-                }
+                } catch (e) { console.error("Render-Fehler:", e); }
                 window.hideLoader();
             });
 
@@ -310,6 +316,9 @@
               }
             });
             onSnapshot(doc(db, "billard_data", "daily_achivs"), (snap) => { if (snap.exists()) window.dailyAchivs = snap.data(); });
+        }).catch(err => {
+            console.error("Firebase Login Fehler:", err);
+            window.hideLoader();
         });
 
         window.hideLoader = () => {
