@@ -290,6 +290,7 @@
         // Zentrale Funktion zum Rendern der aktiven Ansicht
         window.updateAllViews = () => {
             if (typeof window.renderBillardStats !== 'function') return;
+            if (window.viewId === 'aufzeichnen') window.updateUI();
             if (window.viewId === 'uebersicht') renderHistory();
             if (window.viewId === 'statistik' || window.viewId === 'heute' || window.viewId === 'erfolge') {
                 const isToday = (window.viewId === 'heute');
