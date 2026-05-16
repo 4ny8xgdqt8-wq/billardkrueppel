@@ -68,7 +68,7 @@
         .spinner { width: 45px; height: 45px; border: 4px solid rgba(255, 204, 0, 0.1); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .prob-box{padding:12px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-bottom:15px;display:none;}
+        .prob-box{padding:12px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-bottom:15px;}
         .prob-title{color:var(--accent);font-weight:900;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
         .prob-row{display:flex;justify-content:space-between;margin-bottom:8px; gap: 10px;}
         .prob-pill{font-size:11px;font-weight:900;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.06);color:#fff;flex:1;text-align:center;}
@@ -121,7 +121,9 @@
                         <select id="breakPlayer" style="flex:1.5; margin-bottom:0;" onchange="window.lockBreak()"></select>
                     </div>
                 </div>
-                <div id="match-prob" class="prob-box" style="margin-top:-5px;"></div>
+                <div id="match-prob" class="prob-box" style="margin-top:-5px;">
+                    <div style="color:#8e8e93; font-size:10px; text-align:center; padding:10px; font-weight:800;">Bitte Spieler auswählen, um Prognose zu sehen.</div>
+                </div>
                 <div class="card">
                     <label>Gewinner wählen</label>
                     <div style="display:flex; gap:10px; margin-bottom:10px;">
@@ -289,8 +291,12 @@
 
         // Zentrale Funktion zum Rendern der aktiven Ansicht
         window.updateAllViews = () => {
+            // UI-Update für den Match-Tab (benötigt nur computeEloRatings in Chart.js)
+            if (window.viewId === 'aufzeichnen' && typeof window.computeEloRatings === 'function') {
+                window.updateUI();
+            }
+
             if (typeof window.renderBillardStats !== 'function') return;
-            if (window.viewId === 'aufzeichnen') window.updateUI();
             if (window.viewId === 'uebersicht') renderHistory();
             if (window.viewId === 'statistik' || window.viewId === 'heute' || window.viewId === 'erfolge') {
                 const isToday = (window.viewId === 'heute');
@@ -336,6 +342,7 @@
                 window.spieler.forEach(p => s.options.add(new Option(p, p)));
                 s.onchange = () => { window.updateUI(); };
             });
+            if (typeof window.computeEloRatings === 'function') window.updateUI();
         };
 
         window.updateUI = () => {
@@ -453,9 +460,10 @@
             const b = document.getElementById('match-prob');
             const isReady = (m==='1:1' ? (document.getElementById('p1').value && document.getElementById('p2').value) : (document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value));
             
-            b.style.display='block'; // Immer anzeigen
-            if(!isReady) { b.innerHTML = `<div style="color:#8e8e93; font-size:10px; text-align:center; padding:10px; font-weight:800;">Bitte Spieler auswählen, um Prognose zu sehen.</div>`; return; }
-            b.style.display='block';
+            if(!isReady) { 
+                b.innerHTML = `<div style="color:#8e8e93; font-size:10px; text-align:center; padding:10px; font-weight:800;">Bitte Spieler auswählen, um Prognose zu sehen.</div>`; 
+                return; 
+            }
             
             const pIds = (m === '1:1') ? ['p1', 'p2'] : ['t1p1', 't1p2', 't2p1', 't2p2'];
             const pVals = pIds.map(id => document.getElementById(id).value).filter(Boolean);
