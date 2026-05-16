@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Billardkrüppel</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Billard">
+    <link rel="apple-touch-icon" href="logo.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -380,17 +385,23 @@
             if (!window.winnerNum || !p1 || !p2 || !b) return alert("Bitte alles ausfüllen!");
             const now = new Date();
             
-            // Stabiles Datumsformat DD.MM.YYYY erzwingen
             const pad = (n) => String(n).padStart(2, '0');
+            const dStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}`;
             const todayStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
-            const dStr = todayStr + ", " + now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
 
             const data = { m, p1, p2, w: window.winnerNum, t: document.getElementById('winType').value, a: b, l: parseInt(document.getElementById('leftover').value), d: dStr };
             
             const isoDay = now.toISOString().split('T')[0];
+            const updatedStats = [...window.stats, data];
             
-            // Erfolge für heute berechnen
-            const todayMatches = [...window.stats, data].filter(g => g.d && g.d.startsWith(todayStr));
+            // Robuster Vergleich für die heutige Berechnung
+            const isSameDay = (d1, d2) => {
+                const m1 = String(d1 || "").match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+                if (!m1) return false;
+                return parseInt(m1[1], 10) === d2.getDate() && parseInt(m1[2], 10) === (d2.getMonth() + 1) && parseInt(m1[3], 10) === d2.getFullYear();
+            };
+
+            const todayMatches = updatedStats.filter(g => g && g.d && isSameDay(g.d, now));
             const procData = window.processAllStatsChronologically(todayMatches, window.spieler);
             const dayResults = {};
             Object.keys(procData.pData).forEach(player => {
@@ -407,8 +418,8 @@
               newDaily.days[isoDay] = dayResults;
               await window.dbFns.setDoc(window.dbFns.doc(window.db, "billard_data", "daily_achivs"), newDaily);
             }
-            window.stats.push(data);
-            await window.dbFns.setDoc(window.dbFns.doc(window.db, "billard_data", "stats"), { matches: window.stats });
+            window.stats = updatedStats;
+            await window.dbFns.setDoc(window.dbFns.doc(window.db, "billard_data", "stats"), { matches: updatedStats });
             document.getElementById('leftover').value = "0"; window.winnerNum = 0; window.breakLocked = false;
             document.querySelectorAll('.win-btn').forEach(b => b.classList.remove('selected'));
             window.updateUI();

@@ -262,6 +262,13 @@ window.shamePool = [
 
 // --- HILFSFUNKTIONEN (Außerhalb für Scriptable verfügbar) ---
 window.processData = function(dataArray, todayStr) {
+    const now = new Date();
+    const checkToday = (dateStr) => {
+        const m = String(dateStr || "").match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+        if (!m) return false;
+        return parseInt(m[1], 10) === now.getDate() && parseInt(m[2], 10) === (now.getMonth() + 1) && parseInt(m[3], 10) === now.getFullYear();
+    };
+
     const pData = {};
     let blackWins = 0, breakWinsCount = 0;
     const initP = (n) => { 
@@ -273,7 +280,7 @@ window.processData = function(dataArray, todayStr) {
     };
 
     dataArray.forEach(g => {
-        const isTodayMatch = todayStr && g.d && g.d.startsWith(todayStr);
+        const isTodayMatch = checkToday(g.d);
         const isTeam = g.m === "2:2";
         const p1Arr = isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1];
         const p2Arr = isTeam ? (g.p2 ? g.p2.split(" & ") : []) : [g.p2];
@@ -316,7 +323,7 @@ window.computeEloRatings = function(allMatches) {
     const games = {};
     const parseSortTime = (gd) => {
         const s = String(gd || "");
-        const m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})(?:[^\d]+(\d{1,2}):(\d{2}))?/);
+        const m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[^\d]+(\d{1,2}):(\d{2}))?/);
         if (!m) return 0;
         return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10), m[4] ? parseInt(m[4], 10) : 0, m[5] ? parseInt(m[5], 10) : 0).getTime();
     };
@@ -371,7 +378,7 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
 
     const parseSortTime = (gd) => {
         const s = String(gd || "");
-        const m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})(?:[^\d]+(\d{1,2}):(\d{2}))?/);
+        const m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[^\d]+(\d{1,2}):(\d{2}))?/);
         if (!m) return 0;
         return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10), m[4] ? parseInt(m[4], 10) : 0, m[5] ? parseInt(m[5], 10) : 0).getTime();
     };
@@ -485,6 +492,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
     const byId = (id) => (root && root.querySelector) ? root.querySelector('#' + id) : document.getElementById(id);
     
+    // --- TITEL ANPASSEN ---
+    const vTitle = document.getElementById('stat-title');
+    if (vTitle) vTitle.innerText = filterToday ? 'Heute' : 'Statistik';
+
     // --- DAILY ACHIVS LADEN (falls nicht bereits vorhanden) ---
     if (!window.dailyAchivs) {
       window.dailyAchivs = { days: {} };
@@ -505,13 +516,15 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
     if (!stats || stats.length === 0) return;
 
-    // --- STABILES DATUMS-FORMAT GENERIEREN ---
+    // --- DATUM & SICHERE DATEN ---
     const now = new Date();
     const d = String(now.getDate()).padStart(2, '0');
     const m = String(now.getMonth() + 1).padStart(2, '0');
     const y = now.getFullYear();
     const todayStr = d + "." + m + "." + y; // DD.MM.YYYY
     const isoDay = `${y}-${m}-${d}`; // YYYY-MM-DD
+
+    const safeStats = (stats || []).filter(m => m && m.d);
 
     // --- Daily Achievements Storage (wird von BillardPro.js in daily_achivs.json geschrieben)
     if (!window.dailyAchivs || !window.dailyAchivs.days) {
@@ -609,11 +622,11 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     }
 
     // --- DATEN FILTERN ---
-    const statsToday = stats.filter(g => g.d && g.d.startsWith(todayStr));
-    const statsBeforeToday = stats.filter(g => !(g.d && g.d.startsWith(todayStr)));
+    const statsToday = safeStats.filter(g => g.d.startsWith(todayStr));
+    const statsBeforeToday = safeStats.filter(g => !g.d.startsWith(todayStr));
     
     const dataToday = window.processData(statsToday, todayStr); // Use global simpler processData for today's stats
-    const dataAll = window.processAllStatsChronologically(stats, configuredPlayers);
+    const dataAll = window.processAllStatsChronologically(safeStats, configuredPlayers);
     const dataBeforeToday = window.processAllStatsChronologically(statsBeforeToday, configuredPlayers);
 
     // ELO is already calculated within processAllStatsChronologically, map it to a simpler structure if needed
@@ -979,12 +992,12 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     if (labels.length > 0) {
         byId('stat-total').innerText = currentStats.length;
         
-        // Sieg n. Anstoß
-        const breakRate = Math.round((res.breakWins / (currentStats.length || 1)) * 100);
-        byId('stat-break-adv').innerText = breakRate + "%";
+        // Global-Stats berechnen (unabhängig vom Filter für Vergleichswerte sinnvoll)
+        const breakRate = Math.round(((res.breakWins || 0) / (currentStats.length || 1)) * 100);
+        const bAdvEl = byId('stat-break-adv');
+        if (bAdvEl) bAdvEl.innerText = breakRate + "%";
         
-        // Schwarz-Fehler Quote
-        const blackRate = Math.round((res.blackWins / (currentStats.length || 1)) * 100);
+        const blackRate = Math.round(((res.blackWins || 0) / (currentStats.length || 1)) * 100);
         byId('stat-black').innerText = blackRate + "%";
 
         // Pechvogel (Ø Restkugeln bei Niederlage) – bei Gleichstand mehrere anzeigen
