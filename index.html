@@ -20,7 +20,7 @@
         .main-content { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 0 16px 120px 16px; }
         .view { display: none; flex-direction: column; width: 100%; } 
         .view.active { display: flex; }
-        .card { background: var(--card); border-radius: 20px; padding: 12px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+        .card { background: var(--card); border-radius: 20px; padding: 15px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
         .header-container { 
             position: sticky; top: 0; z-index: 1000; background: rgba(0, 0, 0, 0.4); 
             backdrop-filter: blur(30px) saturate(210%); -webkit-backdrop-filter: blur(30px) saturate(210%);
@@ -42,9 +42,27 @@
         .tab-item.active { color: #ffffff; }
         .tab-icon { font-size: 21px; margin-bottom: 2px; }
         
-        label { display: block; margin-bottom: 4px; color: #8e8e93; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        label { display: block; margin-bottom: 4px; color: #8e8e93; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding-left: 4px; }
         select, input { width: 100%; padding: 10px; background: rgba(44, 44, 46, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; outline: none; margin-bottom: 6px; }
         
+        .swipe-item { position: relative; background: transparent; border-radius: 24px; overflow: hidden; margin-bottom: 16px; }
+        .swipe-content { position: relative; padding: 20px; background: var(--card); z-index: 2; border: 1px solid rgba(255,255,255,0.08); transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        .swipe-delete-btn { position: absolute; right: 0; top: 0; bottom: 0; background: var(--error); color: white; display: flex; align-items: center; justify-content: center; width: 90px; z-index: 1; font-weight: 800; }
+        .win-text { color: #34c759; font-weight: 800; }
+        .loss-text { color: #ff3b30; opacity: 0.8; }
+
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; padding: 4px 8px; color: var(--accent); font-size: 10px; text-transform: uppercase; }
+        td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+        .filter-bar { display: flex; gap: 8px; padding: 10px 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); }
+        .filter-pill { padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8e8e93; font-size: 11px; font-weight: 800; white-space: nowrap; transition: all 0.2s; }
+        .filter-pill.active { background: var(--accent); color: #000; border-color: var(--accent); }
+        .modal { position: fixed; inset: 0; z-index: 20000; display: none; align-items: flex-start; justify-content: center; padding-top: 12vh; }
+        .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); }
+        .modal-card { position: relative; width: 86%; max-width: 420px; background: rgb(28,28,30); border: 1px solid rgba(255,255,255,0.10); border-radius: 18px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.45); }
+
         .btn-save { background: #34c759; color: white; border: none; padding: 14px; border-radius: 16px; font-size: 16px; font-weight: 900; width: 100%; margin-top: 5px; }
         .win-btn { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #8e8e93; font-weight: 800; text-align: center; }
         .win-btn.selected { border-color: var(--accent); background: rgba(255, 204, 0, 0.15); color: var(--accent); }
@@ -54,6 +72,18 @@
         .loader-title { font-weight: 900; font-size: 24px; color: var(--accent); text-transform: uppercase; margin-bottom: 30px; }
         .spinner { width: 45px; height: 45px; border: 4px solid rgba(255, 204, 0, 0.1); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .prob-box{padding:8px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-top:4px;}
+        .prob-title{color:#ffcc00;font-weight:900;font-size:10px;text-transform:uppercase;letter-spacing:1px;}
+        .prob-row{display:flex;justify-content:space-between;align-items:center;margin-top:4px;gap:10px;}
+        .prob-pill{font-size:10px;font-weight:900;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:#fff;white-space:nowrap;}
+        .prob-bar{height:4px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden;margin-top:4px;}
+        .prob-bar>div{height:100%;border-radius:999px;background:linear-gradient(90deg,#34c759,#4FC3F7);}
+        .prob-sub{color:#8e8e93;font-size:9px;line-height:1.2;margin-top:4px;}
+
+        .break-row{display:flex;gap:10px;align-items:center;}
+        .break-label{margin:0;line-height:1;padding-top:0;white-space:nowrap;}
+        .break-btn{width:auto;margin-top:0;flex:0 0 auto; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:10px; padding:6px 10px; font-size:10px; font-weight:800;}
     </style>
 </head>
 <body>
@@ -66,12 +96,13 @@
 
     <div class="app-container">
         <div class="main-content" id="scroll-area">
+            
             <!-- Ansicht: Aufzeichnen -->
             <div id="view-aufzeichnen" class="view active">
                 <div class="header-container">
-                    <div class="header-side"><img src="logo.png" class="logo-img"></div>
+                    <div class="header-side"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
                     <div class="title-stack"><div class="main-title">Billardkrüppel</div><div class="sub-title">Match erfassen</div></div>
-                    <div class="header-side right"><img src="logo.png" class="logo-img"></div>
+                    <div class="header-side right"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
                 </div>
                 <div class="card">
                     <label>Spielmodus</label>
@@ -80,27 +111,109 @@
                         <option value="2:2">2 gegen 2</option>
                     </select>
                     <div id="ui-1-1">
-                        <label>Spieler 1</label><select class="player-sel" id="p1"></select>
-                        <label>Spieler 2</label><select class="player-sel" id="p2"></select>
+                        <label>Spieler 1</label><select class="player-sel" id="p1" onchange="updateBtnText()"></select>
+                        <label>Spieler 2</label><select class="player-sel" id="p2" onchange="updateBtnText()"></select>
                     </div>
-                    <!-- Weiteres UI wie in deiner App... -->
+                    <div id="ui-2-2" style="display:none;">
+                        <label>Team 1</label>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom:8px;">
+                            <select class="player-sel" id="t1p1" onchange="updateBtnText()"></select><select class="player-sel" id="t1p2" onchange="updateBtnText()"></select>
+                        </div>
+                        <label>Team 2</label>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <select class="player-sel" id="t2p1" onchange="updateBtnText()"></select><select class="player-sel" id="t2p2" onchange="updateBtnText()"></select>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="break-row">
+                      <label class="break-label">Anstoß</label>
+                      <button id="btn-breakcalc" class="break-btn" disabled onclick="calcBreak()">Anstoß ermitteln</button>
+                      <select id="breakPlayer" disabled></select>
+                    </div>
+                </div>
+                <div id="match-prob" class="prob-box"></div>
+                <br>
+                <div class="card">
+                    <label>Gewinner wählen</label>
+                    <div style="display:flex; gap:10px; margin-bottom:10px;">
+                        <div id="btn-win1" class="win-btn" onclick="selectWinner(1)">P1</div>
+                        <div id="btn-win2" class="win-btn" onclick="selectWinner(2)">P2</div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+                        <div><label>Wie gewonnen</label><select id="winType"><option value="Normal">Normal</option><option value="Verlierer hat Schwarz versenkt">Verlierer hat Schwarz versenkt</option></select></div>
+                        <div><label>Restkugeln Verlierer</label><input type="number" inputmode="numeric" id="leftover" value="0"></div>
+                    </div>
                     <button class="btn-save" onclick="doSave()">Speichern</button>
                 </div>
             </div>
-            <!-- Weitere Views hier einfügen (Historie, Statistik etc.) -->
+
+            <!-- Ansicht: Historie -->
+            <div id="view-uebersicht" class="view">
+                <div class="header-container">
+                    <div class="header-side"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
+                    <div class="title-stack"><div class="main-title">Historie</div><div class="sub-title">Letzte Partien</div></div>
+                    <div class="header-side right"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
+                </div>
+                <div id="match-counter" style="text-align:center; font-size:12px; color:#8e8e93; margin-bottom:15px;">Matches: 0</div>
+                <div id="history-list"></div>
+            </div>
+
+            <!-- Ansicht: Statistik -->
+            <div id="view-statistik" class="view">
+                <div class="header-container">
+                    <div class="header-side"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
+                    <div class="title-stack"><div class="main-title" id="stat-title">Statistik</div><div class="sub-title" id="stat-subtitle">Analysen</div></div>
+                    <div class="header-side right"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
+                </div>
+                <div class="card"><label>Siegquote in %</label><div style="height:160px;"><canvas id="winChart"></canvas></div></div>
+                <div class="card" id="eloTrendCard">
+                    <label>Ranking & Form</label>
+                    <div id="eloRanking"></div>
+                    <div id="trendPlayers" style="margin-top:12px;"></div>
+                </div>
+                <div class="stat-grid">
+                    <div class="card"><label>Matches</label><div id="stat-total" style="font-size:20px; font-weight:800;">0</div></div>
+                    <div class="card"><label>Sieg n. Anstoß</label><div id="stat-break-adv" style="font-size:20px; font-weight:800; color:#34c759;">0%</div></div>
+                    <div class="card"><label>Angstgegner</label><div id="stat-angst" style="font-weight:800; font-size:11px; color:#ff9500;">-</div></div>
+                    <div class="card"><label>Längste Serie</label><div id="stat-streak" style="font-weight:800; font-size:11px;">-</div></div>
+                </div>
+                <div id="achievements-today"></div>
+            </div>
+
+            <!-- Ansicht: Erfolge -->
+            <div id="view-erfolge" class="view">
+                <div class="header-container">
+                    <div class="header-side"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
+                    <div class="title-stack"><div class="main-title">Erfolge</div><div class="sub-title">Bestenliste</div></div>
+                    <div class="header-side right"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
+                </div>
+                <div id="achievements-alltime"></div>
+            </div>
         </div>
 
         <div class="tab-bar">
             <div id="tab-indicator" class="tab-indicator"></div>
             <div class="tab-item active" onclick="switchV('aufzeichnen',this)"><span class="tab-icon">🎱</span><span>Match</span></div>
-            <div class="tab-item" onclick="switchV('statistik',this)"><span class="tab-icon">📊</span><span>Statistik</span></div>
+            <div class="tab-item" onclick="switchV('statistik',this)"><span class="tab-icon">📊</span><span>Stat</span></div>
+            <div class="tab-item" onclick="switchV('erfolge',this)"><span class="tab-icon">🎖️</span><span>Erfolge</span></div>
+            <div class="tab-item" onclick="switchV('uebersicht',this)"><span class="tab-icon">📜</span><span>Historie</span></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="breakModal" class="modal">
+        <div class="modal-backdrop" onclick="document.getElementById('breakModal').style.display='none'"></div>
+        <div class="modal-card">
+            <div style="font-weight:900;color:#ffcc00;font-size:14px;text-transform:uppercase;text-align:center;">Anstoß ermittelt</div>
+            <div id="breakResult" style="font-size:42px;font-weight:900;color:#4FC3F7;margin:12px 0;text-align:center;"></div>
+            <button class="btn-save" onclick="document.getElementById('breakModal').style.display='none'">OK</button>
         </div>
     </div>
 
     <script src="Chart.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -116,60 +229,218 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
+        window.stats = [];
+        window.spieler = [];
+        window.winnerNum = 0;
+        window.viewId = 'aufzeichnen';
+
         signInAnonymously(auth).then(() => {
-            console.log("Verbunden mit Firebase");
             initApp();
         });
 
         function initApp() {
-            // Snapshot für Stats
+            // Realtime-Updates für Stats
             onSnapshot(doc(db, "billard_data", "stats"), (snap) => {
                 if (snap.exists()) {
                     window.stats = snap.data().matches || [];
-                    window.hideLoader();
-                    renderAll();
+                    updateAllViews();
+                }
+                window.hideLoader();
+            });
+
+            // Spielerliste laden
+            onSnapshot(doc(db, "billard_data", "spieler"), (snap) => {
+                if (snap.exists()) {
+                    window.spieler = snap.data().names || [];
+                    initDropdowns();
                 }
             });
 
-            // Snapshot für Spieler
-            onSnapshot(doc(db, "billard_data", "spieler"), (snap) => {
-                if (snap.exists()) {
-                    const names = snap.data().names || [];
-                    updatePlayerDropdowns(names);
-                }
+            // Daily Achivs laden
+            onSnapshot(doc(db, "billard_data", "daily_achivs"), (snap) => {
+                if (snap.exists()) window.dailyAchivs = snap.data();
             });
         }
 
         window.hideLoader = () => {
-            document.getElementById('loading-overlay').style.opacity = '0';
-            setTimeout(() => document.getElementById('loading-overlay').style.display = 'none', 400);
+            const l = document.getElementById('loading-overlay');
+            if(l) { l.style.opacity = '0'; setTimeout(() => l.style.display = 'none', 400); }
         };
 
-        function updatePlayerDropdowns(names) {
-            document.querySelectorAll('.player-sel').forEach(sel => {
-                sel.innerHTML = '<option value="">Wählen</option>';
-                names.forEach(n => sel.options.add(new Option(n, n)));
+        function initDropdowns() {
+            document.querySelectorAll('.player-sel').forEach(s => {
+                s.innerHTML = '<option disabled selected value="">Wählen</option>';
+                window.spieler.forEach(p => s.options.add(new Option(p, p)));
             });
         }
 
-        window.doSave = async () => {
-            const p1 = document.getElementById('p1').value;
-            const p2 = document.getElementById('p2').value;
-            if(!p1 || !p2) return alert("Spieler wählen!");
+        window.updateBtnText = () => {
+            const m = document.getElementById('mode').value;
+            let f1, f2;
+            if (m === '1:1') { 
+                f1 = document.getElementById('p1').value || "P1"; 
+                f2 = document.getElementById('p2').value || "P2"; 
+            } else { 
+                f1 = (document.getElementById('t1p1').value + " & " + document.getElementById('t1p2').value).replace('undefined','?'); 
+                f2 = (document.getElementById('t2p1').value + " & " + document.getElementById('t2p2').value).replace('undefined','?'); 
+            }
+            document.getElementById('btn-win1').innerText = f1;
+            document.getElementById('btn-win2').innerText = f2;
             
-            const match = { p1, p2, d: new Date().toLocaleString(), w: 1 }; // Beispiel
-            window.stats.push(match);
+            const b = document.getElementById('breakPlayer');
+            b.innerHTML = '<option value="" selected disabled>Wählen</option>';
+            b.options.add(new Option(f1, f1));
+            b.options.add(new Option(f2, f2));
+            
+            document.getElementById('btn-breakcalc').disabled = !isMatchReady();
+            updateMatchProbability();
+        };
+
+        function isMatchReady() {
+            const m = document.getElementById('mode').value;
+            if(m === '1:1') return document.getElementById('p1').value && document.getElementById('p2').value;
+            return document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value;
+        }
+
+        window.selectWinner = (n) => {
+            window.winnerNum = n;
+            document.getElementById('btn-win1').classList.toggle('selected', n===1);
+            document.getElementById('btn-win2').classList.toggle('selected', n===2);
+        };
+
+        window.calcBreak = () => {
+            const m = document.getElementById('mode').value;
+            const sel = document.getElementById('breakPlayer');
+            const candidates = (m === '1:1') ? [document.getElementById('p1').value, document.getElementById('p2').value] : [document.getElementById('t1p1').value, document.getElementById('t1p2').value, document.getElementById('t2p1').value, document.getElementById('t2p2').value];
+            const picked = candidates[Math.floor(Math.random() * candidates.length)];
+            
+            let resultText = picked;
+            if(m === '2:2') {
+                if(picked === document.getElementById('t1p1').value || picked === document.getElementById('t1p2').value) resultText = document.getElementById('t1p1').value + " & " + document.getElementById('t1p2').value;
+                else resultText = document.getElementById('t2p1').value + " & " + document.getElementById('t2p2').value;
+            }
+            
+            sel.value = resultText;
+            document.getElementById('breakResult').innerText = resultText;
+            document.getElementById('breakModal').style.display = 'flex';
+        };
+
+        window.doSave = async () => {
+            const mode = document.getElementById('mode').value;
+            const left = parseInt(document.getElementById('leftover').value);
+            const breaker = document.getElementById('breakPlayer').value;
+            let p1, p2;
+            if (mode === '1:1') { p1 = document.getElementById('p1').value; p2 = document.getElementById('p2').value; }
+            else { p1 = document.getElementById('t1p1').value + " & " + document.getElementById('t1p2').value; p2 = document.getElementById('t2p1').value + " & " + document.getElementById('t2p2').value; }
+
+            if (!window.winnerNum || !p1 || !p2 || !breaker) return alert("Bitte alles ausfüllen!");
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('de-DE') + ", " + now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+            const data = { m: mode, p1, p2, w: window.winnerNum, t: document.getElementById('winType').value, a: breaker, l: left, d: dateStr };
+            
+            window.stats.push(data);
             await setDoc(doc(db, "billard_data", "stats"), { matches: window.stats });
+            
+            // Reset Form
+            document.getElementById('leftover').value = "0";
+            window.winnerNum = 0;
+            document.getElementById('btn-win1').classList.remove('selected');
+            document.getElementById('btn-win2').classList.remove('selected');
             alert("Gespeichert!");
         };
 
-        window.switchV = (id, el) => {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-' + id).classList.add('active');
-            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('tab-indicator').style.left = el.offsetLeft + 'px';
+        window.requestDelete = async (index) => {
+            if(!confirm("Dieses Match wirklich löschen?")) return;
+            window.stats.splice(index, 1);
+            await setDoc(doc(db, "billard_data", "stats"), { matches: window.stats });
         };
+
+        window.updateUI = () => {
+            const mode = document.getElementById('mode').value;
+            document.getElementById('ui-1-1').style.display = (mode === '1:1') ? 'block' : 'none';
+            document.getElementById('ui-2-2').style.display = (mode === '2:2') ? 'block' : 'none';
+            updateBtnText();
+        };
+
+        function updateAllViews() {
+            if (window.viewId === 'uebersicht') renderHistory();
+            if (window.viewId === 'statistik') window.renderBillardStats(window.stats, false, false, document.getElementById('view-statistik'));
+            if (window.viewId === 'erfolge') window.renderBillardStats(window.stats, false, true, document.getElementById('view-erfolge'));
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-list');
+            document.getElementById('match-counter').innerText = "Matches: " + window.stats.length;
+            let h = "";
+            for (let i = window.stats.length - 1; i >= 0; i--) {
+                const g = window.stats[i];
+                h += `<div class="swipe-item">
+                    <div class="swipe-delete-btn" onclick="requestDelete(${i})">Löschen</div>
+                    <div class="swipe-content" onclick="this.parentElement.style.transform=(this.parentElement.style.transform==='translateX(-90px)')?'translateX(0)':'translateX(-90px)'">
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <div style="font-size:16px; font-weight:700;"><span class="${g.w==1?'win-text':'loss-text'}">${g.p1}</span> vs <span class="${g.w==2?'win-text':'loss-text'}">${g.p2}</span></div>
+                            <div style="font-size:11px; color:#8e8e93;">${g.d}</div>
+                        </div>
+                        <div style="font-size:12px; color:#8e8e93; margin-top:8px;">${g.t} | Rest: ${g.l} | Anstoß: ${g.a}</div>
+                    </div>
+                </div>`;
+            }
+            container.innerHTML = h || '<div style="text-align:center; color:#8e8e93; padding:30px;">Noch kein Spiel.</div>';
+        }
+
+        window.switchV = (id, el) => {
+            window.viewId = id;
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            
+            if(id === 'statistik' || id === 'erfolge') {
+                document.getElementById('view-' + id).classList.add('active');
+                window.renderBillardStats(window.stats, false, (id==='erfolge'), document.getElementById('view-'+id));
+            } else {
+                document.getElementById('view-' + id).classList.add('active');
+                if(id === 'uebersicht') renderHistory();
+            }
+            
+            el.classList.add('active');
+            const ind = document.getElementById('tab-indicator');
+            ind.style.width = el.offsetWidth + 'px';
+            ind.style.left = el.offsetLeft + 'px';
+            document.getElementById('scroll-area').scrollTop = 0;
+        };
+
+        // Global verfügbare Funktionen für Chart.js
+        window.updateMatchProbability = () => {
+            const box = document.getElementById('match-prob');
+            if(!isMatchReady()) { box.innerHTML = ''; return; }
+            
+            const mode = document.getElementById('mode').value;
+            const t1 = (mode==='1:1') ? [document.getElementById('p1').value] : [document.getElementById('t1p1').value, document.getElementById('t1p2').value];
+            const t2 = (mode==='1:1') ? [document.getElementById('p2').value] : [document.getElementById('t2p1').value, document.getElementById('t2p2').value];
+            
+            const elo = computeEloRatings(window.stats);
+            const getE = (p) => (elo[p] ? elo[p].elo : 1000);
+            const r1 = t1.reduce((s,p)=>s+getE(p),0)/t1.length;
+            const r2 = t2.reduce((s,p)=>s+getE(p),0)/t2.length;
+            const prob1 = 1 / (1 + Math.pow(10, (r2 - r1) / 400));
+            const pct1 = Math.round(prob1 * 100);
+            
+            box.innerHTML = `
+                <div class="prob-title">🎯 Gewinn-Wahrscheinlichkeit</div>
+                <div class="prob-row">
+                    <div class="prob-pill">${pct1}%</div>
+                    <div class="prob-pill">${100-pct1}%</div>
+                </div>
+                <div class="prob-bar"><div style="width:${pct1}%"></div></div>
+                <div class="prob-sub">Basis: Team-ELO Ø (${Math.round(r1)} vs ${Math.round(r2)})</div>`;
+        };
+
+        // Init Indicator
+        setTimeout(() => {
+            const activeTab = document.querySelector('.tab-item.active');
+            const ind = document.getElementById('tab-indicator');
+            if(activeTab && ind) { ind.style.width = activeTab.offsetWidth + 'px'; ind.style.left = activeTab.offsetLeft + 'px'; }
+        }, 500);
     </script>
 </body>
 </html>
