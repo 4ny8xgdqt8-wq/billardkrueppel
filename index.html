@@ -45,9 +45,6 @@
         label { display: block; margin-bottom: 4px; color: #8e8e93; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding-left: 4px; }
         select, input { width: 100%; padding: 12px; background: rgba(44, 44, 46, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: white; outline: none; margin-bottom: 8px; font-size: 15px; -webkit-appearance: none; }
         
-        .swipe-item { position: relative; background: var(--error); border-radius: 24px; overflow: hidden; margin-bottom: 12px; }
-        .swipe-content { position: relative; padding: 16px; background: var(--card); z-index: 2; border: 1px solid rgba(255,255,255,0.08); transition: transform 0.3s ease; }
-        .swipe-delete-btn { position: absolute; right: 0; top: 0; bottom: 0; color: white; display: flex; align-items: center; justify-content: center; width: 90px; z-index: 1; font-weight: 800; font-size: 11px; text-transform: uppercase; }
         .win-text { color: #34c759; font-weight: 800; }
         .loss-text { color: #ff3b30; font-weight: 800; }
 
@@ -469,15 +466,15 @@
             document.getElementById('match-counter').innerText = "Matches: " + window.stats.length;
             container.innerHTML = window.stats.slice().reverse().map((g, idx) => {
                 const i = window.stats.length - 1 - idx;
-                return `<div class="swipe-item">
-                    <div class="swipe-delete-btn" onclick="requestDelete(${i})">Löschen</div>
-                    <div class="swipe-content" onclick="this.style.transform=(this.style.transform==='translateX(-90px)')?'translateX(0)':'translateX(-90px)'">
-                        <div style="display:flex; justify-content:space-between; align-items:start;">
-                            <div style="font-size:16px; font-weight:700;"><span class="${g.w==1?'win-text':'loss-text'}">${g.p1}</span> vs <span class="${g.w==2?'win-text':'loss-text'}">${g.p2}</span></div>
+                return `<div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <div style="font-size:16px; font-weight:700;"><span class="${g.w==1?'win-text':'loss-text'}">${g.p1}</span> vs <span class="${g.w==2?'win-text':'loss-text'}">${g.p2}</span></div>
+                        <div style="text-align: right;">
                             <div style="font-size:11px; color:#8e8e93;">${g.d}</div>
+                            <div style="font-size:10px; color:var(--error); font-weight:900; margin-top:8px; text-transform:uppercase;" onclick="requestDelete(${i})">Löschen</div>
                         </div>
-                        <div style="font-size:12px; color:#8e8e93; margin-top:8px;">${g.t} | Rest: ${g.l} | Anstoß: ${g.a}</div>
                     </div>
+                    <div style="font-size:12px; color:#8e8e93; margin-top:8px;">${g.t} | Rest: ${g.l} | Anstoß: ${g.a}</div>
                 </div>`;
             }).join("") || '<div style="text-align:center;color:#8e8e93;padding:40px;">Keine Spiele vorhanden.</div>';
         }
