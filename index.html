@@ -196,16 +196,14 @@
                 <div style="position: sticky; top: 0; z-index: 1000; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(20px); margin: 0 -16px 15px -16px; border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); padding-top: calc(var(--safe-top) + 10px);">
                     <div class="header-container" style="position: relative; background: transparent; backdrop-filter: none; border-bottom: none; margin: 0;">
                         <div class="header-side"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
-                        <div class="title-stack"><div class="main-title">Report</div><div class="sub-title">Teilen</div></div>
+                        <div class="title-stack"><div class="main-title">System</div><div class="sub-title">Info & Update</div></div>
                         <div class="header-side right"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"></div>
                     </div>
                     <div style="padding: 0 16px 15px 16px;">
-                        <button class="btn-save" onclick="window.startExport()">Bericht (HTML) speichern</button>
-                    <button class="btn-save" style="margin-top: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); font-size: 11px;" onclick="window.location.href=window.location.href.split('?')[0]+'?update='+new Date().getTime()">App-Inhalt neu laden</button>
-                    <div style="text-align: center; color: #444; font-size: 9px; margin-top: 8px; font-weight: 800;">VERSION 1.0.3</div>
+                        <button class="btn-save" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); font-size: 11px;" onclick="window.location.href=window.location.href.split('?')[0]+'?update='+new Date().getTime()">App-Inhalt neu laden</button>
+                        <div style="text-align: center; color: #444; font-size: 9px; margin-top: 15px; font-weight: 800;">VERSION 1.0.3</div>
                     </div>
                 </div>
-                <div id="export-preview"></div>
             </div>
         </div>
 
@@ -216,7 +214,7 @@
             <div class="tab-item" onclick="switchV('statistik',this)"><span class="tab-icon">📊</span><span>Gesamt</span></div>
             <div class="tab-item" onclick="switchV('erfolge',this)"><span class="tab-icon">🎖️</span><span>Erfolge</span></div>
             <div class="tab-item" onclick="switchV('uebersicht',this)"><span class="tab-icon">📜</span><span>Historie</span></div>
-            <div class="tab-item" onclick="switchV('export',this)"><span class="tab-icon">📎</span><span>Teilen</span></div>
+            <div class="tab-item" onclick="switchV('export',this)"><span class="tab-icon">⚙️</span><span>System</span></div>
         </div>
     </div>
 
@@ -305,7 +303,6 @@
                 const isToday = (window.viewId === 'heute');
                 window.renderBillardStats(window.stats, isToday);
             }
-            if (window.viewId === 'export') window.generateExportPreview();
         };
 
         // Sicherheits-Timeout: Falls Firebase hängt, Loader nach 5 Sek trotzdem entfernen
@@ -506,29 +503,6 @@
             }).join("") || '<div style="text-align:center;color:#8e8e93;padding:40px;">Keine Spiele vorhanden.</div>';
         }
 
-        window.generateExportPreview = () => {
-            const today = new Date().toLocaleDateString('de-DE');
-            window.renderBillardStats(window.stats, true, false, document.getElementById('view-export'));
-            const hGrid = document.querySelector('#view-export .stat-grid').outerHTML;
-            const hAchs = document.getElementById('achievements-today').innerHTML;
-            
-            window.renderBillardStats(window.stats, false, false, document.getElementById('view-export'));
-            const gElo = document.getElementById('eloRanking').outerHTML;
-            
-            document.getElementById('export-preview').innerHTML = `
-                <div class="card"><label>Report vom ${today}</label>
-                <h3 style="color:var(--accent); font-size:12px;">HEUTE</h3>${hGrid}${hAchs}
-                <h3 style="color:var(--accent); font-size:12px; margin-top:20px;">RANKING</h3>${gElo}</div>`;
-        };
-
-        window.startExport = () => {
-            const h = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{background:#000;color:#fff;font-family:sans-serif;padding:20px;}.card{background:#1c1c1e;border-radius:15px;padding:15px;margin-bottom:10px;border:1px solid #333;}label{color:#8e8e93;font-size:10px;text-transform:uppercase;display:block;margin-bottom:5px;}.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}</style></head><body><h1>Billard Report</h1>${document.getElementById('export-preview').innerHTML}</body></html>`;
-            const blob = new Blob([h], {type:'text/html'});
-            const a = document.createElement('a'); 
-            a.href = URL.createObjectURL(blob); 
-            a.download = 'Billard_Report_' + new Date().toLocaleDateString() + '.html'; 
-            a.click();
-        };
 
         window.openAchListModal = () => { renderAchList('all'); document.getElementById('achListModal').style.display='flex'; };
         window.closeAchListModal = () => { document.getElementById('achListModal').style.display='none'; };
