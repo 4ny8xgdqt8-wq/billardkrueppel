@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Billard">
     <link rel="apple-touch-icon" href="logo_html.png?v=2">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <style>
         :root {
             --bg: #000000; --card: #1c1c1e; --accent: #ffcc00; --error: #ff3b30; --text: #ffffff;
@@ -240,7 +240,7 @@
         </div>
     </div>
 
-    <script src="Chart.js"></script>
+    <script src="Chart.js?v=1.0.2"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -314,6 +314,9 @@
                     }
                 } catch (e) { console.error("Render-Fehler:", e); }
                 window.hideLoader();
+            }, (err) => { 
+                console.error("Firebase Stats Fehler:", err);
+                window.hideLoader(); 
             });
 
             onSnapshot(doc(db, "billard_data", "spieler"), (snap) => {
@@ -321,17 +324,13 @@
                   window.spieler = snap.data().names || [];
                   window.initDropdowns();
               }
-            });
+            }, (err) => console.error("Firebase Spieler Fehler:", err));
+            
             onSnapshot(doc(db, "billard_data", "daily_achivs"), (snap) => { if (snap.exists()) window.dailyAchivs = snap.data(); });
         }).catch(err => {
             console.error("Firebase Login Fehler:", err);
             window.hideLoader();
         });
-
-        window.hideLoader = () => {
-            const l = document.getElementById('loading-overlay');
-            if(l) { l.style.opacity = '0'; setTimeout(() => l.style.display = 'none', 400); }
-        };
 
         window.initDropdowns = () => {
             document.querySelectorAll('.player-sel').forEach(s => {
