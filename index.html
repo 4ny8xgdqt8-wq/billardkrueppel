@@ -124,7 +124,7 @@
                     <br>
                     <label>Anstoß</label>
                     <div style="display:flex; gap:10px;">
-                        <button id="btn-breakcalc" class="win-btn" style="flex:1; background: rgba(255,204,0,0.1); color: var(--accent);" onclick="window.calcBreak()">Zufall</button>
+                        <button id="btn-breakcalc" class="win-btn" style="flex:1; background: rgba(255,204,0,0.1); color: var(--accent);" onclick="window.calcBreak()">🎲 Würfeln</button>
                         <select id="breakPlayer" style="flex:1.5; margin-bottom:0;" onchange="window.lockBreak()"></select>
                     </div>
                 </div>
@@ -360,8 +360,8 @@
             const getTN = (a, b) => (a && b) ? a + " & " + b : (a || b || "");
             const n1 = (m==='1:1') ? document.getElementById('p1').value : getTN(document.getElementById('t1p1').value, document.getElementById('t1p2').value);
             const n2 = (m==='1:1') ? document.getElementById('p2').value : getTN(document.getElementById('t2p1').value, document.getElementById('t2p2').value);
-            document.getElementById('btn-win1').innerText = n1 || "Seite 1";
-            document.getElementById('btn-win2').innerText = n2 || "Seite 2";
+            document.getElementById('btn-win1').innerText = n1 || "Spieler 1";
+            document.getElementById('btn-win2').innerText = n2 || "Spieler 2";
 
             if (!window.breakLocked) {
               const b = document.getElementById('breakPlayer');
