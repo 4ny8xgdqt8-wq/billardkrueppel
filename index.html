@@ -507,12 +507,30 @@
             pills.forEach((p, idx) => p.classList.toggle('active', fNames[idx] === filter));
 
             let pool = [];
-            if (filter==='all') pool = [...window.famePool, ...window.shamePool, ...window.dailyFamePool, ...window.dailyShamePool];
-            else if (filter==='fame') pool = window.famePool;
-            else if (filter==='shame') pool = window.shamePool;
+            if (filter==='all') {
+                pool = [...window.famePool.map(a=>({...a,k:'fame'})), ...window.shamePool.map(a=>({...a,k:'shame'})), ...window.dailyFamePool, ...window.dailyShamePool];
+            } else if (filter==='fame') {
+                pool = window.famePool.map(a=>({...a,k:'fame'}));
+            } else if (filter==='shame') {
+                pool = window.shamePool.map(a=>({...a,k:'shame'}));
             else pool = [...window.dailyFamePool, ...window.dailyShamePool];
 
-            c.innerHTML = pool.map(a => `<div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);"><div style="font-size:24px;">${a.i}</div><div style="flex:1;"><div style="font-size:12px; font-weight:900;">${a.t}</div><div style="font-size:10px; color:#8e8e93;">${a.h}</div></div></div>`).join("");
+            c.innerHTML = pool.map(a => {
+                const isShame = (a.k === "shame");
+                const howColor = isShame ? "rgba(255, 69, 58, 0.70)" : "rgba(52, 199, 89, 0.70)";
+                const howIcon  = isShame ? "💀" : "🏆";
+                const isMaxTier = a.max === true;
+                const phrase = (a.d && a.d.length > 0) ? `"${a.d[0]}"` : "";
+
+                return `<div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 0.5px solid rgba(255,255,255,0.05);">
+                  <div style="font-size:22px; min-width:35px; text-align:center;">${a.i}</div>
+                  <div style="flex:1;">
+                    <div style="font-size:12px; font-weight:900; color:#fff;"><span style="${isMaxTier ? 'color:#4FC3F7;' : ''}">${a.t}${isMaxTier ? ' ⭐' : ''}</span></div>
+                    ${phrase ? `<div style="font-size:10px; color:#acacb0; font-style:italic; margin-top:2px;">${phrase}</div>` : ''}
+                    <div style="font-size:10px; margin-top:3px; color:${howColor};">${howIcon} ${a.h || ""}</div>
+                  </div>
+                </div>`;
+            }).join("");
         };
 
         // Init Tab-Indikator
