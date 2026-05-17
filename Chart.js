@@ -414,51 +414,7 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         const actualScoreTeam1 = (g.w == 1) ? 1 : 0;
         const eloChange = actualScoreTeam1 - expectedScoreTeam1;
 
-        allPlayersInMatch.forEach(p => {
-            const currentElo = getElo(p);
-            const kFactor = getKFactor(p);
-            let newElo = winnerPlayers.includes(p) ? (currentElo + kFactor * eloChange) : (currentElo - kFactor * eloChange);
-            eloRatings[p] = newElo;
-            eloGamesCount[p] = getEloGameCount(p) + 1;
-            
-            // Peak ELO tracken
-            if (newElo > pData[p].maxElo) pData[p].maxElo = Math.round(newElo);
-            
-            pData[p].eloHistory.push(Math.round(newElo));
-            pData[p].games++;
-            
-            // Peak Winrate tracken (ab 5 Spielen für statistische Relevanz)
-            const currentWR = (pData[p].wins / pData[p].games) * 100;
-            if (pData[p].games >= 5 && currentWR > pData[p].maxWinRate) pData[p].maxWinRate = currentWR;
-
-            pData[p].gameResultsHistory.push(winnerPlayers.includes(p));
-            pData[p].last30Games.push(winnerPlayers.includes(p));
-            if (pData[p].last30Games.length > 30) pData[p].last30Games.shift();
-
-            // --- DYNAMISCHE STATS FÜR TRACKER BERECHNEN ---
-            const d = pData[p];
-            d.winRate = Math.round((d.wins / (d.games || 1)) * 100);
-            d.avgKiller = d.wins > 0 ? (d.killerPoints / d.wins) : 0;
-            d.avgRest = (d.games - d.wins) > 0 ? (d.rest / (d.games - d.wins)) : 0;
-            d.winRateLast30 = d.last30Games.length > 0 ? Math.round((d.last30Games.filter(r => r).length / d.last30Games.length) * 100) : 0;
-            if (d.eloHistory.length >= 10) d.eloDelta10 = d.eloHistory[d.eloHistory.length - 1] - d.eloHistory[d.eloHistory.length - 10];
-
-            // --- ACHIEVEMENT TRACKER LOGIK ---
-            allPools.forEach(ach => {
-                const hasNow = ach.cond(d);
-                if (!d.achTracker[ach.t]) d.achTracker[ach.t] = { earned: 0, lost: 0, active: false };
-                const s = d.achTracker[ach.t];
-                
-                if (hasNow && !s.active) {
-                    s.earned++;
-                    s.active = true;
-                } else if (!hasNow && s.active) {
-                    s.lost++;
-                    s.active = false;
-                }
-            });
-        });
-
+        // --- 1. BASIS STATS (Sieg/Niederlage/Streaks) AKTUALISIEREN ---
         winnerPlayers.forEach(p => {
             pData[p].wins++;
             pData[p].killerPoints += restValue;
@@ -486,6 +442,50 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         if (restValue === 1) winnerPlayers.forEach(p => { if(p) pData[p].clutchWins++; });
         if (g.t && g.t.includes("Schwarz")) globalBlackWins++;
         if (winnerString === g.a) globalBreakWins++;
+
+        // --- 2. ELO & ACHIEVEMENT TRACKER (nachdem Stats aktualisiert wurden) ---
+        allPlayersInMatch.forEach(p => {
+            const currentElo = getElo(p);
+            const kFactor = getKFactor(p);
+            let newElo = winnerPlayers.includes(p) ? (currentElo + kFactor * eloChange) : (currentElo - kFactor * eloChange);
+            eloRatings[p] = newElo;
+            eloGamesCount[p] = getEloGameCount(p) + 1;
+            
+            if (newElo > pData[p].maxElo) pData[p].maxElo = Math.round(newElo);
+            pData[p].eloHistory.push(Math.round(newElo));
+            pData[p].games++;
+            
+            const currentWR = (pData[p].wins / pData[p].games) * 100;
+            if (pData[p].games >= 5 && currentWR > pData[p].maxWinRate) pData[p].maxWinRate = currentWR;
+
+            const isWinner = winnerPlayers.includes(p);
+            pData[p].gameResultsHistory.push(isWinner);
+            pData[p].last30Games.push(isWinner);
+            if (pData[p].last30Games.length > 30) pData[p].last30Games.shift();
+
+            // --- DYNAMISCHE STATS FÜR TRACKER BERECHNEN ---
+            const d = pData[p];
+            d.winRate = Math.round((d.wins / (d.games || 1)) * 100);
+            d.avgKiller = d.wins > 0 ? (d.killerPoints / d.wins) : 0;
+            d.avgRest = (d.games - d.wins) > 0 ? (d.rest / (d.games - d.wins)) : 0;
+            d.winRateLast30 = d.last30Games.length > 0 ? Math.round((d.last30Games.filter(r => r).length / d.last30Games.length) * 100) : 0;
+            if (d.eloHistory.length >= 10) d.eloDelta10 = d.eloHistory[d.eloHistory.length - 1] - d.eloHistory[d.eloHistory.length - 10];
+
+            // --- ACHIEVEMENT TRACKER LOGIK ---
+            allPools.forEach(ach => {
+                const hasNow = ach.cond(d);
+                if (!d.achTracker[ach.t]) d.achTracker[ach.t] = { earned: 0, lost: 0, active: false };
+                const s = d.achTracker[ach.t];
+                
+                if (hasNow && !s.active) {
+                    s.earned++;
+                    s.active = true;
+                } else if (!hasNow && s.active) {
+                    s.lost++;
+                    s.active = false;
+                }
+            });
+        });
     });
 
     let maxElo = -Infinity;
