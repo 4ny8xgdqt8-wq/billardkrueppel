@@ -47,9 +47,9 @@ window.famePool = [
   { cond: (d) => d.maxStreak >= 8, i: "🔥", t: "Serientäter III", d: ["Cheat-Code gefunden.", "Absolute Zerstörung.", "Acht am Stück?!", "Das ist legendär.", "Was für ein Lauf!"], h: "Gewinne mindestens 8 Spiele in Folge", g: "Serientäter", tier: 3 },
   { cond: (d) => d.maxStreak >= 10, i: "🔥", t: "Serientäter IV", d: ["Cheat-Code gefunden.", "Absolute Zerstörung.", "Acht am Stück?!", "Das ist legendär.", "Was für ein Lauf!"], h: "Gewinne mindestens 10 Spiele in Folge", g: "Serientäter", tier: 4 },
   { cond: (d) => d.maxStreak >= 12, i: "🔥", t: "Serientäter V", d: ["Cheat-Code gefunden.", "Absolute Zerstörung.", "Acht am Stück?!", "Das ist legendär.", "Was für ein Lauf!"], h: "Gewinne mindestens 12 Spiele in Folge", g: "Serientäter", tier: 5, max: true },
-  { cond: (d) => d.winRate >= 60 && d.games >= 5, i: "🎯", t: "Scharfschütze I", d: ["Solide Quote!", "Die Taschen sind heute freundlich.", "Trefferbild passt.", "Sauber gespielt.", "Guter Fokus."], h: "Gewinne mindestens 60% deiner Matches (mind. 5 Spiele)", g: "Scharfschütze", tier: 1 },
-  { cond: (d) => d.winRate >= 75 && d.games >= 8, i: "🎯", t: "Scharfschütze II", d: ["Operiert mit dem Queue.", "Kein Millimeter Abweichung.", "Das ist ernst.", "Präzise wie ein Laser.", "Heute sitzt’s."], h: "Gewinne mindestens 75% deiner Matches (mind. 8 Spiele)", g: "Scharfschütze", tier: 2 },
-  { cond: (d) => d.winRate >= 85 && d.games >= 12, i: "🎯", t: "Scharfschütze III", d: ["Das ist eine andere Liga.", "Präzision am Limit.", "85%+ ist frech gut.", "Der Tisch ist im Griff.", "Kunst am Filz."], h: "Gewinne mindestens 85% deiner Matches (mind. 12 Spiele)", g: "Scharfschütze", tier: 3, max: true },
+  { cond: (d) => (d.maxWinRate || d.winRate) >= 60 && d.games >= 5, i: "🎯", t: "Scharfschütze I", d: ["Solide Quote!", "Die Taschen sind heute freundlich.", "Trefferbild passt.", "Sauber gespielt.", "Guter Fokus."], h: "Erreiche eine Winrate von 60% (mind. 5 Spiele)", g: "Scharfschütze", tier: 1 },
+  { cond: (d) => (d.maxWinRate || d.winRate) >= 75 && d.games >= 8, i: "🎯", t: "Scharfschütze II", d: ["Operiert mit dem Queue.", "Kein Millimeter Abweichung.", "Das ist ernst.", "Präzise wie ein Laser.", "Heute sitzt’s."], h: "Erreiche eine Winrate von 75% (mind. 8 Spiele)", g: "Scharfschütze", tier: 2 },
+  { cond: (d) => (d.maxWinRate || d.winRate) >= 85 && d.games >= 12, i: "🎯", t: "Scharfschütze III", d: ["Das ist eine andere Liga.", "Präzision am Limit.", "85%+ ist frech gut.", "Der Tisch ist im Griff.", "Kunst am Filz."], h: "Erreiche eine Winrate von 85% (mind. 12 Spiele)", g: "Scharfschütze", tier: 3, max: true },
   { cond: (d) => d.avgKiller >= 4.5 && d.wins >= 3, i: "🧹", t: "Abräumer I", d: ["Der Tisch wird leerer.", "Gegner hat viel zu tun.", "Saubere Dominanz.", "Du räumst auf.", "Guter Start."], h: "Lass im Schnitt mindestens 4,5 Kugeln beim Gegner übrig (pro Sieg)", g: "Abräumer", tier: 1 },
   { cond: (d) => d.avgKiller >= 5.5 && d.wins >= 5, i: "🧹", t: "Abräumer II", d: ["Hinterlässt verbrannte Erde.", "Das ist brutal effizient.", "Gegner sammelt nur noch.", "Abriss läuft.", "Keine Gnade."], h: "Lass im Schnitt mindestens 5,5 Kugeln beim Gegner übrig (pro Sieg)", g: "Abräumer", tier: 2 },
   { cond: (d) => d.avgKiller >= 6.5 && d.wins >= 8, i: "🧹", t: "Abräumer III", d: ["Das ist eine Rasur.", "Der Gegner sieht nur noch Reste.", "Dominanz pur.", "Metzger deluxe.", "Unfair gut."], h: "Lass im Schnitt mindestens 6,5 Kugeln beim Gegner übrig (pro Sieg)", g: "Abräumer", tier: 3, max: true },
@@ -95,7 +95,7 @@ window.famePool = [
   { cond: (d) => d.wins >= 190, i: "🏛️", t: "Hall of Famer IX", d: ["190 Siege – Endgame.", "Das ist nicht mehr normal.", "Du bist die Statistik.", "Die Halle kennt nur noch dich.", "Wahnsinn."], h: "Hol dir mindestens 190 Siege", g: "Hall of Famer", tier: 9 },
   { cond: (d) => d.wins >= 250, i: "🏛️", t: "Hall of Famer X", d: ["MAX-Tier erreicht.", "250 Siege – krank.", "Die Halle ist dein Zuhause.", "Das ist Unsterblichkeit.", "Legendär."], h: "Hol dir mindestens 250 Siege", g: "Hall of Famer", tier: 10, max: true },
   { cond: (d) => d.games >= 5 && d.avgKiller >= 6, i: "🚯", t: "Clean-Up Crew", d: ["Er lässt den Tisch sauberer als er ihn fand.", "Null Toleranz für Restkugeln.", "Ein Mann, ein Wort, ein leeres Loch.", "Effizienz ist seine Superkraft.", "Keine Kugel ist vor ihm sicher.", "Er macht das Licht aus."] , h: "Spiele mindestens 5 Matches – und Lass im Schnitt mindestens 6 Kugeln beim Gegner übrig (pro Sieg)"},
-  { cond: (d) => d.wins > d.games * 0.8 && d.games >= 10, i: "🛸", t: "Alien", d: ["Seine Skills sind nicht von der Erde.", "Er spielt in einer anderen Dimension.", "Wurde von der NASA geschickt.", "Vollkommene Kontrolle über Raum und Zeit.", "Kein menschliches Wesen locht so.", "Wir sind nur seine Spielzeuge."] , h: "Spiele mindestens 10 Matches – und halte eine Siegquote von über 80%"},
+  { cond: (d) => (d.maxWinRate || d.winRate) >= 80 && d.games >= 10, i: "🛸", t: "Alien", d: ["Seine Skills sind nicht von der Erde.", "Er spielt in einer anderen Dimension.", "Wurde von der NASA geschickt.", "Vollkommene Kontrolle über Raum und Zeit.", "Kein menschliches Wesen locht so.", "Wir sind nur seine Spielzeuge."] , h: "Erreiche eine historische Siegquote von über 80% (mind. 10 Spiele)"},
   { cond: (d) => d.clutchWins >= 5, i: "🎰", t: "Jackpot-Killer", d: ["Gewinnt IMMER auf der letzten Kugel.", "Er liebt das Drama.", "Spannung ist seine Droge.", "Verhöhnt den Gegner durch Comebacks.", "Nerven aus Neutronenstern-Materie.", "Das Glück der Tüchtigen."] , h: "Gewinne mindestens 5 1-Kugel-Krimis (Gegner hat nur 1 Kugel übrig)"},
   { cond: (d) => d.killerPoints >= 50, i: "🧨", t: "Abrissunternehmer I", d: ["Er verteilt Reste.", "Der Gegner sammelt nur noch.", "Ziemlich brutal.", "Da bleibt was liegen.", "Abriss gestartet."], h: "Lass insgesamt 50 Kugeln beim Gegner übrig", g: "Abrissunternehmer", tier: 1 },
   { cond: (d) => d.killerPoints >= 100, i: "🧨", t: "Abrissunternehmer II", d: ["100 Restkugeln verteilt.", "Karrieren im Sinkflug.", "Kein Mitleid.", "Terror am Tisch.", "Endgegner-Vibes."], h: "Lass insgesamt 100 Kugeln beim Gegner übrig", g: "Abrissunternehmer", tier: 2 },
@@ -370,7 +370,7 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
                 todayBreakWins: 0, todayBlackWinsCount: 0, todayKillerPoints: 0, todayRest: 0, todayAvgRest: 0,
                 loseStreak: 0, maxLoseStreak: 0,
                 gameResultsHistory: [], last30Games: [], last20Losses: [], last20WinsKiller: [],
-                eloHistory: [], headToHead: {}, closeLosses: 0, dramaWins: 0, winsVsTopElo: 0,
+            eloHistory: [], maxElo: 1000, maxWinRate: 0, headToHead: {}, closeLosses: 0, dramaWins: 0, winsVsTopElo: 0, achTracker: {},
                 achCountTotal: 0, completedTracks: 0,
             };
         }
@@ -392,6 +392,8 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
 
     let globalBlackWins = 0;
     let globalBreakWins = 0;
+
+    const allPools = [...window.famePool, ...window.shamePool];
 
     orderedMatches.forEach(g => {
         if (!g) return;
@@ -418,11 +420,43 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
             let newElo = winnerPlayers.includes(p) ? (currentElo + kFactor * eloChange) : (currentElo - kFactor * eloChange);
             eloRatings[p] = newElo;
             eloGamesCount[p] = getEloGameCount(p) + 1;
+            
+            // Peak ELO tracken
+            if (newElo > pData[p].maxElo) pData[p].maxElo = Math.round(newElo);
+            
             pData[p].eloHistory.push(Math.round(newElo));
             pData[p].games++;
+            
+            // Peak Winrate tracken (ab 5 Spielen für statistische Relevanz)
+            const currentWR = (pData[p].wins / pData[p].games) * 100;
+            if (pData[p].games >= 5 && currentWR > pData[p].maxWinRate) pData[p].maxWinRate = currentWR;
+
             pData[p].gameResultsHistory.push(winnerPlayers.includes(p));
             pData[p].last30Games.push(winnerPlayers.includes(p));
             if (pData[p].last30Games.length > 30) pData[p].last30Games.shift();
+
+            // --- DYNAMISCHE STATS FÜR TRACKER BERECHNEN ---
+            const d = pData[p];
+            d.winRate = Math.round((d.wins / (d.games || 1)) * 100);
+            d.avgKiller = d.wins > 0 ? (d.killerPoints / d.wins) : 0;
+            d.avgRest = (d.games - d.wins) > 0 ? (d.rest / (d.games - d.wins)) : 0;
+            d.winRateLast30 = d.last30Games.length > 0 ? Math.round((d.last30Games.filter(r => r).length / d.last30Games.length) * 100) : 0;
+            if (d.eloHistory.length >= 10) d.eloDelta10 = d.eloHistory[d.eloHistory.length - 1] - d.eloHistory[d.eloHistory.length - 10];
+
+            // --- ACHIEVEMENT TRACKER LOGIK ---
+            allPools.forEach(ach => {
+                const hasNow = ach.cond(d);
+                if (!d.achTracker[ach.t]) d.achTracker[ach.t] = { earned: 0, lost: 0, active: false };
+                const s = d.achTracker[ach.t];
+                
+                if (hasNow && !s.active) {
+                    s.earned++;
+                    s.active = true;
+                } else if (!hasNow && s.active) {
+                    s.lost++;
+                    s.active = false;
+                }
+            });
         });
 
         winnerPlayers.forEach(p => {
@@ -883,6 +917,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           const howIcon  = isShame ? "💀" : "🏆";
           const isMaxTier = item.max === true;
           const newBadge = item.isNew ? `<span style="background:#ffcc00; color:#000; font-size:8px; font-weight:900; padding:2px 5px; border-radius:4px; margin-left:8px; vertical-align:middle;">NEU</span>` : "";
+          const tracker = d.achTracker ? d.achTracker[item.t] : null;
+          const trackerHtml = tracker ? `<div style="font-size:9px; color:#8e8e93; margin-top:4px; font-weight:600;">Sammelrate: <span style="color:#34c759;">📈 ${tracker.earned}</span> ${tracker.lost > 0 ? `| <span style="color:#ff3b30;">📉 ${tracker.lost}</span>` : ''}</div>` : "";
 
           return `
             <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 0.5px solid rgba(255,255,255,0.05);">
@@ -893,6 +929,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 </div>
                 <div style="font-size:10px; color:#acacb0; font-style:italic; margin-top:2px;">"${phrase}"</div>
                 <div style="font-size:10px; margin-top:3px; color:${howColor};">${howIcon} ${item.h || ""}</div>
+                ${trackerHtml}
               </div>
             </div>`;
         };
