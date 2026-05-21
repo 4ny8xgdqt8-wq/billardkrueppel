@@ -2,7 +2,9 @@
 // icon-color: purple; icon-glyph: magic;
 
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.0.2 - 2024-05-21"; 
+window.BILLARD_APP_VERSION = "1.0.5"; 
+// ---------------------------------------
+
 
 // --- GLOBALE POOLS (Verfügbar für WebView UND Scriptable) ---
 window.dailyFamePool = [
@@ -1609,8 +1611,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         // --- 🔥 Formanzeige / Trending Player (letzte 10 Spiele) ---
         function renderTrendingPlayers(allStats, show) {
           const el = byId('trendPlayers') || document.getElementById('trendPlayers');
+          const headEl = byId('trendHeader') || document.getElementById('trendHeader');
           if (!el) return;
-          if (!show) { el.innerHTML = ''; return; }
+          if (!show) { el.innerHTML = ''; if (headEl) headEl.innerHTML = ''; return; }
 
           const N = 10;
 
@@ -1722,17 +1725,19 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           const deltaStyle = (d) => d > 0 ? 'color:#34c759;' : (d < 0 ? 'color:rgba(255,69,58,0.85);' : 'color:#8e8e93;');
           const deltaSign = (d) => d > 0 ? `+${d}` : `${d}`;
 
-          let html = `
+          if (headEl) {
+            headEl.innerHTML = `
             <div style="margin-top:14px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
               <div style="color:#ffcc00; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:1px;">🔥 Formanzeige</div>
               <div style="margin-top:6px; font-size:10px; line-height:1.4; color:#8e8e93;">Trending aus den letzten ${N} Spielen: ELO-Änderung + aktuelle Siegserie.</div>
               <div style="height:2px; width:24px; background:#ffcc00; margin-top:6px; border-radius:2px;"></div>
-            </div>
-            <div style="margin-top:10px;">
-          `;
+            </div>`;
+          }
+
+          let listHtml = `<div style="margin-top:10px;">`;
 
           rows.forEach((r, i) => {
-            html += `
+            listHtml += `
               <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${i === 0 ? '🔥' : (i === 1 ? '✨' : (i === 2 ? '📈' : (i+1 + '.')))}</div>
                 <div style="flex:1;">
@@ -1747,8 +1752,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             `;
           });
 
-          html += `</div>`;
-          el.innerHTML = html;
+          listHtml += `</div>`;
+          el.innerHTML = listHtml;
         }
 
         const eloCard = byId('eloTrendCard') || document.getElementById('eloTrendCard');

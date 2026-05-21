@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Billardkrüppel</title>
-    <link rel="manifest" href="manifest.json?v=1.0.3">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="icon" type="image/png" href="logo_html.png?v=2">
     <link rel="shortcut icon" type="image/png" href="logo_html.png?v=2">
@@ -12,6 +11,12 @@
     <meta name="apple-mobile-web-app-title" content="Billard">
     <link rel="apple-touch-icon" href="logo_html.png?v=2">
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+
+    <!-- // Versions-Tracking für Cache-Validierung -->
+    <script src="Chart.js?v=1.0.5"></script>
+    <link rel="manifest" href="manifest.json?v=1.0.5">
+    <!-- // --------------------------------------- -->
+
     <style>
         :root {
             --bg: #000000; --card: #1c1c1e; --accent: #ffcc00; --error: #ff3b30; --text: #ffffff;
@@ -234,6 +239,11 @@
                 flex: none !important;
                 width: 100%;
                 margin-bottom: 8px; /* Abstand nach unten, wenn der Button oben steht */
+                writing-mode: horizontal-tb;
+                text-orientation: mixed;
+                padding: 12px;
+                font-size: 15px;
+                height: 46px;
             }
             /* Remove bottom margin from the last stacked column if it's not the button */
             .filter-row .filter-date-col {
@@ -248,6 +258,7 @@
         <div class="loader-title">Billardkrüppel</div>
         <div class="spinner"></div>
         <div style="margin-top: 20px; font-weight: 900; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px;">Synchronisiere...</div>
+        <div id="loader-version" style="margin-top: 8px; font-size: 10px; color: #8e8e93; font-weight: 600; opacity: 0.8;"></div>
     </div>
 
     <div class="app-container">
@@ -269,8 +280,8 @@
                                 <option value="2:2">2 gegen 2</option>
                             </select>
                         </div>
-                        <button id="btn-random-teams" onclick="window.openTeamModal()" style="height: 46px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: var(--accent); font-size: 11px; font-weight: 800; padding: 0 12px; white-space: nowrap;">Startteam ermitteln</button>
-                        <button id="btn-setup-help" onclick="window.openSetupModal()" style="height: 46px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: #4FC3F7; font-size: 11px; font-weight: 800; padding: 0 12px; white-space: nowrap;">Kugelanordnung</button>
+                        <button id="btn-random-teams" onclick="window.openTeamModal()" style="height: 46px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: var(--accent); font-size: 11px; font-weight: 800; padding: 0 12px; white-space: nowrap;">🎲 Startteam</button>
+                        <button id="btn-setup-help" onclick="window.openSetupModal()" style="height: 46px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: #4FC3F7; font-size: 11px; font-weight: 800; padding: 0 12px; white-space: nowrap;">🎱-Anordnung</button>
                     </div>
 
                     <div id="ui-1-1">
@@ -415,11 +426,11 @@
                     <div class="card"><label style="color: var(--accent);">Siegquote %</label><div style="height:160px;"><canvas id="winChart"></canvas></div></div>
                     <div class="card" id="eloTrendCard">
                         <label>Ranking & Form</label>
-                        <div id="eloHistoryContainer" style="height:220px; margin-bottom: 20px;">
-                            <label style="color: var(--accent); padding-left:0; font-size:10px; margin-bottom:8px;">ELO-Verlauf (Top 5)</label>
-                            <div style="height:180px;"><canvas id="eloHistoryChart"></canvas></div>
-                        </div>
                         <div id="eloRanking"></div>
+                    <div id="trendHeader"></div>
+                        <div id="eloHistoryContainer" style="height:180px; margin: 15px 0 20px 0;">
+                        <div style="height:180px;"><canvas id="eloHistoryChart"></canvas></div>
+                    </div>
                         <div id="trendPlayers" style="margin-top:12px;"></div>
                     </div>
                     <div class="stat-grid">
@@ -710,7 +721,6 @@
         </div>
     </div>
 
-    <script src="Chart.js?v=1.0.4"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -741,6 +751,11 @@
         window.db = db; 
         window.dbFns = { doc, setDoc, getDoc, updateDoc };
         window.stats = []; window.spieler = []; window.dailyAchivs = { days: {} };
+
+        // Versionsnummer im Ladebildschirm anzeigen (aus Chart.js)
+        const verEl = document.getElementById('loader-version');
+        if (verEl && window.BILLARD_APP_VERSION) verEl.innerText = "App Version: " + window.BILLARD_APP_VERSION;
+
         window.winnerNum = 0; window.viewId = 'aufzeichnen'; window.breakLocked = false;
 
         // Navigation und Tab-Wechsel
@@ -960,6 +975,22 @@
             if (typeof window.renderBillardStats !== 'function') return;
 
             const isToday = (window.viewId === 'heute');
+
+            // Filter-UI im Statistik-View (wird vom Heute-Tab geteilt) ausblenden
+            const statHeader = document.querySelector('#view-statistik .header-container');
+            if (statHeader) {
+                const toggleBar = statHeader.querySelector('.filter-toggle-bar');
+                const titleStack = statHeader.querySelector('.title-stack');
+                if (isToday) {
+                    if (toggleBar) toggleBar.style.display = 'none';
+                    if (titleStack) titleStack.style.pointerEvents = 'none';
+                    statHeader.classList.remove('filter-active');
+                } else {
+                    if (toggleBar) toggleBar.style.display = 'flex';
+                    if (titleStack) titleStack.style.pointerEvents = 'auto';
+                }
+            }
+
             const statsToUse = isToday ? window.stats : (typeof window.getFilteredStats === 'function' ? window.getFilteredStats() : window.stats);
 
             if (window.viewId === 'uebersicht') renderHistory(statsToUse);
