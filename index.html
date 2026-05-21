@@ -13,8 +13,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
     <!-- // Versions-Tracking für Cache-Validierung -->
-    <script src="Chart.js?v=1.0.5"></script>
-    <link rel="manifest" href="manifest.json?v=1.0.5">
+    <script src="Chart.js?v=1.0.7"></script>
+    <link rel="manifest" href="manifest.json?v=1.0.7">
     <!-- // --------------------------------------- -->
 
     <style>
@@ -191,9 +191,7 @@
             align-items: center;
             gap: 4px;
             color: var(--error);
-            /* Enhanced glow with white "frame" effect */
-            text-shadow: 0 0 2px #fff, /* Subtle white outline/frame */
-                         0 0 8px rgba(255, 59, 48, 0.6); /* Red glow */
+            text-shadow: 0 0 6px rgba(255, 59, 48, 0.7); /* Nur roter Glow, etwas stärker */
             font-size: 9px;
             font-weight: 800;
             margin-top: 4px;
@@ -204,9 +202,7 @@
         }
         .filter-toggle-bar.active {
             color: #34c759;
-            /* Enhanced glow with white "frame" effect for active state */
-            text-shadow: 0 0 2px #fff, /* Subtle white outline/frame */
-                         0 0 10px rgba(52, 199, 89, 0.8); /* Green glow */
+            text-shadow: 0 0 8px rgba(52, 199, 89, 0.9); /* Nur grüner Glow, etwas stärker */
             opacity: 1;
         }
         .filter-chevron {

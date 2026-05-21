@@ -2,9 +2,8 @@
 // icon-color: purple; icon-glyph: magic;
 
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.0.5"; 
+window.BILLARD_APP_VERSION = "1.0.7"; 
 // ---------------------------------------
-
 
 // --- GLOBALE POOLS (Verfügbar für WebView UND Scriptable) ---
 window.dailyFamePool = [
