@@ -1,6 +1,9 @@
 // Variables used by Scriptable.
 // icon-color: purple; icon-glyph: magic;
 
+// Versions-Tracking für Cache-Validierung
+window.BILLARD_APP_VERSION = "1.0.2 - 2024-05-21"; 
+
 // --- GLOBALE POOLS (Verfügbar für WebView UND Scriptable) ---
 window.dailyFamePool = [
   { k: "fame", cond: (d) => d.todayGames > 0 && d.todayWins === d.todayGames, i: "👑", t: "Tageskönig", d: ["Heute ungeschlagen!", "Der Chef im Haus (für heute).", "Niemand kam an ihm vorbei.", "Ein perfekter Tag.", "Heute spielt er in einer eigenen Liga.", "Die weiße Weste."] , h: "Spiel heute mindestens ein Match und bleib ungeschlagen"},
