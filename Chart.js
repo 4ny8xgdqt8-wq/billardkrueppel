@@ -515,6 +515,107 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
     return { pData, blackWins: globalBlackWins, breakWins: globalBreakWins };
 };
 
+// --- CONSOLIDATED FILTER FUNCTION ---
+window.getFilteredStats = () => {
+    if (window.timeFilter === 'custom') {
+        let start = null;
+        if (window.customStartDate) {
+            const [sy, sm, sd] = window.customStartDate.split('-').map(Number);
+            // Erstelle Startdatum in UTC (00:00:00 des ausgewählten Tages)
+            start = new Date(0);
+            start.setUTCFullYear(sy, sm - 1, sd);
+            start.setUTCHours(0, 0, 0, 0);
+        }
+        let end = null;
+        if (window.customEndDate) {
+            const [ey, em, ed] = window.customEndDate.split('-').map(Number);
+            // Erstelle Enddatum in UTC (23:59:59 des ausgewählten Tages)
+            end = new Date(0);
+            end.setUTCFullYear(ey, em - 1, ed);
+            end.setUTCHours(23, 59, 59, 999);
+        }
+
+        return window.stats.filter(g => {
+            if (!g || !g.d) return false;
+            // Format: DD.MM.YYYY, HH:MM
+            const parts = g.d.split(', ')[0].split('.');
+            if (parts.length < 3) return false;
+            // Erstelle Matchdatum in UTC (00:00:00 des Match-Tages)
+            const mDate = new Date(0);
+            mDate.setUTCFullYear(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+            mDate.setUTCHours(0, 0, 0, 0);
+
+            if (start && mDate < start) return false;
+            if (end && mDate > end) return false;
+            return true;
+        });
+    }
+
+    if (window.timeFilter === 'all') return window.stats;
+    
+    const now = new Date();
+    // Referenzdatum für heutige Berechnungen in UTC
+    const todayStartUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+    
+    return window.stats.filter(g => {
+        if (!g || !g.d) return false;
+        // Format: DD.MM.YYYY, HH:MM
+        const parts = g.d.split(', ')[0].split('.');
+        if (parts.length < 3) return false;
+        // Erstelle Matchdatum in UTC (00:00:00 des Match-Tages)
+        const mDate = new Date(0);
+        mDate.setUTCFullYear(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+        mDate.setUTCHours(0, 0, 0, 0);
+
+        if (window.timeFilter === '30days') {
+            const limit = new Date(todayStartUTC);
+            limit.setUTCDate(limit.getUTCDate() - 30); // setUTCDate statt setDate für UTC-Konsistenz
+            return mDate >= limit;
+        }
+        if (window.timeFilter === '60days') {
+            const limit = new Date(todayStartUTC);
+            limit.setUTCDate(limit.getUTCDate() - 60);
+            return mDate >= limit;
+        }
+        if (window.timeFilter === '90days') {
+            const limit = new Date(todayStartUTC);
+            limit.setUTCDate(limit.getUTCDate() - 90);
+            return mDate >= limit;
+        }
+        if (window.timeFilter === 'month') { // "Aktueller Monat"
+            return mDate.getUTCMonth() === now.getUTCMonth() && mDate.getUTCFullYear() === now.getUTCFullYear();
+        }
+        if (window.timeFilter === 'lastMonth') { // "Letzter Monat"
+            const lastMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1, 0, 0, 0, 0));
+            const currentMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+            return mDate >= lastMonthStart && mDate < currentMonthStart;
+        }
+        if (window.timeFilter === 'quarter') { // "Aktuelles Quartal"
+            const qStartMonth = Math.floor(now.getUTCMonth() / 3) * 3;
+            const qStart = new Date(Date.UTC(now.getUTCFullYear(), qStartMonth, 1, 0, 0, 0, 0));
+            return mDate >= qStart;
+        }
+        if (window.timeFilter === 'lastQuarter') { // "Letztes Quartal"
+            const currentQuarterStartMonth = Math.floor(now.getUTCMonth() / 3) * 3;
+            const lastQuarterStartMonth = currentQuarterStartMonth - 3;
+            let lastQuarterYear = now.getUTCFullYear();
+            if (lastQuarterStartMonth < 0) { lastQuarterYear--; lastQuarterStartMonth += 12; }
+            const lastQuarterStart = new Date(Date.UTC(lastQuarterYear, lastQuarterStartMonth, 1, 0, 0, 0, 0));
+            const currentQuarterStart = new Date(Date.UTC(now.getUTCFullYear(), currentQuarterStartMonth, 1, 0, 0, 0, 0));
+            return mDate >= lastQuarterStart && mDate < currentQuarterStart;
+        }
+        if (window.timeFilter === 'year') { // "Aktuelles Jahr"
+            return mDate.getUTCFullYear() === now.getUTCFullYear();
+        }
+        if (window.timeFilter === 'lastYear') { // "Letztes Jahr"
+            const lastYearStart = new Date(Date.UTC(now.getUTCFullYear() - 1, 0, 1, 0, 0, 0, 0));
+            const currentYearStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1, 0, 0, 0, 0));
+            return mDate >= lastYearStart && mDate < currentYearStart;
+        }
+        return true;
+    });
+};
+
 window.renderBillardStats = function(stats, filterToday = false, onlyAchievements = false, rootEl = document) {
     // --- Scope: suche IDs nur innerhalb der aktiven View (wichtig bei doppelten IDs im DOM)
     let root = rootEl || document;
@@ -547,8 +648,6 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
       } catch (e) {}
       return null;
     })();
-
-    if (!stats || stats.length === 0) return;
 
     // --- DATUM & SICHERE DATEN ---
     const now = new Date();
@@ -656,7 +755,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     }
 
     // --- DATEN FILTERN ---
-    const statsToday = safeStats.filter(g => g.d.startsWith(todayStr));
+    const statsToday = safeStats.filter(g => g && g.d && g.d.startsWith(todayStr));
     const statsBeforeToday = safeStats.filter(g => !g.d.startsWith(todayStr));
     
     const dataToday = window.processData(statsToday, todayStr); // Use global simpler processData for today's stats
@@ -1028,6 +1127,68 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
     if (labels.length > 0) {
         byId('stat-total').innerText = currentStats.length;
+
+        // --- KUGEL-STATISTIK BERECHNEN ---
+        let vollWins = 0, halbWins = 0, totalBallMatches = 0;
+        currentStats.forEach(g => {
+            if (g.bt1 && g.bt2) {
+                totalBallMatches++;
+                const winnerType = (g.w == 1) ? g.bt1 : g.bt2;
+                if (winnerType === 'Voll') vollWins++;
+                else if (winnerType === 'Halb') halbWins++;
+            }
+        });
+        const vRate = totalBallMatches > 0 ? Math.round((vollWins / totalBallMatches) * 100) : 0;
+        const hRate = totalBallMatches > 0 ? Math.round((halbWins / totalBallMatches) * 100) : 0;
+        const vEl = byId('stat-balls-voll'), hEl = byId('stat-balls-halb');
+        if (vEl) vEl.innerText = vRate + "%";
+        if (hEl) hEl.innerText = hRate + "%";
+        
+        // --- TOP KUGEL-SPIELER BERECHNEN ---
+        const playerBallWins = {}; // { "PlayerName": { "Voll": X, "Halb": Y } }
+
+        currentStats.forEach(g => {
+            if (g.bt1 && g.bt2 && g.w) {
+                let winnerNameOrTeam, winnerBallType;
+                if (g.w == 1) {
+                    winnerNameOrTeam = g.p1;
+                    winnerBallType = g.bt1;
+                } else { // g.w == 2
+                    winnerNameOrTeam = g.p2;
+                    winnerBallType = g.bt2;
+                }
+
+                const playersInWinningSide = (g.m === "2:2") ? winnerNameOrTeam.split(" & ").map(s => s.trim()) : [winnerNameOrTeam];
+
+                playersInWinningSide.forEach(p => {
+                    if (!playerBallWins[p]) {
+                        playerBallWins[p] = { "Voll": 0, "Halb": 0 };
+                    }
+                    playerBallWins[p][winnerBallType]++;
+                });
+            }
+        });
+
+        let topVollPlayers = [], maxVollWins = 0;
+        let topHalbPlayers = [], maxHalbWins = 0;
+
+        for (const player in playerBallWins) {
+            const vollWins = playerBallWins[player]["Voll"];
+            const halbWins = playerBallWins[player]["Halb"];
+
+            if (vollWins > maxVollWins) {
+                maxVollWins = vollWins;
+                topVollPlayers = [player];
+            } else if (vollWins === maxVollWins && vollWins > 0) { topVollPlayers.push(player); }
+
+            if (halbWins > maxHalbWins) {
+                maxHalbWins = halbWins;
+                topHalbPlayers = [player];
+            } else if (halbWins === maxHalbWins && halbWins > 0) { topHalbPlayers.push(player); }
+        }
+
+        byId('stat-top-voll').innerText = maxVollWins > 0 ? `${topVollPlayers.join(' / ')} (${maxVollWins}x)` : "-";
+        byId('stat-top-halb').innerText = maxHalbWins > 0 ? `${topHalbPlayers.join(' / ')} (${maxHalbWins}x)` : "-";
         
         // Global-Stats berechnen (unabhängig vom Filter für Vergleichswerte sinnvoll)
         const breakRate = Math.round(((res.breakWins || 0) / (currentStats.length || 1)) * 100);
@@ -1072,6 +1233,20 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           byId('stat-killer').innerText = "-";
         }
 
+        // Die Mauer (Zäher Verlierer: Min Ø Restkugeln bei Niederlage)
+        // Nur Spieler mit mindestens einer Niederlage berücksichtigen
+        const wallCandidates = pechVals.filter(x => (res.pData[x.p].games - res.pData[x.p].wins) > 0);
+        if (wallCandidates.length > 0) {
+          const minWall = Math.min(...wallCandidates.map(x => x.avg));
+          const topWall = wallCandidates
+            .filter(x => x.avg === minWall)
+            .sort((a, b) => (b.ga - a.ga) || a.p.localeCompare(b.p, 'de'));
+        
+          byId('stat-mauer').innerText = topWall.map(x => x.p).join(' / ') + " (" + minWall.toFixed(1) + ")";
+        } else {
+          byId('stat-mauer').innerText = "-";
+        }
+
         // Nervenstärke (Meiste Clutch Wins) – bei Gleichstand mehrere anzeigen
         const maxClutch = Math.max(...labels.map(p => res.pData[p].clutchWins || 0));
 
@@ -1099,33 +1274,80 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           return parts.length ? parts.join(" & ") : "";
         };
 
+        const teamResults = {};
+        const ballSpez = {}; // { player: { Voll: {w,g}, Halb: {w,g} } }
+
         currentStats.forEach(g => {
-          if (g.m !== "2:2") return;
-        
-          const team1 = normTeamKey(g.p1);
-          const team2 = normTeamKey(g.p2);
-          if (!team1 || !team2) return;
-        
-          const winnerTeam = (g.w == 1) ? team1 : team2;
-          teamWins[winnerTeam] = (teamWins[winnerTeam] || 0) + 1;
+            // Duo Logic
+            if (g.m === "2:2") {
+                const t1 = normTeamKey(g.p1), t2 = normTeamKey(g.p2);
+                if (t1 && t2) {
+                    if (!teamResults[t1]) teamResults[t1] = { w: 0, g: 0 };
+                    if (!teamResults[t2]) teamResults[t2] = { w: 0, g: 0 };
+                    teamResults[t1].g++; teamResults[t2].g++;
+                    if (g.w == 1) teamResults[t1].w++; else teamResults[t2].w++;
+                }
+            }
+            // Kugel Spez Logic
+            if (g.bt1 && g.bt2 && g.w) {
+                const p1Arr = (g.m === "2:2") ? g.p1.split(" & ") : [g.p1];
+                const p2Arr = (g.m === "2:2") ? g.p2.split(" & ") : [g.p2];
+                const processP = (arr, type, isWin) => arr.forEach(p => {
+                    const n = p.trim(); if (!n) return;
+                    if (!ballSpez[n]) ballSpez[n] = { Voll: {w:0, g:0}, Halb: {w:0, g:0} };
+                    ballSpez[n][type].g++; if (isWin) ballSpez[n][type].w++;
+                });
+                processP(p1Arr, g.bt1, g.w == 1);
+                processP(p2Arr, g.bt2, g.w == 2);
+            }
         });
 
-        // BESTES TEAM (nur 2:2) – bei Gleichstand mehrere anzeigen
-        let bestTeamWins = 0;
-        for (const t in teamWins) {
-          if (teamWins[t] > bestTeamWins) bestTeamWins = teamWins[t];
+        // Render Partner-Power
+        const duoRanking = Object.entries(teamResults)
+            .map(([name, s]) => ({ name, wr: Math.round((s.w / s.g) * 100), games: s.g, wins: s.w }))
+            .filter(t => t.games >= 3)
+            .sort((a, b) => b.wr - a.wr || b.games - a.games)
+            .slice(0, 3);
+
+        const duoEl = byId('stat-duo-ranking');
+        if (duoEl) {
+            duoEl.innerHTML = duoRanking.length > 0 ? duoRanking.map((t, idx) => 
+                `<div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; padding: 4px 8px; background:rgba(255,255,255,0.03); border-radius:8px;">
+                    <span style="color:#fff;">${idx+1}. ${t.name}</span>
+                    <span style="font-weight:800; color:#5856d6;">${t.wr}% <small style="opacity:0.6; font-weight:400;">(${t.wins}/${t.games})</small></span>
+                </div>`
+            ).join('') : '<div style="font-size:10px; color:#8e8e93; text-align:center; padding:5px;">Mindestens 3 Spiele als Team nötig</div>';
         }
 
-        const teamEl = byId('stat-team');
-        if (teamEl) {
-          if (bestTeamWins > 0) {
-            const topTeams = Object.keys(teamWins)
-              .filter(t => teamWins[t] === bestTeamWins)
-              .sort((a, b) => a.localeCompare(b, 'de'));
-            teamEl.innerText = `${topTeams.join(' / ')} (${bestTeamWins} Siege)`;
-          } else {
-            teamEl.innerText = "-";
-          }
+        // Render Kugel-Spezis
+        let topVollarbeiter = { n: '-', wr: 0 }, topHalbeExperte = { n: '-', wr: 0 };
+        Object.entries(ballSpez).forEach(([name, data]) => {
+            if (data.Voll.g >= 3) { // Schwelle auf 3 Spiele gesetzt
+                const wr = (data.Voll.w / data.Voll.g) * 100;
+                if (wr > topVollarbeiter.wr) topVollarbeiter = { n: name, wr };
+            }
+            if (data.Halb.g >= 3) { // Schwelle auf 3 Spiele gesetzt
+                const wr = (data.Halb.w / data.Halb.g) * 100;
+                if (wr > topHalbeExperte.wr) topHalbeExperte = { n: name, wr };
+            }
+        });
+
+        const spezEl = byId('stat-ball-spez');
+        if (spezEl) {
+            spezEl.innerHTML = `
+                <div style="display:flex; justify-content:space-around; align-items:center; padding: 5px 0;">
+                    <div style="text-align:center;">
+                        <div style="font-size:8px; color:#8e8e93; font-weight:700; letter-spacing:0.5px;">VOLL-PROFI</div>
+                        <div style="font-size:13px; font-weight:800; color:#ffcc00;">${topVollarbeiter.n}</div>
+                        <div style="font-size:10px; color:#34c759; font-weight:700;">${topVollarbeiter.wr > 0 ? Math.round(topVollarbeiter.wr) + '%' : '-'}</div>
+                    </div>
+                    <div style="height:30px; width:1px; background:rgba(255,255,255,0.1);"></div>
+                    <div style="text-align:center;">
+                        <div style="font-size:8px; color:#8e8e93; font-weight:700; letter-spacing:0.5px;">HALBE-AS</div>
+                        <div style="font-size:13px; font-weight:800; color:#4FC3F7;">${topHalbeExperte.n}</div>
+                        <div style="font-size:10px; color:#34c759; font-weight:700;">${topHalbeExperte.wr > 0 ? Math.round(topHalbeExperte.wr) + '%' : '-'}</div>
+                    </div>
+                </div>`;
         }
 
         // --- ANGSTGEGNER LOGIK (Wer dominiert wen am meisten?) ---
@@ -1178,6 +1400,53 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           byId('stat-angst').innerText = "-";
         }
 
+        // --- DIREKTE DUELLE (Dominanz) ---
+        const matchupStats = {}; // key: "P1|P2" (alphabetisch sortiert), value: { p1: "P1", p2: "P2", p1_wins: X, p2_wins: Y, games: Z }
+
+        currentStats.forEach(g => {
+            if (g.m !== "1:1") return; // Nur 1:1 Duelle betrachten
+            if (!g.p1 || !g.p2) return;
+
+            const playerA = g.p1;
+            const playerB = g.p2;
+            const winner = (g.w == 1) ? playerA : playerB;
+
+            // Kanonischer Schlüssel, um A vs B und B vs A gleich zu behandeln
+            const key = [playerA, playerB].sort().join('|');
+
+            if (!matchupStats[key]) {
+                matchupStats[key] = { p1: playerA, p2: playerB, p1_wins: 0, p2_wins: 0, games: 0 };
+            }
+
+            matchupStats[key].games++;
+            if (winner === playerA) {
+                matchupStats[key].p1_wins++;
+            } else {
+                matchupStats[key].p2_wins++;
+            }
+        });
+
+        const dominantMatchups = Object.values(matchupStats)
+            .filter(m => m.games >= 3) // Mindestens 3 Spiele für aussagekräftige Statistik
+            .map(m => {
+                const wr1 = Math.round((m.p1_wins / m.games) * 100);
+                const wr2 = Math.round((m.p2_wins / m.games) * 100);
+                const dominance = Math.abs(wr1 - wr2); // Absolute Differenz als Dominanz-Score
+                return { ...m, wr1, wr2, dominance };
+            })
+            .sort((a, b) => b.dominance - a.dominance || b.games - a.games) // Nach Dominanz, dann Spielen sortieren
+            .slice(0, 3); // Top 3 anzeigen
+
+        const h2hEl = byId('stat-head-to-head');
+        if (h2hEl) {
+            h2hEl.innerHTML = dominantMatchups.length > 0 ? dominantMatchups.map((m, idx) =>
+                `<div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; padding: 4px 8px; background:rgba(255,255,255,0.03); border-radius:8px;">
+                    <span style="color:#fff;">${idx+1}. ${m.p1} vs ${m.p2}</span>
+                    <span style="font-weight:800; color:#5856d6;">${m.wr1}% - ${m.wr2}% <small style="opacity:0.6; font-weight:400;">(${m.games} Spiele)</small></span>
+                </div>`
+            ).join('') : '<div style="font-size:10px; color:#8e8e93; text-align:center; padding:5px;">Mindestens 3 1:1-Duelle nötig</div>';
+        }
+
         // Längste Serie – bei Gleichstand mehrere anzeigen
         const maxStreak = Math.max(...labels.map(p => res.pData[p].maxStreak || 0));
 
@@ -1228,6 +1497,58 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           }
         });
 
+        // --- ELO HISTORY CHART (LINE) ---
+        const eloHistoryContainer = document.getElementById('eloHistoryContainer');
+        const eloCanvas = document.getElementById('eloHistoryChart');
+        const eloTrendCard = document.getElementById('eloTrendCard');
+
+        // Karten im Heute-Tab IMMER ausblenden
+        if (filterToday) {
+            if (eloTrendCard) eloTrendCard.style.display = 'none';
+        } else {
+            if (eloTrendCard) eloTrendCard.style.display = 'block';
+
+            // Diagramm nur zeichnen, wenn wir nicht im Heute-Tab sind
+            if (eloCanvas && eloHistoryContainer) {
+                const eloCtx = eloCanvas.getContext('2d');
+                if (eloCanvas.__myEloChart) eloCanvas.__myEloChart.destroy();
+
+                const topPlayers = labels
+                    .filter(p => res.pData[p].games > 0)
+                    .sort((a, b) => res.pData[b].elo - res.pData[a].elo)
+                    .slice(0, 5);
+
+                if (topPlayers.length > 0) {
+                    eloHistoryContainer.style.display = 'block';
+                    const maxGames = Math.max(...topPlayers.map(p => res.pData[p].eloHistory.length));
+                    const chartLabels = Array.from({length: maxGames + 1}, (_, i) => i);
+                    const colors = ['#ffcc00', '#4FC3F7', '#34c759', '#ff3b30', '#5856d6'];
+
+                    const datasets = topPlayers.map((p, i) => ({
+                        label: p,
+                        data: [1000, ...res.pData[p].eloHistory],
+                        borderColor: colors[i % colors.length],
+                        backgroundColor: colors[i % colors.length] + '22',
+                        tension: 0.3, pointRadius: 2, borderWidth: 2
+                    }));
+
+                    eloCanvas.__myEloChart = new Chart(eloCtx, {
+                        type: 'line',
+                        data: { labels: chartLabels, datasets },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { display: true, position: 'bottom', labels: { color: '#8e8e93', boxWidth: 8, font: { size: 9 } } } },
+                            scales: {
+                                y: { ticks: { color: '#8e8e93', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                                x: { ticks: { color: '#444', font: { size: 8 } }, grid: { display: false } }
+                            }
+                        }
+                    });
+                } else {
+                    eloHistoryContainer.style.display = 'none';
+                }
+            }
+        }
 
         // --- ELO Rangliste + Erklärung (nur Gesamt) ---
         function renderEloRanking(pData, show) {
@@ -1441,6 +1762,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
         // Kacheln
         setText('stat-total', '0');
+        setText('stat-balls-voll', '0%');
+        setText('stat-balls-halb', '0%');
+        setText('stat-top-voll', '-');
+        setText('stat-top-halb', '-');
         setText('stat-break-adv', '0%');
         setText('stat-black', '0%');
         setText('stat-pechvogel', '-');
@@ -1448,19 +1773,30 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         setText('stat-clutch', '-');
         setText('stat-angst', '-');
         setText('stat-streak', '-');
-        setText('stat-team', '-');
+        setText('stat-mauer', '-');
+        setText('stat-head-to-head', '-');
+        setText('stat-duo-ranking', '-');
+        setText('stat-ball-spez', '-');
 
         const eloEl = document.getElementById('eloRanking');
         if (eloEl) eloEl.innerHTML = '';
         const trendEl = document.getElementById('trendPlayers');
         if (trendEl) trendEl.innerHTML = '';
-        const eloCard = document.getElementById('eloTrendCard');
-        if (eloCard) eloCard.style.display = 'none';
+        
+        const eloTrendCard = document.getElementById('eloTrendCard');
+        if (eloTrendCard) eloTrendCard.style.display = 'none';
+        const eloHistoryContainer = document.getElementById('eloHistoryContainer');
+        if (eloHistoryContainer) eloHistoryContainer.style.display = 'none';
 
         // Chart wirklich zurücksetzen
         if (window.myWinChart) {
           window.myWinChart.destroy();
           window.myWinChart = null;
+        }
+
+        const eloCanvas = document.getElementById('eloHistoryChart');
+        if (eloCanvas && eloCanvas.__myEloChart) {
+            eloCanvas.__myEloChart.destroy();
         }
 
         const canvas = document.getElementById('winChart');

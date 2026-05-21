@@ -75,12 +75,171 @@
         .spinner { width: 45px; height: 45px; border: 4px solid rgba(255, 204, 0, 0.1); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .prob-box{padding:12px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-bottom:15px;min-height:100px;display:flex;flex-direction:column;justify-content:center;}
+        .prob-box{padding:10px 12px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-bottom:12px;display:flex;flex-direction:column;}
         .prob-title{color:var(--accent);font-weight:900;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
         .prob-row{display:flex;justify-content:space-between;margin-bottom:8px; gap: 10px;}
         .prob-pill{font-size:11px;font-weight:900;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.06);color:#fff;flex:1;text-align:center;}
-        .prob-bar{height:6px;border-radius:10px;background:rgba(255,255,255,0.1);overflow:hidden;}
-        .prob-bar>div{height:100%;background:linear-gradient(90deg,#34c759,#4FC3F7);transition: width 0.5s ease;}
+        .prob-bar{height:6px;border-radius:10px;background:rgba(255,255,255,0.1);position:relative;overflow:visible;}
+        .prob-bar>div:first-child{height:100%;background:linear-gradient(90deg,#34c759,#4FC3F7);transition: width 0.5s ease;border-radius:inherit;}
+
+        @keyframes pulse-error {
+            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5); }
+            70% { box-shadow: 0 0 0 12px rgba(255, 59, 48, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+        }
+        @keyframes modal-shake {
+            0%, 100% { transform: scale(1); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .error-highlight {
+            border: 3px solid var(--error) !important;
+            animation: pulse-error 2s infinite;
+            background: rgba(60, 0, 0, 0.95) !important;
+            color: #ffffff !important;
+        }
+         /* Verhindert, dass die aufgeklappte Liste ebenfalls rot wird */
+        .error-highlight option {
+            background-color: var(--card) !important;
+            color: #ffffff !important;
+        }
+
+        .time-filter-card {
+            margin-bottom: 15px;
+            background: rgba(255, 204, 0, 0.05) !important;
+            border: 1px solid rgba(255, 204, 0, 0.2) !important;
+        }
+        .custom-date-input {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 10px;
+            color: var(--accent) !important;
+            font-size: 10px !important;
+            padding: 4px 6px !important;
+            margin-bottom: 0 !important;
+            width: 100%;
+            border-radius: 14px; /* Match select */
+            height: 46px; /* Match select and button height */
+            border-radius: 14px;
+            font-size: 15px !important; /* Match select */
+            padding: 12px !important; /* Match select */
+            padding-left: 28px !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffcc00' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: 8px center !important;
+            background-size: 14px !important;
+        }
+        /* Default styles for larger screens (flex layout) */
+        .filter-row {
+            display: none;
+            gap: 8px;
+            align-items: stretch;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(28, 28, 30, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 15px;
+            border-bottom: 1px solid var(--accent);
+            z-index: 2000;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+        }
+        .header-container.filter-active .filter-row {
+            display: flex;
+        }
+        .filter-controls-stack { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .filter-dropdown-col { display: flex; flex-direction: column; }
+        .filter-date-col { display: flex; flex-direction: column; }
+        .filter-reset-btn {
+            flex: 0 0 44px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            color: var(--error);
+            font-size: 18px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0;
+            padding: 0 2px; /* Adjusted padding for vertical text */
+            cursor: pointer;
+            writing-mode: vertical-lr; /* Write text vertically, left-to-right */
+            text-orientation: upright; /* Keep characters upright */
+            font-size: 11px; /* Smaller font to fit vertically */
+        }
+
+        .custom-date-input::-webkit-calendar-picker-indicator {
+            display: none !important;
+            -webkit-appearance: none;
+        }
+        .time-filter-select {
+            margin-bottom: 0 !important;
+            border-color: rgba(255, 204, 0, 0.3) !important;
+            color: var(--accent) !important;
+            font-weight: 700;
+        }
+        .filter-toggle-bar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--error);
+            /* Enhanced glow with white "frame" effect */
+            text-shadow: 0 0 2px #fff, /* Subtle white outline/frame */
+                         0 0 8px rgba(255, 59, 48, 0.6); /* Red glow */
+            font-size: 9px;
+            font-weight: 800;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+        .filter-toggle-bar.active {
+            color: #34c759;
+            /* Enhanced glow with white "frame" effect for active state */
+            text-shadow: 0 0 2px #fff, /* Subtle white outline/frame */
+                         0 0 10px rgba(52, 199, 89, 0.8); /* Green glow */
+            opacity: 1;
+        }
+        .filter-chevron {
+            font-size: 8px;
+            transition: transform 0.3s ease;
+        }
+        .header-container.filter-active .filter-chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Media Query for smaller screens (e.g., mobile phones) */
+        @media (max-width: 480px) {
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch !important; /* Ensure items stretch to full width */
+            }
+            .filter-controls-stack {
+                flex: none !important;
+                width: 100%;
+            }
+            .filter-dropdown-col,
+            .filter-date-col {
+                width: 100%; /* Make them take full width */
+                margin-bottom: 8px; /* Add spacing between stacked elements */
+            }
+            .filter-date-col label {
+                text-align: left !important; /* Align date label to left when stacked */
+            }
+            .filter-reset-btn {
+                flex: none !important;
+                width: 100%;
+                margin-bottom: 8px; /* Abstand nach unten, wenn der Button oben steht */
+            }
+            /* Remove bottom margin from the last stacked column if it's not the button */
+            .filter-row .filter-date-col {
+                margin-bottom: 0; /* Remove margin if it's the last div before the button */
+            }
+        }
     </style>
 </head>
 <body>
@@ -111,6 +270,7 @@
                             </select>
                         </div>
                         <button id="btn-random-teams" onclick="window.openTeamModal()" style="height: 46px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: var(--accent); font-size: 11px; font-weight: 800; padding: 0 12px; white-space: nowrap;">Startteam ermitteln</button>
+                        <button id="btn-setup-help" onclick="window.openSetupModal()" style="height: 46px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: #4FC3F7; font-size: 11px; font-weight: 800; padding: 0 12px; white-space: nowrap;">Kugelanordnung</button>
                     </div>
 
                     <div id="ui-1-1">
@@ -131,11 +291,11 @@
                     <label>Anstoß</label>
                     <div style="display:flex; gap:10px;">
                         <button id="btn-breakcalc" class="win-btn" style="flex:1; background: rgba(255,204,0,0.1); color: var(--accent);" onclick="window.calcBreak()">🎲 Würfeln</button>
-                        <select id="breakPlayer" style="flex:1.5; margin-bottom:0;" onchange="window.lockBreak()"></select>
+                        <select id="breakPlayer" style="flex:1.5; margin-bottom:0;" disabled></select>
                     </div>
                 </div>
-                <div id="match-prob" class="prob-box" style="margin-top:-5px;">
-                    <div style="color:#8e8e93; font-size:10px; text-align:center; padding:10px; font-weight:800;">Bitte Spieler auswählen, um Prognose zu sehen.</div>
+                <div id="match-prob" class="prob-box" style="margin-top:-10px;">
+                    <div style="color:#8e8e93; font-size:10px; text-align:center; padding:5px; font-weight:800;">Spieler wählen für Prognose</div>
                 </div>
                 <div class="card">
                     <label>Gewinner wählen</label>
@@ -143,9 +303,27 @@
                         <div id="btn-win1" class="win-btn" onclick="window.selectWinner(1)">Team 1</div>
                         <div id="btn-win2" class="win-btn" onclick="window.selectWinner(2)">Team 2</div>
                     </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
-                        <div><label>Wie gewonnen</label><select id="winType"><option value="Normal">Normal</option><option value="Verlierer hat Schwarz versenkt">Verlierer hat Schwarz versenkt</option></select></div>
-                        <div><label>Restkugeln Verlierer</label><input type="number" inputmode="numeric" id="leftover" value="0" onfocus="if(this.value==='0')this.value=''"></div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <label id="ballLabel1">Kugeln Spieler / Team 1</label>
+                            <select id="ballType1" onchange="window.syncBallTypes(1)" style="margin-bottom:0;">
+                                <option value="" disabled selected>Wählen</option>
+                                <option value="Voll">Voll</option>
+                                <option value="Halb">Halb</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label id="ballLabel2">Kugeln Spieler / Team 2</label>
+                            <select id="ballType2" onchange="window.syncBallTypes(2)" style="margin-bottom:0;">
+                                <option value="" disabled selected>Wählen</option>
+                                <option value="Voll">Voll</option>
+                                <option value="Halb">Halb</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div><label>Wie gewonnen</label><select id="winType" style="margin-bottom:0;"><option value="Normal">Normal</option><option value="Verlierer hat Schwarz versenkt">Verlierer hat Schwarz versenkt</option></select></div>
+                        <div><label>Restkugeln Verlierer</label><input type="number" inputmode="numeric" id="leftover" value="0" style="margin-bottom:0;" onfocus="if(this.value==='0')this.value=''"></div>
                     </div>
                     <button class="btn-save" onclick="window.doSave()">Speichern</button>
                 </div>
@@ -154,8 +332,41 @@
             <div id="view-uebersicht" class="view">
                 <div class="header-container">
                     <div class="header-side"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
-                    <div class="title-stack"><div class="main-title">Historie</div><div class="sub-title">Letzte Partien</div></div>
-                    <div class="header-side right"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'"></div>
+                    <div class="title-stack" onclick="window.toggleHeaderFilter(this)" style="cursor: pointer;">
+                        <div class="main-title">Historie</div>
+                        <div class="sub-title">Letzte Partien</div>
+                        <div class="filter-toggle-bar">Zeitraum filtern <span class="filter-chevron">▼</span></div>
+                    </div>
+                    <div class="header-side right">
+                        <img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'">
+                    </div>
+                    <div class="filter-row">
+                        <button class="filter-reset-btn" onclick="window.handleFilterChange('all')">RESET</button>
+                        <div class="filter-controls-stack">
+                            <div class="filter-dropdown-col">
+                                <label>Zeitraum</label>
+                                <select class="time-filter-select" onchange="window.handleFilterChange(this.value)">
+                                    <option value="all">Gesamt</option>
+                                    <option value="month">Aktueller Monat</option>
+                                    <option value="quarter">Aktuelles Quartal</option>
+                                    <option value="year">Aktuelles Jahr</option>
+                                    <option value="30days">Letzte 30 Tage</option>
+                                    <option value="60days">Letzte 60 Tage</option>
+                                    <option value="90days">Letzte 90 Tage</option>
+                                    <option value="lastMonth">Letzter Monat</option>
+                                    <option value="lastQuarter">Letztes Quartal</option>
+                                    <option value="lastYear">Letztes Jahr</option>
+                                </select>
+                            </div>
+                            <div class="filter-date-col">
+                                <label>Von - Bis</label>
+                                <div style="display: flex; gap: 4px;">
+                                    <input type="date" id="date-start-hist" class="custom-date-input custom-date-start" onchange="window.handleCustomDateChange()" onclick="this.showPicker?.()">
+                                    <input type="date" id="date-end-hist" class="custom-date-input custom-date-end" onchange="window.handleCustomDateChange()" onclick="this.showPicker?.()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div id="match-counter" style="text-align:center; font-size:12px; color:#8e8e93; margin-bottom:15px;">Matches: 0</div>
                 <div id="history-list"></div>
@@ -164,26 +375,94 @@
             <div id="view-statistik" class="view">
                 <div class="header-container">
                     <div class="header-side"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
-                    <div class="title-stack"><div class="main-title" id="stat-title">Statistik</div><div class="sub-title">Analysen</div></div>
-                    <div class="header-side right"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'"></div>
+                    <div class="title-stack" onclick="window.toggleHeaderFilter(this)" style="cursor: pointer;">
+                        <div class="main-title" id="stat-title">Statistik</div>
+                        <div class="sub-title">Analysen</div>
+                        <div class="filter-toggle-bar">Zeitraum filtern <span class="filter-chevron">▼</span></div>
+                    </div>
+                    <div class="header-side right">
+                        <img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'">
+                    </div>
+                    <div class="filter-row">
+                        <button class="filter-reset-btn" onclick="window.handleFilterChange('all')">RESET</button>
+                        <div class="filter-controls-stack">
+                            <div class="filter-dropdown-col">
+                                <label>Zeitraum</label>
+                                <select class="time-filter-select" onchange="window.handleFilterChange(this.value)">
+                                    <option value="all">Gesamt</option>
+                                    <option value="month">Aktueller Monat</option>
+                                    <option value="quarter">Aktuelles Quartal</option>
+                                    <option value="year">Aktuelles Jahr</option>
+                                    <option value="30days">Letzte 30 Tage</option>
+                                    <option value="60days">Letzte 60 Tage</option>
+                                    <option value="90days">Letzte 90 Tage</option>
+                                    <option value="lastMonth">Letzter Monat</option>
+                                    <option value="lastQuarter">Letztes Quartal</option>
+                                    <option value="lastYear">Letztes Jahr</option>
+                                </select>
+                            </div>
+                            <div class="filter-date-col">
+                                <label>Von - Bis</label>
+                                <div style="display: flex; gap: 4px;">
+                                    <input type="date" id="date-start-stat" class="custom-date-input custom-date-start" onchange="window.handleCustomDateChange()" onclick="this.showPicker?.()">
+                                    <input type="date" id="date-end-stat" class="custom-date-input custom-date-end" onchange="window.handleCustomDateChange()" onclick="this.showPicker?.()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div id="stat-content-wrapper">
-                    <div class="card"><label>Siegquote %</label><div style="height:160px;"><canvas id="winChart"></canvas></div></div>
+                    <div class="card"><label style="color: var(--accent);">Siegquote %</label><div style="height:160px;"><canvas id="winChart"></canvas></div></div>
                     <div class="card" id="eloTrendCard">
                         <label>Ranking & Form</label>
+                        <div id="eloHistoryContainer" style="height:220px; margin-bottom: 20px;">
+                            <label style="color: var(--accent); padding-left:0; font-size:10px; margin-bottom:8px;">ELO-Verlauf (Top 5)</label>
+                            <div style="height:180px;"><canvas id="eloHistoryChart"></canvas></div>
+                        </div>
                         <div id="eloRanking"></div>
                         <div id="trendPlayers" style="margin-top:12px;"></div>
                     </div>
                     <div class="stat-grid">
-                        <div class="card"><label>Matches</label><div id="stat-total" style="font-size:18px; font-weight:800;">0</div></div>
-                        <div class="card"><label>Break-Adv.</label><div id="stat-break-adv" style="font-size:18px; font-weight:800; color:#34c759;">0%</div></div>
-                        <div class="card"><label>Fehler-Sieg</label><div id="stat-black" style="font-size:13px; font-weight:800; color:#ff3b30;">0%</div></div>
-                        <div class="card"><label>Pechvogel</label><div id="stat-pechvogel" style="font-size:11px; font-weight:800;">-</div></div>
-                        <div class="card"><label>Clutch</label><div id="stat-clutch" style="font-size:11px; font-weight:800; color:#007aff;">-</div></div>
-                        <div class="card"><label>Killer</label><div id="stat-killer" style="font-size:11px; font-weight:800; color:#ff3b30;">-</div></div>
-                        <div class="card" style="grid-column: span 2;"><label>Bestes Team</label><div id="stat-team" style="font-weight:800; color:#5856d6;">-</div></div>
-                        <div class="card"><label>Angstgegner</label><div id="stat-angst" style="font-weight:800; font-size:11px; color:#ff9500;">-</div></div>
-                        <div class="card"><label>Längste Serie</label><div id="stat-streak" style="font-weight:800; font-size:11px;">-</div></div>
+                        <div class="card"><label>Spiele gesamt</label><div id="stat-total" style="font-size:18px; font-weight:800;">0</div></div>
+                        <div class="card"><label>Anstoß-Vorteil</label><div id="stat-break-adv" style="font-size:18px; font-weight:800; color:#34c759;">0%</div></div>
+                        <div class="card"><label>Sieg durch Foul</label><div id="stat-black" style="font-size:13px; font-weight:800; color:#ff3b30;">0%</div></div>
+                        <div class="card"><label>Pechvogel (Ø Restkugeln)</label><div id="stat-pechvogel" style="font-size:11px; font-weight:800;">-</div></div>
+                        <div class="card"><label>Nervenstärke (Gegner hat <= 1 Kugel)</label><div id="stat-clutch" style="font-size:11px; font-weight:800; color:#007aff;">-</div></div>
+                        <div class="card"><label>Killer (Gegner hat >= 2 Kugeln)</label><div id="stat-killer" style="font-size:11px; font-weight:800; color:#ff3b30;">-</div></div>
+                        <div class="card" style="grid-column: span 2;">
+                            <label>Top Kugel-Gewinner</label>
+                            <div style="display: flex; justify-content: space-around; align-items: center; padding: 5px 0;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 10px; color: #8e8e93; font-weight: 800; text-transform: uppercase;">Voll</div>
+                                    <div id="stat-top-voll" style="font-size: 14px; font-weight: 800; color: #ffcc00;">-</div>
+                                </div>
+                                <div style="height: 30px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 10px; color: #8e8e93; font-weight: 800; text-transform: uppercase;">Halb</div>
+                                    <div id="stat-top-halb" style="font-size: 14px; font-weight: 800; color: #4FC3F7;">-</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card" style="grid-column: span 2;">
+                            <label>Kugel-Verteilung (Siege)</label>
+                            <div style="display: flex; justify-content: space-around; align-items: center; padding: 5px 0;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 10px; color: #8e8e93; font-weight: 800; text-transform: uppercase;">Voll</div>
+                                    <div id="stat-balls-voll" style="font-size: 18px; font-weight: 800; color: #ffcc00;">0%</div>
+                                </div>
+                                <div style="height: 30px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 10px; color: #8e8e93; font-weight: 800; text-transform: uppercase;">Halb</div>
+                                    <div id="stat-balls-halb" style="font-size: 18px; font-weight: 800; color: #4FC3F7;">0%</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card" style="grid-column: span 2;"><label>Partner-Power (Top Duos %)</label><div id="stat-duo-ranking"></div></div>
+                        <div class="card" style="grid-column: span 2;"><label>Kugel-Spezis (Beste Winrate pro Kugeltyp, ab 3 Gewinne)</label><div id="stat-ball-spez"></div></div>
+                        <div class="card" style="grid-column: span 2;"><label>Absoluter Angstgegner</label><div id="stat-angst" style="font-weight:800; font-size:11px; color:#ff9500;">-</div></div>
+                        <div class="card" style="grid-column: span 2;"><label>Direkte Duelle (Top Dominanz)</label><div id="stat-head-to-head"></div></div>
+                        <div class="card" style="grid-column: span 2;"><label>Längste Serie</label><div id="stat-streak" style="font-weight:800; font-size:11px;">-</div></div>
+                        <div class="card" style="grid-column: span 2;"><label>Die Mauer (Zäher Verlierer)</label><div id="stat-mauer" style="font-weight:800; font-size:11px; color:#4FC3F7;">-</div></div>
                     </div>
                     <div id="today-matches-card" class="card" style="display:none;">
                         <label>Heutige Matches</label>
@@ -197,8 +476,41 @@
                 <div style="position: sticky; top: 0; z-index: 1000; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(20px); margin: 0 -16px 15px -16px; border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); padding-top: calc(var(--safe-top) + 10px);">
                     <div class="header-container" style="position: relative; background: transparent; backdrop-filter: none; border-bottom: none; margin: 0; padding-top: 0;">
                         <div class="header-side"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
-                        <div class="title-stack"><div class="main-title">Hall of Fame & Shame</div><div class="sub-title">Bestenliste</div></div>
-                        <div class="header-side right"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'"></div>
+                        <div class="title-stack" onclick="window.toggleHeaderFilter(this)" style="cursor: pointer;">
+                            <div class="main-title">Hall of Fame & Shame</div>
+                            <div class="sub-title">Bestenliste</div>
+                            <div class="filter-toggle-bar">Zeitraum filtern <span class="filter-chevron">▼</span></div>
+                        </div>
+                        <div class="header-side right">
+                            <img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'">
+                        </div>
+                        <div class="filter-row">
+                            <button class="filter-reset-btn" onclick="window.handleFilterChange('all')">RESET</button>
+                            <div class="filter-controls-stack">
+                                <div class="filter-dropdown-col">
+                                    <label>Zeitraum</label>
+                                    <select class="time-filter-select" onchange="window.handleFilterChange(this.value)">
+                                        <option value="all">Gesamt</option>
+                                        <option value="month">Aktueller Monat</option>
+                                        <option value="quarter">Aktuelles Quartal</option>
+                                        <option value="year">Aktuelles Jahr</option>
+                                        <option value="30days">Letzte 30 Tage</option>
+                                        <option value="60days">Letzte 60 Tage</option>
+                                        <option value="90days">Letzte 90 Tage</option>
+                                        <option value="lastMonth">Letzter Monat</option>
+                                        <option value="lastQuarter">Letztes Quartal</option>
+                                        <option value="lastYear">Letztes Jahr</option>
+                                    </select>
+                                </div>
+                                <div class="filter-date-col">
+                                    <label>Von - Bis</label>
+                                    <div style="display: flex; gap: 4px;">
+                                        <input type="date" id="date-start-erfolge" class="custom-date-input custom-date-start" onchange="window.handleCustomDateChange()" onclick="this.showPicker?.()">
+                                        <input type="date" id="date-end-erfolge" class="custom-date-input custom-date-end" onchange="window.handleCustomDateChange()" onclick="this.showPicker?.()">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div style="padding: 0 16px 15px 16px;">
                         <button class="btn-save" style="background:rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); font-size: 11px;" onclick="openAchListModal()">Achievement-Übersicht</button>
@@ -246,6 +558,95 @@
         </div>
     </div>
 
+    <div id="diceModal" class="modal">
+        <div class="modal-backdrop" onclick="window.closeDiceModal()"></div>
+        <div class="modal-card" style="max-width: 320px;">
+            <div style="padding: 30px 20px; text-align: center;">
+                <div style="font-size: 40px; margin-bottom: 15px;">🎲</div>
+                <div style="font-weight: 900; color: var(--accent); font-size: 16px; text-transform: uppercase; margin-bottom: 10px;">Gewürfelt!</div>
+                <div style="color: #8e8e93; font-size: 13px; line-height: 1.5; font-weight: 600;">Der Anstoß geht an:</div>
+                <div id="diceResultName" style="color: #34c759; font-size: 28px; font-weight: 900; margin-top: 10px;"></div>
+            </div>
+            <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                <button class="btn-save" style="margin-top:0;" onclick="window.closeDiceModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="setupModal" class="modal">
+        <div class="modal-backdrop" onclick="window.closeSetupModal()"></div>
+        <div class="modal-card" style="max-width: 380px;">
+            <div style="padding: 30px 20px; text-align: center;">
+                <div style="font-size: 40px; margin-bottom: 15px;">📐</div>
+                <div style="font-weight: 900; color: var(--accent); font-size: 16px; text-transform: uppercase; margin-bottom: 10px;">Kugel-Aufbau (8-Ball)</div>
+                <div style="color: #ffffff; font-size: 13px; line-height: 1.5; font-weight: 600; margin-bottom: 20px;">
+                    Die offizielle Anordnung der Kugeln im Dreieck:
+                </div>
+
+                <svg width="100%" height="200" viewBox="0 0 200 200" style="background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 15px;">
+                    <defs>
+                        <radialGradient id="gradSetupV" cx="30%" cy="30%" r="50%">
+                            <stop offset="0%" stop-color="white" stop-opacity="0.3"/>
+                            <stop offset="100%" stop-color="black" stop-opacity="0.2"/>
+                        </radialGradient>
+                        <radialGradient id="gradSetupH" cx="30%" cy="30%" r="50%">
+                            <stop offset="0%" stop-color="white" stop-opacity="0.2"/>
+                            <stop offset="100%" stop-color="black" stop-opacity="0.2"/>
+                        </radialGradient>
+                        <radialGradient id="gradSetup8" cx="30%" cy="30%" r="50%">
+                            <stop offset="0%" stop-color="white" stop-opacity="0.4"/>
+                            <stop offset="100%" stop-color="black" stop-opacity="0.1"/>
+                        </radialGradient>
+                    </defs>
+                    <!-- Triangle Outline -->
+                    <polygon points="100,10 10,190 190,190" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+                    
+                    <!-- Apex (Ball 1) - Solid -->
+                    <g transform="translate(100,25)">
+                        <circle cx="0" cy="0" r="10" fill="#ffcc00"/>
+                        <circle cx="0" cy="0" r="10" fill="url(#gradSetupV)"/>
+                        <text x="0" y="3.5" font-family="-apple-system" font-size="10" fill="#000" text-anchor="middle" font-weight="bold">1</text>
+                    </g>
+                    <text x="100" y="45" font-family="-apple-system" font-size="10" fill="#ffcc00" text-anchor="middle" font-weight="bold">Vorderste Kugel (liegt auf dem Anstosspunkt)</text>
+                    
+                    <!-- Middle (Ball 8) - Black -->
+                    <g transform="translate(100,100)">
+                        <circle cx="0" cy="0" r="10" fill="#000"/>
+                        <circle cx="0" cy="0" r="10" fill="url(#gradSetup8)"/>
+                        <text x="0" y="3.5" font-family="-apple-system" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold">8</text>
+                    </g>
+                    <text x="100" y="120" font-family="-apple-system" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="bold">Mitte des Dreiecks</text>
+                    
+                    <!-- Bottom Left Corner (Solid) -->
+                    <g transform="translate(30,175)">
+                        <circle cx="0" cy="0" r="10" fill="#ffcc00"/>
+                        <circle cx="0" cy="0" r="10" fill="url(#gradSetupV)"/>
+                        <text x="0" y="3.5" font-family="-apple-system" font-size="10" fill="#000" text-anchor="middle" font-weight="bold">V</text>
+                    </g>
+                    <text x="30" y="195" font-family="-apple-system" font-size="10" fill="#ffcc00" text-anchor="middle" font-weight="bold">Eine Volle</text>
+                    
+                    <!-- Bottom Right Corner (Half) -->
+                    <g transform="translate(170,175)">
+                        <circle cx="0" cy="0" r="10" fill="white"/>
+                        <path d="M-9.5 -3.2 A 10 10 0 0 0 -9.5 3.2 L 9.5 3.2 A 10 10 0 0 0 9.5 -3.2 Z" fill="#4FC3F7"/>
+                        <circle cx="0" cy="0" r="10" fill="url(#gradSetupH)"/>
+                        <text x="0" y="3.5" font-family="-apple-system" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold">H</text>
+                    </g>
+                    <text x="170" y="195" font-family="-apple-system" font-size="10" fill="#4FC3F7" text-anchor="middle" font-weight="bold">Eine Halbe</text>
+                </svg>
+                
+                <div style="color: #ffffff; font-size: 11px; line-height: 1.5; font-weight: 600; margin-top: 15px; text-align: left; padding: 0 10px;">
+                    • Alle anderen Kugeln beliebig verteilen.<br>
+                    • Die vorderste Kugel liegt auf dem "<b>Anstosspunkt</b>".<br>
+                    • Der Anstoß erfolgt von der gegenüberliegenden Seite (auf der Anstoßlinie, nicht nur auf dem Punkt).
+                </div>
+            </div>
+            <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                <button class="btn-save" style="margin-top:0;" onclick="window.closeSetupModal()">Verstanden</button>
+            </div>
+        </div>
+    </div>
+
     <div id="confirmModal" class="modal">
         <div class="modal-backdrop" onclick="window.closeConfirmModal()"></div>
         <div class="modal-card" style="max-width: 320px;">
@@ -272,6 +673,20 @@
             <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 10px;">
                 <button class="btn-save" style="margin-top:0; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); font-size: 14px; flex: 1;" onclick="window.closeDeleteConfirmModal()">Abbrechen</button>
                 <button class="btn-save" style="margin-top:0; background: var(--error); font-size: 14px; flex: 1;" onclick="window.doDeleteMatch()">Löschen</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="errorModal" class="modal">
+        <div class="modal-backdrop" onclick="window.closeErrorModal()"></div>
+        <div class="modal-card" style="max-width: 320px;">
+            <div style="padding: 30px 20px; text-align: center;">
+                <div style="font-size: 40px; margin-bottom: 15px;">⚠️</div>
+                <div style="font-weight: 900; color: var(--error); font-size: 16px; text-transform: uppercase; margin-bottom: 10px;">Etwas fehlt!</div>
+                <div id="errorModalText" style="color: #text; font-size: 14px; line-height: 1.6; font-weight: 600; white-space: pre-line; text-align: left; padding: 0 10px;"></div>
+            </div>
+            <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                <button class="btn-save" style="margin-top:0; background: var(--error);" onclick="window.closeErrorModal()">Verstanden</button>
             </div>
         </div>
     </div>
@@ -369,6 +784,76 @@
             document.getElementById('successModal').style.display = 'none';
         };
 
+        window.closeDiceModal = () => {
+            document.getElementById('diceModal').style.display = 'none';
+        };
+
+        window.openSetupModal = () => {
+            document.getElementById('setupModal').style.display = 'flex';
+        };
+
+        window.closeSetupModal = () => {
+            document.getElementById('setupModal').style.display = 'none';
+        };
+
+        window.highlightedElements = []; // Global array to keep track of highlighted elements
+
+        window.openErrorModal = (msg, elementIdsToHighlight = []) => {
+            const modal = document.getElementById('errorModal');
+            document.getElementById('errorModalText').innerText = msg;
+            modal.style.display = 'flex';
+            
+            // Shake Animation triggern
+            const card = modal.querySelector('.modal-card');
+            card.style.animation = 'none';
+            card.offsetHeight; // Reflow
+            card.style.animation = 'modal-shake 0.4s ease-in-out';
+
+            // Clear previous highlights
+            window.highlightedElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.remove('error-highlight');
+                    let prev = el.previousElementSibling;
+                    if (prev && prev.tagName === 'LABEL') prev.style.color = '';
+                    let pPrev = el.parentElement.previousElementSibling;
+                    if (pPrev && pPrev.tagName === 'LABEL') pPrev.style.color = '';
+                }
+            });
+            window.highlightedElements = [];
+
+            // Apply new highlights
+            elementIdsToHighlight.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.add('error-highlight');
+                    window.highlightedElements.push(id);
+                    
+                    // Das zugehörige Label ebenfalls rot einfärben
+                    let prev = el.previousElementSibling;
+                    if (prev && prev.tagName === 'LABEL') prev.style.color = 'var(--error)';
+                    let pPrev = el.parentElement.previousElementSibling;
+                    if (pPrev && pPrev.tagName === 'LABEL') pPrev.style.color = 'var(--error)';
+                }
+            });
+        };
+
+        window.removeHighlight = (id) => {
+            const el = document.getElementById(id);
+            if (el && el.classList.contains('error-highlight')) {
+                el.classList.remove('error-highlight');
+                let prev = el.previousElementSibling;
+                if (prev && prev.tagName === 'LABEL') prev.style.color = '';
+                let pPrev = el.parentElement.previousElementSibling;
+                if (pPrev && pPrev.tagName === 'LABEL') pPrev.style.color = '';
+                window.highlightedElements = window.highlightedElements.filter(hid => hid !== id);
+            }
+        };
+
+        window.closeErrorModal = () => {
+            document.getElementById('errorModal').style.display = 'none';
+        };
+
         window.matchToDeleteIndex = -1; // Globale Variable zum Speichern des Index
 
         window.openDeleteConfirmModal = (index) => {
@@ -394,18 +879,92 @@
             window.location.href = url + '?u=' + Date.now();
         };
 
+        window.getBallIcon = (type) => {
+            if (type === 'Voll') return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="#ffcc00"/><circle cx="12" cy="12" r="11" fill="url(#gradV)"/><defs><radialGradient id="gradV" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.3"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
+            return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="white"/><path d="M1.5 8.5 A 11 11 0 0 0 1.5 15.5 L 22.5 15.5 A 11 11 0 0 0 22.5 8.5 Z" fill="#4FC3F7"/><circle cx="12" cy="12" r="11" fill="url(#gradH)"/><defs><radialGradient id="gradH" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.2"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
+        };
+
+        window.timeFilter = 'all';
+        window.customStartDate = null;
+        window.customEndDate = null;
+
+        window.handleFilterChange = (val) => {
+            window.timeFilter = val;
+            // Synchronisiere alle Filter-Dropdowns in der App
+            document.querySelectorAll('.time-filter-select').forEach(s => s.value = val);
+
+            // Wenn ein Preset gewählt wird, leere die benutzerdefinierten Daten
+            if (val !== 'custom') {
+                document.querySelectorAll('.custom-date-input').forEach(i => i.value = '');
+                window.customStartDate = null;
+                window.customEndDate = null;
+            }
+            window.updateAllViews();
+        };
+
+        window.handleCustomDateChange = () => {
+            const sStat = document.getElementById('date-start-stat');
+            const eStat = document.getElementById('date-end-stat');
+            const sErf = document.getElementById('date-start-erfolge');
+            const eErf = document.getElementById('date-end-erfolge');
+            const sHist = document.getElementById('date-start-hist');
+            const eHist = document.getElementById('date-end-hist');
+
+            let startVal, endVal;
+            if (window.viewId === 'erfolge') {
+                startVal = sErf?.value;
+                endVal = eErf?.value;
+            } else if (window.viewId === 'uebersicht') {
+                startVal = sHist?.value;
+                endVal = eHist?.value;
+            } else {
+                startVal = sStat?.value;
+                endVal = eStat?.value;
+            }
+            
+            // Synchronisiere die Eingabefelder über alle Tabs
+            document.querySelectorAll('.custom-date-start').forEach(i => i.value = startVal || '');
+            document.querySelectorAll('.custom-date-end').forEach(i => i.value = endVal || '');
+            
+            window.customStartDate = startVal;
+            window.customEndDate = endVal;
+
+            if (startVal || endVal) {
+                window.timeFilter = 'custom';
+                // Dropdown auf "Gesamte Historie" zurücksetzen
+                document.querySelectorAll('.time-filter-select').forEach(s => s.value = 'all');
+            } else {
+                window.timeFilter = 'all';
+            }
+            window.updateAllViews();
+        };
+
+        window.toggleHeaderFilter = (trigger) => {
+            const header = trigger.closest('.header-container');
+            header.classList.toggle('filter-active');
+        };
+
         // Zentrale Funktion zum Rendern der aktiven Ansicht
         window.updateAllViews = () => {
+            // Filter-Labels im Header aktualisieren (Farbe & Leuchten)
+            const isFilterActive = window.timeFilter !== 'all';
+            document.querySelectorAll('.filter-toggle-bar').forEach(bar => {
+                bar.classList.toggle('active', isFilterActive);
+            });
+
             // UI-Update für den Match-Tab (benötigt nur computeEloRatings in Chart.js)
             if (window.viewId === 'aufzeichnen' && typeof window.computeEloRatings === 'function') {
                 window.updateUI();
             }
 
             if (typeof window.renderBillardStats !== 'function') return;
-            if (window.viewId === 'uebersicht') renderHistory();
+
+            const isToday = (window.viewId === 'heute');
+            const statsToUse = isToday ? window.stats : (typeof window.getFilteredStats === 'function' ? window.getFilteredStats() : window.stats);
+
+            if (window.viewId === 'uebersicht') renderHistory(statsToUse);
             if (window.viewId === 'statistik' || window.viewId === 'heute' || window.viewId === 'erfolge') {
-                const isToday = (window.viewId === 'heute');
-                window.renderBillardStats(window.stats, isToday);
+                window.renderBillardStats(statsToUse, isToday);
             }
         };
 
@@ -507,10 +1066,20 @@
         window.updateUI = () => {
             const m = document.getElementById('mode').value;
 
+            // Re-aktivieren der Würfel-Steuerung bei Interaktion (Spielerwechsel)
+            window.breakLocked = false;
+            const diceBtn = document.getElementById('btn-breakcalc');
+            if (diceBtn) {
+                diceBtn.style.opacity = "1";
+                diceBtn.disabled = false;
+            }
+            // Fehler-Markierung beim Anstoß entfernen, wenn Spieler neu gewählt werden
+            window.removeHighlight('breakPlayer');
+
             // Deaktiviere den Button für Zufallsteams, wenn heute bereits ein Match in der Historie steht
             const now = new Date();
             const pad = (n) => String(n).padStart(2, '0');
-            const todayStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}}.${now.getFullYear()}`;
+            const todayStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
             const hasTodayMatch = (window.stats || []).some(g => g && g.d && g.d.startsWith(todayStr));
             const randomBtn = document.getElementById('btn-random-teams');
             if (randomBtn) {
@@ -528,6 +1097,11 @@
             document.getElementById('btn-win1').innerText = n1 || "Spieler 1";
             document.getElementById('btn-win2').innerText = n2 || "Spieler 2";
 
+            const ballLabel1 = document.getElementById('ballLabel1');
+            const ballLabel2 = document.getElementById('ballLabel2');
+            if (ballLabel1) ballLabel1.innerText = n1 ? "Kugeln " + n1 : "Kugeln Spieler / Team 1";
+            if (ballLabel2) ballLabel2.innerText = n2 ? "Kugeln " + n2 : "Kugeln Spieler / Team 2";
+
             if (!window.breakLocked) {
               const b = document.getElementById('breakPlayer');
               b.innerHTML = '<option value="" selected disabled>Wählen</option>';
@@ -541,14 +1115,36 @@
             
             const ready = (m==='1:1' ? (document.getElementById('p1').value && document.getElementById('p2').value) : (document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value));
             document.getElementById('btn-breakcalc').disabled = !ready;
+
+            // Highlights entfernen, wenn Spieler gewählt wurden
+            ['p1', 'p2', 't1p1', 't1p2', 't2p1', 't2p2'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.value) window.removeHighlight(id);
+            });
+
             window.updateMatchProbability();
         };
 
-        window.lockBreak = () => { window.breakLocked = true; };
+        window.syncBallTypes = (n) => {
+            const b1 = document.getElementById('ballType1');
+            const b2 = document.getElementById('ballType2');
+            if (n === 1) {
+                if (b1.value === 'Voll') b2.value = 'Halb';
+                else if (b1.value === 'Halb') b2.value = 'Voll';
+            } else {
+                if (b2.value === 'Voll') b1.value = 'Halb';
+                else if (b2.value === 'Halb') b1.value = 'Voll';
+            }
+            if (b1.value) window.removeHighlight('ballType1');
+            if (b2.value) window.removeHighlight('ballType2');
+        };
+
         window.selectWinner = (n) => {
             window.winnerNum = n;
             document.getElementById('btn-win1').classList.toggle('selected', n===1);
             document.getElementById('btn-win2').classList.toggle('selected', n===2);
+            window.removeHighlight('btn-win1');
+            window.removeHighlight('btn-win2');
         };
 
         window.calcBreak = () => {
@@ -562,23 +1158,72 @@
               else res = document.getElementById('t2p1').value + " & " + document.getElementById('t2p2').value;
             }
             document.getElementById('breakPlayer').value = res;
+            window.removeHighlight('breakPlayer');
             window.breakLocked = true;
+
+            // Deaktivieren nach dem Würfeln
+            const diceBtn = document.getElementById('btn-breakcalc');
+            const breakSel = document.getElementById('breakPlayer');
+            if (diceBtn) { diceBtn.disabled = true; diceBtn.style.opacity = "0.3"; }
+            if (breakSel) breakSel.disabled = true;
+            
+            // Den Namen der ermittelten Person/Team in das Modal schreiben
+            document.getElementById('diceResultName').innerText = res;
+
+            // Popup anzeigen
+            document.getElementById('diceModal').style.display = 'flex';
         };
 
         window.doSave = async () => {
             const m = document.getElementById('mode').value;
             const b = document.getElementById('breakPlayer').value;
+            const bt1 = document.getElementById('ballType1').value;
+            const bt2 = document.getElementById('ballType2').value;
             let p1, p2;
-            if (m === '1:1') { p1 = document.getElementById('p1').value; p2 = document.getElementById('p2').value; }
-            else { p1 = document.getElementById('t1p1').value + " & " + document.getElementById('t1p2').value; p2 = document.getElementById('t2p1').value + " & " + document.getElementById('t2p2').value; }
-            if (!window.winnerNum || !p1 || !p2 || !b) return alert("Bitte alles ausfüllen!");
+
+            const missingMessages = [];
+            const missingElements = [];
+
+            if (m === '1:1') {
+                const v1 = document.getElementById('p1').value;
+                const v2 = document.getElementById('p2').value;
+                if (!v1) { missingMessages.push("Spieler 1"); missingElements.push('p1'); }
+                if (!v2) { missingMessages.push("Spieler 2"); missingElements.push('p2'); }
+                p1 = v1; p2 = v2;
+            } else {
+                const v1 = document.getElementById('t1p1').value;
+                const v2 = document.getElementById('t1p2').value;
+                const v3 = document.getElementById('t2p1').value;
+                const v4 = document.getElementById('t2p2').value;
+                if (!v1) { missingMessages.push("Team 1 Spieler 1"); missingElements.push('t1p1'); }
+                if (!v2) { missingMessages.push("Team 1 Spieler 2"); missingElements.push('t1p2'); }
+                if (!v3) { missingMessages.push("Team 2 Spieler 1"); missingElements.push('t2p1'); }
+                if (!v4) { missingMessages.push("Team 2 Spieler 2"); missingElements.push('t2p2'); }
+                p1 = v1 + " & " + v2;
+                p2 = v3 + " & " + v4;
+            }
+            if (!b) { missingMessages.push("Anstoß"); missingElements.push('breakPlayer'); }
+            if (!bt1) { missingMessages.push("Kugeln Team 1"); missingElements.push('ballType1'); }
+            if (!bt2) { missingMessages.push("Kugeln Team 2"); missingElements.push('ballType2'); }
+            if (!window.winnerNum) { 
+                missingMessages.push("Gewinner"); 
+                // Highlight both winner buttons if winner is not selected
+                missingElements.push('btn-win1', 'btn-win2'); 
+            }
+
+            if (missingMessages.length > 0) {
+                const formattedMsg = "Folgende Angaben fehlen noch:\n\n" + missingMessages.map(m => "• " + m).join("\n");
+                window.openErrorModal(formattedMsg, missingElements);
+                return;
+            }
+
             const now = new Date();
             
             const pad = (n) => String(n).padStart(2, '0');
             const dStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}`;
             const todayStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
 
-            const data = { m, p1, p2, w: window.winnerNum, t: document.getElementById('winType').value, a: b, l: parseInt(document.getElementById('leftover').value), d: dStr };
+            const data = { m, p1, p2, w: window.winnerNum, t: document.getElementById('winType').value, a: b, l: parseInt(document.getElementById('leftover').value), d: dStr, bt1, bt2 };
             
             const isoDay = now.toISOString().split('T')[0];
             const updatedStats = [...window.stats, data];
@@ -616,6 +1261,8 @@
             document.querySelectorAll('.win-btn').forEach(b => b.classList.remove('selected'));
             document.querySelectorAll('.player-sel').forEach(s => s.value = "");
             document.getElementById('breakPlayer').value = "";
+            document.getElementById('ballType1').value = "";
+            document.getElementById('ballType2').value = "";
             
             window.updateUI();
             window.openSuccessModal();
@@ -629,7 +1276,7 @@
             const isReady = (m==='1:1' ? (document.getElementById('p1').value && document.getElementById('p2').value) : (document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value));
             
             if(!isReady) { 
-                b.innerHTML = `<div style="color:#8e8e93; font-size:10px; text-align:center; padding:10px; font-weight:800;">Bitte Spieler auswählen, um Prognose zu sehen.</div>`; 
+                b.innerHTML = `<div style="color:#8e8e93; font-size:10px; text-align:center; padding:5px; font-weight:800;">Spieler wählen für Prognose</div>`; 
                 return; 
             }
             
@@ -642,36 +1289,109 @@
             
             const elo = window.computeEloRatings(window.stats);
             const getE = (p) => (elo[p] ? elo[p].elo : 1000);
-            
-            let r1, r2;
-            if(m==='1:1') { r1 = getE(document.getElementById('p1').value); r2 = getE(document.getElementById('p2').value); }
-            else { r1 = (getE(document.getElementById('t1p1').value)+getE(document.getElementById('t1p2').value))/2; r2 = (getE(document.getElementById('t2p1').value)+getE(document.getElementById('t2p2').value))/2; }
-            
-            const prob1 = Math.round((1 / (1 + Math.pow(10, (r2 - r1) / 400))) * 100);
-            const l1 = (m==='1:1' ? document.getElementById('p1').value : "Team 1");
-            const l2 = (m==='1:1' ? document.getElementById('p2').value : "Team 2");
 
-            b.innerHTML = `<div class="prob-title">🎯 Sieg-Prognose</div><div class="prob-row"><div class="prob-pill">${l1}: ${prob1}%</div><div class="prob-pill">${l2}: ${100-prob1}%</div></div><div class="prob-bar"><div style="width:${prob1}%"></div></div><div style="font-size:9px; color:#8e8e93; margin-top:6px; text-align:center;">Basis: Team-ELO Ø (${Math.round(r1)} vs ${Math.round(r2)})</div>`;
+            let r1, r2, n1, n2;
+            if(m==='1:1') { 
+                n1 = document.getElementById('p1').value; n2 = document.getElementById('p2').value;
+                r1 = getE(n1); r2 = getE(n2); 
+            } else { 
+                n1 = document.getElementById('t1p1').value + " & " + document.getElementById('t1p2').value;
+                n2 = document.getElementById('t2p1').value + " & " + document.getElementById('t2p2').value;
+                r1 = (getE(document.getElementById('t1p1').value)+getE(document.getElementById('t1p2').value))/2; 
+                r2 = (getE(document.getElementById('t2p1').value)+getE(document.getElementById('t2p2').value))/2; 
+            }
+
+            const getBP = (searchStr) => {
+                if (!searchStr) return null;
+                const searchPlayers = searchStr.split(" & ").map(s => s.trim()).filter(Boolean);
+                let vW = 0, hW = 0;
+                window.stats.forEach(g => {
+                    if (!g || !g.bt1 || !g.bt2 || !g.w) return;
+                    const p1A = (g.p1 || '').split(" & ").map(s => s.trim()).filter(Boolean);
+                    const p2A = (g.p2 || '').split(" & ").map(s => s.trim()).filter(Boolean);
+
+                    // Zähle Siege für JEDEN Spieler in der Auswahl einzeln (aggregiert)
+                    searchPlayers.forEach(p => {
+                        if (p1A.includes(p) && g.w == 1) {
+                            if (g.bt1 === 'Voll') vW++;
+                            else if (g.bt1 === 'Halb') hW++;
+                        } else if (p2A.includes(p) && g.w == 2) {
+                            if (g.bt2 === 'Voll') vW++;
+                            else if (g.bt2 === 'Halb') hW++;
+                        }
+                    });
+                });
+                if (vW === hW || (vW + hW) < 1) return null;
+                return vW > hW ? { t: 'Voll', c: '#ffcc00' } : { t: 'Halb', c: '#4FC3F7' };
+            };
+
+            const pref1 = getBP(n1), pref2 = getBP(n2);
+            const prob1 = Math.round((1 / (1 + Math.pow(10, (r2 - r1) / 400))) * 100);
+            const prob2 = 100 - prob1;
+            const l1 = (m==='1:1' ? n1 : "Team 1");
+            const l2 = (m==='1:1' ? n2 : "Team 2");
+
+            const getBallIcon = (type) => {
+                if (type === 'Voll') return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="#ffcc00"/><circle cx="12" cy="12" r="11" fill="url(#gradV)"/><defs><radialGradient id="gradV" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.3"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
+                return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="white"/><path d="M1.5 8.5 A 11 11 0 0 0 1.5 15.5 L 22.5 15.5 A 11 11 0 0 0 22.5 8.5 Z" fill="#4FC3F7"/><circle cx="12" cy="12" r="11" fill="url(#gradH)"/><defs><radialGradient id="gradH" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.2"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
+            };
+            
+            const c1 = prob1 > 50 ? '#34c759' : (prob1 < 50 ? '#ff3b30' : '#ffffff');
+            const c2 = prob2 > 50 ? '#34c759' : (prob2 < 50 ? '#ff3b30' : '#ffffff');
+
+            b.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span style="color:var(--accent); font-weight:900; font-size:10px; text-transform:uppercase; letter-spacing:1px;">🎯 Sieg-Prognose</span>
+                    <span style="font-size:9px; color:#8e8e93; font-weight:700;">${Math.round(r1)} vs ${Math.round(r2)} Ø ELO</span>
+                </div>
+                <div class="prob-bar" style="margin-bottom:6px;">
+                    <div style="width:${prob1}%"></div>
+                    <div style="position:absolute; left:50%; top:-4px; bottom:-4px; width:2px; background:#ff3b30; z-index:2; transform:translateX(-50%); box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:12px; font-weight:900; color:${c1}; flex:1; display:flex; align-items:center;">
+                        <span style="white-space:nowrap;">${l1}: ${prob1}%</span>
+                        ${pref1 ? `<span style="display:inline-flex; align-items:center; font-size:11px; font-weight:900; color:${pref1.c}; opacity:0.9; margin-left:6px;">${window.getBallIcon(pref1.t)}${pref1.t}</span>` : ''}
+                    </div>
+                    <div style="font-size:12px; font-weight:900; color:${c2}; flex:1; display:flex; align-items:center; justify-content:flex-end;">
+                        ${pref2 ? `<span style="display:inline-flex; align-items:center; font-size:11px; font-weight:900; color:${pref2.c}; opacity:0.9; margin-right:6px;">${window.getBallIcon(pref2.t)}${pref2.t}</span>` : ''}
+                        <span style="white-space:nowrap;">${l2}: ${prob2}%</span>
+                    </div>
+                </div>`;
         };
 
-        function renderHistory() {
+        function renderHistory(statsToRender) {
             const container = document.getElementById('history-list');
-            document.getElementById('match-counter').innerText = "Matches: " + window.stats.length;
-            container.innerHTML = window.stats.slice().reverse().map((g, idx) => {
-                const i = window.stats.length - 1 - idx;
+            const list = statsToRender || window.stats;
+            document.getElementById('match-counter').innerText = "Matches: " + list.length;
+
+            const getBallBadge = (type) => {
+                if (!type) return '';
+                const color = type === 'Voll' ? '#ffcc00' : '#4FC3F7';
+                const smallerIcon = window.getBallIcon(type).replace('width="14"', 'width="11"').replace('height="14"', 'height="11"');
+                return `<span style="display:inline-flex; align-items:center; font-size:9px; font-weight:900; color:${color}; opacity:0.9; margin-left:6px; vertical-align:middle;">${smallerIcon}${type}</span>`;
+            };
+
+            container.innerHTML = list.slice().reverse().map((g) => {
+                const i = window.stats.indexOf(g);
                 return `<div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:start;">
-                        <div style="font-size:16px; font-weight:700;"><span class="${g.w==1?'win-text':'loss-text'}">${g.p1}</span> vs <span class="${g.w==2?'win-text':'loss-text'}">${g.p2}</span></div>
-                        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
-                            <div style="font-size:11px; color:#8e8e93;">${g.d}</div>
-                            <div style="font-size:10px; color:var(--error); font-weight:900; margin-top:8px; text-transform:uppercase;" onclick="requestDelete(${i})">Löschen</div>
+                        <div style="font-size:14px; font-weight:700; display:flex; align-items:center; flex-wrap:wrap;">
+                            <span class="${g.w==1?'win-text':'loss-text'}">${g.p1}</span>${getBallBadge(g.bt1)} 
+                            <span style="color:#444; margin:0 6px;">vs</span> 
+                            <span class="${g.w==2?'win-text':'loss-text'}">${g.p2}</span>${getBallBadge(g.bt2)}
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size:10px; color:#8e8e93;">${g.d}</div>
                         </div>
                     </div>
-                    <div style="font-size:12px; color:#8e8e93; margin-top:8px;">${g.t} | Rest: ${g.l} | Anstoß: ${g.a}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                        <div style="font-size:10px; color:#8e8e93;">${g.t} | Rest: ${g.l} | Anstoß: ${g.a}</div>
+                        <div style="font-size:9px; color:var(--error); font-weight:900; text-transform:uppercase;" onclick="requestDelete(${i})">Löschen</div>
+                    </div>
                 </div>`;
             }).join("") || '<div style="text-align:center;color:#8e8e93;padding:40px;">Keine Spiele vorhanden.</div>';
         }
-
 
         window.openAchListModal = () => { renderAchList('all'); document.getElementById('achListModal').style.display='flex'; };
         window.closeAchListModal = () => { document.getElementById('achListModal').style.display='none'; };
@@ -710,6 +1430,19 @@
 
         // Init Tab-Indikator
         setTimeout(() => { switchV('aufzeichnen', document.querySelector('.tab-item.active')); }, 300);
+
+        // Filter-Menü schließen bei Klick außerhalb
+        document.addEventListener('click', (e) => {
+            const activeHeader = document.querySelector('.header-container.filter-active');
+            if (activeHeader && !activeHeader.contains(e.target)) {
+                activeHeader.classList.remove('filter-active');
+            }
+        });
+
+        // Filter-Menü schließen beim Scrollen
+        document.getElementById('scroll-area')?.addEventListener('scroll', () => {
+            document.querySelector('.header-container.filter-active')?.classList.remove('filter-active');
+        }, { passive: true });
     </script>
 </body>
 </html>
