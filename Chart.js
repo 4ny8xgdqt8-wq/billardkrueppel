@@ -2,7 +2,20 @@
 // icon-color: purple; icon-glyph: magic;
 
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.0.7"; 
+window.BILLARD_APP_VERSION = "1.0.8"; 
+
+// Globale Avatar-Zuordnung (Spielername -> Pfad zum Bild)
+window.playerAvatars = {
+    "Daniel": "avatars/Daniel.png",
+    "Thorsten": "avatars/Thorsten.png",
+    "Peter": "avatars/Peter.png",
+    "Patrick": "avatars/Patrick.png",
+};
+
+// Hilfsfunktion zur Auflösung des Bildpfads
+window.getAvatarUrl = (name) => {
+    return window.playerAvatars[name] || `avatars/${name}.png`;
+};
 // ---------------------------------------
 
 // --- GLOBALE POOLS (Verfügbar für WebView UND Scriptable) ---
@@ -890,23 +903,35 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           playerBoxHtml = `
             <div style="background:rgba(255,255,255,0.06); border-radius:18px; margin-bottom:15px;
                         border: 1px solid rgba(255,204,0,0.15); overflow:hidden;">
-              <div style="padding:12px 15px; border-bottom: 1px solid rgba(255,255,255,0.06);">
-                <div style="color:#ffffff; font-weight:900; font-size:16px; line-height:1;">
-                  ${p}
+              <div onclick="const content = this.nextElementSibling; const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; this.querySelector('.ach-chevron').style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';"
+                   style="padding:12px 15px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor:pointer; -webkit-tap-highlight-color: transparent; display:flex; align-items:center; gap:12px;">
+                <div class="ach-chevron" style="color:var(--accent); font-size:14px; transition: transform 0.3s ease; transform: rotate(180deg); background: rgba(255,204,0,0.15); width: 26px; height: 26px; display: flex; align-items:center; justify-content:center; border-radius: 50%; flex-shrink:0;">▼</div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <img src="${window.getAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
+                  <div style="display:none; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,0.1);">👤</div>
+                  <div style="color:#ffffff; font-weight:900; font-size:16px; line-height:1;">
+                    ${p}
+                  </div>
                 </div>
               </div>
-              <div style="padding:12px 12px 6px 12px;">`;
+              <div style="padding:12px 12px 6px 12px; display:block;">`;
         } else {
           playerBoxHtml = `
             <div style="background:rgba(255,255,255,0.06); border-radius:18px; margin-bottom:15px; border: 1px solid rgba(255,204,0,0.15); overflow:hidden;">
-              <div style="background:rgba(255,204,0,0.12); padding:12px 15px; border-bottom: 1px solid rgba(255,204,0,0.1);">
+              <div onclick="const content = this.nextElementSibling; const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; this.querySelector('.ach-chevron').style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';"
+                   style="background:rgba(255,204,0,0.12); padding:12px 15px; border-bottom: 1px solid rgba(255,204,0,0.1); cursor:pointer; -webkit-tap-highlight-color: transparent;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                  <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="ach-chevron" style="color:var(--accent); font-size:14px; transition: transform 0.3s ease; background: rgba(255,204,0,0.15); width: 26px; height: 26px; display: flex; align-items:center; justify-content:center; border-radius: 50%; flex-shrink:0;">▼</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${window.getAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.2);">
+                    <div style="display:none; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:20px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                     <span style="font-size:26px;">${currentLvl.icon}</span>
                     <div>
                       <div style="color:#ffffff; font-weight:900; font-size:17px; line-height:1;">${p}</div>
                       <div style="color:#ffcc00; font-weight:700; font-size:10px; text-transform:uppercase; margin-top:2px; letter-spacing:0.5px;">${currentLvl.title}</div>
                     </div>
+                  </div>
                   </div>
                   <div style="text-align:right;">
                     <div style="color:#ffcc00; font-weight:900; font-size:16px;">${d.wins}</div>
@@ -914,17 +939,24 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                   </div>
                 </div>
 
-                <div style="height:5px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden; margin-bottom:6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);">
-                  <div style="height:100%; width:${progressPercent}%; background:linear-gradient(90deg, #ffcc00, #ff9500); border-radius:3px; transition: width 0.6s cubic-bezier(0.17, 0.67, 0.83, 0.67);"></div>
+                <div style="height:14px; background:rgba(0,0,0,0.5); border-radius:20px; overflow:hidden; margin-bottom:10px; border: 1px solid rgba(255,255,255,0.1); position:relative; box-shadow: inset 0 2px 5px rgba(0,0,0,0.7);">
+                  <!-- Dezente Skala-Markierungen -->
+                  <div style="position:absolute; inset:0; background: repeating-linear-gradient(90deg, transparent, transparent calc(25% - 1px), rgba(255,255,255,0.08) 25%); pointer-events:none; z-index:1;"></div>
+                  <div style="height:100%; width:${progressPercent}%; background:linear-gradient(90deg, #8B6B00, #FFCC00, #FFF176); border-radius:20px; transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 0 20px rgba(255, 204, 0, 0.4); position: relative; overflow: hidden; z-index:2;">
+                    <!-- Dynamischer Shimmer -->
+                    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: progress-shimmer 3s infinite;"></div>
+                    <!-- Leuchtende Spitze -->
+                    <div style="position:absolute; right:0; top:0; bottom:0; width:3px; background:#fff; box-shadow: 0 0 10px 2px #fff; opacity:0.8;"></div>
+                  </div>
                 </div>
 
-                <div style="color:#8e8e93; font-size:9px; display:flex; justify-content:space-between; align-items:center;">
-                  <span style="font-family: 'Courier New', Courier, monospace;">${infoText}</span>
-                  <span style="font-weight:800; color:#ffcc00; background:rgba(255,204,0,0.1); padding:2px 5px; border-radius:4px;">${progressPercent}%</span>
+                <div style="color:#8e8e93; font-size:10px; display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-weight: 500; letter-spacing: 0.1px;">${infoText}</span>
+                  <span style="font-weight:900; color:#ffcc00; background:rgba(255,204,0,0.15); padding:2px 6px; border-radius:6px; border: 1px solid rgba(255,204,0,0.2);">${progressPercent}%</span>
                 </div>
               </div>
 
-              <div style="padding:12px 12px 6px 12px;">`;
+              <div style="padding:12px 12px 6px 12px; display:none;">`;
         }
 
         // --- Berechnung der Raten für d (jetzt) ---
@@ -1483,7 +1515,56 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
               borderRadius: 8
             }]
           },
+          plugins: [{
+            id: 'barAvatars',
+            afterDatasetsDraw: (chart) => {
+              const { ctx } = chart;
+              chart.getDatasetMeta(0).data.forEach((bar, index) => {
+                const playerName = labels[index];
+                if (!playerName) return;
+                
+                const url = window.getAvatarUrl(playerName);
+                if (!window._avatarCache) window._avatarCache = {};
+                
+                if (!window._avatarCache[url]) {
+                  const img = new Image();
+                  img.src = url;
+                  img.onload = () => chart.draw();
+                  img.onerror = () => { img.isError = true; chart.draw(); };
+                  window._avatarCache[url] = img;
+                }
+                
+                const img = window._avatarCache[url];
+                const size = 30;
+                const posY = bar.y - size - 6;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(bar.x, posY + size/2, size/2, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.05)';
+                ctx.fill();
+                ctx.clip();
+
+                if (img.complete && !img.isError && img.naturalWidth !== 0) {
+                  ctx.drawImage(img, bar.x - size/2, posY, size, size);
+                } else {
+                  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                  ctx.font = (size * 0.6) + 'px Arial';
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+                  ctx.fillText('👤', bar.x, posY + size/2 + 1);
+                }
+                ctx.restore();
+                ctx.beginPath();
+                ctx.arc(bar.x, posY + size/2, size/2, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255, 204, 0, 0.4)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+              });
+            }
+          }],
           options: {
+            layout: { padding: { top: 40 } },
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
@@ -1591,6 +1672,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             html += `
               <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${badge || (i+1 + '.')}</div>
+                <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
+                <div style="display:none; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1;">
                   <div style="font-size:12px; font-weight:900; color:#fff;">${r.name}</div>
                   <div style="font-size:10px; color:#8e8e93;">bewertete Spiele: ${r.games}</div>
@@ -1739,6 +1822,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             listHtml += `
               <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${i === 0 ? '🔥' : (i === 1 ? '✨' : (i === 2 ? '📈' : (i+1 + '.')))}</div>
+                <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
+                <div style="display:none; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1;">
                   <div style="font-size:12px; font-weight:900; color:#fff;">${r.name}</div>
                   <div style="font-size:10px; color:#8e8e93;">letzte ${r.g}: ${r.w}-${r.l} (${r.wr}%)${r.streak > 1 ? ` • Serie: ${r.streak}` : ''}</div>

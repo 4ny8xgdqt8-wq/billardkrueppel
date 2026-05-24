@@ -13,8 +13,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
     <!-- // Versions-Tracking für Cache-Validierung -->
-    <script src="Chart.js?v=1.0.7"></script>
-    <link rel="manifest" href="manifest.json?v=1.0.7">
+    <script src="Chart.js?v=1.0.8"></script>
+    <link rel="manifest" href="manifest.json?v=1.0.8">
     <!-- // --------------------------------------- -->
 
     <style>
@@ -79,6 +79,7 @@
         .loader-title { font-weight: 900; font-size: 24px; color: var(--accent); text-transform: uppercase; margin-bottom: 30px; }
         .spinner { width: 45px; height: 45px; border: 4px solid rgba(255, 204, 0, 0.1); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes progress-shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
         .prob-box{padding:10px 12px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-bottom:12px;display:flex;flex-direction:column;}
         .prob-title{color:var(--accent);font-weight:900;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
@@ -281,24 +282,48 @@
                     </div>
 
                     <div id="ui-1-1">
-                        <label>Spieler 1</label><select class="player-sel" id="p1" onchange="updateMatchProbability()"></select>
-                        <label>Spieler 2</label><select class="player-sel" id="p2" onchange="updateMatchProbability()"></select>
+                        <label>Spieler 1</label>
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                            <div id="p1-avatar-preview" style="flex-shrink:0; display:flex; min-width:32px;"></div>
+                            <select class="player-sel" id="p1" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1; width:auto;"></select>
+                        </div>
+                        <label>Spieler 2</label>
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                            <div id="p2-avatar-preview" style="flex-shrink:0; display:flex; min-width:32px;"></div>
+                            <select class="player-sel" id="p2" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1; width:auto;"></select>
+                        </div>
                     </div>
                     <div id="ui-2-2" style="display:none;">
                         <label>Team 1</label>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom:8px;">
-                            <select class="player-sel" id="t1p1" onchange="updateMatchProbability()"></select><select class="player-sel" id="t1p2" onchange="updateMatchProbability()"></select>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <div id="t1p1-avatar-preview" style="flex-shrink:0; display:flex; min-width:24px;"></div>
+                                <select class="player-sel" id="t1p1" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1; width:auto;"></select>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <div id="t1p2-avatar-preview" style="flex-shrink:0; display:flex; min-width:24px;"></div>
+                                <select class="player-sel" id="t1p2" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1; width:auto;"></select>
+                            </div>
                         </div>
                         <label>Team 2</label>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                            <select class="player-sel" id="t2p1" onchange="updateMatchProbability()"></select><select class="player-sel" id="t2p2" onchange="updateMatchProbability()"></select>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <div id="t2p1-avatar-preview" style="flex-shrink:0; display:flex; min-width:24px;"></div>
+                                <select class="player-sel" id="t2p1" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1; width:auto;"></select>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <div id="t2p2-avatar-preview" style="flex-shrink:0; display:flex; min-width:24px;"></div>
+                                <select class="player-sel" id="t2p2" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1; width:auto;"></select>
+                            </div>
                         </div>
                     </div>
-                    <br>
                     <label>Anstoß</label>
                     <div style="display:flex; gap:10px;">
                         <button id="btn-breakcalc" class="win-btn" style="flex:1; background: rgba(255,204,0,0.1); color: var(--accent);" onclick="window.calcBreak()">🎲 Würfeln</button>
-                        <select id="breakPlayer" style="flex:1.5; margin-bottom:0;" disabled></select>
+                        <div style="flex:1.5; display:flex; align-items:center; gap:8px;">
+                            <div id="breakPlayer-avatar-preview" style="flex-shrink:0; display:flex; min-width:32px;"></div>
+                            <select id="breakPlayer" style="margin-bottom:0; flex:1; width:auto;" disabled onchange="window.updateAvatarPreviews()"></select>
+                        </div>
                     </div>
                 </div>
                 <div id="match-prob" class="prob-box" style="margin-top:-10px;">
@@ -572,6 +597,7 @@
                 <div style="font-size: 40px; margin-bottom: 15px;">🎲</div>
                 <div style="font-weight: 900; color: var(--accent); font-size: 16px; text-transform: uppercase; margin-bottom: 10px;">Gewürfelt!</div>
                 <div style="color: #8e8e93; font-size: 13px; line-height: 1.5; font-weight: 600;">Der Anstoß geht an:</div>
+                <div id="diceResultAvatar" style="display:flex; justify-content:center; gap:12px; margin-top:20px;"></div>
                 <div id="diceResultName" style="color: #34c759; font-size: 28px; font-weight: 900; margin-top: 10px;"></div>
             </div>
             <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
@@ -736,6 +762,38 @@
         const auth = getAuth(app);
 
          // hideLoader SOFORT definieren, damit es für Snapshots und Timeouts verfügbar ist
+        // Hilfsfunktion zum Aktualisieren der Avatar-Vorschauen neben den Dropdowns
+        window.updateAvatarPreviews = () => {
+            const ids = ['p1', 'p2', 't1p1', 't1p2', 't2p1', 't2p2', 'breakPlayer'];
+            ids.forEach(id => {
+                const sel = document.getElementById(id);
+                const preview = document.getElementById(id + '-avatar-preview');
+                if (!sel || !preview) return;
+
+                const val = sel.value;
+                const names = val ? val.split(' & ').map(n => n.trim()) : [null];
+                const size = names.length > 1 ? 24 : 32;
+                
+                preview.innerHTML = names.map(n => {
+                    const silhouette = `<div style="width:${size}px; height:${size}px; min-width:${size}px; border-radius:50%; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:${size*0.5}px; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.2);">👤</div>`;
+                    if (!n) return silhouette;
+
+                    const src = (window.getAvatarUrl && typeof window.getAvatarUrl === 'function') ? window.getAvatarUrl(n) : `avatars/${n}.png`;
+                    return `
+                        <div style="position:relative; width:${size}px; height:${size}px; min-width:${size}px; margin-right:${names.length > 1 ? '-8px' : '0px'}; z-index:${names.length > 1 ? '1' : '0'}">
+                            <img src="${src}" onerror="this.style.display='none'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,204,0,0.4); z-index:2; background:transparent;">
+                            ${silhouette}
+                        </div>`;
+                }).join('');
+            });
+        };
+
+        // -- INITIALISIERUNG DER GLOBALE VARIABLEN UND FUNKTIONEN --
+        window.db = db; 
+        window.dbFns = { doc, setDoc, getDoc, updateDoc };
+        window.stats = []; window.spieler = []; window.dailyAchivs = { days: {} };
+        window.winnerNum = 0; window.viewId = 'aufzeichnen'; window.breakLocked = false;
+
         window.hideLoader = () => {
             const l = document.getElementById('loading-overlay');
             if(l && l.style.display !== 'none') { 
@@ -744,36 +802,19 @@
             }
         };
 
-        window.db = db; 
-        window.dbFns = { doc, setDoc, getDoc, updateDoc };
-        window.stats = []; window.spieler = []; window.dailyAchivs = { days: {} };
-
-        // Versionsnummer im Ladebildschirm anzeigen (aus Chart.js)
-        const verEl = document.getElementById('loader-version');
-        if (verEl && window.BILLARD_APP_VERSION) verEl.innerText = "App Version: " + window.BILLARD_APP_VERSION;
-
-        window.winnerNum = 0; window.viewId = 'aufzeichnen'; window.breakLocked = false;
-
-        // Navigation und Tab-Wechsel
         window.switchV = (id, el) => {
             window.viewId = id;
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-            
-            // 'heute' und 'statistik' teilen sich die gleiche View, aber mit unterschiedlichen Datenfiltern
             const targetViewId = (id === 'heute' || id === 'statistik') ? 'view-statistik' : 'view-' + id;
             const targetView = document.getElementById(targetViewId);
             if (targetView) targetView.classList.add('active');
-            
             if (el) el.classList.add('active');
-            
-            // Tab-Indikator (gelber Hintergrund) verschieben
             if (el) {
                 const ind = document.getElementById('tab-indicator');
                 ind.style.width = el.offsetWidth + "px";
                 ind.style.left = el.offsetLeft + "px";
             }
-            
             window.updateAllViews();
             const scrollArea = document.getElementById('scroll-area');
             if (scrollArea) scrollArea.scrollTop = 0;
@@ -998,21 +1039,19 @@
         // Sicherheits-Timeout: Falls Firebase hängt, Loader nach 5 Sek trotzdem entfernen
         setTimeout(() => window.hideLoader(), 6000);
 
+        // Versionsnummer im Ladebildschirm anzeigen
+        const verEl = document.getElementById('loader-version');
+        if (verEl && window.BILLARD_APP_VERSION) verEl.innerText = "App Version: " + window.BILLARD_APP_VERSION;
+
+        // -- FIREBASE LISTENERS (Erst nach Definition der Funktionen starten!) --
         signInAnonymously(auth).then(() => {
             onSnapshot(doc(db, "billard_data", "stats"), (snap) => {
-                try {
-                    if (snap.exists()) {
-                        window.stats = snap.data().matches || [];
-                        if (typeof window.updateAllViews === 'function') {
-                            window.updateAllViews();
-                        }
-                    }
-                } catch (e) { console.error("Render-Fehler:", e); }
+                if (snap.exists()) {
+                    window.stats = snap.data().matches || [];
+                    window.updateAllViews();
+                }
                 window.hideLoader();
-            }, (err) => { 
-                console.error("Firebase Stats Fehler:", err);
-                window.hideLoader(); 
-            });
+            }, (err) => window.hideLoader());
 
             onSnapshot(doc(db, "billard_data", "spieler"), (snap) => {
               if (snap.exists()) {
@@ -1033,6 +1072,7 @@
                 window.spieler.forEach(p => s.options.add(new Option(p, p)));
                 s.onchange = () => { window.updateUI(); };
             });
+            if (window.updateAvatarPreviews) window.updateAvatarPreviews();
             if (typeof window.computeEloRatings === 'function') window.updateUI();
         };
 
@@ -1056,7 +1096,11 @@
                 return `
                     <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding:16px; background:${isSelected ? 'rgba(52,199,89,0.12)' : 'rgba(255,255,255,0.03)'}; border-radius:18px; cursor: pointer; border: 1px solid ${isSelected ? '#34c759' : 'rgba(255,255,255,0.1)'}; transition: all 0.2s ease;">
                         <input type="checkbox" value="${p}" class="team-p-check" style="display:none;" onchange="this.parentElement.style.background=this.checked?'rgba(52,199,89,0.12)':'rgba(255,255,255,0.03)'; this.parentElement.style.borderColor=this.checked?'#34c759':'rgba(255,255,255,0.1)'; this.parentElement.querySelector('.check-mark').style.opacity=this.checked?'1':'0.1';" ${isSelected ? 'checked' : ''}>
-                        <span style="font-size:16px; font-weight:800; color: #fff;">${p}</span>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <img src="${window.getAvatarUrl ? window.getAvatarUrl(p) : `avatars/${p}.png`}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
+                            <div style="display:none; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,0.1);">👤</div>
+                            <span style="font-size:16px; font-weight:800; color: #fff;">${p}</span>
+                        </div>
                         <span class="check-mark" style="font-size:20px; color:#34c759; opacity:${isSelected ? '1' : '0.1'}; transition: opacity 0.2s;">✓</span>
                     </label>
                 `;
@@ -1150,6 +1194,7 @@
             });
 
             window.updateMatchProbability();
+            if (window.updateAvatarPreviews) window.updateAvatarPreviews();
         };
 
         window.syncBallTypes = (n) => {
@@ -1196,6 +1241,24 @@
             
             // Den Namen der ermittelten Person/Team in das Modal schreiben
             document.getElementById('diceResultName').innerText = res;
+            
+            // Avatar im Würfel-Modal anzeigen
+            const avatarContainer = document.getElementById('diceResultAvatar');
+            if (avatarContainer) {
+                const names = res.split(' & ').map(n => n.trim());
+                const size = names.length > 1 ? 44 : 64;
+                avatarContainer.innerHTML = names.map(n => {
+                    const silhouette = `<div style="width:${size}px; height:${size}px; border-radius:50%; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:${size*0.5}px; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.2);">👤</div>`;
+                    const src = (window.getAvatarUrl && typeof window.getAvatarUrl === 'function') ? window.getAvatarUrl(n) : `avatars/${n}.png`;
+                    return `
+                        <div style="position:relative; width:${size}px; height:${size}px;">
+                            <img src="${src}" onerror="this.style.display='none'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:2px solid var(--accent); z-index:2; background:transparent;">
+                            ${silhouette}
+                        </div>`;
+                }).join('');
+            }
+
+            if (window.updateAvatarPreviews) window.updateAvatarPreviews();
 
             // Popup anzeigen
             document.getElementById('diceModal').style.display = 'flex';
@@ -1392,21 +1455,30 @@
             const list = statsToRender || window.stats;
             document.getElementById('match-counter').innerText = "Matches: " + list.length;
 
+            const getAvatarHtml = (playerName, size = 18) => {
+                if (!playerName) return '';
+                const players = playerName.split(' & ').map(p => p.trim());
+                return players.map(p => {
+                    const avatarSrc = window.getAvatarUrl ? window.getAvatarUrl(p) : `avatars/${p}.png`;
+                    return `<img src="${avatarSrc}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,204,0,0.3); margin-right:4px; vertical-align:middle;"><div style="display:none; width:${size}px; height:${size}px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:${size*0.6}px; border:1px solid rgba(255,255,255,0.1); margin-right:4px; vertical-align:middle;">👤</div>`;
+                }).join('');
+            };
+
             const getBallBadge = (type) => {
                 if (!type) return '';
                 const color = type === 'Voll' ? '#ffcc00' : '#4FC3F7';
                 const smallerIcon = window.getBallIcon(type).replace('width="14"', 'width="11"').replace('height="14"', 'height="11"');
-                return `<span style="display:inline-flex; align-items:center; font-size:9px; font-weight:900; color:${color}; opacity:0.9; margin-left:6px; vertical-align:middle;">${smallerIcon}${type}</span>`;
+                return `<span style="display:inline-flex; align-items:center; font-size:9px; font-weight:900; color:${color}; opacity:0.9; margin-left:4px; vertical-align:middle;">${smallerIcon}${type}</span>`;
             };
 
             container.innerHTML = list.slice().reverse().map((g) => {
                 const i = window.stats.indexOf(g);
                 return `<div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:start;">
-                        <div style="font-size:14px; font-weight:700; display:flex; align-items:center; flex-wrap:wrap;">
-                            <span class="${g.w==1?'win-text':'loss-text'}">${g.p1}</span>${getBallBadge(g.bt1)} 
-                            <span style="color:#444; margin:0 6px;">vs</span> 
-                            <span class="${g.w==2?'win-text':'loss-text'}">${g.p2}</span>${getBallBadge(g.bt2)}
+                        <div style="font-size:13px; font-weight:700; display:flex; align-items:center; flex-wrap:wrap; gap:4px; flex:1;">
+                            ${getAvatarHtml(g.p1)}<span class="${g.w==1?'win-text':'loss-text'}">${g.p1}</span>${getBallBadge(g.bt1)} 
+                            <span style="color:#444; margin:0 2px; font-size:10px;">vs</span> 
+                            ${getAvatarHtml(g.p2)}<span class="${g.w==2?'win-text':'loss-text'}">${g.p2}</span>${getBallBadge(g.bt2)}
                         </div>
                         <div style="text-align: right;">
                             <div style="font-size:10px; color:#8e8e93;">${g.d}</div>
