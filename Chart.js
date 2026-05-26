@@ -1,5 +1,5 @@
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.1.5"; 
+window.BILLARD_APP_VERSION = "1.1.6"; 
 
 // Globale Avatar-Zuordnung (Spielername -> Pfad zum Bild)
 window.playerAvatars = {
@@ -373,7 +373,19 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
 
     const getElo = (p) => (typeof eloRatings[p] === 'number') ? eloRatings[p] : baseElo;
     const getEloGameCount = (p) => (typeof eloGamesCount[p] === 'number') ? eloGamesCount[p] : 0;
-    const getKFactor = (p) => (getEloGameCount(p) < 20 ? 40 : 20);
+    
+    const getKFactor = (p) => {
+        const games = getEloGameCount(p);
+        // Gleitender Übergang: Startet bei 50, sinkt über 30 Spiele linear auf 20
+        let k = games < 30 ? (50 - games) : 20;
+        if (k < 20) k = 20;
+        
+        // Momentum-Bonus: Wer eine Serie hat, verändert sein Rating schneller
+        if (pData[p] && pData[p].currentStreak >= 3) k += 5;
+        if (pData[p] && pData[p].currentStreak >= 5) k += 5;
+        
+        return k;
+    };
 
     const initP = (n) => {
         if (!pData[n]) {
@@ -430,10 +442,18 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         const avgEloTeam2 = p2Arr.reduce((sum, p) => sum + getElo(p), 0) / (p2Arr.length || 1);
         const expectedScoreTeam1 = 1 / (1 + Math.pow(10, (avgEloTeam2 - avgEloTeam1) / 400));
         const actualScoreTeam1 = (g.w == 1) ? 1 : 0;
-        const eloChange = actualScoreTeam1 - expectedScoreTeam1;
+        const baseEloChange = actualScoreTeam1 - expectedScoreTeam1;
+
+        // 1:1 Matches sind aussagekräftiger für das individuelle Skill-Level
+        const modeMultiplier = (g.m === "1:1") ? 1.2 : 1.0;
+
+        // Dominanz-Faktor (Nicht-linear): Ein 7:0 (Rest 7) wiegt schwerer als ein knappes Ding.
+        // Ein perfektes Spiel gibt nun bis zu 50% Bonus-Punkte.
+        const marginMultiplier = 1 + (Math.pow(restValue / 7, 1.5) * 0.5);
         
-        // Delta für dieses Spiel speichern (Index aus der Original-Liste nutzen)
-        matchDeltas[allMatches.indexOf(g)] = Math.round(getKFactor(allPlayersInMatch[0]) * Math.abs(eloChange));
+        // Delta für die Historie (Durchschnittlicher K-Faktor der Beteiligten)
+        const avgK = (allPlayersInMatch.reduce((sum, p) => sum + getKFactor(p), 0) / allPlayersInMatch.length) * modeMultiplier;
+        matchDeltas[allMatches.indexOf(g)] = Math.round(avgK * Math.abs(baseEloChange) * marginMultiplier);
 
         // --- 1. BASIS STATS (Sieg/Niederlage/Streaks) AKTUALISIEREN ---
         winnerPlayers.forEach(p => {
@@ -480,8 +500,10 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         allPlayersInMatch.forEach(p => {
             const currentElo = getElo(p);
             const kFactor = getKFactor(p);
-            // eloChange bezieht sich auf Team 1. Team 2 erhält die inverse Änderung.
-            let newElo = p1Arr.includes(p) ? (currentElo + kFactor * eloChange) : (currentElo - kFactor * eloChange);
+            
+            const change = kFactor * baseEloChange * marginMultiplier * modeMultiplier;
+            let newElo = p1Arr.includes(p) ? (currentElo + change) : (currentElo - change);
+            
             eloRatings[p] = newElo;
             eloGamesCount[p] = getEloGameCount(p) + 1;
             
@@ -792,7 +814,13 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
       const getG = (p) => (typeof games[p] === 'number') ? games[p] : 0;
       const setR = (p, v) => { ratings[p] = v; };
       const incG = (p) => { games[p] = getG(p) + 1; };
-      const getK = (p) => (getG(p) < 20 ? 40 : 20);
+      
+      const getK = (p) => {
+        const gCount = getG(p);
+        // Gleitender Übergang für Konsistenz mit dem Haupt-Prozessor
+        let k = gCount < 30 ? (50 - gCount) : 20;
+        return k < 20 ? 20 : k;
+      };
 
       ordered.forEach(g => {
         if (!g) return;
@@ -803,6 +831,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const team2 = t2.map(s => String(s || '').trim()).filter(Boolean);
         if (!team1.length || !team2.length) return;
 
+        const restValue = parseInt(g.l || 0);
+        const modeMultiplier = (g.m === "1:1") ? 1.2 : 1.0;
+        const marginMultiplier = 1 + (Math.pow(restValue / 7, 1.5) * 0.5);
+
         const avg = (arr) => arr.reduce((sum, p) => sum + getR(p), 0) / arr.length;
         const r1 = avg(team1);
         const r2 = avg(team2);
@@ -810,8 +842,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const s1 = (g.w == 1) ? 1 : 0;
         const dScore = (s1 - e1);
 
-        team1.forEach(p => { setR(p, getR(p) + getK(p) * dScore); incG(p); });
-        team2.forEach(p => { setR(p, getR(p) - getK(p) * dScore); incG(p); });
+        const baseChange = dScore * modeMultiplier * marginMultiplier;
+
+        team1.forEach(p => { setR(p, getR(p) + getK(p) * baseChange); incG(p); });
+        team2.forEach(p => { setR(p, getR(p) + getK(p) * ( (s1 === 1 ? 0 : 1) - (1-e1) ) * modeMultiplier * marginMultiplier ); incG(p); });
       });
 
       const out = {};

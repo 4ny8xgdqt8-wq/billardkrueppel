@@ -13,8 +13,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
     <!-- // Versions-Tracking für Cache-Validierung -->
-    <script src="Chart.js?v=1.1.5"></script>
-    <link rel="manifest" href="manifest.json?v=1.1.5">
+    <script src="Chart.js?v=1.1.6"></script>
+    <link rel="manifest" href="manifest.json?v=1.1.6">
     <!-- // --------------------------------------- -->
 
     <style>
@@ -227,7 +227,7 @@
         .prob-row{display:flex;justify-content:space-between;margin-bottom:8px; gap: 10px;}
         .prob-pill{font-size:11px;font-weight:900;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.06);color:#fff;flex:1;text-align:center;}
         .prob-bar{height:10px; border-radius:20px; background:rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); position:relative; overflow:visible; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);}
-        .prob-bar>div:first-child{height:100%; background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%), linear-gradient(90deg, #34c759, #4FC3F7); border-radius:inherit; transition: width 0.8s cubic-bezier(0.3, 1.5, 0.5, 1); box-shadow: 0 0 15px rgba(52, 199, 89, 0.3); animation: bar-glow 2s infinite alternate; position: relative;}
+        .prob-bar>div:first-child{height:100%; background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%), linear-gradient(90deg, #34c759, #4FC3F7); border-radius:inherit; transition: width 0.8s cubic-bezier(0.3, 1.5, 0.5, 1); box-shadow: 0 0 15px rgba(52, 199, 89, 0.3); position: relative;}
 
         @keyframes pulse-error {
             0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5); }
@@ -1707,7 +1707,11 @@
             const elo = window.computeEloRatings(window.stats);
             const getE = (p) => (elo[p] ? elo[p].elo : 1000);
             const getG = (p) => (elo[p] ? elo[p].eloGames : 0);
-            const getK = (p) => (getG(p) < 20 ? 40 : 20);
+            const getK = (p) => {
+                const games = getG(p);
+                let k = games < 30 ? (50 - games) : 20;
+                return k < 20 ? 20 : k;
+            };
 
             let r1, r2, n1, n2, k1, k2;
             if(m==='1:1') { 
@@ -1723,47 +1727,18 @@
                 k2 = (getK(document.getElementById('t2p1').value) + getK(document.getElementById('t2p2').value)) / 2;
             }
 
-            const getBP = (searchStr) => {
-                if (!searchStr) return null;
-                const searchPlayers = searchStr.split(" & ").map(s => s.trim()).filter(Boolean);
-                let vW = 0, hW = 0;
-                window.stats.forEach(g => {
-                    if (!g || !g.bt1 || !g.bt2 || !g.w) return;
-                    const p1A = (g.p1 || '').split(" & ").map(s => s.trim()).filter(Boolean);
-                    const p2A = (g.p2 || '').split(" & ").map(s => s.trim()).filter(Boolean);
-
-                    // Zähle Siege für JEDEN Spieler in der Auswahl einzeln (aggregiert)
-                    searchPlayers.forEach(p => {
-                        if (p1A.includes(p) && g.w == 1) {
-                            if (g.bt1 === 'Voll') vW++;
-                            else if (g.bt1 === 'Halb') hW++;
-                        } else if (p2A.includes(p) && g.w == 2) {
-                            if (g.bt2 === 'Voll') vW++;
-                            else if (g.bt2 === 'Halb') hW++;
-                        }
-                    });
-                });
-                if (vW === hW || (vW + hW) < 1) return null;
-                return vW > hW ? { t: 'Voll', c: '#ffcc00' } : { t: 'Halb', c: '#4FC3F7' };
-            };
-
-            const pref1 = getBP(n1), pref2 = getBP(n2);
             const prob1 = Math.round((1 / (1 + Math.pow(10, (r2 - r1) / 400))) * 100);
             const prob2 = 100 - prob1;
+            
+            const modeMultiplier = (m === "1:1") ? 1.2 : 1.0;
 
-            // ELO Vorschau berechnen
-            const winDelta1 = Math.round(k1 * (1 - prob1/100));
-            const lossDelta1 = Math.round(k1 * (prob1/100));
-            const winDelta2 = Math.round(k2 * (1 - prob2/100));
-            const lossDelta2 = Math.round(k2 * (prob2/100));
+            const winDelta1 = Math.round(k1 * (1 - prob1/100) * modeMultiplier);
+            const lossDelta1 = Math.round(k1 * (prob1/100) * modeMultiplier);
+            const winDelta2 = Math.round(k2 * (1 - prob2/100) * modeMultiplier);
+            const lossDelta2 = Math.round(k2 * (prob2/100) * modeMultiplier);
 
             const l1 = (m==='1:1' ? n1 : "Team 1");
             const l2 = (m==='1:1' ? n2 : "Team 2");
-
-            const getBallIcon = (type) => {
-                if (type === 'Voll') return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="#ffcc00"/><circle cx="12" cy="12" r="11" fill="url(#gradV)"/><defs><radialGradient id="gradV" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.3"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
-                return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="white"/><path d="M1.5 8.5 A 11 11 0 0 0 1.5 15.5 L 22.5 15.5 A 11 11 0 0 0 22.5 8.5 Z" fill="#4FC3F7"/><circle cx="12" cy="12" r="11" fill="url(#gradH)"/><defs><radialGradient id="gradH" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.2"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
-            };
             
             const c1 = prob1 > 50 ? '#34c759' : (prob1 < 50 ? '#ff3b30' : '#ffffff');
             const c2 = prob2 > 50 ? '#34c759' : (prob2 < 50 ? '#ff3b30' : '#ffffff');
@@ -1771,7 +1746,7 @@
             b.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                     <span style="color:var(--accent); font-weight:900; font-size:10px; text-transform:uppercase; letter-spacing:1px;">🎯 Sieg-Prognose</span>
-                    <span style="font-size:9px; color:#8e8e93; font-weight:700;">${Math.round(r1)} vs ${Math.round(r2)} Ø ELO</span>
+                    <span style="font-size:9px; color:#8e8e93; font-weight:700;">Basis-Punkte (Bonus möglich)</span>
                 </div>
                 <div class="prob-bar" style="margin-bottom:6px;">
                     <div style="width:${prob1}%">
@@ -1783,7 +1758,6 @@
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="font-size:12px; font-weight:900; color:${c1}; flex:1; display:flex; align-items:center;">
                         <span style="white-space:nowrap;">${l1}: ${prob1}%</span>
-                        ${pref1 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref1.c}; opacity:0.8; margin-left:6px;">${window.getBallIcon(pref1.t).replace('14','11')}${pref1.t}</span>` : ''}
                         <div style="font-size:8px; font-weight:900; margin-left:auto; text-align:right; background:rgba(255,255,255,0.03); padding:3px 6px; border-radius:8px; border:0.5px solid rgba(255,255,255,0.05); line-height:1.1;">
                             <div style="color:#34c759; margin-bottom:1px;">+${winDelta1} ELO</div>
                             <div style="color:#ff3b30;">-${lossDelta1} ELO</div>
@@ -1794,7 +1768,6 @@
                             <div style="color:#34c759; margin-bottom:1px;">+${winDelta2} ELO</div>
                             <div style="color:#ff3b30;">-${lossDelta2} ELO</div>
                         </div>
-                        ${pref2 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref2.c}; opacity:0.8; margin-right:6px;">${window.getBallIcon(pref2.t).replace('14','11')}${pref2.t}</span>` : ''}
                         <span style="white-space:nowrap;">${l2}: ${prob2}%</span>
                     </div>
                 </div>`;
