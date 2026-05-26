@@ -1,8 +1,5 @@
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.1.4"; 
-
-// Initiales Limit für die Historie
-window.historyLimit = 20;
+window.BILLARD_APP_VERSION = "1.1.5"; 
 
 // Globale Avatar-Zuordnung (Spielername -> Pfad zum Bild)
 window.playerAvatars = {
@@ -194,6 +191,14 @@ window.famePool = [
   { cond: (d) => d.dailyDaysWithAch >= 50,  i:"🗓️", t:"Daily‑Sammler VII",d:["50 Tage – Maschine.","Du sammelst wie ein Profi.","Kalender voller Siege.","Gnadenlos konstant.","Starker Grind."], h:"Sammle an 50 Tagen mindestens einen Tageserfolg", g:"Daily‑Sammler", tier:7 },
   { cond: (d) => d.dailyDaysWithAch >= 75,  i:"📆", t:"Daily‑Sammler VIII",d:["Das ist schon ein Lifestyle.","Du bist immer da.","Kalender wird Legendär.","Du sammelst wie ein Hunter.","Top!"], h:"Sammle an 75 Tagen mindestens einen Tageserfolg", g:"Daily‑Sammler", tier:8 },
   { cond: (d) => d.dailyDaysWithAch >= 100, i:"📆", t:"Daily‑Sammler IX", d:["100 Tage Erfolg.","Das ist absurd gut.","Du bist die Routine.","Du hast den Kalender besiegt.","Wahnsinn."], h:"Sammle an 100 Tagen mindestens einen Tageserfolg", g:"Daily‑Sammler", tier:9 },
+  { cond: (d) => d.achCountTotal >= 10,  i:"📚", t:"Sammler I",  d:["Er sammelt Titel.","Die Vitrine füllt sich.","Mehr als nur Matches.","Schöne Sammlung.","Weiter!"], h:"Schalte insgesamt 10 Achievements frei", g:"Sammler", tier:1 },
+  { cond: (d) => d.achCountTotal >= 25,  i:"📚", t:"Sammler II", d:["Das wird eine Kollektion.","Du jagst Badges.","Wird langsam voll.","Respekt.","Sammler-Vibes."], h:"Schalte insgesamt 25 Achievements frei", g:"Sammler", tier:2 },
+  { cond: (d) => d.achCountTotal >= 50,  i:"📚", t:"Sammler III",d:["Das ist ernst.","Du hast Content durchgespielt.","Schon viel gesehen.","Große Sammlung.","Stark."], h:"Schalte insgesamt 50 Achievements frei", g:"Sammler", tier:3 },
+  { cond: (d) => d.achCountTotal >= 90,  i:"📚", t:"Sammler IV", d:["Maschine.","Fast alles offen.","Das ist Arbeit.","Du bist ein Hunter.","Weiter so."], h:"Schalte insgesamt 90 Achievements frei", g:"Sammler", tier:4 },
+  { cond: (d) => d.achCountTotal >= 130, i:"📚", t:"Sammler V",  d:["MAX-Hunter.","Du bist das Achievement-Menü.","Alles eingesammelt.","Legendär.","Unfassbar."], h:"Schalte insgesamt 130 Achievements frei", g:"Sammler", tier:5, max:true },
+  { cond: (d) => d.completedTracks >= 1, i:"🏁", t:"Track-Master I",  d:["Ein track ist durch.","Komplettiert.","Du hast es gefressen.","Sauber.","Weiter zum nächsten."], h:"Schließe 1 Achievement-Track komplett ab", g:"Track-Master", tier:1 },
+  { cond: (d) => d.completedTracks >= 3, i:"🏁", t:"Track-Master II", d:["Du räumst auf.","Mehrere Tracks erledigt.","Das ist Fleiß.","Stark.","Sammler-Pro."], h:"Schließe 3 Achievement-Tracks komplett ab", g:"Track-Master", tier:2 },
+  { cond: (d) => d.completedTracks >= 5, i:"🏁", t:"Track-Master III",d:["Du hast die Tracks im Griff.","Komplettierungs-Boss.","Alles sauber.","Unfair konsequent.","Legendär."], h:"Schließe 5 Achievement-Tracks komplett ab", g:"Track-Master", tier:3, max:true },
 ];
 
 window.shamePool = [
@@ -267,14 +272,6 @@ window.shamePool = [
   { cond: (d) => d.vsWorstOpponentLosses >= 5,  i:"🫥", t:"Haus-Gast I",  d:["Immer wieder eingeladen.","Und immer wieder verloren.","Der Tisch kennt das Ende.","Das ist Gewohnheit.","Du bist Stammkunde."], h:"Verliere 5× gegen deinen schlimmsten Gegner", g:"Haus-Gast", tier:1 },
   { cond: (d) => d.vsWorstOpponentLosses >= 9,  i:"🫥", t:"Haus-Gast II", d:["Das ist eine serie… leider.","Du kennst den weg nach unten.","Er liest dich.","Immer gleich.","Aua."], h:"Verliere 9× gegen deinen schlimmsten Gegner", g:"Haus-Gast", tier:2 },
   { cond: (d) => d.vsWorstOpponentLosses >= 14, i:"🫥", t:"Haus-Gast III",d:["Du wohnst fast da.","Er hat deinen Schlüssel.","Das ist Dominanz (gegen dich).","Bittere Realität.","Zeit für Rache."], h:"Verliere 14× gegen deinen schlimmsten Gegner", g:"Haus-Gast", tier:3, max:true },
-  { cond: (d) => d.achCountTotal >= 10,  i:"📚", t:"Sammler I",  d:["Er sammelt Titel.","Die Vitrine füllt sich.","Mehr als nur Matches.","Schöne Sammlung.","Weiter!"], h:"Schalte insgesamt 10 Achievements frei", g:"Sammler", tier:1 },
-  { cond: (d) => d.achCountTotal >= 25,  i:"📚", t:"Sammler II", d:["Das wird eine Kollektion.","Du jagst Badges.","Wird langsam voll.","Respekt.","Sammler-Vibes."], h:"Schalte insgesamt 25 Achievements frei", g:"Sammler", tier:2 },
-  { cond: (d) => d.achCountTotal >= 50,  i:"📚", t:"Sammler III",d:["Das ist ernst.","Du hast Content durchgespielt.","Schon viel gesehen.","Große Sammlung.","Stark."], h:"Schalte insgesamt 50 Achievements frei", g:"Sammler", tier:3 },
-  { cond: (d) => d.achCountTotal >= 90,  i:"📚", t:"Sammler IV", d:["Maschine.","Fast alles offen.","Das ist Arbeit.","Du bist ein Hunter.","Weiter so."], h:"Schalte insgesamt 90 Achievements frei", g:"Sammler", tier:4 },
-  { cond: (d) => d.achCountTotal >= 130, i:"📚", t:"Sammler V",  d:["MAX-Hunter.","Du bist das Achievement-Menü.","Alles eingesammelt.","Legendär.","Unfassbar."], h:"Schalte insgesamt 130 Achievements frei", g:"Sammler", tier:5, max:true },
-  { cond: (d) => d.completedTracks >= 1, i:"🏁", t:"Track-Master I",  d:["Ein track ist durch.","Komplettiert.","Du hast es gefressen.","Sauber.","Weiter zum nächsten."], h:"Schließe 1 Achievement-Track komplett ab", g:"Track-Master", tier:1 },
-  { cond: (d) => d.completedTracks >= 3, i:"🏁", t:"Track-Master II", d:["Du räumst auf.","Mehrere Tracks erledigt.","Das ist Fleiß.","Stark.","Sammler-Pro."], h:"Schließe 3 Achievement-Tracks komplett ab", g:"Track-Master", tier:2 },
-  { cond: (d) => d.completedTracks >= 5, i:"🏁", t:"Track-Master III",d:["Du hast die Tracks im Griff.","Komplettierungs-Boss.","Alles sauber.","Unfair konsequent.","Legendär."], h:"Schließe 5 Achievement-Tracks komplett ab", g:"Track-Master", tier:3, max:true },
 ];
 
 // --- HILFSFUNKTIONEN (Außerhalb für Scriptable verfügbar) ---

@@ -13,8 +13,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
     <!-- // Versions-Tracking für Cache-Validierung -->
-    <script src="Chart.js?v=1.1.4"></script>
-    <link rel="manifest" href="manifest.json?v=1.1.4">
+    <script src="Chart.js?v=1.1.5"></script>
+    <link rel="manifest" href="manifest.json?v=1.1.5">
     <!-- // --------------------------------------- -->
 
     <style>
@@ -1966,36 +1966,45 @@
         const mainContent = document.getElementById('scroll-area');
         let startX = 0;
         let startY = 0;
-        const swipeThreshold = 70; // Mindestpixel für eine gültige Wischgeste
+        let isSwiping = false;
+        const swipeThreshold = 40; // Feinfühliger (vorher 70)
 
         mainContent.addEventListener('pointerdown', (e) => {
             startX = e.clientX;
             startY = e.clientY;
+            isSwiping = true;
         });
 
-        mainContent.addEventListener('pointerup', (e) => {
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY;
+        mainContent.addEventListener('pointermove', (e) => {
+            if (!isSwiping) return;
 
-            // Nur wischen, wenn horizontaler Weg deutlich größer als vertikaler Weg (verhindert Fehltrigger beim Scrollen)
-            if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            const absDx = Math.abs(dx);
+            const absDy = Math.abs(dy);
+
+            // Auslösen, wenn horizontaler Weg Schwellenwert erreicht und deutlich flacher als vertikaler Scroll ist
+            if (absDx > swipeThreshold && absDx > absDy * 1.2) {
+                isSwiping = false; // Verhindert mehrfaches Auslösen während einer Bewegung
                 const currentIndex = tabOrder.indexOf(window.viewId);
 
-                if (deltaX < 0) { // Swipe nach links
-                    const nextIndex = currentIndex + 1;
-                    if (nextIndex < tabOrder.length) {
-                        const nextTabId = tabOrder[nextIndex];
-                        window.switchV(nextTabId, document.querySelector(`.tab-item[onclick*="${nextTabId}"]`));
-                    }
-                } else { // Swipe nach rechts
-                    const prevIndex = currentIndex - 1;
-                    if (prevIndex >= 0) {
-                        const prevTabId = tabOrder[prevIndex];
-                        window.switchV(prevTabId, document.querySelector(`.tab-item[onclick*="${prevTabId}"]`));
-                    }
+                if (dx < 0 && currentIndex < tabOrder.length - 1) { // Nach links wischen -> Nächster Tab
+                    const nextId = tabOrder[currentIndex + 1];
+                    window.switchV(nextId, document.querySelectorAll('.tab-item')[currentIndex + 1]);
+                } else if (dx > 0 && currentIndex > 0) { // Nach rechts wischen -> Vorheriger Tab
+                    const prevId = tabOrder[currentIndex - 1];
+                    window.switchV(prevId, document.querySelectorAll('.tab-item')[currentIndex - 1]);
                 }
             }
+
+            // Wenn der User primär vertikal scrollt (nach oben/unten), brechen wir die Swipe-Erkennung ab
+            if (absDy > 20 && absDy > absDx) {
+                isSwiping = false;
+            }
         });
+
+        mainContent.addEventListener('pointerup', () => isSwiping = false);
+        mainContent.addEventListener('pointercancel', () => isSwiping = false);
     </script>
 </body>
 </html>
