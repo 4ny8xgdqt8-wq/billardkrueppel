@@ -11,10 +11,11 @@
     <meta name="apple-mobile-web-app-title" content="Billard">
     <link rel="apple-touch-icon" href="logo_html.png?v=2">
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <!-- // Versions-Tracking für Cache-Validierung -->
-    <script src="Chart.js?v=1.0.8"></script>
-    <link rel="manifest" href="manifest.json?v=1.0.8">
+    <script src="Chart.js?v=1.1.3"></script>
+    <link rel="manifest" href="manifest.json?v=1.1.3">
     <!-- // --------------------------------------- -->
 
     <style>
@@ -24,37 +25,164 @@
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { 
-            background: var(--bg); color: var(--text); margin: 0; padding: 0; 
+            background: radial-gradient(circle at center, #2c2c2e 0%, #000000 100%) fixed; color: var(--text); margin: 0; padding: 0; 
             font-family: -apple-system, sans-serif; height: 100vh; width: 100%; 
             overflow: hidden; -webkit-user-select: none;
         }
         .app-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; position: fixed; }
-        .main-content { flex: 1; overflow-y: auto; padding: 0 16px 120px 16px; -webkit-overflow-scrolling: touch; }
-        .view { display: none; flex-direction: column; width: 100%; } 
+        .main-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            padding: 0 16px 120px 16px; 
+            -webkit-overflow-scrolling: touch; 
+            position: relative; 
+        }
+        .view { 
+            display: none; 
+            flex-direction: column; 
+            width: 100%; 
+            animation-duration: 0.3s;
+            animation-fill-mode: both;
+            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        } 
         .view.active { display: flex; }
-        .card { background: var(--card); border-radius: 20px; padding: 15px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
-        .header-container { position: sticky; top: 0; z-index: 1000; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: calc(var(--safe-top) + 10px) 16px 10px 16px; display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 -16px 15px -16px; border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); }
+
+        /* Animationen für den Seitenwechsel */
+        .slide-in-right { animation-name: slideInRight; }
+        .slide-in-left { animation-name: slideInLeft; }
+        .slide-out-right { animation-name: slideOutRight; display: flex !important; position: absolute; top: 0; left: 16px; width: calc(100% - 32px); z-index: 0; }
+        .slide-out-left { animation-name: slideOutLeft; display: flex !important; position: absolute; top: 0; left: 16px; width: calc(100% - 32px); z-index: 0; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        @keyframes slideOutLeft {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(-100%); opacity: 0; }
+        }
+        .card { 
+            background: rgba(28, 28, 30, 0.65); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px); 
+            border-radius: 20px; padding: 15px; margin-bottom: 12px; 
+            border: 1px solid rgba(255,255,255,0.12); 
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3); 
+        }
+        .header-container { 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            background: rgba(20, 20, 22, 0.55); 
+            backdrop-filter: blur(30px) saturate(210%) brightness(1.2); 
+            -webkit-backdrop-filter: blur(30px) saturate(210%) brightness(1.2); 
+            padding: calc(var(--safe-top) + 10px) 16px 10px 16px; 
+            display: flex; align-items: center; justify-content: center; gap: 12px; 
+            margin: 0 -16px 15px -16px; 
+            border-bottom: 0.5px solid rgba(255, 255, 255, 0.15); 
+        }
         .header-side { display: flex; align-items: center; }
         .header-side.right { justify-content: flex-end; }
         .logo-img { height: 30px; width: auto; object-fit: contain; }
         .title-stack { display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .main-title { font-weight: 900; font-size: 18px; line-height: 1; letter-spacing: -0.5px; color: var(--accent); text-transform: uppercase; }
+        .main-title { 
+            font-weight: 900; font-size: 18px; line-height: 1; letter-spacing: -0.5px; 
+            color: var(--accent); text-transform: uppercase; 
+            text-shadow: 0 0 12px rgba(255, 204, 0, 0.3);
+        }
         .sub-title { color: #8e8e93; font-size: 9px; font-weight: 700; margin-top: 2px; text-transform: uppercase; letter-spacing: 1.5px; }
         
-        .tab-bar { position: absolute; bottom: calc(var(--safe-bottom) + 10px); left: 12px; right: 12px; background: rgba(35, 35, 35, 0.1); backdrop-filter: blur(45px) saturate(250%) brightness(1.2); -webkit-backdrop-filter: blur(45px) saturate(250%) brightness(1.2); border: 0.5px solid rgba(255, 255, 255, 0.15); display: flex; border-radius: 38px; height: 70px; z-index: 9999; padding: 0 6px; align-items: center; box-shadow: 0 18px 45px rgba(0,0,0,0.5); }
-        .tab-indicator { position: absolute; height: 54px; background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.10)); border-radius: 32px; transition: all 0.45s cubic-bezier(0.25, 0.8, 0.25, 1.2); z-index: 0; }
+        .section-label { 
+            font-size: 10px; 
+            font-weight: 900; 
+            color: #8e8e93; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            margin: 24px 0 12px 4px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+        }
+        .section-label::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent); }
+        .tab-bar { 
+            position: absolute; bottom: calc(var(--safe-bottom) + 10px); left: 12px; right: 12px; 
+            background: rgba(20, 20, 22, 0.55); 
+            backdrop-filter: blur(35px) saturate(210%) brightness(1.2); 
+            -webkit-backdrop-filter: blur(35px) saturate(210%) brightness(1.2); 
+            border: 0.5px solid rgba(255, 255, 255, 0.15); 
+            display: flex; border-radius: 38px; height: 70px; 
+            z-index: 9999; padding: 0 6px; 
+            align-items: center; 
+            box-shadow: 0 18px 45px rgba(0,0,0,0.5);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .tab-indicator { 
+            position: absolute; height: 54px; 
+            background: rgba(255, 255, 255, 0.12); 
+            border: 0.5px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 32px; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1.4); z-index: 0; 
+        }
         .tab-item { flex: 1; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.4); font-size: 8.5px; font-weight: 800; border-radius: 32px; transition: all 0.3s; position: relative; z-index: 1; }
-        .tab-item.active { color: #ffffff; } .tab-item.active .tab-icon { transform: scale(1.2) translateY(-2px); color: var(--accent); }
-        .tab-icon { font-size: 21px; margin-bottom: 2px; }
+        .tab-item:active { transform: scale(0.94); }
+        .tab-item.active { color: #ffffff; } 
+        .tab-item.active .tab-icon { transform: scale(1.25) translateY(-2px); color: var(--accent); text-shadow: 0 0 12px rgba(255, 204, 0, 0.4); }
+        .tab-icon { font-size: 21px; margin-bottom: 2px; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1.5); }
+
+        /* Styles für den Achievement-Chevron (ausklappbare Menüs) */
+        .ach-chevron {
+            width: 9px;
+            height: 9px;
+            border-right: 2px solid var(--accent);
+            border-bottom: 2px solid var(--accent);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1.4);
+            cursor: pointer;
+            flex-shrink: 0;
+            display: block;
+        }
+        .ach-chevron.collapsed { transform: rotate(45deg); margin-top: -4px; }
+        .ach-chevron.expanded { transform: rotate(-135deg); margin-top: 4px; }
+        .ach-chevron:active { /* Visuelles Feedback beim Drücken */
+            opacity: 0.5;
+            transform: scale(0.8);
+        }
         
         label { display: block; margin-bottom: 4px; color: #8e8e93; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding-left: 4px; }
-        select, input { width: 100%; padding: 12px; background: rgba(44, 44, 46, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: white; outline: none; margin-bottom: 8px; font-size: 15px; -webkit-appearance: none; }
+        select, input { 
+            width: 100%; padding: 12px; 
+            background: rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 14px; color: white; outline: none; margin-bottom: 8px; font-size: 15px; -webkit-appearance: none; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        select:focus, input:focus { 
+            border-color: var(--accent); 
+            background: rgba(255, 204, 0, 0.1); 
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.2); 
+        }
         select { 
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 12px center;
             background-size: 16px;
             padding-right: 36px;
+        }
+        /* Stellt sicher, dass die Optionen im Dropdown lesbar sind */
+        select option {
+            background-color: var(--card); /* Dunkler Hintergrund wie die Karten */
+            color: var(--text); /* Weißer Text */
         }
         
         .win-text { color: #34c759; font-weight: 800; }
@@ -67,26 +195,39 @@
         
         .modal { position: fixed; inset: 0; z-index: 20000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); }
-        .modal-card { position: relative; width: 100%; max-width: 420px; max-height: 85vh; background: #1c1c1e; border: 1px solid rgba(255,255,255,0.1); border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .modal-card { 
+            position: relative; width: 100%; max-width: 420px; max-height: 85vh; 
+            background: rgba(28, 28, 30, 0.85); 
+            backdrop-filter: blur(35px) saturate(150%); 
+            -webkit-backdrop-filter: blur(35px) saturate(150%);
+            border: 1px solid rgba(255,255,255,0.15); 
+            border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+        }
 
-        .btn-save { background: #34c759; color: white; border: none; padding: 14px; border-radius: 16px; font-size: 16px; font-weight: 900; width: 100%; transition: opacity 0.2s; }
-        .btn-save:active { opacity: 0.8; }
-        .win-btn { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #8e8e93; font-weight: 800; text-align: center; }
-        .win-btn.selected { border-color: var(--accent); background: rgba(255, 204, 0, 0.15); color: var(--accent); }
+        .btn-save { background: #34c759; color: white; border: none; padding: 14px; border-radius: 16px; font-size: 16px; font-weight: 900; width: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-save:active { transform: scale(0.96); opacity: 0.9; }
+        .win-btn { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #8e8e93; font-weight: 800; text-align: center; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .win-btn:active { transform: scale(0.96); }
+        .win-btn.selected { border-color: var(--accent); background: rgba(255, 204, 0, 0.15); color: var(--accent); box-shadow: 0 0 15px rgba(255, 204, 0, 0.2); }
+
+        #btn-random-teams, #btn-setup-help, #btn-breakcalc { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #btn-random-teams:active, #btn-setup-help:active, #btn-breakcalc:active { transform: scale(0.95); opacity: 0.8; }
 
         .loading-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 30000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
         .loader-logo { height: 80px; width: auto; margin-bottom: 15px; }
         .loader-title { font-weight: 900; font-size: 24px; color: var(--accent); text-transform: uppercase; margin-bottom: 30px; }
         .spinner { width: 45px; height: 45px; border: 4px solid rgba(255, 204, 0, 0.1); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes progress-shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        @keyframes progress-shimmer { 0% { transform: translateX(-110%) skewX(-20deg); } 100% { transform: translateX(250%) skewX(-20deg); } }
+        @keyframes tip-pulse { 0% { opacity: 0.3; transform: scale(1); filter: blur(3px); } 100% { opacity: 0.9; transform: scale(2.5); filter: blur(6px); } }
+        @keyframes bar-glow { 0% { box-shadow: 0 0 10px rgba(255, 204, 0, 0.2); } 100% { box-shadow: 0 0 25px rgba(255, 204, 0, 0.6); } }
 
         .prob-box{padding:10px 12px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-bottom:12px;display:flex;flex-direction:column;}
         .prob-title{color:var(--accent);font-weight:900;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
         .prob-row{display:flex;justify-content:space-between;margin-bottom:8px; gap: 10px;}
         .prob-pill{font-size:11px;font-weight:900;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.06);color:#fff;flex:1;text-align:center;}
-        .prob-bar{height:6px;border-radius:10px;background:rgba(255,255,255,0.1);position:relative;overflow:visible;}
-        .prob-bar>div:first-child{height:100%;background:linear-gradient(90deg,#34c759,#4FC3F7);transition: width 0.5s ease;border-radius:inherit;}
+        .prob-bar{height:10px; border-radius:20px; background:rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); position:relative; overflow:visible; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);}
+        .prob-bar>div:first-child{height:100%; background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%), linear-gradient(90deg, #34c759, #4FC3F7); border-radius:inherit; transition: width 0.8s cubic-bezier(0.3, 1.5, 0.5, 1); box-shadow: 0 0 15px rgba(52, 199, 89, 0.3); animation: bar-glow 2s infinite alternate; position: relative;}
 
         @keyframes pulse-error {
             0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5); }
@@ -144,9 +285,9 @@
             top: 100%;
             left: 0;
             right: 0;
-            background: rgba(28, 28, 30, 0.98);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(28, 28, 30, 0.75);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
             padding: 15px;
             border-bottom: 1px solid var(--accent);
             z-index: 2000;
@@ -245,6 +386,43 @@
             /* Remove bottom margin from the last stacked column if it's not the button */
             .filter-row .filter-date-col {
                 margin-bottom: 0; /* Remove margin if it's the last div before the button */
+            }
+
+                        }
+
+        /* Optimierte Styles für die Historie Datumsgruppierung */
+        .history-date-header {
+            position: sticky;
+            top: 58px; /* Verhindert Überlappung mit dem Haupt-Header */
+            background: rgba(10, 10, 12, 0.5); /* Etwas weniger opak */
+            backdrop-filter: blur(15px) saturate(150%); /* Weniger Unschärfe und Sättigung */
+            -webkit-backdrop-filter: blur(15px) saturate(150%);
+            padding: 10px 16px 6px 16px; /* Vertikales Padding reduziert */
+            margin: 0 -16px 12px -16px;
+            font-size: 10px;
+            font-weight: 700; /* Weniger fett */
+            color: #8e8e93;
+            text-transform: uppercase;
+            letter-spacing: 1px; /* Letter-Spacing reduziert */
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 0.5px solid rgba(255, 255, 255, 0.15); /* Etwas sichtbarere, einheitliche Linie */
+        }
+
+        /* Leichte Pulsierung für den Erstplatzierten */
+        .rank-1-card {
+            animation: pulse-gold 1s infinite alternate ease-in-out; /* Schnelleres Pulsieren */
+        }
+        @keyframes pulse-gold {
+            0% { 
+                box-shadow: 0 0 12px rgba(255, 204, 0, 0.15); 
+                border-color: rgba(255, 204, 0, 0.3) !important; 
+            }
+            100% { 
+                box-shadow: 0 0 28px rgba(255, 204, 0, 0.4); 
+                border-color: rgba(255, 204, 0, 0.9) !important; 
             }
         }
     </style>
@@ -444,6 +622,7 @@
                     </div>
                 </div>
                 <div id="stat-content-wrapper">
+                    <div class="section-label">📈 Performance</div>
                     <div class="card"><label style="color: var(--accent);">Siegquote %</label><div style="height:160px;"><canvas id="winChart"></canvas></div></div>
                     <div class="card" id="eloTrendCard">
                         <label>Ranking & Form</label>
@@ -454,15 +633,20 @@
                     </div>
                         <div id="trendPlayers" style="margin-top:12px;"></div>
                     </div>
+
+                    <div class="section-label">🔬 Spielstil & Analyse</div>
                     <div class="stat-grid">
-                        <div class="card"><label>Spiele gesamt</label><div id="stat-total" style="font-size:18px; font-weight:800;">0</div></div>
-                        <div class="card"><label>Anstoß-Vorteil</label><div id="stat-break-adv" style="font-size:18px; font-weight:800; color:#34c759;">0%</div></div>
-                        <div class="card"><label>Sieg durch Foul</label><div id="stat-black" style="font-size:13px; font-weight:800; color:#ff3b30;">0%</div></div>
-                        <div class="card"><label>Pechvogel (Ø Restkugeln)</label><div id="stat-pechvogel" style="font-size:11px; font-weight:800;">-</div></div>
-                        <div class="card"><label>Nervenstärke (Gegner hat <= 1 Kugel)</label><div id="stat-clutch" style="font-size:11px; font-weight:800; color:#007aff;">-</div></div>
-                        <div class="card"><label>Killer (Gegner hat >= 2 Kugeln)</label><div id="stat-killer" style="font-size:11px; font-weight:800; color:#ff3b30;">-</div></div>
+                        <div class="card"><label>🎲 Spiele gesamt</label><div id="stat-total" style="font-size:18px; font-weight:800;">0</div></div>
+                        <div class="card"><label>⚡ Anstoß-Vorteil</label><div id="stat-break-adv" style="font-size:18px; font-weight:800; color:#34c759;">0%</div></div>
+                        <div class="card"><label>🐀 Sieg durch Foul</label><div id="stat-black" style="font-size:13px; font-weight:800; color:#ff3b30;">0%</div></div>
+                        <div class="card"><label>🫠 Pechvogel</label><div id="stat-pechvogel" style="font-size:11px; font-weight:800;">-</div></div>
+                        <div class="card"><label>🥶 Nervenstärke</label><div id="stat-clutch" style="font-size:11px; font-weight:800; color:#007aff;">-</div></div>
+                        <div class="card"><label>🔪 Killer-Instinkt</label><div id="stat-killer" style="font-size:11px; font-weight:800; color:#ff3b30;">-</div></div>
                         <div class="card" style="grid-column: span 2;">
-                            <label>Top Kugel-Gewinner</label>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                <label style="margin:0;">Kugel-Favoriten</label>
+                                <div style="font-size:8px; color:#444; font-weight:900; text-transform:uppercase;">Wer gewinnt mit was?</div>
+                            </div>
                             <div style="display: flex; justify-content: space-around; align-items: center; padding: 5px 0;">
                                 <div style="text-align: center;">
                                     <div style="font-size: 10px; color: #8e8e93; font-weight: 800; text-transform: uppercase;">Voll</div>
@@ -489,13 +673,20 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card" style="grid-column: span 2;"><label>Partner-Power (Top Duos %)</label><div id="stat-duo-ranking"></div></div>
-                        <div class="card" style="grid-column: span 2;"><label>Kugel-Spezis (Beste Winrate pro Kugeltyp, ab 3 Gewinne)</label><div id="stat-ball-spez"></div></div>
-                        <div class="card" style="grid-column: span 2;"><label>Absoluter Angstgegner</label><div id="stat-angst" style="font-weight:800; font-size:11px; color:#ff9500;">-</div></div>
-                        <div class="card" style="grid-column: span 2;"><label>Direkte Duelle (Top Dominanz)</label><div id="stat-head-to-head"></div></div>
-                        <div class="card" style="grid-column: span 2;"><label>Längste Serie</label><div id="stat-streak" style="font-weight:800; font-size:11px;">-</div></div>
-                        <div class="card" style="grid-column: span 2;"><label>Die Mauer (Zäher Verlierer)</label><div id="stat-mauer" style="font-weight:800; font-size:11px; color:#4FC3F7;">-</div></div>
                     </div>
+
+                    <div class="section-label">👥 Social & Teams</div>
+                    <div class="stat-grid">
+                        <div class="card" style="grid-column: span 2;"><label>Partner-Power (Top Duos %)</label><div id="stat-duo-ranking"></div></div>
+                        <div class="card" style="grid-column: span 2;"><label>Kugel-Spezis (Beste Siegrate pro Kugeltyp)</label><div id="stat-ball-spez"></div></div>
+                        <div class="card" style="grid-column: span 2;"><label>Absoluter Angstgegner</label><div id="stat-angst" style="font-weight:800; font-size:11px; color:#ff9500;">-</div></div>
+                        <div class="card" style="grid-column: span 2;"><label>Direkte Duelle</label><div id="stat-head-to-head"></div></div>
+                    </div>
+
+                    <div class="section-label">🏆 Meilensteine</div>
+                    <div class="card"><label>Längste Sieg-Serie</label><div id="stat-streak" style="font-weight:800; font-size:18px; color:var(--accent);">0</div></div>
+                    <div class="card"><label>Die Mauer (Zäher Verlierer)</label><div id="stat-mauer" style="font-weight:800; font-size:11px; color:#4FC3F7;">-</div></div>
+                    
                     <div id="today-matches-card" class="card" style="display:none;">
                         <label>Heutige Matches</label>
                         <div id="today-match-list" style="margin-top:8px;"></div>
@@ -716,10 +907,21 @@
             <div style="padding: 30px 20px; text-align: center;">
                 <div style="font-size: 40px; margin-bottom: 15px;">⚠️</div>
                 <div style="font-weight: 900; color: var(--error); font-size: 16px; text-transform: uppercase; margin-bottom: 10px;">Etwas fehlt!</div>
-                <div id="errorModalText" style="color: #text; font-size: 14px; line-height: 1.6; font-weight: 600; white-space: pre-line; text-align: left; padding: 0 10px;"></div>
+                <div id="errorModalText" style="color: var(--text); font-size: 14px; line-height: 1.6; font-weight: 600; white-space: pre-line; text-align: left; padding: 0 10px;"></div>
             </div>
             <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
                 <button class="btn-save" style="margin-top:0; background: var(--error);" onclick="window.closeErrorModal()">Verstanden</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="playerProfileModal" class="modal">
+        <div class="modal-backdrop" onclick="window.closePlayerProfileModal()"></div>
+        <div class="modal-card">
+            <div id="profileHeader" style="padding: 25px 20px 15px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05);"></div>
+            <div id="profileStats" style="flex:1; overflow-y:auto; padding: 20px;"></div>
+            <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                <button class="btn-save" style="margin-top:0;" onclick="window.closePlayerProfileModal()">Schließen</button>
             </div>
         </div>
     </div>
@@ -793,6 +995,7 @@
         window.dbFns = { doc, setDoc, getDoc, updateDoc };
         window.stats = []; window.spieler = []; window.dailyAchivs = { days: {} };
         window.winnerNum = 0; window.viewId = 'aufzeichnen'; window.breakLocked = false;
+        const tabOrder = ['aufzeichnen', 'heute', 'statistik', 'erfolge', 'uebersicht'];
 
         window.hideLoader = () => {
             const l = document.getElementById('loading-overlay');
@@ -803,21 +1006,49 @@
         };
 
         window.switchV = (id, el) => {
-            window.viewId = id;
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            const oldId = window.viewId;
+            if (oldId === id) return;
+
+            const oldIndex = tabOrder.indexOf(oldId);
+            const newIndex = tabOrder.indexOf(id);
+            const direction = newIndex > oldIndex ? 'next' : 'prev';
+
+            const currentView = document.querySelector('.view.active');
             const targetViewId = (id === 'heute' || id === 'statistik') ? 'view-statistik' : 'view-' + id;
-            const targetView = document.getElementById(targetViewId);
-            if (targetView) targetView.classList.add('active');
-            if (el) el.classList.add('active');
+            const nextView = document.getElementById(targetViewId);
+
+            if (!nextView) return;
+
+            window.viewId = id;
+
+            // Tab-Bar UI sofort aktualisieren
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
             if (el) {
+                el.classList.add('active');
                 const ind = document.getElementById('tab-indicator');
                 ind.style.width = el.offsetWidth + "px";
                 ind.style.left = el.offsetLeft + "px";
             }
-            window.updateAllViews();
-            const scrollArea = document.getElementById('scroll-area');
-            if (scrollArea) scrollArea.scrollTop = 0;
+
+            // Wenn das DOM-Element gleich bleibt (z.B. Wechsel zwischen Heute/Gesamt), keine Animation
+            if (currentView === nextView) {
+                window.updateAllViews();
+                return;
+            }
+
+            const inClass = direction === 'next' ? 'slide-in-right' : 'slide-in-left';
+            const outClass = direction === 'next' ? 'slide-out-left' : 'slide-out-right';
+
+            if (currentView) currentView.classList.add(outClass);
+            nextView.classList.add('active', inClass);
+
+            setTimeout(() => {
+                if (currentView) currentView.classList.remove('active', outClass);
+                nextView.classList.remove(inClass);
+                window.updateAllViews();
+                const scrollArea = document.getElementById('scroll-area');
+                if (scrollArea) scrollArea.scrollTop = 0;
+            }, 300);
         };
 
         window.forceUpdate = () => {
@@ -835,6 +1066,8 @@
         window.closeSuccessModal = () => {
             document.getElementById('successModal').style.display = 'none';
         };
+
+        window.closePlayerProfileModal = () => { document.getElementById('playerProfileModal').style.display = 'none'; };
 
         window.closeDiceModal = () => {
             document.getElementById('diceModal').style.display = 'none';
@@ -1048,6 +1281,10 @@
             onSnapshot(doc(db, "billard_data", "stats"), (snap) => {
                 if (snap.exists()) {
                     window.stats = snap.data().matches || [];
+                    // Berechne Karriere-Stats für die Spieler-Profile vorab
+                    if (typeof window.processAllStatsChronologically === 'function') {
+                        window.careerStats = window.processAllStatsChronologically(window.stats, window.spieler);
+                    }
                     window.updateAllViews();
                 }
                 window.hideLoader();
@@ -1057,10 +1294,21 @@
               if (snap.exists()) {
                   window.spieler = snap.data().names || [];
                   window.initDropdowns();
+                  if (window.stats && window.stats.length > 0 && typeof window.processAllStatsChronologically === 'function') {
+                      window.careerStats = window.processAllStatsChronologically(window.stats, window.spieler);
+                  }
               }
             }, (err) => console.error("Firebase Spieler Fehler:", err));
             
-            onSnapshot(doc(db, "billard_data", "daily_achivs"), (snap) => { if (snap.exists()) window.dailyAchivs = snap.data(); });
+            onSnapshot(doc(db, "billard_data", "daily_achivs"), (snap) => { 
+                if (snap.exists()) {
+                    window.dailyAchivs = snap.data();
+                    // WICHTIG: Karriere-Stats neu berechnen, da Daily-Achievements nun bekannt sind
+                    if (window.stats && window.stats.length > 0 && typeof window.processAllStatsChronologically === 'function') {
+                        window.careerStats = window.processAllStatsChronologically(window.stats, window.spieler);
+                    }
+                }
+            });
         }).catch(err => {
             console.error("Firebase Login Fehler:", err);
             window.hideLoader();
@@ -1233,6 +1481,11 @@
             window.removeHighlight('breakPlayer');
             window.breakLocked = true;
 
+            // Haptik beim Würfeln (kurzes Rattern für das Würfel-Gefühl)
+            if ("vibrate" in navigator) {
+                navigator.vibrate([30, 50, 30, 50, 30]);
+            }
+
             // Deaktivieren nach dem Würfeln
             const diceBtn = document.getElementById('btn-breakcalc');
             const breakSel = document.getElementById('breakPlayer');
@@ -1358,6 +1611,74 @@
             window.openSuccessModal();
         };
 
+        window.openPlayerProfile = (name) => {
+            // Nutze careerStats statt lastProcessedStats, um Filter-Einfluss zu vermeiden
+            const stats = window.careerStats || window.lastProcessedStats;
+            if (!stats || !stats.pData[name]) return;
+            const d = stats.pData[name];
+            
+            const header = document.getElementById('profileHeader');
+            const content = document.getElementById('profileStats');
+            
+            header.innerHTML = `
+                <img src="${window.getAvatarUrl(name)}" style="width:80px; height:80px; border-radius:50%; border:3px solid var(--accent); margin-bottom:10px; object-fit:cover;">
+                <div style="font-size:22px; font-weight:900; color:#fff;">${name}</div>
+                <div style="font-size:12px; color:var(--accent); font-weight:700; text-transform:uppercase; margin-top:4px; letter-spacing:1px;">Spieler-Steckbrief</div>
+            `;
+
+            const winRate = Math.round((d.wins / d.games) * 100);
+
+            // Bestimme Lieblingskugel basierend auf allen Spielen (Karriere)
+            let favBall = "-";
+            if (window.stats) {
+                let v = 0, h = 0;
+                window.stats.forEach(g => {
+                    const p1Arr = (g.p1 || "").split(" & ").map(s => s.trim());
+                    const p2Arr = (g.p2 || "").split(" & ").map(s => s.trim());
+                    if (p1Arr.includes(name) && g.bt1) g.bt1 === 'Voll' ? v++ : h++;
+                    if (p2Arr.includes(name) && g.bt2) g.bt2 === 'Voll' ? v++ : h++;
+                });
+                if (v > h) favBall = "🟡 Voll"; else if (h > v) favBall = "🔵 Halb";
+            }
+
+            content.innerHTML = `
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:20px;">
+                    <div class="card" style="margin-bottom:0; padding:12px; background:rgba(255,255,255,0.03); text-align:center;">
+                        <label style="padding:0;">Aktuelles ELO</label>
+                        <div style="font-size:20px; font-weight:900; color:var(--accent);">${d.elo || 1000}</div>
+                    </div>
+                    <div class="card" style="margin-bottom:0; padding:12px; background:rgba(255,255,255,0.03); text-align:center;">
+                        <label style="padding:0;">Siegquote</label>
+                        <div style="font-size:20px; font-weight:900; color:#34c759;">${winRate}%</div>
+                    </div>
+                </div>
+
+                <div class="section-label" style="margin-top:0;">📊 Karriere-Highlights</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; justify-content:space-between; font-size:13px; padding:10px; background:rgba(255,255,255,0.02); border-radius:10px;">
+                        <span style="color:#8e8e93;">Spiele gesamt</span><span style="font-weight:800;">${d.games}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; padding:10px; background:rgba(255,255,255,0.02); border-radius:10px;">
+                        <span style="color:#8e8e93;">Höchste Serie</span><span style="font-weight:800; color:var(--accent);">🔥 ${d.maxStreak}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; padding:10px; background:rgba(255,255,255,0.02); border-radius:10px;">
+                        <span style="color:#8e8e93;">Lieblingskugeln</span><span style="font-weight:800;">${favBall}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; padding:10px; background:rgba(255,255,255,0.02); border-radius:10px;">
+                        <span style="color:#8e8e93;">Nervenstärke (Clutch)</span><span style="font-weight:800; color:#4FC3F7;">🦾 ${d.clutchWins}x</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; padding:10px; background:rgba(255,255,255,0.02); border-radius:10px;">
+                        <span style="color:#8e8e93;">ELO-Rekord</span><span style="font-weight:800;">📈 ${d.maxElo}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; padding:10px; background:rgba(255,255,255,0.02); border-radius:10px;">
+                        <span style="color:#8e8e93;">Achievements</span><span style="font-weight:800;">🏆 ${d.achCountTotal}</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('playerProfileModal').style.display = 'flex';
+        };
+
         // Die ursprüngliche requestDelete Funktion ruft jetzt das Modal auf
         window.requestDelete = (i) => { window.openDeleteConfirmModal(i); };
         window.updateMatchProbability = () => {
@@ -1379,16 +1700,21 @@
             
             const elo = window.computeEloRatings(window.stats);
             const getE = (p) => (elo[p] ? elo[p].elo : 1000);
+            const getG = (p) => (elo[p] ? elo[p].eloGames : 0);
+            const getK = (p) => (getG(p) < 20 ? 40 : 20);
 
-            let r1, r2, n1, n2;
+            let r1, r2, n1, n2, k1, k2;
             if(m==='1:1') { 
                 n1 = document.getElementById('p1').value; n2 = document.getElementById('p2').value;
                 r1 = getE(n1); r2 = getE(n2); 
+                k1 = getK(n1); k2 = getK(n2);
             } else { 
                 n1 = document.getElementById('t1p1').value + " & " + document.getElementById('t1p2').value;
                 n2 = document.getElementById('t2p1').value + " & " + document.getElementById('t2p2').value;
                 r1 = (getE(document.getElementById('t1p1').value)+getE(document.getElementById('t1p2').value))/2; 
                 r2 = (getE(document.getElementById('t2p1').value)+getE(document.getElementById('t2p2').value))/2; 
+                k1 = (getK(document.getElementById('t1p1').value) + getK(document.getElementById('t1p2').value)) / 2;
+                k2 = (getK(document.getElementById('t2p1').value) + getK(document.getElementById('t2p2').value)) / 2;
             }
 
             const getBP = (searchStr) => {
@@ -1418,6 +1744,13 @@
             const pref1 = getBP(n1), pref2 = getBP(n2);
             const prob1 = Math.round((1 / (1 + Math.pow(10, (r2 - r1) / 400))) * 100);
             const prob2 = 100 - prob1;
+
+            // ELO Vorschau berechnen
+            const winDelta1 = Math.round(k1 * (1 - prob1/100));
+            const lossDelta1 = Math.round(k1 * (prob1/100));
+            const winDelta2 = Math.round(k2 * (1 - prob2/100));
+            const lossDelta2 = Math.round(k2 * (prob2/100));
+
             const l1 = (m==='1:1' ? n1 : "Team 1");
             const l2 = (m==='1:1' ? n2 : "Team 2");
 
@@ -1435,16 +1768,27 @@
                     <span style="font-size:9px; color:#8e8e93; font-weight:700;">${Math.round(r1)} vs ${Math.round(r2)} Ø ELO</span>
                 </div>
                 <div class="prob-bar" style="margin-bottom:6px;">
-                    <div style="width:${prob1}%"></div>
-                    <div style="position:absolute; left:50%; top:-4px; bottom:-4px; width:2px; background:#ff3b30; z-index:2; transform:translateX(-50%); box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>
+                    <div style="width:${prob1}%">
+                        <!-- Liquid Glow Tip -->
+                        <div style="position:absolute; right:-6px; top:-30%; bottom:-30%; width:12px; background: radial-gradient(circle, #fff 0%, transparent 70%); opacity:0.7; animation: tip-pulse 1s infinite alternate; z-index:3;"></div>
+                    </div>
+                    <div style="position:absolute; left:50%; top:-4px; bottom:-4px; width:2px; background:rgba(255,255,255,0.4); z-index:4; transform:translateX(-50%);"></div>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="font-size:12px; font-weight:900; color:${c1}; flex:1; display:flex; align-items:center;">
                         <span style="white-space:nowrap;">${l1}: ${prob1}%</span>
-                        ${pref1 ? `<span style="display:inline-flex; align-items:center; font-size:11px; font-weight:900; color:${pref1.c}; opacity:0.9; margin-left:6px;">${window.getBallIcon(pref1.t)}${pref1.t}</span>` : ''}
+                        ${pref1 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref1.c}; opacity:0.8; margin-left:6px;">${window.getBallIcon(pref1.t).replace('14','11')}${pref1.t}</span>` : ''}
+                        <div style="font-size:8px; font-weight:900; margin-left:auto; text-align:right; background:rgba(255,255,255,0.03); padding:3px 6px; border-radius:8px; border:0.5px solid rgba(255,255,255,0.05); line-height:1.1;">
+                            <div style="color:#34c759; margin-bottom:1px;">+${winDelta1} ELO</div>
+                            <div style="color:#ff3b30;">-${lossDelta1} ELO</div>
+                        </div>
                     </div>
-                    <div style="font-size:12px; font-weight:900; color:${c2}; flex:1; display:flex; align-items:center; justify-content:flex-end;">
-                        ${pref2 ? `<span style="display:inline-flex; align-items:center; font-size:11px; font-weight:900; color:${pref2.c}; opacity:0.9; margin-right:6px;">${window.getBallIcon(pref2.t)}${pref2.t}</span>` : ''}
+                    <div style="font-size:12px; font-weight:900; color:${c2}; flex:1; display:flex; align-items:center; justify-content:flex-end; gap:6px;">
+                        <div style="font-size:8px; font-weight:900; margin-right:auto; text-align:left; background:rgba(255,255,255,0.03); padding:3px 6px; border-radius:8px; border:0.5px solid rgba(255,255,255,0.05); line-height:1.1;">
+                            <div style="color:#34c759; margin-bottom:1px;">+${winDelta2} ELO</div>
+                            <div style="color:#ff3b30;">-${lossDelta2} ELO</div>
+                        </div>
+                        ${pref2 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref2.c}; opacity:0.8; margin-right:6px;">${window.getBallIcon(pref2.t).replace('14','11')}${pref2.t}</span>` : ''}
                         <span style="white-space:nowrap;">${l2}: ${prob2}%</span>
                     </div>
                 </div>`;
@@ -1453,43 +1797,112 @@
         function renderHistory(statsToRender) {
             const container = document.getElementById('history-list');
             const list = statsToRender || window.stats;
-            document.getElementById('match-counter').innerText = "Matches: " + list.length;
+            
+            // ELO Deltas berechnen
+            const processed = window.processAllStatsChronologically(window.stats, window.spieler);
+            const deltas = processed.matchDeltas || {};
+
+            const counter = document.getElementById('match-counter');
+            if (counter) counter.innerText = "Matches: " + list.length;
 
             const getAvatarHtml = (playerName, size = 18) => {
                 if (!playerName) return '';
                 const players = playerName.split(' & ').map(p => p.trim());
-                return players.map(p => {
+                return players.map((p, idx) => {
                     const avatarSrc = window.getAvatarUrl ? window.getAvatarUrl(p) : `avatars/${p}.png`;
-                    return `<img src="${avatarSrc}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,204,0,0.3); margin-right:4px; vertical-align:middle;"><div style="display:none; width:${size}px; height:${size}px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:${size*0.6}px; border:1px solid rgba(255,255,255,0.1); margin-right:4px; vertical-align:middle;">👤</div>`;
+                    const isLast = idx === players.length - 1;
+                    const margin = isLast ? '0' : '-6px';
+                    return `<img src="${avatarSrc}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,0.2); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;"><div style="display:none; width:${size}px; height:${size}px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:${size*0.6}px; border:1px solid rgba(255,255,255,0.1); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;">👤</div>`;
                 }).join('');
             };
 
             const getBallBadge = (type) => {
                 if (!type) return '';
-                const color = type === 'Voll' ? '#ffcc00' : '#4FC3F7';
-                const smallerIcon = window.getBallIcon(type).replace('width="14"', 'width="11"').replace('height="14"', 'height="11"');
-                return `<span style="display:inline-flex; align-items:center; font-size:9px; font-weight:900; color:${color}; opacity:0.9; margin-left:4px; vertical-align:middle;">${smallerIcon}${type}</span>`;
+                return `<span style="display:inline-flex; align-items:center; opacity:0.8;">${window.getBallIcon(type).replace('width="14"','width="12"').replace('height="14"','height="12"').replace('margin-right:4px;','')}</span>`;
             };
 
-            container.innerHTML = list.slice().reverse().map((g) => {
+            let html = "";
+            let lastDate = "";
+
+            const sortedList = list.slice().reverse();
+
+            if (sortedList.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#8e8e93;padding:40px;">Keine Spiele vorhanden.</div>';
+                return;
+            }
+
+            sortedList.forEach((g) => {
                 const i = window.stats.indexOf(g);
-                return `<div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:start;">
-                        <div style="font-size:13px; font-weight:700; display:flex; align-items:center; flex-wrap:wrap; gap:4px; flex:1;">
-                            ${getAvatarHtml(g.p1)}<span class="${g.w==1?'win-text':'loss-text'}">${g.p1}</span>${getBallBadge(g.bt1)} 
-                            <span style="color:#444; margin:0 2px; font-size:10px;">vs</span> 
-                            ${getAvatarHtml(g.p2)}<span class="${g.w==2?'win-text':'loss-text'}">${g.p2}</span>${getBallBadge(g.bt2)}
+                const dateParts = (g.d || "").split(", ");
+                const date = dateParts[0];
+                const time = dateParts[1] || "";
+
+                if (date !== lastDate) {
+                    html += `<div class="history-date-header"><span>📅 ${date}</span></div>`;
+                    lastDate = date;
+                }
+
+                const isWin1 = g.w == 1;
+                const isWin2 = g.w == 2;
+                const delta = deltas[i] || 0;
+
+                html += `
+                <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; border-left: 4px solid ${isWin1 ? '#34c759' : '#ff3b30'}; border-right: 4px solid ${isWin2 ? '#34c759' : '#ff3b30'};">
+                    <div style="padding: 12px 14px 8px 12px; display: flex; align-items: center; justify-content: space-between;">
+                        <!-- Team 1 -->
+                        <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; overflow: hidden;">
+                            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                                <div style="display: flex; align-items: center; flex-shrink: 0;">${getAvatarHtml(g.p1)}</div>
+                                <div style="font-size: 13px; font-weight: 800; color: ${isWin1 ? '#fff' : '#8e8e93'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">
+                                    ${isWin1 ? '🏆 ' : ''}${g.p1}
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                ${getBallBadge(g.bt1)}
+                                <span style="font-size: 10px; font-weight: 700; color: #444;">${g.bt1}</span>
+                                ${isWin1 ? `<span style="font-size: 9px; font-weight: 900; color: #34c759; margin-left: 4px;">+${delta} ELO</span>` : `<span style="font-size: 9px; font-weight: 900; color: #ff3b30; margin-left: 4px;">-${delta} ELO</span>`}
+                            </div>
                         </div>
-                        <div style="text-align: right;">
-                            <div style="font-size:10px; color:#8e8e93;">${g.d}</div>
+
+                        <!-- VS Divider -->
+                        <div style="padding: 0 10px; display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <div style="font-size: 10px; font-weight: 900; color: rgba(255,255,255,0.15);">VS</div>
+                            <div style="height: 20px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+                        </div>
+
+                        <!-- Team 2 -->
+                        <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; overflow: hidden; text-align: right;">
+                            <div style="display: flex; align-items: center; gap: 8px; width: 100%; justify-content: flex-end;">
+                                <div style="font-size: 13px; font-weight: 800; color: ${isWin2 ? '#fff' : '#8e8e93'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">
+                                    ${g.p2}${isWin2 ? ' 🏆' : ''}
+                                </div>
+                                <div style="display: flex; align-items: center; flex-shrink: 0;">${getAvatarHtml(g.p2)}</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                ${isWin2 ? `<span style="font-size: 9px; font-weight: 900; color: #34c759; margin-right: 4px;">+${delta} ELO</span>` : `<span style="font-size: 9px; font-weight: 900; color: #ff3b30; margin-right: 4px;">-${delta} ELO</span>`}
+                                <span style="font-size: 10px; font-weight: 700; color: #444;">${g.bt2}</span>
+                                ${getBallBadge(g.bt2)}
+                            </div>
                         </div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-                        <div style="font-size:10px; color:#8e8e93;">${g.t} | Rest: ${g.l} | Anstoß: ${g.a}</div>
-                        <div style="font-size:9px; color:var(--error); font-weight:900; text-transform:uppercase;" onclick="requestDelete(${i})">Löschen</div>
+
+                    <!-- Footer Info -->
+                    <div style="background: rgba(255,255,255,0.03); padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1;">
+                            <span style="font-size: 10px; color: #8e8e93; font-weight: 600; white-space: nowrap;">🕒 ${time}</span>
+                            <span style="font-size: 10px; color: #8e8e93; font-weight: 600; white-space: nowrap;">🎱 ${g.m}</span>
+                            <span style="font-size: 10px; color: #8e8e93; font-weight: 600; white-space: nowrap;">🛑 Rest: ${g.l}</span>
+                            <span style="font-size: 10px; color: #8e8e93; font-weight: 600; white-space: nowrap;">📝 ${g.t}</span>
+                            <span style="font-size: 10px; color: #8e8e93; font-weight: 600; white-space: nowrap;">⚡ ${g.a}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                             <div style="font-size:9px; color:var(--error); font-weight:900; text-transform:uppercase; padding: 4px 8px; background: rgba(255, 59, 48, 0.1); border-radius: 6px;" onclick="requestDelete(${i})">Löschen</div>
+                        </div>
                     </div>
                 </div>`;
-            }).join("") || '<div style="text-align:center;color:#8e8e93;padding:40px;">Keine Spiele vorhanden.</div>';
+            });
+
+            container.innerHTML = html;
         }
 
         window.openAchListModal = () => { renderAchList('all'); document.getElementById('achListModal').style.display='flex'; };
@@ -1542,6 +1955,38 @@
         document.getElementById('scroll-area')?.addEventListener('scroll', () => {
             document.querySelector('.header-container.filter-active')?.classList.remove('filter-active');
         }, { passive: true });
+
+        // --- SWIPE GESTEN FÜR TAB-NAVIGATION ---
+        const mainContent = document.getElementById('scroll-area');
+        let startX = 0;
+        const swipeThreshold = 70; // Mindestpixel für eine gültige Wischgeste
+
+        mainContent.addEventListener('pointerdown', (e) => {
+            startX = e.clientX;
+        });
+
+        mainContent.addEventListener('pointerup', (e) => {
+            const deltaX = e.clientX - startX;
+
+            // Nur reagieren, wenn es eine signifikante horizontale Bewegung war
+            if (Math.abs(deltaX) > swipeThreshold) {
+                const currentIndex = tabOrder.indexOf(window.viewId);
+
+                if (deltaX < 0) { // Swipe nach links
+                    const nextIndex = currentIndex + 1;
+                    if (nextIndex < tabOrder.length) {
+                        const nextTabId = tabOrder[nextIndex];
+                        window.switchV(nextTabId, document.querySelector(`.tab-item[onclick*="${nextTabId}"]`));
+                    }
+                } else { // Swipe nach rechts
+                    const prevIndex = currentIndex - 1;
+                    if (prevIndex >= 0) {
+                        const prevTabId = tabOrder[prevIndex];
+                        window.switchV(prevTabId, document.querySelector(`.tab-item[onclick*="${prevTabId}"]`));
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html>

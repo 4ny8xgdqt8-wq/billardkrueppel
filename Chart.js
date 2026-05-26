@@ -2,7 +2,10 @@
 // icon-color: purple; icon-glyph: magic;
 
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.0.8"; 
+window.BILLARD_APP_VERSION = "1.1.3"; 
+
+// Initiales Limit für die Historie
+window.historyLimit = 20;
 
 // Globale Avatar-Zuordnung (Spielername -> Pfad zum Bild)
 window.playerAvatars = {
@@ -345,7 +348,7 @@ window.computeEloRatings = function(allMatches) {
         return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10), m[4] ? parseInt(m[4], 10) : 0, m[5] ? parseInt(m[5], 10) : 0).getTime();
     };
     const ordered = (allMatches || []).map((g, i) => ({ g, i }))
-        .sort((a, b) => parseSortTime(a.g.d) - parseSortTime(b.g.d) || a.i - b.i)
+        .sort((a, b) => (parseSortTime(a.g.d) || 0) - (parseSortTime(b.g.d) || 0) || a.i - b.i)
         .map(x => x.g);
 
     const getR = (p) => (typeof ratings[p] === 'number') ? ratings[p] : base;
@@ -387,8 +390,11 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
                 todayBreakWins: 0, todayBlackWinsCount: 0, todayKillerPoints: 0, todayRest: 0, todayAvgRest: 0,
                 loseStreak: 0, maxLoseStreak: 0,
                 gameResultsHistory: [], last30Games: [], last20Losses: [], last20WinsKiller: [],
-            eloHistory: [], maxElo: 1000, maxWinRate: 0, headToHead: {}, closeLosses: 0, dramaWins: 0, winsVsTopElo: 0, achTracker: {},
+            eloHistory: [], maxElo: 1000, maxWinRate: 0, headToHead: {}, 
+                closeLosses: 0, closeWins: 0, dramaWins: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0,
+                winsVsTopElo: 0, achTracker: {},
                 achCountTotal: 0, completedTracks: 0,
+                dailyDaysWithAch: 0
             };
         }
     };
@@ -409,6 +415,7 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
 
     let globalBlackWins = 0;
     let globalBreakWins = 0;
+    const matchDeltas = {};
 
     const allPools = [...window.famePool, ...window.shamePool];
 
@@ -425,17 +432,21 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         const winnerString = (g.w == 1) ? g.p1 : g.p2;
         const restValue = parseInt(g.l || 0);
 
-        const avgEloTeam1 = p1Arr.reduce((sum, p) => sum + getElo(p), 0) / p1Arr.length;
-        const avgEloTeam2 = p2Arr.reduce((sum, p) => sum + getElo(p), 0) / p2Arr.length;
+        const avgEloTeam1 = p1Arr.reduce((sum, p) => sum + getElo(p), 0) / (p1Arr.length || 1);
+        const avgEloTeam2 = p2Arr.reduce((sum, p) => sum + getElo(p), 0) / (p2Arr.length || 1);
         const expectedScoreTeam1 = 1 / (1 + Math.pow(10, (avgEloTeam2 - avgEloTeam1) / 400));
         const actualScoreTeam1 = (g.w == 1) ? 1 : 0;
         const eloChange = actualScoreTeam1 - expectedScoreTeam1;
+        
+        // Delta für dieses Spiel speichern (Index aus der Original-Liste nutzen)
+        matchDeltas[allMatches.indexOf(g)] = Math.round(getKFactor(allPlayersInMatch[0]) * Math.abs(eloChange));
 
         // --- 1. BASIS STATS (Sieg/Niederlage/Streaks) AKTUALISIEREN ---
         winnerPlayers.forEach(p => {
             pData[p].wins++;
             pData[p].killerPoints += restValue;
             pData[p].currentStreak = pData[p].lastWin ? (pData[p].currentStreak + 1) : 1;
+            pData[p].streak = pData[p].currentStreak; // Alias für Ranking
             if (pData[p].currentStreak > pData[p].maxStreak) pData[p].maxStreak = pData[p].currentStreak;
             pData[p].lastWin = true;
             pData[p].loseStreak = 0;
@@ -443,6 +454,15 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
             if (winnerString === g.a) pData[p].breakWins++;
             pData[p].last20WinsKiller.push(restValue);
             if (pData[p].last20WinsKiller.length > 20) pData[p].last20WinsKiller.shift();
+            
+            // Head-to-Head befüllen (wichtig für Achievements und Analysen)
+            loserPlayers.forEach(l => {
+                if (!pData[p].headToHead[l]) pData[p].headToHead[l] = { wins: 0, games: 0 };
+                if (!pData[l].headToHead[p]) pData[l].headToHead[p] = { wins: 0, games: 0 };
+                pData[p].headToHead[l].wins++;
+                pData[p].headToHead[l].games++;
+                pData[l].headToHead[p].games++;
+            });
         });
 
         loserPlayers.forEach(p => {
@@ -456,7 +476,9 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
             if (restValue === 1) pData[p].closeLosses++;
         });
 
-        if (restValue === 1) winnerPlayers.forEach(p => { if(p) pData[p].clutchWins++; });
+        if (restValue === 1) winnerPlayers.forEach(p => { 
+            if(p) { pData[p].clutchWins++; pData[p].closeWins++; pData[p].dramaWins++; } 
+        });
         if (g.t && g.t.includes("Schwarz")) globalBlackWins++;
         if (winnerString === g.a) globalBreakWins++;
 
@@ -464,7 +486,8 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         allPlayersInMatch.forEach(p => {
             const currentElo = getElo(p);
             const kFactor = getKFactor(p);
-            let newElo = winnerPlayers.includes(p) ? (currentElo + kFactor * eloChange) : (currentElo - kFactor * eloChange);
+            // eloChange bezieht sich auf Team 1. Team 2 erhält die inverse Änderung.
+            let newElo = p1Arr.includes(p) ? (currentElo + kFactor * eloChange) : (currentElo - kFactor * eloChange);
             eloRatings[p] = newElo;
             eloGamesCount[p] = getEloGameCount(p) + 1;
             
@@ -505,12 +528,42 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         });
     });
 
+    window.lastProcessedStats = { pData, blackWins: globalBlackWins, breakWins: globalBreakWins, matchDeltas };
+
     let maxElo = -Infinity;
     let topEloPlayer = null;
     Object.keys(eloRatings).forEach(p => { if (eloRatings[p] > maxElo) { maxElo = eloRatings[p]; topEloPlayer = p; } });
 
     Object.keys(pData).forEach(p => {
         const d = pData[p];
+
+        // Berechnung der Tage mit Tageserfolgen (Daily Days)
+        if (window.dailyAchivs && window.dailyAchivs.days) {
+            let daysWithAch = 0;
+            for (const dayKey in window.dailyAchivs.days) {
+                const dayRec = window.dailyAchivs.days[dayKey] || {};
+                const arr = dayRec[p] || [];
+                if (Array.isArray(arr) && arr.length > 0) daysWithAch++;
+            }
+            d.dailyDaysWithAch = daysWithAch;
+        }
+
+        // Angstgegner-Metriken (Schlimmster Gegner = meiste Niederlagen)
+        let worstOpponent = null, maxLosses = -1;
+        Object.keys(d.headToHead).forEach(opp => {
+            const h = d.headToHead[opp];
+            const losses = h.games - h.wins;
+            if (losses > maxLosses) { maxLosses = losses; worstOpponent = opp; }
+        });
+        if (worstOpponent) {
+            d.vsWorstOpponentLosses = maxLosses;
+            d.vsNemesisWins = d.headToHead[worstOpponent].wins;
+        }
+
+        // Aktuelle ELO-Werte für direkten Zugriff im Steckbrief setzen
+        d.elo = Math.round(eloRatings[p]);
+        d.eloGames = eloGamesCount[p];
+
         d.winRateLast30 = d.last30Games.length > 0 ? Math.round((d.last30Games.filter(r => r).length / d.last30Games.length) * 100) : 0;
         d.avgRestLossLast20 = d.last20Losses.length > 0 ? (d.last20Losses.reduce((s, v) => s + v, 0) / d.last20Losses.length) : 0;
         d.avgKillerLast20 = d.last20WinsKiller.length > 0 ? (d.last20WinsKiller.reduce((s, v) => s + v, 0) / d.last20WinsKiller.length) : 0;
@@ -527,9 +580,42 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
 
         if (topEloPlayer && d.headToHead[topEloPlayer]) { d.winsVsTopElo = d.headToHead[topEloPlayer].wins; }
         else { d.winsVsTopElo = 0; }
+
+        // Achievement-Anzahl für Karriere berechnen
+        let currentAchs = [];
+        [...window.famePool.map(a=>({...a,k:'fame'})), ...window.shamePool.map(a=>({...a,k:'shame'}))].forEach(ach => {
+            if (ach.cond(d)) currentAchs.push(ach);
+        });
+        const tierBest = {};
+        currentAchs.forEach(it => {
+            if (!it.g || !it.tier) return;
+            const key = it.k + '|' + it.g;
+            if (!tierBest[key] || it.tier > tierBest[key].tier) tierBest[key] = it;
+        });
+        const finalAchs = currentAchs.filter(it => !(it.g && it.tier));
+        Object.values(tierBest).forEach(a => finalAchs.push(a));
+        d.achCountTotal = finalAchs.length;
+
+        // Berechnung der abgeschlossenen Achievement-Tracks
+        const tracks = {};
+        finalAchs.forEach(ach => {
+            if (ach.g && ach.tier) {
+                if (!tracks[ach.g] || ach.tier > tracks[ach.g]) tracks[ach.g] = ach.tier;
+            }
+        });
+        let completedTracksCount = 0;
+        const allTracksInPool = new Set();
+        allPools.forEach(ach => { if (ach.g && ach.tier) allTracksInPool.add(ach.g); });
+        allTracksInPool.forEach(trackName => {
+            const maxTierInTrack = allPools
+                .filter(ach => ach.g === trackName)
+                .reduce((max, ach) => Math.max(max, ach.tier || 0), 0);
+            if (maxTierInTrack > 0 && tracks[trackName] === maxTierInTrack) completedTracksCount++;
+        });
+        d.completedTracks = completedTracksCount;
     });
 
-    return { pData, blackWins: globalBlackWins, breakWins: globalBreakWins };
+    return { pData, blackWins: globalBlackWins, breakWins: globalBreakWins, matchDeltas };
 };
 
 // --- CONSOLIDATED FILTER FUNCTION ---
@@ -636,17 +722,11 @@ window.getFilteredStats = () => {
 window.renderBillardStats = function(stats, filterToday = false, onlyAchievements = false, rootEl = document) {
     // --- Scope: suche IDs nur innerhalb der aktiven View (wichtig bei doppelten IDs im DOM)
     let root = rootEl || document;
-    
-    // Sicherheits-Check: Falls root kein gültiges Element ist (z.B. durch Fehler im Export-Preview)
-    if (!root || typeof root.querySelector !== 'function') {
-        root = document;
-    }
 
-    const byId = (id) => (root && root.querySelector) ? root.querySelector('#' + id) : document.getElementById(id);
-    
-    // --- TITEL ANPASSEN ---
-    const vTitle = document.getElementById('stat-title');
-    if (vTitle) vTitle.innerText = filterToday ? 'Heute' : 'Statistik';
+    // Sicherheits-Check: Falls root kein gültiges Element ist (z.B. durch Fehler im Export-Preview)
+    if (!root || typeof root.querySelector !== 'function') root = document;
+
+    const byId = (id) => (root && root.querySelector) ? root.querySelector('#' + id) : document.getElementById(id);    
 
     // --- DAILY ACHIVS LADEN (falls nicht bereits vorhanden) ---
     if (!window.dailyAchivs) {
@@ -865,10 +945,12 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         ];
 
         let currentLvl = levelSystem[0];
+        let currentLvlIndex = 1;
         let nextLvl = null;
         for (let i = 0; i < levelSystem.length; i++) {
           if (d.wins >= levelSystem[i].min) {
             currentLvl = levelSystem[i];
+            currentLvlIndex = i + 1;
             nextLvl = levelSystem[i + 1] || null;
           }
         }
@@ -901,11 +983,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
         if (isTodayTab) {
           playerBoxHtml = `
-            <div style="background:rgba(255,255,255,0.06); border-radius:18px; margin-bottom:15px;
-                        border: 1px solid rgba(255,204,0,0.15); overflow:hidden;">
-              <div onclick="const content = this.nextElementSibling; const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; this.querySelector('.ach-chevron').style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';"
+            <div style="background:rgba(255,255,255,0.06); border-radius:18px; margin-bottom:15px; border: 1px solid rgba(255,204,0,0.15); overflow:hidden;">
+              <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
                    style="padding:12px 15px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor:pointer; -webkit-tap-highlight-color: transparent; display:flex; align-items:center; gap:12px;">
-                <div class="ach-chevron" style="color:var(--accent); font-size:14px; transition: transform 0.3s ease; transform: rotate(180deg); background: rgba(255,204,0,0.15); width: 26px; height: 26px; display: flex; align-items:center; justify-content:center; border-radius: 50%; flex-shrink:0;">▼</div>
+                <div class="ach-chevron expanded"></div>
                 <div style="display:flex; align-items:center; gap:10px;">
                   <img src="${window.getAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
                   <div style="display:none; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,0.1);">👤</div>
@@ -918,18 +999,18 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         } else {
           playerBoxHtml = `
             <div style="background:rgba(255,255,255,0.06); border-radius:18px; margin-bottom:15px; border: 1px solid rgba(255,204,0,0.15); overflow:hidden;">
-              <div onclick="const content = this.nextElementSibling; const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; this.querySelector('.ach-chevron').style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';"
+              <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
                    style="background:rgba(255,204,0,0.12); padding:12px 15px; border-bottom: 1px solid rgba(255,204,0,0.1); cursor:pointer; -webkit-tap-highlight-color: transparent;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                   <div style="display:flex; align-items:center; gap:12px;">
-                    <div class="ach-chevron" style="color:var(--accent); font-size:14px; transition: transform 0.3s ease; background: rgba(255,204,0,0.15); width: 26px; height: 26px; display: flex; align-items:center; justify-content:center; border-radius: 50%; flex-shrink:0;">▼</div>
+                    <div class="ach-chevron collapsed"></div>
                     <div style="display:flex; align-items:center; gap:10px;">
                     <img src="${window.getAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.2);">
                     <div style="display:none; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:20px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                     <span style="font-size:26px;">${currentLvl.icon}</span>
                     <div>
                       <div style="color:#ffffff; font-weight:900; font-size:17px; line-height:1;">${p}</div>
-                      <div style="color:#ffcc00; font-weight:700; font-size:10px; text-transform:uppercase; margin-top:2px; letter-spacing:0.5px;">${currentLvl.title}</div>
+                      <div style="color:#ffcc00; font-weight:700; font-size:10px; text-transform:uppercase; margin-top:2px; letter-spacing:0.5px;">Rang ${currentLvlIndex} • ${currentLvl.title}</div>
                     </div>
                   </div>
                   </div>
@@ -939,14 +1020,12 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                   </div>
                 </div>
 
-                <div style="height:14px; background:rgba(0,0,0,0.5); border-radius:20px; overflow:hidden; margin-bottom:10px; border: 1px solid rgba(255,255,255,0.1); position:relative; box-shadow: inset 0 2px 5px rgba(0,0,0,0.7);">
+                <div style="height:16px; background:rgba(0,0,0,0.3); border-radius:20px; overflow:hidden; margin-bottom:12px; border: 1px solid rgba(255,255,255,0.15); position:relative; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: inset 0 1px 4px rgba(0,0,0,0.5);">
                   <!-- Dezente Skala-Markierungen -->
-                  <div style="position:absolute; inset:0; background: repeating-linear-gradient(90deg, transparent, transparent calc(25% - 1px), rgba(255,255,255,0.08) 25%); pointer-events:none; z-index:1;"></div>
-                  <div style="height:100%; width:${progressPercent}%; background:linear-gradient(90deg, #8B6B00, #FFCC00, #FFF176); border-radius:20px; transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 0 20px rgba(255, 204, 0, 0.4); position: relative; overflow: hidden; z-index:2;">
-                    <!-- Dynamischer Shimmer -->
-                    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: progress-shimmer 3s infinite;"></div>
-                    <!-- Leuchtende Spitze -->
-                    <div style="position:absolute; right:0; top:0; bottom:0; width:3px; background:#fff; box-shadow: 0 0 10px 2px #fff; opacity:0.8;"></div>
+                  <div style="position:absolute; inset:0; background: repeating-linear-gradient(90deg, transparent, transparent calc(25% - 1px), rgba(255,255,255,0.06) 25%); pointer-events:none; z-index:1;"></div>
+                  <div style="height:100%; width:${progressPercent}%; background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%), linear-gradient(90deg, #B8860B, #FFCC00, #FFFACD); border-radius:20px; transition: width 1.8s cubic-bezier(0.3, 1.5, 0.5, 1); box-shadow: 0 0 25px rgba(255, 204, 0, 0.6); position: relative; overflow: visible; z-index:2; animation: bar-glow 2s infinite alternate;">
+                    <!-- Liquid Glow Tip (leuchtender Kern am Ende) -->
+                    <div style="position:absolute; right:-10px; top:-50%; bottom:-50%; width:20px; background: radial-gradient(circle, #fff 0%, transparent 70%); opacity:0.7; animation: tip-pulse 1s infinite alternate; z-index:3;"></div>
                   </div>
                 </div>
 
@@ -1161,6 +1240,17 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     const currentStats = filterToday ? statsToday : stats;
     const labels = Object.keys(res.pData);
 
+        // --- ZENTRALE FARB-LOGIK FÜR GRAPH & LISTEN ---
+        const graphColors = ['#ffcc00', '#4FC3F7', '#34c759', '#ff3b30', '#5856d6'];
+        const topEloPlayers = labels
+            .filter(p => res.pData[p].games > 0)
+            .sort((a, b) => res.pData[b].elo - res.pData[a].elo)
+            .slice(0, 5);
+        const getPlayerColor = (name) => {
+            const idx = topEloPlayers.indexOf(name);
+            return idx > -1 ? graphColors[idx] : '#ffffff';
+        };
+
     if (labels.length > 0) {
         byId('stat-total').innerText = currentStats.length;
 
@@ -1347,12 +1437,23 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
         const duoEl = byId('stat-duo-ranking');
         if (duoEl) {
-            duoEl.innerHTML = duoRanking.length > 0 ? duoRanking.map((t, idx) => 
-                `<div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; padding: 4px 8px; background:rgba(255,255,255,0.03); border-radius:8px;">
-                    <span style="color:#fff;">${idx+1}. ${t.name}</span>
-                    <span style="font-weight:800; color:#5856d6;">${t.wr}% <small style="opacity:0.6; font-weight:400;">(${t.wins}/${t.games})</small></span>
-                </div>`
-            ).join('') : '<div style="font-size:10px; color:#8e8e93; text-align:center; padding:5px;">Mindestens 3 Spiele als Team nötig</div>';
+            duoEl.innerHTML = duoRanking.length > 0 ? duoRanking.map((t, idx) => {
+                const pNames = t.name.split(' & ');
+                return `
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:6px; padding: 8px; background:rgba(255,255,255,0.04); border-radius:12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="color:var(--accent); font-weight:900; width:12px;">${idx+1}</span>
+                        <div style="display:flex; align-items:center;">
+                            ${pNames.map((p, pIdx) => `<img src="${window.getAvatarUrl(p)}" style="width:20px; height:20px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); ${pIdx > 0 ? 'margin-left:-8px;' : ''} z-index:${2-pIdx};">`).join('')}
+                        </div>
+                        <span style="color:#fff; margin-left:8px; font-weight:600;">${t.name}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-weight:900; color:var(--accent); font-size:12px;">${t.wr}%</span>
+                        <div style="font-size:8px; opacity:0.5;">${t.wins}/${t.games} W</div>
+                    </div>
+                </div>`;
+            }).join('') : '<div style="font-size:10px; color:#8e8e93; text-align:center; padding:5px;">Mindestens 3 Spiele als Team nötig</div>';
         }
 
         // Render Kugel-Spezis
@@ -1371,17 +1472,19 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const spezEl = byId('stat-ball-spez');
         if (spezEl) {
             spezEl.innerHTML = `
-                <div style="display:flex; justify-content:space-around; align-items:center; padding: 5px 0;">
-                    <div style="text-align:center;">
-                        <div style="font-size:8px; color:#8e8e93; font-weight:700; letter-spacing:0.5px;">VOLL-PROFI</div>
-                        <div style="font-size:13px; font-weight:800; color:#ffcc00;">${topVollarbeiter.n}</div>
-                        <div style="font-size:10px; color:#34c759; font-weight:700;">${topVollarbeiter.wr > 0 ? Math.round(topVollarbeiter.wr) + '%' : '-'}</div>
+                <div style="display:flex; justify-content:space-around; align-items:center; padding: 10px 0;">
+                    <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                        <div style="font-size:8px; color:#8e8e93; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Voll-Profi</div>
+                        <img src="${window.getAvatarUrl(topVollarbeiter.n)}" style="width:28px; height:28px; border-radius:50%; border:2px solid #ffcc00;">
+                        <div style="font-size:13px; font-weight:900; color:#fff;">${topVollarbeiter.n}</div>
+                        <div style="font-size:10px; color:#34c759; font-weight:900;">${topVollarbeiter.wr > 0 ? Math.round(topVollarbeiter.wr) + '%' : '-'}</div>
                     </div>
-                    <div style="height:30px; width:1px; background:rgba(255,255,255,0.1);"></div>
-                    <div style="text-align:center;">
-                        <div style="font-size:8px; color:#8e8e93; font-weight:700; letter-spacing:0.5px;">HALBE-AS</div>
-                        <div style="font-size:13px; font-weight:800; color:#4FC3F7;">${topHalbeExperte.n}</div>
-                        <div style="font-size:10px; color:#34c759; font-weight:700;">${topHalbeExperte.wr > 0 ? Math.round(topHalbeExperte.wr) + '%' : '-'}</div>
+                    <div style="height:40px; width:1px; background:rgba(255,255,255,0.1);"></div>
+                    <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                        <div style="font-size:8px; color:#8e8e93; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Halbe-As</div>
+                        <img src="${window.getAvatarUrl(topHalbeExperte.n)}" style="width:28px; height:28px; border-radius:50%; border:2px solid #4FC3F7;">
+                        <div style="font-size:13px; font-weight:900; color:#fff;">${topHalbeExperte.n}</div>
+                        <div style="font-size:10px; color:#34c759; font-weight:900;">${topHalbeExperte.wr > 0 ? Math.round(topHalbeExperte.wr) + '%' : '-'}</div>
                     </div>
                 </div>`;
         }
@@ -1463,24 +1566,36 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         });
 
         const dominantMatchups = Object.values(matchupStats)
-            .filter(m => m.games >= 3) // Mindestens 3 Spiele für aussagekräftige Statistik
             .map(m => {
                 const wr1 = Math.round((m.p1_wins / m.games) * 100);
                 const wr2 = Math.round((m.p2_wins / m.games) * 100);
                 const dominance = Math.abs(wr1 - wr2); // Absolute Differenz als Dominanz-Score
                 return { ...m, wr1, wr2, dominance };
             })
-            .sort((a, b) => b.dominance - a.dominance || b.games - a.games) // Nach Dominanz, dann Spielen sortieren
-            .slice(0, 3); // Top 3 anzeigen
+            .sort((a, b) => b.dominance - a.dominance || b.games - a.games); // Nach Dominanz, dann Spielen sortieren
 
         const h2hEl = byId('stat-head-to-head');
         if (h2hEl) {
-            h2hEl.innerHTML = dominantMatchups.length > 0 ? dominantMatchups.map((m, idx) =>
-                `<div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; padding: 4px 8px; background:rgba(255,255,255,0.03); border-radius:8px;">
-                    <span style="color:#fff;">${idx+1}. ${m.p1} vs ${m.p2}</span>
-                    <span style="font-weight:800; color:#5856d6;">${m.wr1}% - ${m.wr2}% <small style="opacity:0.6; font-weight:400;">(${m.games} Spiele)</small></span>
-                </div>`
-            ).join('') : '<div style="font-size:10px; color:#8e8e93; text-align:center; padding:5px;">Mindestens 3 1:1-Duelle nötig</div>';
+            h2hEl.innerHTML = dominantMatchups.length > 0 ? dominantMatchups.map((m, idx) => {
+                return `
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:6px; padding: 8px; background:rgba(255,255,255,0.04); border-radius:12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                        <span style="color:var(--accent); font-weight:900; width:12px; flex-shrink:0;">${idx+1}</span>
+                        <div style="display:flex; align-items:center; gap:6px; flex:1; overflow:hidden;">
+                            <img src="${window.getAvatarUrl(m.p1)}" style="width:22px; height:22px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); flex-shrink:0;">
+                            <span style="color:#fff; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p1}</span>
+                            <span style="opacity:0.3; font-size:8px; font-weight:900; flex-shrink:0;">VS</span>
+                            <img src="${window.getAvatarUrl(m.p2)}" style="width:22px; height:22px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); flex-shrink:0;">
+                            <span style="color:#fff; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p2}</span>
+                        </div>
+                    </div>
+                    <div style="text-align:right; margin-left:12px; flex-shrink:0;">
+                        <div style="color:var(--accent); font-weight:900; font-size:12px;">${m.wr1}% : ${m.wr2}%</div>
+                        <div style="font-size:8px; color:#8e8e93; font-weight:700;">${m.games} Games</div>
+                    </div>
+                </div>`;
+
+            }).join('') : '<div style="font-size:10px; color:#8e8e93; text-align:center; padding:5px;">Noch keine 1:1-Duelle vorhanden</div>';
         }
 
         // Längste Serie – bei Gleichstand mehrere anzeigen
@@ -1598,22 +1713,16 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 const eloCtx = eloCanvas.getContext('2d');
                 if (eloCanvas.__myEloChart) eloCanvas.__myEloChart.destroy();
 
-                const topPlayers = labels
-                    .filter(p => res.pData[p].games > 0)
-                    .sort((a, b) => res.pData[b].elo - res.pData[a].elo)
-                    .slice(0, 5);
-
-                if (topPlayers.length > 0) {
+                if (topEloPlayers.length > 0) {
                     eloHistoryContainer.style.display = 'block';
-                    const maxGames = Math.max(...topPlayers.map(p => res.pData[p].eloHistory.length));
+                    const maxGames = Math.max(...topEloPlayers.map(p => res.pData[p].eloHistory.length));
                     const chartLabels = Array.from({length: maxGames + 1}, (_, i) => i);
-                    const colors = ['#ffcc00', '#4FC3F7', '#34c759', '#ff3b30', '#5856d6'];
 
-                    const datasets = topPlayers.map((p, i) => ({
+                    const datasets = topEloPlayers.map((p, i) => ({
                         label: p,
                         data: [1000, ...res.pData[p].eloHistory],
-                        borderColor: colors[i % colors.length],
-                        backgroundColor: colors[i % colors.length] + '22',
+                        borderColor: graphColors[i % graphColors.length],
+                        backgroundColor: graphColors[i % graphColors.length] + '22',
                         tension: 0.3, pointRadius: 2, borderWidth: 2
                     }));
 
@@ -1622,7 +1731,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                         data: { labels: chartLabels, datasets },
                         options: {
                             responsive: true, maintainAspectRatio: false,
-                            plugins: { legend: { display: true, position: 'bottom', labels: { color: '#8e8e93', boxWidth: 8, font: { size: 9 } } } },
+                            plugins: { legend: { display: false } },
                             scales: {
                                 y: { ticks: { color: '#8e8e93', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
                                 x: { ticks: { color: '#444', font: { size: 8 } }, grid: { display: false } }
@@ -1643,7 +1752,12 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
           const rows = Object.keys(pData || {}).map(name => {
             const d = pData[name] || {};
-            return { name, elo: (typeof d.elo === 'number') ? d.elo : 1000, games: (typeof d.eloGames === 'number') ? d.eloGames : 0 };
+            return { 
+                name, 
+                elo: (typeof d.elo === 'number') ? d.elo : 1000, 
+                games: (typeof d.eloGames === 'number') ? d.eloGames : 0,
+                streak: d.currentStreak || 0 
+            };
           }).filter(r => r.games > 0);
 
           // nur Spieler aus spieler.json anzeigen (und nur wenn Spiele vorhanden sind)
@@ -1656,7 +1770,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           if (rows.length === 0) { el.innerHTML = ''; return; }
           rows.sort((a, b) => (b.elo - a.elo) || a.name.localeCompare(b.name, 'de'));
 
-          const medal = (i) => (i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : '')));
+          const medal = (i) => (i === 0 ? '👑' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : '')));
 
           let html = `
             <div style="margin-top:2px;">
@@ -1669,13 +1783,15 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
           rows.forEach((r, i) => {
             const badge = medal(i);
+            const isFirst = i === 0;
+            const streakEmoji = (r.streak >= 3) ? '🔥' : ''; // Flammen-Emoji für 3+ Siege in Folge
             html += `
-              <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+              <div onclick="window.openPlayerProfile('${r.name}')" class="${isFirst ? 'rank-1-card' : ''}" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isFirst ? 'rgba(255, 204, 0, 0.12)' : 'rgba(255,255,255,0.03)'}; padding: 10px; border-radius: 20px; border: 1px solid ${isFirst ? '#ffcc00' : 'rgba(255,255,255,0.05)'}; cursor:pointer;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${badge || (i+1 + '.')}</div>
                 <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
                 <div style="display:none; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1;">
-                  <div style="font-size:12px; font-weight:900; color:#fff;">${r.name}</div>
+                  <div style="font-size:12px; font-weight:900; color:${getPlayerColor(r.name)};">${r.name} ${streakEmoji}</div>
                   <div style="font-size:10px; color:#8e8e93;">bewertete Spiele: ${r.games}</div>
                 </div>
                 <div style="text-align:right;">
@@ -1819,13 +1935,14 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           let listHtml = `<div style="margin-top:10px;">`;
 
           rows.forEach((r, i) => {
+            const isTopForm = i === 0;
             listHtml += `
-              <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+              <div onclick="window.openPlayerProfile('${r.name}')" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isTopForm ? 'rgba(52, 199, 89, 0.08)' : 'rgba(255,255,255,0.03)'}; padding: 10px; border-radius: 12px; border: 1px solid ${isTopForm ? 'rgba(52, 199, 89, 0.3)' : 'rgba(255,255,255,0.05)'}; box-shadow: ${isTopForm ? '0 0 15px rgba(52, 199, 89, 0.15)' : 'none'}; cursor:pointer;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${i === 0 ? '🔥' : (i === 1 ? '✨' : (i === 2 ? '📈' : (i+1 + '.')))}</div>
                 <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
                 <div style="display:none; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1;">
-                  <div style="font-size:12px; font-weight:900; color:#fff;">${r.name}</div>
+                  <div style="font-size:12px; font-weight:900; color:${getPlayerColor(r.name)};">${r.name}</div>
                   <div style="font-size:10px; color:#8e8e93;">letzte ${r.g}: ${r.w}-${r.l} (${r.wr}%)${r.streak > 1 ? ` • Serie: ${r.streak}` : ''}</div>
                 </div>
                 <div style="text-align:right;">
