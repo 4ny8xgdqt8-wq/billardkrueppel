@@ -11,11 +11,10 @@
     <meta name="apple-mobile-web-app-title" content="Billard">
     <link rel="apple-touch-icon" href="logo_html.png?v=2">
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <!-- // Versions-Tracking für Cache-Validierung -->
-    <script src="Chart.js?v=1.1.3a"></script>
-    <link rel="manifest" href="manifest.json?v=1.1.3a">
+    <script src="Chart.js?v=1.1.4"></script>
+    <link rel="manifest" href="manifest.json?v=1.1.4">
     <!-- // --------------------------------------- -->
 
     <style>
@@ -37,6 +36,7 @@
             padding: 0 16px 120px 16px; 
             -webkit-overflow-scrolling: touch; 
             position: relative; 
+            touch-action: pan-y;
         }
         .view { 
             display: none; 
@@ -1018,7 +1018,6 @@
             const nextView = document.getElementById(targetViewId);
 
             if (!nextView) return;
-
             window.viewId = id;
 
             // Tab-Bar UI sofort aktualisieren
@@ -1030,15 +1029,22 @@
                 ind.style.left = el.offsetLeft + "px";
             }
 
-            // Wenn das DOM-Element gleich bleibt (z.B. Wechsel zwischen Heute/Gesamt), keine Animation
-            if (currentView === nextView) {
-                window.updateAllViews();
-                return;
-            }
-
             const inClass = direction === 'next' ? 'slide-in-right' : 'slide-in-left';
             const outClass = direction === 'next' ? 'slide-out-left' : 'slide-out-right';
 
+            // Spezialfall: Animation innerhalb des gleichen Containers (Heute <-> Statistik)
+            if (currentView === nextView) {
+                currentView.classList.add(outClass);
+                setTimeout(() => {
+                    currentView.classList.remove(outClass);
+                    window.updateAllViews(); // Daten im "unsichtbaren" Moment tauschen
+                    currentView.classList.add(inClass);
+                    setTimeout(() => currentView.classList.remove(inClass), 300);
+                }, 150); 
+                return;
+            }
+
+            // Standardfall: Wechsel zwischen verschiedenen Containern
             if (currentView) currentView.classList.add(outClass);
             nextView.classList.add('active', inClass);
 
@@ -1959,17 +1965,20 @@
         // --- SWIPE GESTEN FÜR TAB-NAVIGATION ---
         const mainContent = document.getElementById('scroll-area');
         let startX = 0;
+        let startY = 0;
         const swipeThreshold = 70; // Mindestpixel für eine gültige Wischgeste
 
         mainContent.addEventListener('pointerdown', (e) => {
             startX = e.clientX;
+            startY = e.clientY;
         });
 
         mainContent.addEventListener('pointerup', (e) => {
             const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
 
-            // Nur reagieren, wenn es eine signifikante horizontale Bewegung war
-            if (Math.abs(deltaX) > swipeThreshold) {
+            // Nur wischen, wenn horizontaler Weg deutlich größer als vertikaler Weg (verhindert Fehltrigger beim Scrollen)
+            if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
                 const currentIndex = tabOrder.indexOf(window.viewId);
 
                 if (deltaX < 0) { // Swipe nach links

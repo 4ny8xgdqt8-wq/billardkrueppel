@@ -1,8 +1,5 @@
-// Variables used by Scriptable.
-// icon-color: purple; icon-glyph: magic;
-
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.1.3a"; 
+window.BILLARD_APP_VERSION = "1.1.4"; 
 
 // Initiales Limit für die Historie
 window.historyLimit = 20;
@@ -1997,18 +1994,17 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const eloHistoryContainer = document.getElementById('eloHistoryContainer');
         if (eloHistoryContainer) eloHistoryContainer.style.display = 'none';
 
-        // Chart wirklich zurücksetzen
-        if (window.myWinChart) {
-          window.myWinChart.destroy();
-          window.myWinChart = null;
+        // Chart am Canvas zurücksetzen
+        const canvas = document.getElementById('winChart');
+        if (canvas && canvas.__myWinChart) {
+            canvas.__myWinChart.destroy();
+            canvas.__myWinChart = null;
         }
 
         const eloCanvas = document.getElementById('eloHistoryChart');
         if (eloCanvas && eloCanvas.__myEloChart) {
             eloCanvas.__myEloChart.destroy();
         }
-
-        const canvas = document.getElementById('winChart');
         if (canvas) {
           // Canvas ausblenden, damit garantiert nichts "Altes" sichtbar bleibt
           canvas.style.display = "none";
