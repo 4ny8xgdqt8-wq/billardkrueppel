@@ -2,7 +2,7 @@
 // icon-color: purple; icon-glyph: magic;
 
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.1.7b"; 
+window.BILLARD_APP_VERSION = "1.1.8"; 
 
 // Initiales Limit für die Historie
 window.historyLimit = 20;
@@ -1124,7 +1124,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
 
         // Achievement-HTML bauen
-        const createAchRow2 = (item, name) => {
+        const createAchRow2 = (item, name, aIdx) => {
           const phraseIndex = getFixedIndex(name + item.t, item.d.length);
           const phrase = item.d[phraseIndex];
           const isShame = (item.k === "shame");
@@ -1138,7 +1138,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
           return `
             <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 100%); padding: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid ${categoryColor}; box-shadow: ${isMaxTier ? '0 0 20px rgba(79, 195, 247, 0.2)' : '0 4px 12px rgba(0,0,0,0.2)'};">
-              <div style="font-size:22px; min-width:35px; text-align:center;">${item.i}</div>
+              <div style="font-size:22px; min-width:35px; text-align:center; animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${(aIdx || 0) * 0.1}s;">${item.i}</div>
               <div style="flex:1;">
                 <div style="font-size:12px; font-weight:900; color:#fff;">
                   <span style="${isMaxTier ? 'color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.4);' : ''}">${item.t}${isMaxTier ? ' ⭐' : ''}${newBadge}</span>
@@ -1150,7 +1150,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             </div>`;
         };
 
-        let achHtmlContent = currentAchs.length > 0 ? currentAchs.map(it => createAchRow2(it, p)).join("") : `<div style="color:#555; font-size:11px; text-align:center; padding:20px; font-style:italic;">Noch ein unbeschriebenes Blatt.</div>`;
+        let achHtmlContent = currentAchs.length > 0 ? currentAchs.map((it, aIdx) => createAchRow2(it, p, aIdx)).join("") : `<div style="color:#555; font-size:11px; text-align:center; padding:20px; font-style:italic;">Noch ein unbeschriebenes Blatt.</div>`;
 
         // Daily-Historie im Gesamt-Tab
         if (!isTodayTab) {
@@ -1160,7 +1160,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             achHtmlContent += `
               <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
                 <div style="color:#ffcc00; font-size:11px; font-weight:900; text-transform:uppercase;">Bisherige Tageserfolge</div>
-              </div><div style="margin-top:10px;">` + entries.map(([title, cnt]) => {
+              </div><div style="margin-top:10px;">` + entries.map(([title, cnt], eIdx) => {
                 const ach = [...window.dailyFamePool, ...window.dailyShamePool].find(x => x.t === title);
                 if (!ach) return "";
                 const ic = ach.i || "🏷️";
@@ -1171,7 +1171,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 const phrase = ach.d[phraseIndex];
 
                 return `<div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.04) 100%); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                  <div style="font-size:22px; min-width:35px; text-align:center;">${ic}</div>
+                  <div style="font-size:22px; min-width:35px; text-align:center; animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${eIdx * 0.1}s;">${ic}</div>
                   <div style="flex:1;">
                     <div style="font-size:12px; font-weight:900; color:#fff; display:flex; justify-content:space-between;">
                       <span>${title}</span><span style="color:#ffcc00;">${cnt}×</span>
@@ -1439,14 +1439,14 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
         const duoEl = byId('stat-duo-ranking');
         if (duoEl) {
-            duoEl.innerHTML = duoRanking.length > 0 ? duoRanking.map((t, idx) => {
+              duoEl.innerHTML = duoRanking.length > 0 ? duoRanking.map((t, idx) => { // Added idx for animation-delay
                 const pNames = t.name.split(' & ');
                 return `
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:6px; padding: 8px; background:rgba(255,255,255,0.04); border-radius:12px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:8px; padding: 10px; background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border-radius:14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.2); animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.2 + idx * 0.05}s;">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span style="color:var(--accent); font-weight:900; width:12px;">${idx+1}</span>
                         <div style="display:flex; align-items:center;">
-                            ${pNames.map((p, pIdx) => `<img src="${window.getAvatarUrl(p)}" style="width:20px; height:20px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); ${pIdx > 0 ? 'margin-left:-8px;' : ''} z-index:${2-pIdx};">`).join('')}
+                            ${pNames.map((p, pIdx) => `<img src="${window.getAvatarUrl(p)}" style="width:24px; height:24px; border-radius:50%; border:2px solid rgba(255,255,255,0.15); ${pIdx > 0 ? 'margin-left:-8px;' : ''} z-index:${2-pIdx}; animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${(idx+pIdx) * 0.2}s;">`).join('')}
                         </div>
                         <span style="color:#fff; margin-left:8px; font-weight:600;">${t.name}</span>
                     </div>
@@ -1473,20 +1473,20 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
         const spezEl = byId('stat-ball-spez');
         if (spezEl) {
-            spezEl.innerHTML = `
-                <div style="display:flex; justify-content:space-around; align-items:center; padding: 10px 0;">
+              spezEl.innerHTML = `<div style="animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: 1.25s;">
+                <div style="display:flex; justify-content:space-around; align-items:center; padding: 10px 0; ">
                     <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
                         <div style="font-size:8px; color:#8e8e93; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Voll-Profi</div>
-                        <img src="${window.getAvatarUrl(topVollarbeiter.n)}" style="width:28px; height:28px; border-radius:50%; border:2px solid #ffcc00;">
-                        <div style="font-size:13px; font-weight:900; color:#fff;">${topVollarbeiter.n}</div>
-                        <div style="font-size:10px; color:#34c759; font-weight:900;">${topVollarbeiter.wr > 0 ? Math.round(topVollarbeiter.wr) + '%' : '-'}</div>
+                        <img src="${window.getAvatarUrl(topVollarbeiter.n)}" style="width:36px; height:36px; border-radius:50%; border:3px solid #ffcc00; box-shadow: 0 0 15px rgba(255,204,0,0.3); animation: icon-float-subtle 3s infinite ease-in-out;">
+                        <div style="font-size:14px; font-weight:900; color:#fff; text-shadow: 0 0 8px rgba(255,255,255,0.2);">${topVollarbeiter.n}</div>
+                        <div style="font-size:11px; color:#34c759; font-weight:900; text-shadow: 0 0 8px rgba(52,199,89,0.3);">${topVollarbeiter.wr > 0 ? Math.round(topVollarbeiter.wr) + '%' : '-'}</div>
                     </div>
                     <div style="height:40px; width:1px; background:rgba(255,255,255,0.1);"></div>
                     <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
                         <div style="font-size:8px; color:#8e8e93; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Halbe-As</div>
-                        <img src="${window.getAvatarUrl(topHalbeExperte.n)}" style="width:28px; height:28px; border-radius:50%; border:2px solid #4FC3F7;">
-                        <div style="font-size:13px; font-weight:900; color:#fff;">${topHalbeExperte.n}</div>
-                        <div style="font-size:10px; color:#34c759; font-weight:900;">${topHalbeExperte.wr > 0 ? Math.round(topHalbeExperte.wr) + '%' : '-'}</div>
+                        <img src="${window.getAvatarUrl(topHalbeExperte.n)}" style="width:36px; height:36px; border-radius:50%; border:3px solid #4FC3F7; box-shadow: 0 0 15px rgba(79,195,247,0.3); animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: 0.5s;">
+                        <div style="font-size:14px; font-weight:900; color:#fff; text-shadow: 0 0 8px rgba(255,255,255,0.2);">${topHalbeExperte.n}</div>
+                        <div style="font-size:11px; color:#34c759; font-weight:900; text-shadow: 0 0 8px rgba(52,199,89,0.3);">${topHalbeExperte.wr > 0 ? Math.round(topHalbeExperte.wr) + '%' : '-'}</div>
                     </div>
                 </div>`;
         }
@@ -1580,15 +1580,15 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         if (h2hEl) {
             h2hEl.innerHTML = dominantMatchups.length > 0 ? dominantMatchups.map((m, idx) => {
                 return `
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:6px; padding: 8px; background:rgba(255,255,255,0.04); border-radius:12px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:8px; padding: 10px; background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border-radius:14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.2); animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.35 + idx * 0.05}s;">
                     <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
                         <span style="color:var(--accent); font-weight:900; width:12px; flex-shrink:0;">${idx+1}</span>
                         <div style="display:flex; align-items:center; gap:6px; flex:1; overflow:hidden;">
-                            <img src="${window.getAvatarUrl(m.p1)}" style="width:22px; height:22px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); flex-shrink:0;">
-                            <span style="color:#fff; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p1}</span>
-                            <span style="opacity:0.3; font-size:8px; font-weight:900; flex-shrink:0;">VS</span>
-                            <img src="${window.getAvatarUrl(m.p2)}" style="width:22px; height:22px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); flex-shrink:0;">
-                            <span style="color:#fff; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p2}</span>
+                            <img src="${window.getAvatarUrl(m.p1)}" style="width:24px; height:24px; border-radius:50%; border:2px solid rgba(255,255,255,0.15); flex-shrink:0; animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${idx * 0.1}s;">
+                            <span style="color:#fff; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p1}</span>
+                            <span style="opacity:0.4; font-size:9px; font-weight:900; flex-shrink:0;">VS</span>
+                            <img src="${window.getAvatarUrl(m.p2)}" style="width:24px; height:24px; border-radius:50%; border:2px solid rgba(255,255,255,0.15); flex-shrink:0; animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${idx * 0.1 + 0.2}s;">
+                            <span style="color:#fff; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p2}</span>
                         </div>
                     </div>
                     <div style="text-align:right; margin-left:12px; flex-shrink:0;">
@@ -1775,7 +1775,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           const medal = (i) => (i === 0 ? '👑' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : '')));
 
           let html = `
-            <div style="margin-top:2px;">
+            <div style="margin-top:2px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: 0.4s;">
               <div style="color:#ffcc00; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:1px;">ELO-Rangliste</div>
               <div style="margin-top:6px; font-size:10px; line-height:1.4; color:#8e8e93;">Start bei <b style=\"color:#fff;\">1000</b>. Sieg gegen starke Gegner bringt <b style=\"color:#34c759;\">mehr</b> Punkte, Niederlagen kosten Punkte. Neue Spieler bewegen sich anfangs <b style=\"color:#4FC3F7;\">schneller</b>.</div>
               <div style="height:2px; width:24px; background:#ffcc00; margin-top:6px; border-radius:2px;"></div>
@@ -1786,19 +1786,19 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           rows.forEach((r, i) => {
             const badge = medal(i);
             const isFirst = i === 0;
-            const streakEmoji = (r.streak >= 3) ? '🔥' : ''; // Flammen-Emoji für 3+ Siege in Folge
+            const streakEmoji = (r.streak >= 3) ? ' <span style="color:var(--accent); text-shadow: 0 0 8px rgba(255,204,0,0.4);">🔥</span>' : ''; // Flammen-Emoji für 3+ Siege in Folge
             html += `
-              <div onclick="window.openPlayerProfile('${r.name}')" class="${isFirst ? 'rank-1-card' : ''}" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isFirst ? 'rgba(255, 204, 0, 0.12)' : 'rgba(255,255,255,0.03)'}; padding: 10px; border-radius: 20px; border: 1px solid ${isFirst ? '#ffcc00' : 'rgba(255,255,255,0.05)'}; cursor:pointer;">
+              <div onclick="window.openPlayerProfile('${r.name}')" class="${isFirst ? 'rank-1-card' : ''}" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isFirst ? 'linear-gradient(135deg, rgba(255, 204, 0, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'rgba(255,255,255,0.03)'}; padding: 12px; border-radius: 20px; border: 1px solid ${isFirst ? '#ffcc00' : 'rgba(255,255,255,0.08)'}; cursor:pointer; box-shadow: ${isFirst ? '0 0 20px rgba(255,204,0,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${0.5 + i * 0.05}s;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${badge || (i+1 + '.')}</div>
-                <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
+                <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.15); animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${i * 0.2}s;">
                 <div style="display:none; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1;">
-                  <div style="font-size:12px; font-weight:900; color:${getPlayerColor(r.name)};">${r.name} ${streakEmoji}</div>
-                  <div style="font-size:10px; color:#8e8e93;">bewertete Spiele: ${r.games}</div>
+                  <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2);">${r.name} ${streakEmoji}</div>
+                  <div style="font-size:10px; color:#acacb0; margin-top:2px;">bewertete Spiele: ${r.games}</div>
                 </div>
                 <div style="text-align:right;">
-                  <div style="font-size:14px; font-weight:900; color:#34c759;">${r.elo}</div>
-                  <div style="font-size:8px; color:#8e8e93; text-transform:uppercase; font-weight:700;">ELO</div>
+                  <div style="font-size:16px; font-weight:900; color:#34c759; text-shadow: 0 0 10px rgba(52,199,89,0.3);">${r.elo}</div>
+                  <div style="font-size:9px; color:#8e8e93; text-transform:uppercase; font-weight:800; margin-top:2px;">ELO</div>
                 </div>
               </div>
             `;
@@ -1939,17 +1939,17 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           rows.forEach((r, i) => {
             const isTopForm = i === 0;
             listHtml += `
-              <div onclick="window.openPlayerProfile('${r.name}')" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isTopForm ? 'rgba(52, 199, 89, 0.08)' : 'rgba(255,255,255,0.03)'}; padding: 10px; border-radius: 12px; border: 1px solid ${isTopForm ? 'rgba(52, 199, 89, 0.3)' : 'rgba(255,255,255,0.05)'}; box-shadow: ${isTopForm ? '0 0 15px rgba(52, 199, 89, 0.15)' : 'none'}; cursor:pointer;">
+              <div onclick="window.openPlayerProfile('${r.name}')" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isTopForm ? 'linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'rgba(255,255,255,0.03)'}; padding: 12px; border-radius: 16px; border: 1px solid ${isTopForm ? '#34c759' : 'rgba(255,255,255,0.08)'}; box-shadow: ${isTopForm ? '0 0 20px rgba(52,199,89,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; cursor:pointer; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${0.5 + i * 0.05}s;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${i === 0 ? '🔥' : (i === 1 ? '✨' : (i === 2 ? '📈' : (i+1 + '.')))}</div>
-                <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
+                <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.15); animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${i * 0.2}s;">
                 <div style="display:none; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1;">
-                  <div style="font-size:12px; font-weight:900; color:${getPlayerColor(r.name)};">${r.name}</div>
-                  <div style="font-size:10px; color:#8e8e93;">letzte ${r.g}: ${r.w}-${r.l} (${r.wr}%)${r.streak > 1 ? ` • Serie: ${r.streak}` : ''}</div>
+                  <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2);">${r.name}</div>
+                  <div style="font-size:10px; color:#acacb0; margin-top:2px;">letzte ${r.g}: ${r.w}-${r.l} (${r.wr}%)${r.streak > 1 ? ` • Serie: ${r.streak}` : ''}</div>
                 </div>
                 <div style="text-align:right;">
-                  <div style="font-size:14px; font-weight:900; ${deltaStyle(r.eloDelta)}">${deltaSign(r.eloDelta)}</div>
-                  <div style="font-size:8px; color:#8e8e93; text-transform:uppercase; font-weight:700;">ELO Δ</div>
+                  <div style="font-size:16px; font-weight:900; ${deltaStyle(r.eloDelta)} text-shadow: 0 0 10px ${r.eloDelta > 0 ? 'rgba(52,199,89,0.3)' : (r.eloDelta < 0 ? 'rgba(255,59,48,0.3)' : 'rgba(255,255,255,0.1)')};">${deltaSign(r.eloDelta)}</div>
+                  <div style="font-size:9px; color:#8e8e93; text-transform:uppercase; font-weight:800; margin-top:2px;">ELO Δ</div>
                 </div>
               </div>
             `;
