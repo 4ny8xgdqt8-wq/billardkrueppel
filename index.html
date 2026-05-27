@@ -11,10 +11,11 @@
     <meta name="apple-mobile-web-app-title" content="Billard">
     <link rel="apple-touch-icon" href="logo_html.png?v=2">
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <!-- // Versions-Tracking für Cache-Validierung -->
-    <script src="Chart.js?v=1.1.6"></script>
-    <link rel="manifest" href="manifest.json?v=1.1.6">
+    <script src="Chart.js?v=1.1.7"></script>
+    <link rel="manifest" href="manifest.json?v=1.1.7">
     <!-- // --------------------------------------- -->
 
     <style>
@@ -24,52 +25,19 @@
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { 
-            background: radial-gradient(circle at center, #2c2c2e 0%, #000000 100%) fixed; color: var(--text); margin: 0; padding: 0; 
+            background: radial-gradient(circle at 50% 50%, #2c2c2e 0%, #000000 100%) fixed; 
+            background-size: 200% 200%;
+            animation: bg-drift 20s infinite alternate ease-in-out;
+            color: var(--text); margin: 0; padding: 0; 
             font-family: -apple-system, sans-serif; height: 100vh; width: 100%; 
             overflow: hidden; -webkit-user-select: none;
         }
+        @keyframes bg-drift { 0% { background-position: 0% 0%; } 100% { background-position: 100% 100%; } }
+
         .app-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; position: fixed; }
-        .main-content { 
-            flex: 1; 
-            overflow-y: auto; 
-            overflow-x: hidden; 
-            padding: 0 16px 120px 16px; 
-            -webkit-overflow-scrolling: touch; 
-            position: relative; 
-            touch-action: pan-y;
-        }
-        .view { 
-            display: none; 
-            flex-direction: column; 
-            width: 100%; 
-            animation-duration: 0.3s;
-            animation-fill-mode: both;
-            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        } 
+        .main-content { flex: 1; overflow-y: auto; padding: 0 16px 120px 16px; -webkit-overflow-scrolling: touch; }
+        .view { display: none; flex-direction: column; width: 100%; } 
         .view.active { display: flex; }
-
-        /* Animationen für den Seitenwechsel */
-        .slide-in-right { animation-name: slideInRight; }
-        .slide-in-left { animation-name: slideInLeft; }
-        .slide-out-right { animation-name: slideOutRight; display: flex !important; position: absolute; top: 0; left: 16px; width: calc(100% - 32px); z-index: 0; }
-        .slide-out-left { animation-name: slideOutLeft; display: flex !important; position: absolute; top: 0; left: 16px; width: calc(100% - 32px); z-index: 0; }
-
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideInLeft {
-            from { transform: translateX(-100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOutRight {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        @keyframes slideOutLeft {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(-100%); opacity: 0; }
-        }
         .card { 
             background: rgba(28, 28, 30, 0.65); 
             backdrop-filter: blur(20px); 
@@ -141,17 +109,18 @@
 
         /* Styles für den Achievement-Chevron (ausklappbare Menüs) */
         .ach-chevron {
-            width: 9px;
-            height: 9px;
-            border-right: 2px solid var(--accent);
-            border-bottom: 2px solid var(--accent);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1.4);
+            width: 10px;
+            height: 10px;
+            border-right: 2.5px solid var(--accent);
+            border-bottom: 2.5px solid var(--accent);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
             flex-shrink: 0;
             display: block;
+            filter: drop-shadow(0 0 5px rgba(255, 204, 0, 0.3));
         }
-        .ach-chevron.collapsed { transform: rotate(45deg); margin-top: -4px; }
-        .ach-chevron.expanded { transform: rotate(-135deg); margin-top: 4px; }
+        .ach-chevron.collapsed { transform: rotate(45deg); }
+        .ach-chevron.expanded { transform: rotate(-135deg); }
         .ach-chevron:active { /* Visuelles Feedback beim Drücken */
             opacity: 0.5;
             transform: scale(0.8);
@@ -167,7 +136,8 @@
             border-radius: 14px; color: white; outline: none; margin-bottom: 8px; font-size: 15px; -webkit-appearance: none; 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        select:focus, input:focus { 
+        select, input { box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); } /* Add subtle inner shadow */
+        select:focus, input:focus {
             border-color: var(--accent); 
             background: rgba(255, 204, 0, 0.1); 
             box-shadow: 0 0 15px rgba(255, 204, 0, 0.2); 
@@ -213,11 +183,74 @@
         #btn-random-teams, #btn-setup-help, #btn-breakcalc { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         #btn-random-teams:active, #btn-setup-help:active, #btn-breakcalc:active { transform: scale(0.95); opacity: 0.8; }
 
-        .loading-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 30000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
-        .loader-logo { height: 80px; width: auto; margin-bottom: 15px; }
-        .loader-title { font-weight: 900; font-size: 24px; color: var(--accent); text-transform: uppercase; margin-bottom: 30px; }
-        .spinner { width: 45px; height: 45px; border: 4px solid rgba(255, 204, 0, 0.1); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+        .loading-overlay { 
+            position: fixed; inset: 0; 
+            background: radial-gradient(circle at center, #1c1c1e 0%, #000000 100%); 
+            z-index: 30000; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
+            padding: 20px;
+        }
+        .loader-logo { 
+            height: 70px; width: auto; margin-bottom: 15px; 
+            animation: logo-pulse 0.8s infinite alternate ease-in-out;
+        }
+        .loader-title { font-weight: 900; font-size: 20px; color: var(--accent); text-transform: uppercase; margin-bottom: 25px; text-shadow: 0 0 15px rgba(255, 204, 0, 0.3); letter-spacing: 1.5px; }
+        .spinner { width: 40px; height: 40px; border: 3px solid rgba(255, 204, 0, 0.05); border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite; box-shadow: 0 0 10px rgba(255, 204, 0, 0.1); }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes logo-pulse { 
+            0% { transform: scale(1) rotate(-1deg); filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.2)); } 
+            100% { transform: scale(1.12) rotate(1deg); filter: drop-shadow(0 0 45px rgba(255, 204, 0, 0.7)); } 
+        }
+        .loader-avatar-row { display: flex; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; max-width: 300px; }
+        .loader-avatar-container { position: relative; width: 42px; height: 42px; animation: avatar-float 2.5s infinite ease-in-out; }
+        .loader-avatar { 
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover; 
+            border: 2px solid var(--accent); box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
+            background: rgba(255,255,255,0.05);
+        }
+        @keyframes avatar-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes tip-fade { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 0.7; transform: translateY(0); } }
+        @keyframes ach-card-enter {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); filter: blur(3px); }
+            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+        @keyframes badge-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 12px var(--accent); } 100% { transform: scale(1); } }
+        @keyframes icon-float-subtle { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-4px) rotate(2deg); } }
+        @keyframes history-card-enter {
+            from { opacity: 0; transform: translateY(15px) scale(0.97); filter: blur(4px); }
+            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+        @keyframes status-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+        .cinematic-hud {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(255, 204, 0, 0.05) 0%, rgba(28, 28, 30, 0.8) 100%);
+            border: 1px solid rgba(255, 204, 0, 0.25) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(255, 204, 0, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            animation: hud-reveal 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes hud-reveal { 
+            0% { opacity: 0; transform: translateY(10px) scale(0.98); filter: blur(5px); }
+            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+        .live-dot {
+            width: 6px; height: 6px; background: #ff3b30; border-radius: 50%;
+            box-shadow: 0 0 8px #ff3b30; animation: status-pulse 1.5s infinite;
+        }
+        .btn-ready { 
+            background: linear-gradient(135deg, #34c759 0%, #248a3d 100%) !important;
+            box-shadow: 0 0 25px rgba(52, 199, 89, 0.6);
+            transform: scale(1.02);
+            animation: btn-ready-glow 1.5s infinite alternate ease-in-out;
+        }
+        @keyframes btn-ready-glow {
+            0% { box-shadow: 0 0 15px rgba(52, 199, 89, 0.3); filter: brightness(1); }
+            100% { box-shadow: 0 0 35px rgba(52, 199, 89, 0.8); filter: brightness(1.2); }
+        }
+        .avatar-active { filter: drop-shadow(0 0 8px var(--accent)); transform: scale(1.1); transition: all 0.3s ease; }
+
         @keyframes progress-shimmer { 0% { transform: translateX(-110%) skewX(-20deg); } 100% { transform: translateX(250%) skewX(-20deg); } }
         @keyframes tip-pulse { 0% { opacity: 0.3; transform: scale(1); filter: blur(3px); } 100% { opacity: 0.9; transform: scale(2.5); filter: blur(6px); } }
         @keyframes bar-glow { 0% { box-shadow: 0 0 10px rgba(255, 204, 0, 0.2); } 100% { box-shadow: 0 0 25px rgba(255, 204, 0, 0.6); } }
@@ -278,13 +311,20 @@
         }
         /* Default styles for larger screens (flex layout) */
         .filter-row {
-            display: none;
+            display: flex; /* Immer flexibel, damit die Animation nicht springt */
+            overflow: hidden; /* Verhindert Inhalts-Flackern beim Einklappen */
             gap: 8px;
             align-items: stretch;
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
+            max-height: 0; /* Hidden by default */
+            opacity: 0;
+            transform: translateY(-20px); /* Startet etwas tiefer im Header für mehr Dynamik */
+            pointer-events: none; /* Prevent interaction when hidden */
+            /* Snappy Close: Geht schneller zu als auf */
+            transition: max-height 0.3s ease-in, opacity 0.2s ease-in, transform 0.3s ease-in;
             background: rgba(28, 28, 30, 0.75);
             backdrop-filter: blur(40px) saturate(180%);
             -webkit-backdrop-filter: blur(40px) saturate(180%);
@@ -294,7 +334,12 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.6);
         }
         .header-container.filter-active .filter-row {
-            display: flex;
+            max-height: 350px; /* Genug Platz für Mobile-Stacking */
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+            /* Cinematic Open: Schön weich mit Kurve */
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease-out, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .filter-controls-stack { flex: 1; display: flex; flex-direction: column; gap: 8px; }
         .filter-dropdown-col { display: flex; flex-direction: column; }
@@ -314,6 +359,9 @@
             padding: 0 2px; /* Adjusted padding for vertical text */
             cursor: pointer;
             writing-mode: vertical-lr; /* Write text vertically, left-to-right */
+            backdrop-filter: blur(10px); /* Add backdrop filter */
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); /* Add subtle inner shadow */
             text-orientation: upright; /* Keep characters upright */
             font-size: 11px; /* Smaller font to fit vertically */
         }
@@ -340,12 +388,13 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             opacity: 0.8;
-            transition: all 0.3s ease;
+            transition: all 0.3s ease, transform 0.3s ease; /* Add transform to transition */
         }
         .filter-toggle-bar.active {
             color: #34c759;
-            text-shadow: 0 0 8px rgba(52, 199, 89, 0.9); /* Nur grüner Glow, etwas stärker */
+            text-shadow: 0 0 10px rgba(52, 199, 89, 1); /* Stronger green glow */
             opacity: 1;
+            transform: scale(1.03); /* Subtle scale */
         }
         .filter-chevron {
             font-size: 8px;
@@ -393,23 +442,23 @@
         /* Optimierte Styles für die Historie Datumsgruppierung */
         .history-date-header {
             position: sticky;
-            top: 58px; /* Verhindert Überlappung mit dem Haupt-Header */
-            background: rgba(10, 10, 12, 0.5); /* Etwas weniger opak */
-            backdrop-filter: blur(15px) saturate(150%); /* Weniger Unschärfe und Sättigung */
-            -webkit-backdrop-filter: blur(15px) saturate(150%);
-            padding: 10px 16px 6px 16px; /* Vertikales Padding reduziert */
+            top: 65px; 
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 15px 16px 10px 16px;
             margin: 0 -16px 12px -16px;
-            font-size: 10px;
-            font-weight: 700; /* Weniger fett */
+            font-size: 11px;
+            font-weight: 900;
             color: #8e8e93;
             text-transform: uppercase;
             letter-spacing: 1px; /* Letter-Spacing reduziert */
             z-index: 10;
             display: flex;
             align-items: center;
-            gap: 10px;
-            border-bottom: 0.5px solid rgba(255, 255, 255, 0.15); /* Etwas sichtbarere, einheitliche Linie */
+            gap: 8px;
         }
+        .history-date-header::before { content: ""; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
 
         /* Leichte Pulsierung für den Erstplatzierten */
         .rank-1-card {
@@ -431,8 +480,10 @@
     <div id="loading-overlay" class="loading-overlay">
         <img src="logo.png" class="loader-logo" onerror="this.style.display='none'">
         <div class="loader-title">Billardkrüppel</div>
+        <div id="loader-avatars" class="loader-avatar-row"></div>
         <div class="spinner"></div>
-        <div style="margin-top: 20px; font-weight: 900; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px;">Synchronisiere...</div>
+        <div id="loader-status" style="margin-top: 20px; font-weight: 900; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; animation: status-pulse 1.5s infinite ease-in-out;"></div>
+        <div id="loader-tip" style="margin-top: 30px; color: #8e8e93; font-size: 11px; font-style: italic; width: 90%; max-width: 350px; text-align: center; line-height: 1.4; opacity: 0.7; font-weight: 500;"></div>
         <div id="loader-version" style="margin-top: 8px; font-size: 10px; color: #8e8e93; font-weight: 600; opacity: 0.8;"></div>
     </div>
 
@@ -443,7 +494,7 @@
             <div id="view-aufzeichnen" class="view active">
                 <div class="header-container">
                     <div class="header-side"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
-                    <div class="title-stack"><div class="main-title">Billardkrüppel</div><div class="sub-title">Match erfassen</div></div>
+                    <div class="title-stack"><div class="main-title">Billardkrüppel</div><div class="sub-title" id="dynamic-greeting">Match erfassen</div></div>
                     <div class="header-side right"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
                 </div>
                 <div class="card">
@@ -500,11 +551,11 @@
                         <button id="btn-breakcalc" class="win-btn" style="flex:1; background: rgba(255,204,0,0.1); color: var(--accent);" onclick="window.calcBreak()">🎲 Würfeln</button>
                         <div style="flex:1.5; display:flex; align-items:center; gap:8px;">
                             <div id="breakPlayer-avatar-preview" style="flex-shrink:0; display:flex; min-width:32px;"></div>
-                            <select id="breakPlayer" style="margin-bottom:0; flex:1; width:auto;" disabled onchange="window.updateAvatarPreviews()"></select>
+                            <select id="breakPlayer" style="margin-bottom:0; flex:1; width:auto;" disabled onchange="window.updateUI()"></select>
                         </div>
                     </div>
                 </div>
-                <div id="match-prob" class="prob-box" style="margin-top:-10px;">
+                <div id="match-prob" class="prob-box cinematic-hud" style="margin-top:-10px; border-radius: 20px; padding: 15px;">
                     <div style="color:#8e8e93; font-size:10px; text-align:center; padding:5px; font-weight:800;">Spieler wählen für Prognose</div>
                 </div>
                 <div class="card">
@@ -532,8 +583,8 @@
                         </div>
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                        <div><label>Wie gewonnen</label><select id="winType" style="margin-bottom:0;"><option value="Normal">Normal</option><option value="Verlierer hat Schwarz versenkt">Verlierer hat Schwarz versenkt</option></select></div>
-                        <div><label>Restkugeln Verlierer</label><input type="number" inputmode="numeric" id="leftover" value="0" style="margin-bottom:0;" onfocus="if(this.value==='0')this.value=''"></div>
+                        <div><label>Wie gewonnen</label><select id="winType" style="margin-bottom:0;" onchange="window.updateUI()"><option value="Normal">Normal</option><option value="Verlierer hat Schwarz versenkt">Verlierer hat Schwarz versenkt</option></select></div>
+                        <div><label>Restkugeln Verlierer</label><input type="number" inputmode="numeric" id="leftover" value="0" style="margin-bottom:0;" onfocus="if(this.value==='0')this.value=''" oninput="window.updateUI()"></div>
                     </div>
                     <button class="btn-save" onclick="window.doSave()">Speichern</button>
                 </div>
@@ -578,7 +629,6 @@
                         </div>
                     </div>
                 </div>
-                <div id="match-counter" style="text-align:center; font-size:12px; color:#8e8e93; margin-bottom:15px;">Matches: 0</div>
                 <div id="history-list"></div>
             </div>
 
@@ -963,6 +1013,9 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
+        const loadStartTime = Date.now();
+        const MIN_LOADING_TIME = 4000; // Mindestdauer in Millisekunden (4 Sekunden)
+
          // hideLoader SOFORT definieren, damit es für Snapshots und Timeouts verfügbar ist
         // Hilfsfunktion zum Aktualisieren der Avatar-Vorschauen neben den Dropdowns
         window.updateAvatarPreviews = () => {
@@ -995,7 +1048,6 @@
         window.dbFns = { doc, setDoc, getDoc, updateDoc };
         window.stats = []; window.spieler = []; window.dailyAchivs = { days: {} };
         window.winnerNum = 0; window.viewId = 'aufzeichnen'; window.breakLocked = false;
-        const tabOrder = ['aufzeichnen', 'heute', 'statistik', 'erfolge', 'uebersicht'];
 
         window.hideLoader = () => {
             const l = document.getElementById('loading-overlay');
@@ -1005,56 +1057,29 @@
             }
         };
 
+        // Neue Hilfsfunktion: Prüft die Zeitdifferenz, bevor der Loader versteckt wird
+        const tryHideLoader = () => {
+            const elapsed = Date.now() - loadStartTime;
+            const remaining = Math.max(0, MIN_LOADING_TIME - elapsed);
+            setTimeout(() => window.hideLoader(), remaining);
+        };
+
         window.switchV = (id, el) => {
-            const oldId = window.viewId;
-            if (oldId === id) return;
-
-            const oldIndex = tabOrder.indexOf(oldId);
-            const newIndex = tabOrder.indexOf(id);
-            const direction = newIndex > oldIndex ? 'next' : 'prev';
-
-            const currentView = document.querySelector('.view.active');
-            const targetViewId = (id === 'heute' || id === 'statistik') ? 'view-statistik' : 'view-' + id;
-            const nextView = document.getElementById(targetViewId);
-
-            if (!nextView) return;
             window.viewId = id;
-
-            // Tab-Bar UI sofort aktualisieren
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            const targetViewId = (id === 'heute' || id === 'statistik') ? 'view-statistik' : 'view-' + id;
+            const targetView = document.getElementById(targetViewId);
+            if (targetView) targetView.classList.add('active');
+            if (el) el.classList.add('active');
             if (el) {
-                el.classList.add('active');
                 const ind = document.getElementById('tab-indicator');
                 ind.style.width = el.offsetWidth + "px";
                 ind.style.left = el.offsetLeft + "px";
             }
-
-            const inClass = direction === 'next' ? 'slide-in-right' : 'slide-in-left';
-            const outClass = direction === 'next' ? 'slide-out-left' : 'slide-out-right';
-
-            // Spezialfall: Animation innerhalb des gleichen Containers (Heute <-> Statistik)
-            if (currentView === nextView) {
-                currentView.classList.add(outClass);
-                setTimeout(() => {
-                    currentView.classList.remove(outClass);
-                    window.updateAllViews(); // Daten im "unsichtbaren" Moment tauschen
-                    currentView.classList.add(inClass);
-                    setTimeout(() => currentView.classList.remove(inClass), 300);
-                }, 150); 
-                return;
-            }
-
-            // Standardfall: Wechsel zwischen verschiedenen Containern
-            if (currentView) currentView.classList.add(outClass);
-            nextView.classList.add('active', inClass);
-
-            setTimeout(() => {
-                if (currentView) currentView.classList.remove('active', outClass);
-                nextView.classList.remove(inClass);
-                window.updateAllViews();
-                const scrollArea = document.getElementById('scroll-area');
-                if (scrollArea) scrollArea.scrollTop = 0;
-            }, 300);
+            window.updateAllViews();
+            const scrollArea = document.getElementById('scroll-area');
+            if (scrollArea) scrollArea.scrollTop = 0;
         };
 
         window.forceUpdate = () => {
@@ -1282,6 +1307,49 @@
         const verEl = document.getElementById('loader-version');
         if (verEl && window.BILLARD_APP_VERSION) verEl.innerText = "App Version: " + window.BILLARD_APP_VERSION;
 
+        // Zufälligen Tipp im Loader anzeigen
+        const tips = [
+            "Die 8 muss immer als letzte versenkt werden.",
+            "Kreide dein Queue vor jedem wichtigen Stoß.",
+            "Billard ist 10% Talent und 90% Konzentration.",
+            "Ein sanfter Stoß ist oft präziser als rohe Gewalt.",
+            "Achte auf den Winkel der Weißen nach dem Einschlag.",
+            "Symmetrie im Aufbau ist das A und O."
+        ];
+        const tipEl = document.getElementById('loader-tip');
+        if (tipEl) {
+            tipEl.innerText = "» " + tips[Math.floor(Math.random() * tips.length)] + " «";
+            tipEl.style.animation = "tip-fade 1.5s ease-out forwards";
+        }
+
+        // Dynamische Status-Botschaften im Loader
+        const statusEl = document.getElementById('loader-status');
+        if (statusEl) {
+            const statuses = ["Kreide Queues", "Mische Kugeln", "Poliere Filz", "Bereite Arena vor"];
+            let sIdx = 0;
+            // Ersten Text sofort setzen
+            statusEl.innerText = statuses[sIdx] + "...";
+            // Wechselt alle 1.0 Sekunden den Text
+            setInterval(() => {
+                sIdx = (sIdx + 1) % statuses.length;
+                statusEl.innerText = statuses[sIdx] + "...";
+            }, 1100);
+        }
+
+        // Alle hinterlegten Avatare im Loader anzeigen
+        const loaderAvatars = document.getElementById('loader-avatars');
+        if (loaderAvatars) {
+            const playersToShow = Object.keys(window.playerAvatars || {});
+            loaderAvatars.innerHTML = playersToShow.map((p, i) => {
+                const src = (window.getAvatarUrl && typeof window.getAvatarUrl === 'function') ? window.getAvatarUrl(p) : `avatars/${p}.png`;
+                return `
+                    <div class="loader-avatar-container" style="animation-delay: ${i * 0.4}s">
+                        <img src="${src}" class="loader-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div style="display:none; width:100%; height:100%; border-radius:50%; background:rgba(255,255,255,0.05); align-items:center; justify-content:center; font-size:24px; border:1px solid var(--accent); color:rgba(255,255,255,0.2);">👤</div>
+                    </div>`;
+            }).join('');
+        }
+
         // -- FIREBASE LISTENERS (Erst nach Definition der Funktionen starten!) --
         signInAnonymously(auth).then(() => {
             onSnapshot(doc(db, "billard_data", "stats"), (snap) => {
@@ -1293,8 +1361,8 @@
                     }
                     window.updateAllViews();
                 }
-                window.hideLoader();
-            }, (err) => window.hideLoader());
+            tryHideLoader();
+        }, (err) => tryHideLoader());
 
             onSnapshot(doc(db, "billard_data", "spieler"), (snap) => {
               if (snap.exists()) {
@@ -1317,14 +1385,19 @@
             });
         }).catch(err => {
             console.error("Firebase Login Fehler:", err);
-            window.hideLoader();
+            tryHideLoader();
         });
 
         window.initDropdowns = () => {
             document.querySelectorAll('.player-sel').forEach(s => {
                 s.innerHTML = '<option disabled selected value="">Wählen</option>';
                 window.spieler.forEach(p => s.options.add(new Option(p, p)));
-                s.onchange = () => { window.updateUI(); };
+                s.onchange = () => { 
+                    window.breakLocked = false; 
+                    window.winnerNum = 0;
+                    document.querySelectorAll('.win-btn').forEach(btn => btn.classList.remove('selected'));
+                    window.updateUI(); 
+                };
             });
             if (window.updateAvatarPreviews) window.updateAvatarPreviews();
             if (typeof window.computeEloRatings === 'function') window.updateUI();
@@ -1390,14 +1463,15 @@
 
         window.updateUI = () => {
             const m = document.getElementById('mode').value;
+            const saveBtn = document.querySelector('.btn-save');
 
-            // Re-aktivieren der Würfel-Steuerung bei Interaktion (Spielerwechsel)
-            window.breakLocked = false;
+            // Cinematic Greeting
+            const hours = new Date().getHours();
+            const greeting = hours < 11 ? "Guten Morgen" : (hours < 18 ? "Guten Tag" : "Guten Abend");
+            const greetEl = document.getElementById('dynamic-greeting');
+            if (greetEl) greetEl.innerText = greeting + ", Zeit für ein Match?";
+
             const diceBtn = document.getElementById('btn-breakcalc');
-            if (diceBtn) {
-                diceBtn.style.opacity = "1";
-                diceBtn.disabled = false;
-            }
             // Fehler-Markierung beim Anstoß entfernen, wenn Spieler neu gewählt werden
             window.removeHighlight('breakPlayer');
 
@@ -1435,11 +1509,12 @@
               names.forEach(n => { if(n && !n.includes('undefined')) b.options.add(new Option(n, n)); });
             }
             
-            window.winnerNum = 0;
-            document.querySelectorAll('.win-btn').forEach(btn => btn.classList.remove('selected'));
-            
             const ready = (m==='1:1' ? (document.getElementById('p1').value && document.getElementById('p2').value) : (document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value));
-            document.getElementById('btn-breakcalc').disabled = !ready;
+            
+            if (diceBtn) {
+                diceBtn.disabled = window.breakLocked || !ready;
+                diceBtn.style.opacity = (window.breakLocked || !ready) ? "0.3" : "1";
+            }
 
             // Highlights entfernen, wenn Spieler gewählt wurden
             ['p1', 'p2', 't1p1', 't1p2', 't2p1', 't2p2'].forEach(id => {
@@ -1449,6 +1524,23 @@
 
             window.updateMatchProbability();
             if (window.updateAvatarPreviews) window.updateAvatarPreviews();
+
+            // Check if form is fully ready for "Speichern" cinematic glow
+            const isFormComplete = (m==='1:1' ? (document.getElementById('p1').value && document.getElementById('p2').value) : (document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value)) 
+                                   && document.getElementById('breakPlayer').value 
+                                   && document.getElementById('ballType1').value 
+                                   && window.winnerNum !== 0;
+            
+            if (saveBtn) {
+                if (isFormComplete) saveBtn.classList.add('btn-ready');
+                else saveBtn.classList.remove('btn-ready');
+            }
+
+            // Add glow to selected avatars
+            document.querySelectorAll('[id$="-avatar-preview"] img').forEach(img => {
+                if (img.style.display !== 'none') img.classList.add('avatar-active');
+                else img.classList.remove('avatar-active');
+            });
         };
 
         window.syncBallTypes = (n) => {
@@ -1463,6 +1555,7 @@
             }
             if (b1.value) window.removeHighlight('ballType1');
             if (b2.value) window.removeHighlight('ballType2');
+            window.updateUI();
         };
 
         window.selectWinner = (n) => {
@@ -1471,6 +1564,7 @@
             document.getElementById('btn-win2').classList.toggle('selected', n===2);
             window.removeHighlight('btn-win1');
             window.removeHighlight('btn-win2');
+            window.updateUI();
         };
 
         window.calcBreak = () => {
@@ -1518,6 +1612,7 @@
             }
 
             if (window.updateAvatarPreviews) window.updateAvatarPreviews();
+            window.updateUI();
 
             // Popup anzeigen
             document.getElementById('diceModal').style.display = 'flex';
@@ -1707,11 +1802,7 @@
             const elo = window.computeEloRatings(window.stats);
             const getE = (p) => (elo[p] ? elo[p].elo : 1000);
             const getG = (p) => (elo[p] ? elo[p].eloGames : 0);
-            const getK = (p) => {
-                const games = getG(p);
-                let k = games < 30 ? (50 - games) : 20;
-                return k < 20 ? 20 : k;
-            };
+            const getK = (p) => (getG(p) < 20 ? 40 : 20);
 
             let r1, r2, n1, n2, k1, k2;
             if(m==='1:1') { 
@@ -1727,26 +1818,55 @@
                 k2 = (getK(document.getElementById('t2p1').value) + getK(document.getElementById('t2p2').value)) / 2;
             }
 
+            const getBP = (searchStr) => {
+                if (!searchStr) return null;
+                const searchPlayers = searchStr.split(" & ").map(s => s.trim()).filter(Boolean);
+                let vW = 0, hW = 0;
+                window.stats.forEach(g => {
+                    if (!g || !g.bt1 || !g.bt2 || !g.w) return;
+                    const p1A = (g.p1 || '').split(" & ").map(s => s.trim()).filter(Boolean);
+                    const p2A = (g.p2 || '').split(" & ").map(s => s.trim()).filter(Boolean);
+
+                    // Zähle Siege für JEDEN Spieler in der Auswahl einzeln (aggregiert)
+                    searchPlayers.forEach(p => {
+                        if (p1A.includes(p) && g.w == 1) {
+                            if (g.bt1 === 'Voll') vW++;
+                            else if (g.bt1 === 'Halb') hW++;
+                        } else if (p2A.includes(p) && g.w == 2) {
+                            if (g.bt2 === 'Voll') vW++;
+                            else if (g.bt2 === 'Halb') hW++;
+                        }
+                    });
+                });
+                if (vW === hW || (vW + hW) < 1) return null;
+                return vW > hW ? { t: 'Voll', c: '#ffcc00' } : { t: 'Halb', c: '#4FC3F7' };
+            };
+
+            const pref1 = getBP(n1), pref2 = getBP(n2);
             const prob1 = Math.round((1 / (1 + Math.pow(10, (r2 - r1) / 400))) * 100);
             const prob2 = 100 - prob1;
-            
-            const modeMultiplier = (m === "1:1") ? 1.2 : 1.0;
 
-            const winDelta1 = Math.round(k1 * (1 - prob1/100) * modeMultiplier);
-            const lossDelta1 = Math.round(k1 * (prob1/100) * modeMultiplier);
-            const winDelta2 = Math.round(k2 * (1 - prob2/100) * modeMultiplier);
-            const lossDelta2 = Math.round(k2 * (prob2/100) * modeMultiplier);
+            // ELO Vorschau berechnen
+            const winDelta1 = Math.round(k1 * (1 - prob1/100));
+            const lossDelta1 = Math.round(k1 * (prob1/100));
+            const winDelta2 = Math.round(k2 * (1 - prob2/100));
+            const lossDelta2 = Math.round(k2 * (prob2/100));
 
             const l1 = (m==='1:1' ? n1 : "Team 1");
             const l2 = (m==='1:1' ? n2 : "Team 2");
+
+            const getBallIcon = (type) => {
+                if (type === 'Voll') return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="#ffcc00"/><circle cx="12" cy="12" r="11" fill="url(#gradV)"/><defs><radialGradient id="gradV" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.3"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
+                return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="white"/><path d="M1.5 8.5 A 11 11 0 0 0 1.5 15.5 L 22.5 15.5 A 11 11 0 0 0 22.5 8.5 Z" fill="#4FC3F7"/><circle cx="12" cy="12" r="11" fill="url(#gradH)"/><defs><radialGradient id="gradH" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.2"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
+            };
             
             const c1 = prob1 > 50 ? '#34c759' : (prob1 < 50 ? '#ff3b30' : '#ffffff');
             const c2 = prob2 > 50 ? '#34c759' : (prob2 < 50 ? '#ff3b30' : '#ffffff');
 
             b.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <span style="color:var(--accent); font-weight:900; font-size:10px; text-transform:uppercase; letter-spacing:1px;">🎯 Sieg-Prognose</span>
-                    <span style="font-size:9px; color:#8e8e93; font-weight:700;">Basis-Punkte (Bonus möglich)</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="color:var(--accent); font-weight:900; font-size:9px; text-transform:uppercase; letter-spacing:1.5px; display:flex; align-items:center; gap:6px;"><div class="live-dot"></div> LIVE ANALYSE</span>
+                    <span style="font-size:10px; color:#fff; font-weight:900; opacity: 0.6;">${Math.round(r1)} <span style="color:var(--accent); opacity:1;">VS</span> ${Math.round(r2)} <span style="font-size:7px; color:#8e8e93;">ELO</span></span>
                 </div>
                 <div class="prob-bar" style="margin-bottom:6px;">
                     <div style="width:${prob1}%">
@@ -1758,6 +1878,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="font-size:12px; font-weight:900; color:${c1}; flex:1; display:flex; align-items:center;">
                         <span style="white-space:nowrap;">${l1}: ${prob1}%</span>
+                        ${pref1 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref1.c}; opacity:0.8; margin-left:6px;">${window.getBallIcon(pref1.t).replace('14','11')}${pref1.t}</span>` : ''}
                         <div style="font-size:8px; font-weight:900; margin-left:auto; text-align:right; background:rgba(255,255,255,0.03); padding:3px 6px; border-radius:8px; border:0.5px solid rgba(255,255,255,0.05); line-height:1.1;">
                             <div style="color:#34c759; margin-bottom:1px;">+${winDelta1} ELO</div>
                             <div style="color:#ff3b30;">-${lossDelta1} ELO</div>
@@ -1768,6 +1889,7 @@
                             <div style="color:#34c759; margin-bottom:1px;">+${winDelta2} ELO</div>
                             <div style="color:#ff3b30;">-${lossDelta2} ELO</div>
                         </div>
+                        ${pref2 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref2.c}; opacity:0.8; margin-right:6px;">${window.getBallIcon(pref2.t).replace('14','11')}${pref2.t}</span>` : ''}
                         <span style="white-space:nowrap;">${l2}: ${prob2}%</span>
                     </div>
                 </div>`;
@@ -1803,79 +1925,84 @@
             let html = "";
             let lastDate = "";
 
-            const sortedList = list.slice().reverse();
+            const sortedList = list.slice().reverse().slice(0, 50); // Performance-Limit
 
             if (sortedList.length === 0) {
                 container.innerHTML = '<div style="text-align:center;color:#8e8e93;padding:40px;">Keine Spiele vorhanden.</div>';
                 return;
             }
 
-            sortedList.forEach((g) => {
+            sortedList.forEach((g, idx) => {
                 const i = window.stats.indexOf(g);
                 const dateParts = (g.d || "").split(", ");
                 const date = dateParts[0];
                 const time = dateParts[1] || "";
 
                 if (date !== lastDate) {
-                    html += `<div class="history-date-header"><span>📅 ${date}</span></div>`;
+                    html += `<div class="history-date-header" style="animation: tip-fade 0.5s ease-out forwards; animation-delay: ${idx * 0.05}s"><span>${date}</span></div>`;
                     lastDate = date;
                 }
 
                 const isWin1 = g.w == 1;
                 const isWin2 = g.w == 2;
                 const delta = deltas[i] || 0;
+                
+                // Cinematic Card Style
+                const winGlow = "0 0 20px rgba(52, 199, 89, 0.15)";
+                const borderStyle = isWin1 ? `border-left: 3px solid #34c759;` : `border-right: 3px solid #34c759;`;
+                const hasBreak1 = g.a === g.p1;
+                const hasBreak2 = g.a === g.p2;
 
                 html += `
-                <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; border-left: 4px solid ${isWin1 ? '#34c759' : '#ff3b30'}; border-right: 4px solid ${isWin2 ? '#34c759' : '#ff3b30'};">
-                    <div style="padding: 12px 14px 8px 12px; display: flex; align-items: center; justify-content: space-between;">
+                <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; ${borderStyle} animation: history-card-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: ${idx * 0.05}s; opacity: 0; box-shadow: ${isWin1 ? winGlow : (isWin2 ? winGlow : 'none')}; background: linear-gradient(to bottom, rgba(28,28,30,0.7) 0%, rgba(20,20,22,0.8) 100%); transition: all 0.3s ease;">
+                    <div style="padding: 15px 14px 12px 14px; display: flex; align-items: center; justify-content: space-between; position: relative;">
                         <!-- Team 1 -->
-                        <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; overflow: hidden;">
-                            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
-                                <div style="display: flex; align-items: center; flex-shrink: 0;">${getAvatarHtml(g.p1)}</div>
-                                <div style="font-size: 13px; font-weight: 800; color: ${isWin1 ? '#fff' : '#8e8e93'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">
-                                    ${isWin1 ? '🏆 ' : ''}${g.p1}
+                        <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; overflow: hidden;">
+                            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                                <div style="display: flex; align-items: center; flex-shrink: 0; border: 1px solid ${isWin1 ? '#34c759' : 'transparent'}; border-radius: 50%; padding: 2px;">${getAvatarHtml(g.p1, 22)}</div>
+                                <div style="font-size: 14px; font-weight: 900; color: ${isWin1 ? '#fff' : 'var(--error)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; display: flex; align-items: center; gap: 4px;">
+                                    ${g.p1} ${hasBreak1 ? '<span title="Anstoß" style="color:var(--accent); font-size:10px;">⚡</span>' : ''}
                                 </div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 4px;">
-                                ${getBallBadge(g.bt1)}
-                                <span style="font-size: 10px; font-weight: 700; color: #444;">${g.bt1}</span>
-                                ${isWin1 ? `<span style="font-size: 9px; font-weight: 900; color: #34c759; margin-left: 4px;">+${delta} ELO</span>` : `<span style="font-size: 9px; font-weight: 900; color: #ff3b30; margin-left: 4px;">-${delta} ELO</span>`}
+                                ${isWin1 ? `<span style="font-size: 10px; font-weight: 900; color: #34c759; background: rgba(52,199,89,0.1); padding: 1px 5px; border-radius: 4px;">+${delta}</span>` : `<span style="font-size: 10px; font-weight: 900; color: var(--error); background: rgba(255,59,48,0.1); padding: 1px 5px; border-radius: 4px;">-${delta}</span>`} ${getBallBadge(g.bt1)}
+                                <span style="font-size: 8px; font-weight: 800; color: #444; text-transform: uppercase;">${g.bt1}</span>
                             </div>
                         </div>
 
                         <!-- VS Divider -->
-                        <div style="padding: 0 10px; display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                            <div style="font-size: 10px; font-weight: 900; color: rgba(255,255,255,0.15);">VS</div>
-                            <div style="height: 20px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+                        <div style="padding: 0 15px; display: flex; flex-direction: column; align-items: center; opacity: 0.2;">
+                            <div style="font-size: 9px; font-weight: 900; color: #fff; letter-spacing: 1px;">VS</div>
                         </div>
 
                         <!-- Team 2 -->
-                        <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; overflow: hidden; text-align: right;">
-                            <div style="display: flex; align-items: center; gap: 8px; width: 100%; justify-content: flex-end;">
-                                <div style="font-size: 13px; font-weight: 800; color: ${isWin2 ? '#fff' : '#8e8e93'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">
-                                    ${g.p2}${isWin2 ? ' 🏆' : ''}
+                        <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; overflow: hidden; text-align: right;">
+                            <div style="display: flex; align-items: center; gap: 10px; width: 100%; justify-content: flex-end;">
+                                <div style="font-size: 14px; font-weight: 900; color: ${isWin2 ? '#fff' : 'var(--error)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+                                    ${hasBreak2 ? '<span title="Anstoß" style="color:var(--accent); font-size:10px;">⚡</span>' : ''} ${g.p2}
                                 </div>
-                                <div style="display: flex; align-items: center; flex-shrink: 0;">${getAvatarHtml(g.p2)}</div>
+                                <div style="display: flex; align-items: center; flex-shrink: 0; border: 1px solid ${isWin2 ? '#34c759' : 'transparent'}; border-radius: 50%; padding: 2px;">${getAvatarHtml(g.p2, 22)}</div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 4px;">
-                                ${isWin2 ? `<span style="font-size: 9px; font-weight: 900; color: #34c759; margin-right: 4px;">+${delta} ELO</span>` : `<span style="font-size: 9px; font-weight: 900; color: #ff3b30; margin-right: 4px;">-${delta} ELO</span>`}
-                                <span style="font-size: 10px; font-weight: 700; color: #444;">${g.bt2}</span>
-                                ${getBallBadge(g.bt2)}
+                                <span style="font-size: 8px; font-weight: 800; color: #444; text-transform: uppercase;">${g.bt2}</span>
+                                ${getBallBadge(g.bt2)} ${isWin2 ? `<span style="font-size: 10px; font-weight: 900; color: #34c759; background: rgba(52,199,89,0.1); padding: 1px 5px; border-radius: 4px;">+${delta}</span>` : `<span style="font-size: 10px; font-weight: 900; color: var(--error); background: rgba(255,59,48,0.1); padding: 1px 5px; border-radius: 4px;">-${delta}</span>`}
                             </div>
                         </div>
                     </div>
 
                     <!-- Footer Info -->
-                    <div style="background: rgba(255,255,255,0.03); padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                    <div style="background: rgba(0,0,0,0.2); padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.03);">
                         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1;">
-                            <span style="font-size: 10px; color: #8e8e93; font-weight: 600; white-space: nowrap;">🕒 ${time}</span>
-                            <span style="font-size: 10px; color: #8e8e93; font-weight: 600; white-space: nowrap;">🎱 ${g.m}</span>
-                            <span style="font-size: 10px; color: #8e8e93; font-weight: 600; white-space: nowrap;">🛑 Rest: ${g.l}</span>
-                            <span style="font-size: 10px; color: #8e8e93; font-weight: 600; white-space: nowrap;">📝 ${g.t}</span>
-                            <span style="font-size: 10px; color: #8e8e93; font-weight: 600; white-space: nowrap;">⚡ ${g.a}</span>
+                            <span style="font-size: 9px; color: #8e8e93; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">${time}</span>
+                            <span style="height: 3px; width: 3px; border-radius: 50%; background: #444;"></span>
+                            <span style="font-size: 9px; color: var(--accent); font-weight: 800;">MODUS: ${g.m === '1:1' ? '1 VS 1' : '2 VS 2'}</span>
+                            <span style="height: 3px; width: 3px; border-radius: 50%; background: #444;"></span>
+                            <span style="font-size: 9px; color: #8e8e93; font-weight: 700;">REST: ${g.l}</span>
+                            <span style="height: 3px; width: 3px; border-radius: 50%; background: #444;"></span>
+                            <span style="font-size: 9px; color: #8e8e93; font-weight: 700;">SIEG: ${g.t}</span>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-                             <div style="font-size:9px; color:var(--error); font-weight:900; text-transform:uppercase; padding: 4px 8px; background: rgba(255, 59, 48, 0.1); border-radius: 6px;" onclick="requestDelete(${i})">Löschen</div>
+                        <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+                             <div style="font-size:10px; color:rgba(255,255,255,0.2); transition: color 0.3s;" onmouseover="this.style.color='var(--error)'" onmouseout="this.style.color='rgba(255,255,255,0.2)'" onclick="requestDelete(${i})">Löschen</div>
                         </div>
                     </div>
                 </div>`;
@@ -1937,47 +2064,38 @@
 
         // --- SWIPE GESTEN FÜR TAB-NAVIGATION ---
         const mainContent = document.getElementById('scroll-area');
-        let startX = 0;
-        let startY = 0;
-        let isSwiping = false;
-        const swipeThreshold = 40; // Feinfühliger (vorher 70)
+        let touchStartX = 0;
+        const swipeThreshold = 70; // Mindestpixel für eine gültige Wischgeste
+        const tabOrder = ['aufzeichnen', 'heute', 'statistik', 'erfolge', 'uebersicht'];
 
-        mainContent.addEventListener('pointerdown', (e) => {
-            startX = e.clientX;
-            startY = e.clientY;
-            isSwiping = true;
-        });
+        mainContent.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
 
-        mainContent.addEventListener('pointermove', (e) => {
-            if (!isSwiping) return;
+        mainContent.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const deltaX = touchEndX - touchStartX;
 
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            const absDx = Math.abs(dx);
-            const absDy = Math.abs(dy);
+            // Nur reagieren, wenn es eine signifikante horizontale Bewegung war
+            if (Math.abs(deltaX) > swipeThreshold) {
+                const currentViewId = window.viewId;
+                const currentIndex = tabOrder.indexOf(currentViewId);
 
-            // Auslösen, wenn horizontaler Weg Schwellenwert erreicht und deutlich flacher als vertikaler Scroll ist
-            if (absDx > swipeThreshold && absDx > absDy * 1.2) {
-                isSwiping = false; // Verhindert mehrfaches Auslösen während einer Bewegung
-                const currentIndex = tabOrder.indexOf(window.viewId);
-
-                if (dx < 0 && currentIndex < tabOrder.length - 1) { // Nach links wischen -> Nächster Tab
-                    const nextId = tabOrder[currentIndex + 1];
-                    window.switchV(nextId, document.querySelectorAll('.tab-item')[currentIndex + 1]);
-                } else if (dx > 0 && currentIndex > 0) { // Nach rechts wischen -> Vorheriger Tab
-                    const prevId = tabOrder[currentIndex - 1];
-                    window.switchV(prevId, document.querySelectorAll('.tab-item')[currentIndex - 1]);
+                if (deltaX < 0) { // Swipe nach links
+                    const nextIndex = currentIndex + 1;
+                    if (nextIndex < tabOrder.length) {
+                        const nextTabId = tabOrder[nextIndex];
+                        window.switchV(nextTabId, document.querySelector(`.tab-item[onclick*="${nextTabId}"]`));
+                    }
+                } else { // Swipe nach rechts
+                    const prevIndex = currentIndex - 1;
+                    if (prevIndex >= 0) {
+                        const prevTabId = tabOrder[prevIndex];
+                        window.switchV(prevTabId, document.querySelector(`.tab-item[onclick*="${prevTabId}"]`));
+                    }
                 }
             }
-
-            // Wenn der User primär vertikal scrollt (nach oben/unten), brechen wir die Swipe-Erkennung ab
-            if (absDy > 20 && absDy > absDx) {
-                isSwiping = false;
-            }
-        });
-
-        mainContent.addEventListener('pointerup', () => isSwiping = false);
-        mainContent.addEventListener('pointercancel', () => isSwiping = false);
+        }, { passive: true });
     </script>
 </body>
 </html>

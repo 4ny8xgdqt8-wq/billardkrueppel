@@ -1,5 +1,11 @@
+// Variables used by Scriptable.
+// icon-color: purple; icon-glyph: magic;
+
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.1.6"; 
+window.BILLARD_APP_VERSION = "1.1.7"; 
+
+// Initiales Limit für die Historie
+window.historyLimit = 20;
 
 // Globale Avatar-Zuordnung (Spielername -> Pfad zum Bild)
 window.playerAvatars = {
@@ -191,14 +197,6 @@ window.famePool = [
   { cond: (d) => d.dailyDaysWithAch >= 50,  i:"🗓️", t:"Daily‑Sammler VII",d:["50 Tage – Maschine.","Du sammelst wie ein Profi.","Kalender voller Siege.","Gnadenlos konstant.","Starker Grind."], h:"Sammle an 50 Tagen mindestens einen Tageserfolg", g:"Daily‑Sammler", tier:7 },
   { cond: (d) => d.dailyDaysWithAch >= 75,  i:"📆", t:"Daily‑Sammler VIII",d:["Das ist schon ein Lifestyle.","Du bist immer da.","Kalender wird Legendär.","Du sammelst wie ein Hunter.","Top!"], h:"Sammle an 75 Tagen mindestens einen Tageserfolg", g:"Daily‑Sammler", tier:8 },
   { cond: (d) => d.dailyDaysWithAch >= 100, i:"📆", t:"Daily‑Sammler IX", d:["100 Tage Erfolg.","Das ist absurd gut.","Du bist die Routine.","Du hast den Kalender besiegt.","Wahnsinn."], h:"Sammle an 100 Tagen mindestens einen Tageserfolg", g:"Daily‑Sammler", tier:9 },
-  { cond: (d) => d.achCountTotal >= 10,  i:"📚", t:"Sammler I",  d:["Er sammelt Titel.","Die Vitrine füllt sich.","Mehr als nur Matches.","Schöne Sammlung.","Weiter!"], h:"Schalte insgesamt 10 Achievements frei", g:"Sammler", tier:1 },
-  { cond: (d) => d.achCountTotal >= 25,  i:"📚", t:"Sammler II", d:["Das wird eine Kollektion.","Du jagst Badges.","Wird langsam voll.","Respekt.","Sammler-Vibes."], h:"Schalte insgesamt 25 Achievements frei", g:"Sammler", tier:2 },
-  { cond: (d) => d.achCountTotal >= 50,  i:"📚", t:"Sammler III",d:["Das ist ernst.","Du hast Content durchgespielt.","Schon viel gesehen.","Große Sammlung.","Stark."], h:"Schalte insgesamt 50 Achievements frei", g:"Sammler", tier:3 },
-  { cond: (d) => d.achCountTotal >= 90,  i:"📚", t:"Sammler IV", d:["Maschine.","Fast alles offen.","Das ist Arbeit.","Du bist ein Hunter.","Weiter so."], h:"Schalte insgesamt 90 Achievements frei", g:"Sammler", tier:4 },
-  { cond: (d) => d.achCountTotal >= 130, i:"📚", t:"Sammler V",  d:["MAX-Hunter.","Du bist das Achievement-Menü.","Alles eingesammelt.","Legendär.","Unfassbar."], h:"Schalte insgesamt 130 Achievements frei", g:"Sammler", tier:5, max:true },
-  { cond: (d) => d.completedTracks >= 1, i:"🏁", t:"Track-Master I",  d:["Ein track ist durch.","Komplettiert.","Du hast es gefressen.","Sauber.","Weiter zum nächsten."], h:"Schließe 1 Achievement-Track komplett ab", g:"Track-Master", tier:1 },
-  { cond: (d) => d.completedTracks >= 3, i:"🏁", t:"Track-Master II", d:["Du räumst auf.","Mehrere Tracks erledigt.","Das ist Fleiß.","Stark.","Sammler-Pro."], h:"Schließe 3 Achievement-Tracks komplett ab", g:"Track-Master", tier:2 },
-  { cond: (d) => d.completedTracks >= 5, i:"🏁", t:"Track-Master III",d:["Du hast die Tracks im Griff.","Komplettierungs-Boss.","Alles sauber.","Unfair konsequent.","Legendär."], h:"Schließe 5 Achievement-Tracks komplett ab", g:"Track-Master", tier:3, max:true },
 ];
 
 window.shamePool = [
@@ -272,6 +270,14 @@ window.shamePool = [
   { cond: (d) => d.vsWorstOpponentLosses >= 5,  i:"🫥", t:"Haus-Gast I",  d:["Immer wieder eingeladen.","Und immer wieder verloren.","Der Tisch kennt das Ende.","Das ist Gewohnheit.","Du bist Stammkunde."], h:"Verliere 5× gegen deinen schlimmsten Gegner", g:"Haus-Gast", tier:1 },
   { cond: (d) => d.vsWorstOpponentLosses >= 9,  i:"🫥", t:"Haus-Gast II", d:["Das ist eine serie… leider.","Du kennst den weg nach unten.","Er liest dich.","Immer gleich.","Aua."], h:"Verliere 9× gegen deinen schlimmsten Gegner", g:"Haus-Gast", tier:2 },
   { cond: (d) => d.vsWorstOpponentLosses >= 14, i:"🫥", t:"Haus-Gast III",d:["Du wohnst fast da.","Er hat deinen Schlüssel.","Das ist Dominanz (gegen dich).","Bittere Realität.","Zeit für Rache."], h:"Verliere 14× gegen deinen schlimmsten Gegner", g:"Haus-Gast", tier:3, max:true },
+  { cond: (d) => d.achCountTotal >= 10,  i:"📚", t:"Sammler I",  d:["Er sammelt Titel.","Die Vitrine füllt sich.","Mehr als nur Matches.","Schöne Sammlung.","Weiter!"], h:"Schalte insgesamt 10 Achievements frei", g:"Sammler", tier:1 },
+  { cond: (d) => d.achCountTotal >= 25,  i:"📚", t:"Sammler II", d:["Das wird eine Kollektion.","Du jagst Badges.","Wird langsam voll.","Respekt.","Sammler-Vibes."], h:"Schalte insgesamt 25 Achievements frei", g:"Sammler", tier:2 },
+  { cond: (d) => d.achCountTotal >= 50,  i:"📚", t:"Sammler III",d:["Das ist ernst.","Du hast Content durchgespielt.","Schon viel gesehen.","Große Sammlung.","Stark."], h:"Schalte insgesamt 50 Achievements frei", g:"Sammler", tier:3 },
+  { cond: (d) => d.achCountTotal >= 90,  i:"📚", t:"Sammler IV", d:["Maschine.","Fast alles offen.","Das ist Arbeit.","Du bist ein Hunter.","Weiter so."], h:"Schalte insgesamt 90 Achievements frei", g:"Sammler", tier:4 },
+  { cond: (d) => d.achCountTotal >= 130, i:"📚", t:"Sammler V",  d:["MAX-Hunter.","Du bist das Achievement-Menü.","Alles eingesammelt.","Legendär.","Unfassbar."], h:"Schalte insgesamt 130 Achievements frei", g:"Sammler", tier:5, max:true },
+  { cond: (d) => d.completedTracks >= 1, i:"🏁", t:"Track-Master I",  d:["Ein track ist durch.","Komplettiert.","Du hast es gefressen.","Sauber.","Weiter zum nächsten."], h:"Schließe 1 Achievement-Track komplett ab", g:"Track-Master", tier:1 },
+  { cond: (d) => d.completedTracks >= 3, i:"🏁", t:"Track-Master II", d:["Du räumst auf.","Mehrere Tracks erledigt.","Das ist Fleiß.","Stark.","Sammler-Pro."], h:"Schließe 3 Achievement-Tracks komplett ab", g:"Track-Master", tier:2 },
+  { cond: (d) => d.completedTracks >= 5, i:"🏁", t:"Track-Master III",d:["Du hast die Tracks im Griff.","Komplettierungs-Boss.","Alles sauber.","Unfair konsequent.","Legendär."], h:"Schließe 5 Achievement-Tracks komplett ab", g:"Track-Master", tier:3, max:true },
 ];
 
 // --- HILFSFUNKTIONEN (Außerhalb für Scriptable verfügbar) ---
@@ -373,19 +379,7 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
 
     const getElo = (p) => (typeof eloRatings[p] === 'number') ? eloRatings[p] : baseElo;
     const getEloGameCount = (p) => (typeof eloGamesCount[p] === 'number') ? eloGamesCount[p] : 0;
-    
-    const getKFactor = (p) => {
-        const games = getEloGameCount(p);
-        // Gleitender Übergang: Startet bei 50, sinkt über 30 Spiele linear auf 20
-        let k = games < 30 ? (50 - games) : 20;
-        if (k < 20) k = 20;
-        
-        // Momentum-Bonus: Wer eine Serie hat, verändert sein Rating schneller
-        if (pData[p] && pData[p].currentStreak >= 3) k += 5;
-        if (pData[p] && pData[p].currentStreak >= 5) k += 5;
-        
-        return k;
-    };
+    const getKFactor = (p) => (getEloGameCount(p) < 20 ? 40 : 20);
 
     const initP = (n) => {
         if (!pData[n]) {
@@ -442,18 +436,10 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         const avgEloTeam2 = p2Arr.reduce((sum, p) => sum + getElo(p), 0) / (p2Arr.length || 1);
         const expectedScoreTeam1 = 1 / (1 + Math.pow(10, (avgEloTeam2 - avgEloTeam1) / 400));
         const actualScoreTeam1 = (g.w == 1) ? 1 : 0;
-        const baseEloChange = actualScoreTeam1 - expectedScoreTeam1;
-
-        // 1:1 Matches sind aussagekräftiger für das individuelle Skill-Level
-        const modeMultiplier = (g.m === "1:1") ? 1.2 : 1.0;
-
-        // Dominanz-Faktor (Nicht-linear): Ein 7:0 (Rest 7) wiegt schwerer als ein knappes Ding.
-        // Ein perfektes Spiel gibt nun bis zu 50% Bonus-Punkte.
-        const marginMultiplier = 1 + (Math.pow(restValue / 7, 1.5) * 0.5);
+        const eloChange = actualScoreTeam1 - expectedScoreTeam1;
         
-        // Delta für die Historie (Durchschnittlicher K-Faktor der Beteiligten)
-        const avgK = (allPlayersInMatch.reduce((sum, p) => sum + getKFactor(p), 0) / allPlayersInMatch.length) * modeMultiplier;
-        matchDeltas[allMatches.indexOf(g)] = Math.round(avgK * Math.abs(baseEloChange) * marginMultiplier);
+        // Delta für dieses Spiel speichern (Index aus der Original-Liste nutzen)
+        matchDeltas[allMatches.indexOf(g)] = Math.round(getKFactor(allPlayersInMatch[0]) * Math.abs(eloChange));
 
         // --- 1. BASIS STATS (Sieg/Niederlage/Streaks) AKTUALISIEREN ---
         winnerPlayers.forEach(p => {
@@ -500,10 +486,8 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         allPlayersInMatch.forEach(p => {
             const currentElo = getElo(p);
             const kFactor = getKFactor(p);
-            
-            const change = kFactor * baseEloChange * marginMultiplier * modeMultiplier;
-            let newElo = p1Arr.includes(p) ? (currentElo + change) : (currentElo - change);
-            
+            // eloChange bezieht sich auf Team 1. Team 2 erhält die inverse Änderung.
+            let newElo = p1Arr.includes(p) ? (currentElo + kFactor * eloChange) : (currentElo - kFactor * eloChange);
             eloRatings[p] = newElo;
             eloGamesCount[p] = getEloGameCount(p) + 1;
             
@@ -814,13 +798,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
       const getG = (p) => (typeof games[p] === 'number') ? games[p] : 0;
       const setR = (p, v) => { ratings[p] = v; };
       const incG = (p) => { games[p] = getG(p) + 1; };
-      
-      const getK = (p) => {
-        const gCount = getG(p);
-        // Gleitender Übergang für Konsistenz mit dem Haupt-Prozessor
-        let k = gCount < 30 ? (50 - gCount) : 20;
-        return k < 20 ? 20 : k;
-      };
+      const getK = (p) => (getG(p) < 20 ? 40 : 20);
 
       ordered.forEach(g => {
         if (!g) return;
@@ -831,10 +809,6 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const team2 = t2.map(s => String(s || '').trim()).filter(Boolean);
         if (!team1.length || !team2.length) return;
 
-        const restValue = parseInt(g.l || 0);
-        const modeMultiplier = (g.m === "1:1") ? 1.2 : 1.0;
-        const marginMultiplier = 1 + (Math.pow(restValue / 7, 1.5) * 0.5);
-
         const avg = (arr) => arr.reduce((sum, p) => sum + getR(p), 0) / arr.length;
         const r1 = avg(team1);
         const r2 = avg(team2);
@@ -842,10 +816,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const s1 = (g.w == 1) ? 1 : 0;
         const dScore = (s1 - e1);
 
-        const baseChange = dScore * modeMultiplier * marginMultiplier;
-
-        team1.forEach(p => { setR(p, getR(p) + getK(p) * baseChange); incG(p); });
-        team2.forEach(p => { setR(p, getR(p) + getK(p) * ( (s1 === 1 ? 0 : 1) - (1-e1) ) * modeMultiplier * marginMultiplier ); incG(p); });
+        team1.forEach(p => { setR(p, getR(p) + getK(p) * dScore); incG(p); });
+        team2.forEach(p => { setR(p, getR(p) - getK(p) * dScore); incG(p); });
       });
 
       const out = {};
@@ -916,7 +888,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
       const labels = Object.keys(proc.pData).sort();
 
-      labels.forEach(p => {
+      labels.forEach((p, idx) => {
         const d = proc.pData[p];
         // Vergleichsdaten für "NEU" Badge (Fallback auf leere Stats, falls Spieler heute neu ist)
         const dBefore = (procBefore && procBefore.pData[p]) ? procBefore.pData[p] : { 
@@ -1011,14 +983,14 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
         if (isTodayTab) {
           playerBoxHtml = `
-            <div style="background:rgba(255,255,255,0.06); border-radius:18px; margin-bottom:15px; border: 1px solid rgba(255,204,0,0.15); overflow:hidden;">
+            <div style="background: linear-gradient(135deg, rgba(255, 204, 0, 0.05) 0%, rgba(28, 28, 30, 0.8) 100%); border-radius:20px; margin-bottom:15px; border: 1px solid rgba(255,204,0,0.2); overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
               <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
-                   style="padding:12px 15px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor:pointer; -webkit-tap-highlight-color: transparent; display:flex; align-items:center; gap:12px;">
+                   style="padding:15px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor:pointer; -webkit-tap-highlight-color: transparent; display:flex; align-items:center; gap:12px;">
                 <div class="ach-chevron expanded"></div>
                 <div style="display:flex; align-items:center; gap:10px;">
                   <img src="${window.getAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
                   <div style="display:none; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,0.1);">👤</div>
-                  <div style="color:#ffffff; font-weight:900; font-size:16px; line-height:1;">
+                  <div style="color:#ffffff; font-weight:900; font-size:16px; line-height:1; letter-spacing: 0.5px;">
                     ${p}
                   </div>
                 </div>
@@ -1026,9 +998,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
               <div style="padding:12px 12px 6px 12px; display:block;">`;
         } else {
           playerBoxHtml = `
-            <div style="background:rgba(255,255,255,0.06); border-radius:18px; margin-bottom:15px; border: 1px solid rgba(255,204,0,0.15); overflow:hidden;">
+            <div style="background: linear-gradient(135deg, rgba(255, 204, 0, 0.05) 0%, rgba(28, 28, 30, 0.8) 100%); border-radius:20px; margin-bottom:15px; border: 1px solid rgba(255,204,0,0.2); overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
               <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
-                   style="background:rgba(255,204,0,0.12); padding:12px 15px; border-bottom: 1px solid rgba(255,204,0,0.1); cursor:pointer; -webkit-tap-highlight-color: transparent;">
+                   style="background: linear-gradient(135deg, rgba(255, 204, 0, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%); padding:15px; border-bottom: 1px solid rgba(255,255,255,0.08); cursor:pointer; -webkit-tap-highlight-color: transparent;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                   <div style="display:flex; align-items:center; gap:12px;">
                     <div class="ach-chevron collapsed"></div>
@@ -1037,13 +1009,13 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                     <div style="display:none; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:20px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                     <span style="font-size:26px;">${currentLvl.icon}</span>
                     <div>
-                      <div style="color:#ffffff; font-weight:900; font-size:17px; line-height:1;">${p}</div>
-                      <div style="color:#ffcc00; font-weight:700; font-size:10px; text-transform:uppercase; margin-top:2px; letter-spacing:0.5px;">Rang ${currentLvlIndex} • ${currentLvl.title}</div>
+                      <div style="color:#ffffff; font-weight:900; font-size:18px; line-height:1; letter-spacing: 0.5px;">${p}</div>
+                      <div style="color:var(--accent); font-weight:800; font-size:9px; text-transform:uppercase; margin-top:4px; letter-spacing:1.2px; opacity: 0.8;">Rang ${currentLvlIndex} • ${currentLvl.title}</div>
                     </div>
                   </div>
                   </div>
                   <div style="text-align:right;">
-                    <div style="color:#ffcc00; font-weight:900; font-size:16px;">${d.wins}</div>
+                    <div style="color:var(--accent); font-weight:900; font-size:18px; text-shadow: 0 0 10px rgba(255,204,0,0.3);">${d.wins}</div>
                     <div style="color:#8e8e93; font-size:8px; text-transform:uppercase; font-weight:700;">Siege</div>
                   </div>
                 </div>
@@ -1051,9 +1023,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 <div style="height:16px; background:rgba(0,0,0,0.3); border-radius:20px; overflow:hidden; margin-bottom:12px; border: 1px solid rgba(255,255,255,0.15); position:relative; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: inset 0 1px 4px rgba(0,0,0,0.5);">
                   <!-- Dezente Skala-Markierungen -->
                   <div style="position:absolute; inset:0; background: repeating-linear-gradient(90deg, transparent, transparent calc(25% - 1px), rgba(255,255,255,0.06) 25%); pointer-events:none; z-index:1;"></div>
-                  <div style="height:100%; width:${progressPercent}%; background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%), linear-gradient(90deg, #B8860B, #FFCC00, #FFFACD); border-radius:20px; transition: width 1.8s cubic-bezier(0.3, 1.5, 0.5, 1); box-shadow: 0 0 25px rgba(255, 204, 0, 0.6); position: relative; overflow: visible; z-index:2; animation: bar-glow 2s infinite alternate;">
+                  <div style="position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); animation: progress-shimmer 3s infinite; z-index:3; pointer-events:none;"></div>
+                  <div style="height:100%; width:${progressPercent}%; background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%), linear-gradient(90deg, #B8860B, #FFCC00, #FFFACD); border-radius:20px; transition: width 1.8s cubic-bezier(0.3, 1.5, 0.5, 1); box-shadow: 0 0 25px rgba(255, 204, 0, 0.6); position: relative; overflow: visible; z-index:2;">
                     <!-- Liquid Glow Tip (leuchtender Kern am Ende) -->
-                    <div style="position:absolute; right:-10px; top:-50%; bottom:-50%; width:20px; background: radial-gradient(circle, #fff 0%, transparent 70%); opacity:0.7; animation: tip-pulse 1s infinite alternate; z-index:3;"></div>
+                    <div style="position:absolute; right:-8px; top:-40%; bottom:-40%; width:16px; background: radial-gradient(circle, #fff 0%, transparent 70%); opacity:0.8; animation: tip-pulse 1s infinite alternate; z-index:4;"></div>
                   </div>
                 </div>
 
@@ -1155,19 +1128,20 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           const phraseIndex = getFixedIndex(name + item.t, item.d.length);
           const phrase = item.d[phraseIndex];
           const isShame = (item.k === "shame");
-          const howColor = isShame ? "rgba(255, 69, 58, 0.70)" : "rgba(52, 199, 89, 0.70)";
+          const howColor = isShame ? "rgba(255, 59, 48, 0.85)" : "rgba(52, 199, 89, 0.85)";
           const howIcon  = isShame ? "💀" : "🏆";
           const isMaxTier = item.max === true;
-          const newBadge = item.isNew ? `<span style="background:#ffcc00; color:#000; font-size:8px; font-weight:900; padding:2px 5px; border-radius:4px; margin-left:8px; vertical-align:middle;">NEU</span>` : "";
+          const categoryColor = isShame ? 'var(--error)' : '#34c759';
+          const newBadge = item.isNew ? `<span style="background:var(--accent); color:#000; font-size:8px; font-weight:900; padding:2px 5px; border-radius:4px; margin-left:8px; vertical-align:middle; animation: badge-pulse 1.5s infinite ease-in-out;">NEU</span>` : "";
           const tracker = d.achTracker ? d.achTracker[item.t] : null;
           const trackerHtml = tracker ? `<div style="font-size:9px; color:#8e8e93; margin-top:4px; font-weight:600;">Sammelrate: <span style="color:#34c759;">📈 ${tracker.earned}</span> ${tracker.lost > 0 ? `| <span style="color:#ff3b30;">📉 ${tracker.lost}</span>` : ''}</div>` : "";
 
           return `
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 0.5px solid rgba(255,255,255,0.05);">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 100%); padding: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid ${categoryColor}; box-shadow: ${isMaxTier ? '0 0 20px rgba(79, 195, 247, 0.2)' : '0 4px 12px rgba(0,0,0,0.2)'};">
               <div style="font-size:22px; min-width:35px; text-align:center;">${item.i}</div>
               <div style="flex:1;">
                 <div style="font-size:12px; font-weight:900; color:#fff;">
-                  <span style="${isMaxTier ? 'color:#4FC3F7;' : ''}">${item.t}${isMaxTier ? ' ⭐' : ''}${newBadge}</span>
+                  <span style="${isMaxTier ? 'color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.4);' : ''}">${item.t}${isMaxTier ? ' ⭐' : ''}${newBadge}</span>
                 </div>
                 <div style="font-size:10px; color:#acacb0; font-style:italic; margin-top:2px;">"${phrase}"</div>
                 <div style="font-size:10px; margin-top:3px; color:${howColor};">${howIcon} ${item.h || ""}</div>
@@ -1196,7 +1170,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 const phraseIndex = getFixedIndex(p + ach.t, ach.d.length);
                 const phrase = ach.d[phraseIndex];
 
-                return `<div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 0.5px solid rgba(255,255,255,0.05);">
+                return `<div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.04) 100%); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                   <div style="font-size:22px; min-width:35px; text-align:center;">${ic}</div>
                   <div style="flex:1;">
                     <div style="font-size:12px; font-weight:900; color:#fff; display:flex; justify-content:space-between;">
@@ -2025,17 +1999,18 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const eloHistoryContainer = document.getElementById('eloHistoryContainer');
         if (eloHistoryContainer) eloHistoryContainer.style.display = 'none';
 
-        // Chart am Canvas zurücksetzen
-        const canvas = document.getElementById('winChart');
-        if (canvas && canvas.__myWinChart) {
-            canvas.__myWinChart.destroy();
-            canvas.__myWinChart = null;
+        // Chart wirklich zurücksetzen
+        if (window.myWinChart) {
+          window.myWinChart.destroy();
+          window.myWinChart = null;
         }
 
         const eloCanvas = document.getElementById('eloHistoryChart');
         if (eloCanvas && eloCanvas.__myEloChart) {
             eloCanvas.__myEloChart.destroy();
         }
+
+        const canvas = document.getElementById('winChart');
         if (canvas) {
           // Canvas ausblenden, damit garantiert nichts "Altes" sichtbar bleibt
           canvas.style.display = "none";
