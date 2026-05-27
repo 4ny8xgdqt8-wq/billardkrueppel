@@ -14,8 +14,8 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <!-- // Versions-Tracking für Cache-Validierung -->
-    <script src="Chart.js?v=1.1.7a"></script>
-    <link rel="manifest" href="manifest.json?v=1.1.7a">
+    <script src="Chart.js?v=1.1.7b"></script>
+    <link rel="manifest" href="manifest.json?v=1.1.7b">
     <!-- // --------------------------------------- -->
 
     <style>
@@ -1082,6 +1082,7 @@
             const views = document.querySelectorAll('.view');
             views.forEach(v => v.classList.remove('active', 'slide-right', 'slide-left'));
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            
             const targetViewId = (id === 'heute' || id === 'statistik') ? 'view-statistik' : 'view-' + id;
             const targetView = document.getElementById(targetViewId);
             
