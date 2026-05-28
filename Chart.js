@@ -2,7 +2,7 @@
 // icon-color: purple; icon-glyph: magic;
 
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.1.9"; 
+window.BILLARD_APP_VERSION = "1.2.0"; 
 
 // Initiales Limit für die Historie
 window.historyLimit = 20;
@@ -1787,9 +1787,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           rows.forEach((r, i) => {
             const badge = medal(i);
             const isFirst = i === 0;
-            const streakEmoji = (r.streak >= 3) ? ' <span style="color:var(--accent); text-shadow: 0 0 8px rgba(255,204,0,0.4);">🔥</span>' : ''; // Flammen-Emoji für 3+ Siege in Folge
+            const streakEmoji = (r.streak >= 3) ? ' <span style="display:inline-block; color:var(--accent); text-shadow: 0 0 8px rgba(255,204,0,0.4); animation: streak-pulse 1.5s infinite ease-in-out;">🔥</span>' : ''; // Pulsierendes Flammen-Emoji
             html += `
-              <div onclick="window.openPlayerProfile('${r.name}')" class="${isFirst ? 'rank-1-card' : ''}" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isFirst ? 'linear-gradient(135deg, rgba(255, 204, 0, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'rgba(255,255,255,0.03)'}; padding: 12px; border-radius: 20px; border: 1px solid ${isFirst ? '#ffcc00' : 'rgba(255,255,255,0.08)'}; cursor:pointer; box-shadow: ${isFirst ? '0 0 20px rgba(255,204,0,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${0.5 + i * 0.05}s;">
+              <div onclick="window.openPlayerProfile('${r.name}')" class="${isFirst ? 'rank-1-card' : ''}" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isFirst ? 'linear-gradient(135deg, rgba(255, 204, 0, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'rgba(255,255,255,0.03)'}; padding: 12px; border-radius: 20px; border: 1px solid ${isFirst ? '#ffcc00' : 'rgba(255,255,255,0.08)'}; cursor:pointer; box-shadow: ${isFirst ? '0 0 20px rgba(255,204,0,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; ${isFirst ? '' : 'animation: ach-card-enter 0.4s ease-out forwards; opacity: 0;'} animation-delay: ${0.5 + i * 0.05}s;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${badge || (i+1 + '.')}</div>
                 <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.15); animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${i * 0.2}s;">
                 <div style="display:none; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>

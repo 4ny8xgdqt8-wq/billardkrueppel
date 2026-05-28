@@ -14,8 +14,8 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <!-- // Versions-Tracking für Cache-Validierung -->
-    <script src="Chart.js?v=1.1.9"></script>
-    <link rel="manifest" href="manifest.json?v=1.1.9">
+    <script src="Chart.js?v=1.2.0"></script>
+    <link rel="manifest" href="manifest.json?v=1.2.0">
     <!-- // --------------------------------------- -->
 
     <style>
@@ -24,22 +24,29 @@
             --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom);
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { 
-            background: radial-gradient(circle at 50% 50%, #2c2c2e 0%, #000000 100%) fixed; 
-            background-size: 200% 200%;
-            animation: bg-drift 20s infinite alternate ease-in-out;
+        html, body {
+            /* Partikel-Hintergrund Effekt */
+            background: 
+                radial-gradient(circle at 50% 50%, #2c2c2e 0%, #000000 100%) fixed,
+                radial-gradient(circle at 10% 20%, rgba(255,255,255,0.03) 1px, transparent 1px),
+                radial-gradient(circle at 90% 80%, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 200% 200%, 60px 60px, 80px 80px;
+            animation: bg-drift 20s infinite alternate ease-in-out, particle-drift 100s infinite linear;
             color: var(--text); margin: 0; padding: 0; 
             font-family: -apple-system, sans-serif; height: 100vh; width: 100%; 
             overflow: hidden; -webkit-user-select: none;
         }
         @keyframes bg-drift { 0% { background-position: 0% 0%; } 100% { background-position: 100% 100%; } }
+        @keyframes particle-drift { 0% { background-position: 0% 0%, 0% 0%, 0% 0%; } 100% { background-position: 100% 100%, 200% 200%, -200% -200%; } }
 
         .app-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; position: fixed; }
         .main-content { flex: 1; overflow-y: auto; padding: 0 16px 120px 16px; -webkit-overflow-scrolling: touch; }
         .view { display: none; flex-direction: column; width: 100%; } 
         .view.active { display: flex; }
-        .view.active.slide-right { animation: view-enter-right 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .view.active.slide-left { animation: view-enter-left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .view.slide-right { animation: view-enter-right 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .view.slide-left { animation: view-enter-left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .view.exit-right { animation: view-exit-right 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .view.exit-left { animation: view-exit-left 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         .card { 
             background: rgba(28, 28, 30, 0.65); 
             backdrop-filter: blur(20px); 
@@ -233,8 +240,10 @@
         @keyframes tip-fade { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 0.7; transform: translateY(0); } }
         @keyframes modal-enter { from { opacity: 0; transform: scale(0.94) translateY(10px); filter: blur(10px); } to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); } }
         @keyframes view-enter-right { from { transform: translateX(30px); opacity: 0; filter: blur(5px); } to { transform: translateX(0); opacity: 1; filter: blur(0); } }
-        @keyframes view-enter-left { from { transform: translateX(-30px); opacity: 0; filter: blur(5px); } to { transform: translateX(0); opacity: 1; filter: blur(0); } }
-        @keyframes ach-card-enter {
+        @keyframes view-enter-left { from { transform: translateX(-40px) scale(0.96); opacity: 0; filter: blur(8px); } to { transform: translateX(0) scale(1); opacity: 1; filter: blur(0); } }
+        @keyframes view-exit-right { from { transform: translateX(0) scale(1); opacity: 1; filter: blur(0); } to { transform: translateX(40px) scale(0.96); opacity: 0; filter: blur(8px); } } /* Moves right to exit */
+        @keyframes view-exit-left { from { transform: translateX(0) scale(1); opacity: 1; filter: blur(0); } to { transform: translateX(-40px) scale(0.96); opacity: 0; filter: blur(8px); } } /* Moves left to exit */
+        @keyframes ach-card-enter { /* Depth-Transitions: Skalierung und Unschärfe hinzugefügt */
             from { opacity: 0; transform: translateY(12px) scale(0.98); filter: blur(3px); }
             to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
@@ -491,7 +500,8 @@
 
         /* Leichte Pulsierung für den Erstplatzierten */
         .rank-1-card {
-            animation: pulse-gold 1s infinite alternate ease-in-out; /* Schnelleres Pulsieren */
+            /* Kombiniert Einblend-Animation mit dem dauerhaften Glow */
+            animation: ach-card-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, pulse-gold 2s infinite alternate ease-in-out 0.6s !important;
         }
         @keyframes pulse-gold {
             0% { 
@@ -1104,16 +1114,48 @@
             }
 
             window.viewId = id;
-            const views = document.querySelectorAll('.view');
-            views.forEach(v => v.classList.remove('active', 'slide-right', 'slide-left'));
+            const oldActive = document.querySelector('.view.active');
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
             
             const targetViewId = (id === 'heute' || id === 'statistik') ? 'view-statistik' : 'view-' + id;
             const targetView = document.getElementById(targetViewId);
             
             if (targetView) {
-                targetView.classList.add('active');
+                if (oldActive && oldActive !== targetView) { // Wenn es eine alte aktive Ansicht gibt und diese nicht die Zielansicht ist
+                    const exitDir = dir === 'next' ? 'exit-left' : 'exit-right'; // Entgegengesetzte Richtung für Exit
+                    oldActive.classList.add(exitDir);
+                    
+                    // Temporär aus dem Dokumentfluss nehmen, um "Seite unten" Flackern zu verhindern
+                    oldActive.style.position = 'absolute';
+                    oldActive.style.width = '100%';
+                    oldActive.style.height = '100%';
+                    oldActive.style.top = '0'; // Sicherstellen, dass sie den gesamten Bereich abdeckt
+                    oldActive.style.left = '0'; // Sicherstellen, dass sie den gesamten Bereich abdeckt
 
+                    setTimeout(() => {
+                        oldActive.classList.remove(exitDir);
+                        oldActive.classList.remove('active'); // <-- Dies ist die entscheidende Ergänzung
+                        // Alle Inline-Styles nach der Animation zurücksetzen
+                        oldActive.style.cssText = '';
+                    }, 400); // Match animation duration
+                } else if (oldActive === targetView) {
+                    // Wenn der Benutzer auf den bereits aktiven Tab geklickt hat, einfach zurücksetzen
+                    oldActive.classList.remove('slide-right', 'slide-left', 'exit-right', 'exit-left');
+                    oldActive.style.cssText = '';
+                }
+
+                // Alle anderen Views deaktivieren und Styles zurücksetzen
+                document.querySelectorAll('.view').forEach(v => {
+                    if (v !== targetView && v !== oldActive) {
+                        v.classList.remove('active', 'slide-right', 'slide-left', 'exit-right', 'exit-left');
+                        v.style.cssText = ''; 
+                    }
+                });
+
+                targetView.classList.add('active');
+                targetView.classList.remove('slide-right', 'slide-left', 'exit-right', 'exit-left'); // Sicherstellen, dass keine alten Animationsklassen vorhanden sind
+                targetView.style.cssText = ''; // Reset target styles
+                
                 // Animationen für HUDs und Karten neu triggern, damit sie beim Tab-Wechsel sicher erscheinen
                 targetView.querySelectorAll('.cinematic-entry, .cinematic-hud, .card-hud').forEach(el => {
                     el.style.animation = 'none';
@@ -1814,13 +1856,15 @@
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:20px;">
                     <div class="card" style="margin-bottom:0; padding:15px; background: linear-gradient(135deg, rgba(255, 204, 0, 0.05) 0%, rgba(28, 28, 30, 0.8) 100%); border: 1px solid rgba(255,204,0,0.25); box-shadow: inset 0 0 10px rgba(255,204,0,0.05), 0 4px 15px rgba(0,0,0,0.3); text-align:center;">
                         <label style="padding:0; font-size: 9px; letter-spacing: 1px;">Aktuelles ELO</label>
-                        <div style="font-size:24px; font-weight:900; color:var(--accent); text-shadow: 0 0 10px rgba(255,204,0,0.3);">${d.elo || 1000}</div>
+                        <div id="prof-elo" style="font-size:24px; font-weight:900; color:var(--accent); text-shadow: 0 0 10px rgba(255,204,0,0.3);">0</div>
                     </div>
                     <div class="card" style="margin-bottom:0; padding:15px; background: linear-gradient(135deg, rgba(52, 199, 89, 0.05) 0%, rgba(28, 28, 30, 0.8) 100%); border: 1px solid rgba(52, 199, 89, 0.25); box-shadow: inset 0 0 10px rgba(52, 199, 89, 0.05), 0 4px 15px rgba(0,0,0,0.3); text-align:center;">
                         <label style="padding:0; font-size: 9px; letter-spacing: 1px;">Siegquote</label>
-                        <div style="font-size:24px; font-weight:900; color:#34c759; text-shadow: 0 0 10px rgba(52,199,89,0.3);">${winRate}%</div>
+                        <div id="prof-winrate" style="font-size:24px; font-weight:900; color:#34c759; text-shadow: 0 0 10px rgba(52,199,89,0.3);">0%</div>
                     </div>
                 </div>
+                
+                ${setTimeout(() => { window.animateNumber('prof-elo', d.elo || 1000); window.animateNumber('prof-winrate', winRate); }, 100) && ''}
 
                 <div class="section-label" style="margin-top:0;">📊 Karriere-Highlights</div>
                 <div style="display:flex; flex-direction:column; gap:8px;">
@@ -1848,6 +1892,20 @@
             document.getElementById('playerProfileModal').style.display = 'flex';
         };
 
+        // Funktion für Zahlen-Animation (Suggestion 6)
+        window.animateNumber = (element, start, end, duration) => {
+            let startTime = null;
+            const step = (currentTime) => {
+                if (!startTime) startTime = currentTime;
+                const progress = Math.min((currentTime - startTime) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                element.innerText = value;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        };
         // Die ursprüngliche requestDelete Funktion ruft jetzt das Modal auf
         window.requestDelete = (i) => { window.openDeleteConfirmModal(i); };
         window.updateMatchProbability = () => {
