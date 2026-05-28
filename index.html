@@ -14,24 +14,28 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <!-- // Versions-Tracking für Cache-Validierung -->
-    <script src="Chart.js?v=1.2.0"></script>
-    <link rel="manifest" href="manifest.json?v=1.2.0">
+    <script src="Chart.js?v=1.2.1"></script>
+    <link rel="manifest" href="manifest.json?v=1.2.1">
     <!-- // --------------------------------------- -->
 
     <style>
         :root {
             --bg: #000000; --card: #1c1c1e; --accent: #ffcc00; --error: #ff3b30; --text: #ffffff;
             --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom);
+            /* Ambient Mood Variables - Default for 'aufzeichnen' (Match) */
+            --ambient-main-start: #2c2c2e;
+            --ambient-main-end: #000000;
+            --ambient-particle-color: rgba(255,204,0,0.03); /* Accent yellow for particles */
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body {
             /* Partikel-Hintergrund Effekt */
             background: 
-                radial-gradient(circle at 50% 50%, #2c2c2e 0%, #000000 100%) fixed,
-                radial-gradient(circle at 10% 20%, rgba(255,255,255,0.03) 1px, transparent 1px),
-                radial-gradient(circle at 90% 80%, rgba(255,255,255,0.03) 1px, transparent 1px);
+                radial-gradient(circle at 50% 50%, var(--ambient-main-start) 0%, var(--ambient-main-end) 100%) fixed,
+                radial-gradient(circle at 10% 20%, var(--ambient-particle-color) 1px, transparent 1px),
+                radial-gradient(circle at 90% 80%, var(--ambient-particle-color) 1px, transparent 1px);
             background-size: 200% 200%, 60px 60px, 80px 80px;
-            animation: bg-drift 20s infinite alternate ease-in-out, particle-drift 100s infinite linear;
+            animation: bg-drift 20s infinite alternate ease-in-out, particle-drift 100s infinite linear; /* bg-drift is on background-position */
             color: var(--text); margin: 0; padding: 0; 
             font-family: -apple-system, sans-serif; height: 100vh; width: 100%; 
             overflow: hidden; -webkit-user-select: none;
@@ -220,7 +224,7 @@
         }
         .loader-logo { 
             height: 70px; width: auto; margin-bottom: 15px; 
-            animation: logo-pulse 0.8s infinite alternate ease-in-out;
+            filter: drop-shadow(0 0 20px rgba(255, 204, 0, 0.4));
         }
         .loader-title { font-weight: 900; font-size: 20px; color: var(--accent); text-transform: uppercase; margin-bottom: 25px; text-shadow: 0 0 15px rgba(255, 204, 0, 0.3); letter-spacing: 1.5px; }
         .spinner { width: 40px; height: 40px; border: 3px solid rgba(255, 204, 0, 0.05); border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite; box-shadow: 0 0 10px rgba(255, 204, 0, 0.1); }
@@ -503,6 +507,28 @@
             /* Kombiniert Einblend-Animation mit dem dauerhaften Glow */
             animation: ach-card-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, pulse-gold 2s infinite alternate ease-in-out 0.6s !important;
         }
+
+        /* Dynamische Avatare Effekte */
+        .avatar-frame { position: relative; display: inline-flex; z-index: 1; transition: all 0.3s ease; }
+        .streak-fire::before {
+            content: ""; position: absolute; inset: -4px; border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent, #ffcc00, transparent, #ff9500, transparent);
+            animation: rotate-fire 3s linear infinite; filter: blur(4px); z-index: -1;
+        }
+        .streak-fire::after {
+            content: ""; position: absolute; inset: -8px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,204,0,0.4) 0%, transparent 70%);
+            animation: pulse-fire 1.5s infinite ease-in-out; z-index: -2;
+        }
+        .streak-frost::before {
+            content: ""; position: absolute; inset: -4px; border-radius: 50%;
+            background: #4FC3F7; filter: blur(6px); opacity: 0.6;
+            animation: pulse-frost 2.5s infinite ease-in-out; z-index: -1;
+        }
+        @keyframes rotate-fire { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulse-fire { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.3); opacity: 0.8; } }
+        @keyframes pulse-frost { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.2); opacity: 1; } }
+
         @keyframes pulse-gold {
             0% { 
                 box-shadow: 0 0 12px rgba(255, 204, 0, 0.15); 
@@ -513,6 +539,7 @@
                 border-color: rgba(255, 204, 0, 0.9) !important; 
             }
         }
+        html, body { transition: background-image 0.8s ease-in-out; } /* Smooth transition for gradient colors */
     </style>
 </head>
 <body>
@@ -1121,6 +1148,30 @@
             const targetView = document.getElementById(targetViewId);
             
             if (targetView) {
+                // --- Adaptive Ambient Mood Logic ---
+                let mainStartColor = '#2c2c2e'; // Default for 'aufzeichnen' (Match)
+                let mainEndColor = '#000000'; // Always black for the deep background
+                let particleColor = 'rgba(255,204,0,0.03)'; // Accent yellow for particles
+
+                if (id === 'uebersicht') { // Historie
+                    mainStartColor = '#1a1a2a'; // Cooler, dunkler Blauton
+                    particleColor = 'rgba(79,195,247,0.03)'; // Passendes Hellblau für Partikel
+                } else if (id === 'statistik' || id === 'heute') { // Statistik
+                    mainStartColor = '#1a2a2a'; // Analytischer, dunkler Grünton
+                    particleColor = 'rgba(52,199,89,0.03)'; // Passendes Grün für Partikel
+                } else if (id === 'erfolge') { // Erfolge
+                    mainStartColor = '#3a2a1a'; // Warmer, dunkler Goldton
+                    particleColor = 'rgba(255,149,0,0.03)'; // Passendes Orange für Partikel
+                }
+
+                // Setze die CSS-Variablen, die den Hintergrund steuern
+                document.documentElement.style.setProperty('--ambient-main-start', mainStartColor);
+                document.documentElement.style.setProperty('--ambient-main-end', mainEndColor);
+                document.documentElement.style.setProperty('--ambient-particle-color', particleColor);
+
+                // --- Ende Adaptive Ambient Mood Logic ---
+
+
                 if (oldActive && oldActive !== targetView) { // Wenn es eine alte aktive Ansicht gibt und diese nicht die Zielansicht ist
                     const exitDir = dir === 'next' ? 'exit-left' : 'exit-right'; // Entgegengesetzte Richtung für Exit
                     oldActive.classList.add(exitDir);
@@ -1831,8 +1882,11 @@
             const header = document.getElementById('profileHeader');
             const content = document.getElementById('profileStats');
             
+            const streakClass = d.currentStreak >= 3 ? 'streak-fire' : (d.loseStreak >= 3 ? 'streak-frost' : '');
             header.innerHTML = `
-                <img src="${window.getAvatarUrl(name)}" style="width:90px; height:90px; border-radius:50%; border:4px solid var(--accent); margin-bottom:15px; object-fit:cover; box-shadow: 0 0 20px rgba(255,204,0,0.5);">
+                <div class="avatar-frame ${streakClass}" style="margin-bottom:15px;">
+                    <img src="${window.getAvatarUrl(name)}" style="width:90px; height:90px; border-radius:50%; border:4px solid var(--accent); object-fit:cover; box-shadow: 0 0 20px rgba(255,204,0,0.5);">
+                </div>
                 <div style="font-size:28px; font-weight:900; color:#fff; text-shadow: 0 0 15px rgba(255,204,0,0.4);">${name}</div>
                 <div style="font-size:10px; color:#8e8e93; font-weight:800; text-transform:uppercase; margin-top:8px; letter-spacing:1.5px;">Spieler-Steckbrief</div>
             `;
@@ -1892,20 +1946,6 @@
             document.getElementById('playerProfileModal').style.display = 'flex';
         };
 
-        // Funktion für Zahlen-Animation (Suggestion 6)
-        window.animateNumber = (element, start, end, duration) => {
-            let startTime = null;
-            const step = (currentTime) => {
-                if (!startTime) startTime = currentTime;
-                const progress = Math.min((currentTime - startTime) / duration, 1);
-                const value = Math.floor(progress * (end - start) + start);
-                element.innerText = value;
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
-            };
-            window.requestAnimationFrame(step);
-        };
         // Die ursprüngliche requestDelete Funktion ruft jetzt das Modal auf
         window.requestDelete = (i) => { window.openDeleteConfirmModal(i); };
         window.updateMatchProbability = () => {

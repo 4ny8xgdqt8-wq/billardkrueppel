@@ -2,7 +2,7 @@
 // icon-color: purple; icon-glyph: magic;
 
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.2.0"; 
+window.BILLARD_APP_VERSION = "1.2.1"; 
 
 // Initiales Limit für die Historie
 window.historyLimit = 20;
@@ -1759,7 +1759,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 name, 
                 elo: (typeof d.elo === 'number') ? d.elo : 1000, 
                 games: (typeof d.eloGames === 'number') ? d.eloGames : 0,
-                streak: d.currentStreak || 0 
+                streak: d.currentStreak || 0,
+                loseStreak: d.loseStreak || 0
             };
           }).filter(r => r.games > 0);
 
@@ -1787,11 +1788,14 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           rows.forEach((r, i) => {
             const badge = medal(i);
             const isFirst = i === 0;
+            const streakClass = r.streak >= 3 ? 'streak-fire' : (r.loseStreak >= 3 ? 'streak-frost' : '');
             const streakEmoji = (r.streak >= 3) ? ' <span style="display:inline-block; color:var(--accent); text-shadow: 0 0 8px rgba(255,204,0,0.4); animation: streak-pulse 1.5s infinite ease-in-out;">🔥</span>' : ''; // Pulsierendes Flammen-Emoji
             html += `
               <div onclick="window.openPlayerProfile('${r.name}')" class="${isFirst ? 'rank-1-card' : ''}" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isFirst ? 'linear-gradient(135deg, rgba(255, 204, 0, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'rgba(255,255,255,0.03)'}; padding: 12px; border-radius: 20px; border: 1px solid ${isFirst ? '#ffcc00' : 'rgba(255,255,255,0.08)'}; cursor:pointer; box-shadow: ${isFirst ? '0 0 20px rgba(255,204,0,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; ${isFirst ? '' : 'animation: ach-card-enter 0.4s ease-out forwards; opacity: 0;'} animation-delay: ${0.5 + i * 0.05}s;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${badge || (i+1 + '.')}</div>
-                <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.15); animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${i * 0.2}s;">
+                <div class="avatar-frame ${streakClass}">
+                  <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.15); animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${i * 0.2}s;">
+                </div>
                 <div style="display:none; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1;">
                   <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2);">${r.name} ${streakEmoji}</div>
@@ -1846,7 +1850,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
           const rec = {};
           const init = (p) => {
-            if (!rec[p]) rec[p] = { g:0, w:0, l:0, streak:0, lastWasWin:null, eloBefore:1000, eloAfter:1000, eloDelta:0 };
+            if (!rec[p]) rec[p] = { g:0, w:0, l:0, streak:0, loseStreak:0, lastWasWin:null, eloBefore:1000, eloAfter:1000, eloDelta:0 };
           };
 
           // ELO Simulation (gleiches Modell wie oben)
@@ -1890,11 +1894,13 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 init(p);
                 rec[p].g++; rec[p].w++;
                 rec[p].streak = (rec[p].lastWasWin === true) ? (rec[p].streak + 1) : 1;
+                rec[p].loseStreak = 0;
                 rec[p].lastWasWin = true;
               });
               losers.forEach(p => {
                 init(p);
                 rec[p].g++; rec[p].l++;
+                rec[p].loseStreak = (rec[p].lastWasWin === false) ? (rec[p].loseStreak + 1) : 1;
                 rec[p].streak = 0;
                 rec[p].lastWasWin = false;
               });
@@ -1909,7 +1915,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             .map(name => {
               const r = rec[name];
               const wr = r.g ? Math.round((r.w / r.g) * 100) : 0;
-              return { name, g: r.g, w: r.w, l: r.l, wr, streak: r.streak, eloDelta: r.eloDelta };
+              return { name, g: r.g, w: r.w, l: r.l, wr, streak: r.streak, loseStreak: r.loseStreak, eloDelta: r.eloDelta };
             })
             .filter(r => r.g >= 1)
             .sort((a, b) => (b.eloDelta - a.eloDelta) || (b.wr - a.wr) || (b.g - a.g) || a.name.localeCompare(b.name, 'de'));
@@ -1939,10 +1945,13 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
           rows.forEach((r, i) => {
             const isTopForm = i === 0;
+            const streakClass = r.streak >= 3 ? 'streak-fire' : (r.loseStreak >= 3 ? 'streak-frost' : '');
             listHtml += `
               <div onclick="window.openPlayerProfile('${r.name}')" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isTopForm ? 'linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'rgba(255,255,255,0.03)'}; padding: 12px; border-radius: 16px; border: 1px solid ${isTopForm ? '#34c759' : 'rgba(255,255,255,0.08)'}; box-shadow: ${isTopForm ? '0 0 20px rgba(52,199,89,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; cursor:pointer; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${0.5 + i * 0.05}s;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${i === 0 ? '🔥' : (i === 1 ? '✨' : (i === 2 ? '📈' : (i+1 + '.')))}</div>
-                <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.15); animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${i * 0.2}s;">
+                <div class="avatar-frame ${streakClass}">
+                  <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.15); animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${i * 0.2}s;">
+                </div>
                 <div style="display:none; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1;">
                   <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2);">${r.name}</div>
