@@ -2,7 +2,7 @@
 // icon-color: purple; icon-glyph: magic;
 
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.2.1"; 
+window.BILLARD_APP_VERSION = "1.2.2"; 
 
 // Initiales Limit für die Historie
 window.historyLimit = 20;
