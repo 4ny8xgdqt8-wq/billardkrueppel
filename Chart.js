@@ -2,7 +2,7 @@
 // icon-color: purple; icon-glyph: magic;
 
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.1.8"; 
+window.BILLARD_APP_VERSION = "1.1.9"; 
 
 // Initiales Limit für die Historie
 window.historyLimit = 20;
@@ -1615,7 +1615,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
         // Chart.js Diagramm
         const canvas = byId('winChart');
-        if (!canvas) return;
+        if (canvas) {
         const canvasEl = document.getElementById('winChart');
         if (canvasEl) canvasEl.style.display = "block";
         const ctx = canvas.getContext('2d');
@@ -1698,6 +1698,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             }
           }
         });
+        }
 
         // --- ELO HISTORY CHART (LINE) ---
         const eloHistoryContainer = document.getElementById('eloHistoryContainer');

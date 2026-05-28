@@ -14,8 +14,8 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <!-- // Versions-Tracking für Cache-Validierung -->
-    <script src="Chart.js?v=1.1.8"></script>
-    <link rel="manifest" href="manifest.json?v=1.1.8">
+    <script src="Chart.js?v=1.1.9"></script>
+    <link rel="manifest" href="manifest.json?v=1.1.9">
     <!-- // --------------------------------------- -->
 
     <style>
@@ -1113,17 +1113,30 @@
             
             if (targetView) {
                 targetView.classList.add('active');
+
+                // Animationen für HUDs und Karten neu triggern, damit sie beim Tab-Wechsel sicher erscheinen
+                targetView.querySelectorAll('.cinematic-entry, .cinematic-hud, .card-hud').forEach(el => {
+                    el.style.animation = 'none';
+                    el.offsetHeight; // Reflow erzwingen, um die Animation neu zu starten
+                    el.style.animation = '';
+                });
+
                 if (dir === 'next') targetView.classList.add('slide-right');
                 if (dir === 'prev') targetView.classList.add('slide-left');
             }
-
             if (el) el.classList.add('active');
             if (el) {
                 const ind = document.getElementById('tab-indicator');
                 ind.style.width = el.offsetWidth + "px";
                 ind.style.left = el.offsetLeft + "px";
             }
-            window.updateAllViews();
+
+            // Verzögertes Update, damit der Browser Zeit für das Layout hat
+            // Dies löst das Problem mit "verschwindenden" Kacheln und Diagrammen
+            requestAnimationFrame(() => {
+                window.updateAllViews();
+            });
+
             const scrollArea = document.getElementById('scroll-area');
             if (scrollArea) scrollArea.scrollTop = 0;
         };
