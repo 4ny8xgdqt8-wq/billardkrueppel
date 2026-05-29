@@ -204,6 +204,14 @@ window.famePool = [
   { cond: (d) => d.dailyDaysWithAch >= 50,  i:"🗓️", t:"Daily‑Sammler VII",d:["50 Tage – Maschine.","Du sammelst wie ein Profi.","Kalender voller Siege.","Gnadenlos konstant.","Starker Grind."], h:"Sammle an 50 Tagen mindestens einen Tageserfolg", g:"Daily‑Sammler", tier:7 },
   { cond: (d) => d.dailyDaysWithAch >= 75,  i:"📆", t:"Daily‑Sammler VIII",d:["Das ist schon ein Lifestyle.","Du bist immer da.","Kalender wird Legendär.","Du sammelst wie ein Hunter.","Top!"], h:"Sammle an 75 Tagen mindestens einen Tageserfolg", g:"Daily‑Sammler", tier:8 },
   { cond: (d) => d.dailyDaysWithAch >= 100, i:"📆", t:"Daily‑Sammler IX", d:["100 Tage Erfolg.","Das ist absurd gut.","Du bist die Routine.","Du hast den Kalender besiegt.","Wahnsinn."], h:"Sammle an 100 Tagen mindestens einen Tageserfolg", g:"Daily‑Sammler", tier:9 },
+  { cond: (d) => d.achCountTotal >= 10,  i:"📚", t:"Sammler I",  d:["Er sammelt Titel.","Die Vitrine füllt sich.","Mehr als nur Matches.","Schöne Sammlung.","Weiter!"], h:"Schalte insgesamt 10 Achievements frei", g:"Sammler", tier:1 },
+  { cond: (d) => d.achCountTotal >= 25,  i:"📚", t:"Sammler II", d:["Das wird eine Kollektion.","Du jagst Badges.","Wird langsam voll.","Respekt.","Sammler-Vibes."], h:"Schalte insgesamt 25 Achievements frei", g:"Sammler", tier:2 },
+  { cond: (d) => d.achCountTotal >= 50,  i:"📚", t:"Sammler III",d:["Das ist ernst.","Du hast Content durchgespielt.","Schon viel gesehen.","Große Sammlung.","Stark."], h:"Schalte insgesamt 50 Achievements frei", g:"Sammler", tier:3 },
+  { cond: (d) => d.achCountTotal >= 90,  i:"📚", t:"Sammler IV", d:["Maschine.","Fast alles offen.","Das ist Arbeit.","Du bist ein Hunter.","Weiter so."], h:"Schalte insgesamt 90 Achievements frei", g:"Sammler", tier:4 },
+  { cond: (d) => d.achCountTotal >= 130, i:"📚", t:"Sammler V",  d:["MAX-Hunter.","Du bist das Achievement-Menü.","Alles eingesammelt.","Legendär.","Unfassbar."], h:"Schalte insgesamt 130 Achievements frei", g:"Sammler", tier:5, max:true },
+  { cond: (d) => d.completedTracks >= 1, i:"🏁", t:"Track-Master I",  d:["Ein track ist durch.","Komplettiert.","Du hast es gefressen.","Sauber.","Weiter zum nächsten."], h:"Schließe 1 Achievement-Track komplett ab", g:"Track-Master", tier:1 },
+  { cond: (d) => d.completedTracks >= 3, i:"🏁", t:"Track-Master II", d:["Du räumst auf.","Mehrere Tracks erledigt.","Das ist Fleiß.","Stark.","Sammler-Pro."], h:"Schließe 3 Achievement-Tracks komplett ab", g:"Track-Master", tier:2 },
+  { cond: (d) => d.completedTracks >= 5, i:"🏁", t:"Track-Master III",d:["Du hast die Tracks im Griff.","Komplettierungs-Boss.","Alles sauber.","Unfair konsequent.","Legendär."], h:"Schließe 5 Achievement-Tracks komplett ab", g:"Track-Master", tier:3, max:true },
 ];
 
 window.shamePool = [
@@ -277,14 +285,6 @@ window.shamePool = [
   { cond: (d) => d.vsWorstOpponentLosses >= 5,  i:"🫥", t:"Haus-Gast I",  d:["Immer wieder eingeladen.","Und immer wieder verloren.","Der Tisch kennt das Ende.","Das ist Gewohnheit.","Du bist Stammkunde."], h:"Verliere 5× gegen deinen schlimmsten Gegner", g:"Haus-Gast", tier:1 },
   { cond: (d) => d.vsWorstOpponentLosses >= 9,  i:"🫥", t:"Haus-Gast II", d:["Das ist eine serie… leider.","Du kennst den weg nach unten.","Er liest dich.","Immer gleich.","Aua."], h:"Verliere 9× gegen deinen schlimmsten Gegner", g:"Haus-Gast", tier:2 },
   { cond: (d) => d.vsWorstOpponentLosses >= 14, i:"🫥", t:"Haus-Gast III",d:["Du wohnst fast da.","Er hat deinen Schlüssel.","Das ist Dominanz (gegen dich).","Bittere Realität.","Zeit für Rache."], h:"Verliere 14× gegen deinen schlimmsten Gegner", g:"Haus-Gast", tier:3, max:true },
-  { cond: (d) => d.achCountTotal >= 10,  i:"📚", t:"Sammler I",  d:["Er sammelt Titel.","Die Vitrine füllt sich.","Mehr als nur Matches.","Schöne Sammlung.","Weiter!"], h:"Schalte insgesamt 10 Achievements frei", g:"Sammler", tier:1 },
-  { cond: (d) => d.achCountTotal >= 25,  i:"📚", t:"Sammler II", d:["Das wird eine Kollektion.","Du jagst Badges.","Wird langsam voll.","Respekt.","Sammler-Vibes."], h:"Schalte insgesamt 25 Achievements frei", g:"Sammler", tier:2 },
-  { cond: (d) => d.achCountTotal >= 50,  i:"📚", t:"Sammler III",d:["Das ist ernst.","Du hast Content durchgespielt.","Schon viel gesehen.","Große Sammlung.","Stark."], h:"Schalte insgesamt 50 Achievements frei", g:"Sammler", tier:3 },
-  { cond: (d) => d.achCountTotal >= 90,  i:"📚", t:"Sammler IV", d:["Maschine.","Fast alles offen.","Das ist Arbeit.","Du bist ein Hunter.","Weiter so."], h:"Schalte insgesamt 90 Achievements frei", g:"Sammler", tier:4 },
-  { cond: (d) => d.achCountTotal >= 130, i:"📚", t:"Sammler V",  d:["MAX-Hunter.","Du bist das Achievement-Menü.","Alles eingesammelt.","Legendär.","Unfassbar."], h:"Schalte insgesamt 130 Achievements frei", g:"Sammler", tier:5, max:true },
-  { cond: (d) => d.completedTracks >= 1, i:"🏁", t:"Track-Master I",  d:["Ein track ist durch.","Komplettiert.","Du hast es gefressen.","Sauber.","Weiter zum nächsten."], h:"Schließe 1 Achievement-Track komplett ab", g:"Track-Master", tier:1 },
-  { cond: (d) => d.completedTracks >= 3, i:"🏁", t:"Track-Master II", d:["Du räumst auf.","Mehrere Tracks erledigt.","Das ist Fleiß.","Stark.","Sammler-Pro."], h:"Schließe 3 Achievement-Tracks komplett ab", g:"Track-Master", tier:2 },
-  { cond: (d) => d.completedTracks >= 5, i:"🏁", t:"Track-Master III",d:["Du hast die Tracks im Griff.","Komplettierungs-Boss.","Alles sauber.","Unfair konsequent.","Legendär."], h:"Schließe 5 Achievement-Tracks komplett ab", g:"Track-Master", tier:3, max:true },
 ];
 
 // --- HILFSFUNKTIONEN (Außerhalb für Scriptable verfügbar) ---
@@ -655,7 +655,7 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         d.completedTracks = completedTracksCount;
     });
 
-    return { pData, blackWins: globalBlackWins, breakWins: globalBreakWins, matchDeltas };
+    return { pData, blackWins: globalBlackWins, breakWins: globalBreakWins, matchDeltas, aggregates };
 };
 
 // --- CONSOLIDATED FILTER FUNCTION ---
@@ -991,50 +991,42 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
         if (isTodayTab) {
           playerBoxHtml = `
-            <div style="background: linear-gradient(135deg, rgba(255, 204, 0, 0.05) 0%, rgba(28, 28, 30, 0.8) 100%); border-radius:20px; margin-bottom:15px; border: 1px solid rgba(255,204,0,0.2); overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+            <div class="card-modern" style="margin-bottom:15px; border-radius:22px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0;">
               <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
                    style="padding:15px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor:pointer; -webkit-tap-highlight-color: transparent; display:flex; align-items:center; gap:12px;">
                 <div class="ach-chevron expanded"></div>
                 <div style="display:flex; align-items:center; gap:10px;">
-                  <img src="${window.getAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
-                  <div style="display:none; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,0.1);">👤</div>
-                  <div style="color:#ffffff; font-weight:900; font-size:16px; line-height:1; letter-spacing: 0.5px;">
-                    ${p}
-                  </div>
+                  <img src="${window.getAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:12px; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
+                  <div style="display:none; width:32px; height:32px; border-radius:12px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,0.1);">👤</div>
+                  <div style="color:#ffffff; font-weight:900; font-size:16px; line-height:1; letter-spacing: 0.5px;">${p}</div>
                 </div>
               </div>
               <div style="padding:12px 12px 6px 12px; display:block;">`;
         } else {
           playerBoxHtml = `
-            <div style="background: linear-gradient(135deg, rgba(255, 204, 0, 0.05) 0%, rgba(28, 28, 30, 0.8) 100%); border-radius:20px; margin-bottom:15px; border: 1px solid rgba(255,204,0,0.2); overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+            <div class="achievement-card-hero" style="border-radius:24px; margin-bottom:15px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0;">
               <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
-                   style="background: linear-gradient(135deg, rgba(255, 204, 0, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%); padding:15px; border-bottom: 1px solid rgba(255,255,255,0.08); cursor:pointer; -webkit-tap-highlight-color: transparent;">
+                   style="padding:18px; cursor:pointer; -webkit-tap-highlight-color: transparent;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                   <div style="display:flex; align-items:center; gap:12px;">
                     <div class="ach-chevron collapsed"></div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                    <img src="${window.getAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.2);">
-                    <div style="display:none; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:20px; border:1px solid rgba(255,255,255,0.1);">👤</div>
-                    <span style="font-size:26px;">${currentLvl.icon}</span>
+                    <div style="display:flex; align-items:center; gap:14px;">
+                    <img src="${window.getAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:44px; height:44px; border-radius:14px; object-fit:cover; border:2px solid var(--accent); box-shadow: 0 0 15px rgba(255,204,0,0.2);">
+                    <div style="display:none; width:36px; height:36px; border-radius:12px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:20px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                     <div>
-                      <div style="color:#ffffff; font-weight:900; font-size:18px; line-height:1; letter-spacing: 0.5px;">${p}</div>
-                      <div style="color:var(--accent); font-weight:800; font-size:9px; text-transform:uppercase; margin-top:4px; letter-spacing:1.2px; opacity: 0.8;">Rang ${currentLvlIndex} • ${currentLvl.title}</div>
+                      <div style="color:#ffffff; font-weight:900; font-size:20px; line-height:1; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${p}</div>
+                      <div style="color:var(--accent); font-weight:900; font-size:9px; text-transform:uppercase; margin-top:5px; letter-spacing:1.5px; display:flex; align-items:center; gap:5px;">${currentLvl.icon} RANG ${currentLvlIndex} • ${currentLvl.title}</div>
                     </div>
                   </div>
                   </div>
                   <div style="text-align:right;">
-                    <div style="color:var(--accent); font-weight:900; font-size:18px; text-shadow: 0 0 10px rgba(255,204,0,0.3);">${d.wins}</div>
-                    <div style="color:#8e8e93; font-size:8px; text-transform:uppercase; font-weight:700;">Siege</div>
+                    <div class="stat-value-badge" style="font-size:14px; padding:4px 10px;">${d.wins} <span style="font-size:8px; opacity:0.6; margin-left:2px;">WINS</span></div>
                   </div>
                 </div>
 
-                <div style="height:16px; background:rgba(0,0,0,0.3); border-radius:20px; overflow:hidden; margin-bottom:12px; border: 1px solid rgba(255,255,255,0.15); position:relative; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: inset 0 1px 4px rgba(0,0,0,0.5);">
-                  <!-- Dezente Skala-Markierungen -->
-                  <div style="position:absolute; inset:0; background: repeating-linear-gradient(90deg, transparent, transparent calc(25% - 1px), rgba(255,255,255,0.06) 25%); pointer-events:none; z-index:1;"></div>
-                  <div style="position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); animation: progress-shimmer 3s infinite; z-index:3; pointer-events:none;"></div>
-                  <div style="height:100%; width:${progressPercent}%; background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%), linear-gradient(90deg, #B8860B, #FFCC00, #FFFACD); border-radius:20px; transition: width 1.8s cubic-bezier(0.3, 1.5, 0.5, 1); box-shadow: 0 0 25px rgba(255, 204, 0, 0.6); position: relative; overflow: visible; z-index:2;">
-                    <!-- Liquid Glow Tip (leuchtender Kern am Ende) -->
-                    <div style="position:absolute; right:-8px; top:-40%; bottom:-40%; width:16px; background: radial-gradient(circle, #fff 0%, transparent 70%); opacity:0.8; animation: tip-pulse 1s infinite alternate; z-index:4;"></div>
+                <div class="progress-bar-container" style="margin-bottom:8px;">
+                  <div style="height:100%; width:${progressPercent}%; background: linear-gradient(90deg, #B8860B, #FFCC00); transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(255,204,0,0.5);">
+                    <div style="position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: progress-shimmer 2s infinite;"></div>
                   </div>
                 </div>
 
@@ -1135,12 +1127,13 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
   const borderCol = isShame ? 'var(--error)' : '#34c759';
   const textCol = isShame ? 'rgba(255, 59, 48, 0.85)' : 'rgba(52, 199, 89, 0.85)';
 
+  const borderStyle = isShame ? `border-left: 4px solid ${borderCol};` : 'border-left: none;';
           return `
-    <div class="stat-row-item" style="border-left: 4px solid ${borderCol}; box-shadow: ${isMaxTier ? '0 0 20px rgba(79, 195, 247, 0.2)' : '0 4px 12px rgba(0,0,0,0.2)'};">
-      <div class="achievement-icon" style="animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${(aIdx || 0) * 0.1}s;">${item.i}</div>
+    <div class="stat-row-item ${isMaxTier && !isShame ? 'achievement-glow-fame' : ''} ${isShame ? 'achievement-glow-shame shame-bg' : ''}" style="${borderStyle}">
+      <div class="achievement-icon">${item.i}</div>
               <div style="flex:1;">
         <div class="achievement-title">
-                  <span style="${isMaxTier ? 'color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.4);' : ''}">${item.t}${isMaxTier ? ' ⭐' : ''}${newBadge}</span>
+                  <span style="${isMaxTier ? 'color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.4);' : ''}">${item.t}${isMaxTier ? ' ⭐' : ''} ${newBadge}</span>
                 </div>
         <div class="achievement-phrase">"${phrase}"</div>
         <div class="achievement-how" style="color:${textCol};">${howIcon} ${item.h || ""}</div>
@@ -1164,16 +1157,18 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 if (!ach) return "";
                 const ic = ach.i || "🏷️";
                 const isShame = (ach.k === "shame");
+                const categoryColor = isShame ? 'var(--error)' : '#34c759';
                 const howColor = isShame ? "rgba(255, 69, 58, 0.70)" : "rgba(52, 199, 89, 0.70)";
                 const howIcon  = isShame ? "💀" : "🏆";
                 const phraseIndex = getFixedIndex(p + ach.t, ach.d.length);
                 const phrase = ach.d[phraseIndex];
 
-                return `<div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.04) 100%); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                  <div style="font-size:22px; min-width:35px; text-align:center; animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${eIdx * 0.1}s;">${ic}</div>
+                const borderStyle = isShame ? `border-left: 4px solid ${categoryColor};` : 'border-left: none;';
+                return `<div class="stat-row-item ${isShame ? 'achievement-glow-shame shame-bg' : ''}" style="${borderStyle}">
+                  <div style="font-size:22px; min-width:35px; text-align:center;">${ic}</div>
                   <div style="flex:1;">
-                    <div style="font-size:12px; font-weight:900; color:#fff; display:flex; justify-content:space-between;">
-                      <span>${title}</span><span style="color:#ffcc00;">${cnt}×</span>
+                    <div style="font-size:12px; font-weight:900; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+                      <span>${title}</span><span class="stat-value-badge" style="color:#ffcc00; background:rgba(255,204,0,0.15); border-color:rgba(255,204,0,0.2);">${cnt}×</span>
                     </div>
                     <div style="font-size:10px; color:#acacb0; font-style:italic; margin-top:2px;">"${phrase}"</div>
                     <div style="font-size:10px; margin-top:3px; color:${howColor};">${howIcon} ${ach.h || ""}</div>
@@ -1256,17 +1251,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         byId('stat-total').innerText = currentStats.length;
 
         // --- KUGEL-STATISTIK BERECHNEN ---
-        let vollWins = 0, halbWins = 0, totalBallMatches = 0;
-        currentStats.forEach(g => {
-            if (g.bt1 && g.bt2) {
-                totalBallMatches++;
-                const winnerType = (g.w == 1) ? g.bt1 : g.bt2;
-                if (winnerType === 'Voll') vollWins++;
-                else if (winnerType === 'Halb') halbWins++;
-            }
-        });
-        const vRate = totalBallMatches > 0 ? Math.round((vollWins / totalBallMatches) * 100) : 0;
-        const hRate = totalBallMatches > 0 ? Math.round((halbWins / totalBallMatches) * 100) : 0;
+        const agg = res.aggregates || {};
+        const vRate = agg.totalBallMatches > 0 ? Math.round((agg.vollWins / agg.totalBallMatches) * 100) : 0;
+        const hRate = agg.totalBallMatches > 0 ? Math.round((agg.halbWins / agg.totalBallMatches) * 100) : 0;
         const vEl = byId('stat-balls-voll'), hEl = byId('stat-balls-halb');
         if (vEl) vEl.innerText = vRate + "%";
         if (hEl) hEl.innerText = hRate + "%";
@@ -1441,17 +1428,22 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
               duoEl.innerHTML = duoRanking.length > 0 ? duoRanking.map((t, idx) => { // Added idx for animation-delay
                 const pNames = t.name.split(' & ');
                 return `
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:8px; padding: 10px; background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border-radius:14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.2); animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.2 + idx * 0.05}s;">
+                <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:10px; padding: 12px; border-radius:18px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.2 + idx * 0.05}s;">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="color:var(--accent); font-weight:900; width:12px;">${idx+1}</span>
-                        <div style="display:flex; align-items:center;">
-                            ${pNames.map((p, pIdx) => `<img src="${window.getAvatarUrl(p)}" style="width:24px; height:24px; border-radius:50%; border:2px solid rgba(255,255,255,0.15); ${pIdx > 0 ? 'margin-left:-8px;' : ''} z-index:${2-pIdx}; animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${(idx+pIdx) * 0.2}s;">`).join('')}
+                        <div style="display:flex; flex-direction:column; align-items:center; min-width:18px; margin-right:4px;">
+                            <span style="color:var(--accent); font-weight:900; font-size:14px;">${idx+1}</span>
                         </div>
-                        <span style="color:#fff; margin-left:8px; font-weight:600;">${t.name}</span>
+                        <div style="display:flex; align-items:center; position:relative; width:45px; height:30px;">
+                            ${pNames.map((p, pIdx) => `<img src="${window.getAvatarUrl(p)}" style="position:absolute; left:${pIdx * 15}px; width:28px; height:30px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.2); z-index:${2-pIdx}; transform: rotate(${pIdx === 0 ? '-5deg' : '5deg'}); box-shadow: 4px 0 10px rgba(0,0,0,0.3);">`).join('')}
+                        </div>
+                        <div style="margin-left:12px;">
+                            <div style="color:#fff; font-weight:900; font-size:13px; letter-spacing:0.3px;">${t.name}</div>
+                            <div style="font-size:8px; color:#8e8e93; font-weight:700; text-transform:uppercase; margin-top:2px;">Elite Duo Synergy</div>
+                        </div>
                     </div>
                     <div style="text-align:right;">
-                        <span style="font-weight:900; color:var(--accent); font-size:12px;">${t.wr}%</span>
-                        <div style="font-size:8px; opacity:0.5;">${t.wins}/${t.games} W</div>
+                        <div class="stat-value-badge green">${t.wr}%</div>
+                        <div style="font-size:8px; color:#8e8e93; font-weight:800; margin-top:4px;">${t.wins}W / ${t.games}G</div>
                     </div>
                 </div>`;
             }).join('') : '<div style="font-size:10px; color:#8e8e93; text-align:center; padding:5px;">Mindestens 3 Spiele als Team nötig</div>';
@@ -1476,14 +1468,14 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 <div style="display:flex; justify-content:space-around; align-items:center; padding: 10px 0; ">
                     <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
                         <div style="font-size:8px; color:#8e8e93; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Voll-Profi</div>
-                        <img src="${window.getAvatarUrl(topVollarbeiter.n)}" style="width:36px; height:36px; border-radius:50%; border:3px solid #ffcc00; box-shadow: 0 0 15px rgba(255,204,0,0.3); animation: icon-float-subtle 3s infinite ease-in-out;">
+                        <img src="${window.getAvatarUrl(topVollarbeiter.n)}" style="width:36px; height:36px; border-radius:12px; border:3px solid #ffcc00; box-shadow: 0 0 15px rgba(255,204,0,0.3);">
                         <div style="font-size:14px; font-weight:900; color:#fff; text-shadow: 0 0 8px rgba(255,255,255,0.2);">${topVollarbeiter.n}</div>
                         <div style="font-size:11px; color:#34c759; font-weight:900; text-shadow: 0 0 8px rgba(52,199,89,0.3);">${topVollarbeiter.wr > 0 ? Math.round(topVollarbeiter.wr) + '%' : '-'}</div>
                     </div>
                     <div style="height:40px; width:1px; background:rgba(255,255,255,0.1);"></div>
                     <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
                         <div style="font-size:8px; color:#8e8e93; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Halbe-As</div>
-                        <img src="${window.getAvatarUrl(topHalbeExperte.n)}" style="width:36px; height:36px; border-radius:50%; border:3px solid #4FC3F7; box-shadow: 0 0 15px rgba(79,195,247,0.3); animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: 0.5s;">
+                        <img src="${window.getAvatarUrl(topHalbeExperte.n)}" style="width:36px; height:36px; border-radius:12px; border:3px solid #4FC3F7; box-shadow: 0 0 15px rgba(79,195,247,0.3);">
                         <div style="font-size:14px; font-weight:900; color:#fff; text-shadow: 0 0 8px rgba(255,255,255,0.2);">${topHalbeExperte.n}</div>
                         <div style="font-size:11px; color:#34c759; font-weight:900; text-shadow: 0 0 8px rgba(52,199,89,0.3);">${topHalbeExperte.wr > 0 ? Math.round(topHalbeExperte.wr) + '%' : '-'}</div>
                     </div>
@@ -1578,21 +1570,39 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const h2hEl = byId('stat-head-to-head');
         if (h2hEl) {
             h2hEl.innerHTML = dominantMatchups.length > 0 ? dominantMatchups.map((m, idx) => {
+                const c1 = m.wr1 >= m.wr2 ? 'green' : 'blue';
+                const c2 = m.wr2 > m.wr1 ? 'green' : 'blue';
                 return `
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:8px; padding: 10px; background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border-radius:14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.2); animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.35 + idx * 0.05}s;">
-                    <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                        <span style="color:var(--accent); font-weight:900; width:12px; flex-shrink:0;">${idx+1}</span>
-                        <div style="display:flex; align-items:center; gap:6px; flex:1; overflow:hidden;">
-                            <img src="${window.getAvatarUrl(m.p1)}" style="width:24px; height:24px; border-radius:50%; border:2px solid rgba(255,255,255,0.15); flex-shrink:0; animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${idx * 0.1}s;">
-                            <span style="color:#fff; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p1}</span>
-                            <span style="opacity:0.4; font-size:9px; font-weight:900; flex-shrink:0;">VS</span>
-                            <img src="${window.getAvatarUrl(m.p2)}" style="width:24px; height:24px; border-radius:50%; border:2px solid rgba(255,255,255,0.15); flex-shrink:0; animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${idx * 0.1 + 0.2}s;">
-                            <span style="color:#fff; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p2}</span>
+                <div class="card-modern" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px; padding: 12px; border-radius:20px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.35 + idx * 0.05}s;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <!-- Linker Spieler -->
+                        <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                            <img src="${window.getAvatarUrl(m.p1)}" style="width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
+                            <div style="overflow:hidden;">
+                                <div style="font-size:11px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p1}</div>
+                                <div class="stat-value-badge ${c1}" style="margin-top:3px; display:inline-block;">${m.wr1}%</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Trenner -->
+                        <div style="text-align:center; min-width:45px; padding: 0 5px;">
+                            <div style="font-size:10px; font-weight:900; color:var(--accent); opacity:0.7; letter-spacing:1px;">VS</div>
+                            <div style="font-size:8px; color:#8e8e93; font-weight:800; margin-top:2px;">${m.games}G</div>
+                        </div>
+
+                        <!-- Rechter Spieler -->
+                        <div style="display:flex; align-items:center; gap:10px; flex:1; justify-content:flex-end; text-align:right; overflow:hidden;">
+                            <div style="overflow:hidden;">
+                                <div style="font-size:11px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p2}</div>
+                                <div class="stat-value-badge ${c2}" style="margin-top:3px; display:inline-block;">${m.wr2}%</div>
+                            </div>
+                            <img src="${window.getAvatarUrl(m.p2)}" style="width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
                         </div>
                     </div>
-                    <div style="text-align:right; margin-left:12px; flex-shrink:0;">
-                        <div style="color:var(--accent); font-weight:900; font-size:12px;">${m.wr1}% : ${m.wr2}%</div>
-                        <div style="font-size:8px; color:#8e8e93; font-weight:700;">${m.games} Games</div>
+                    <!-- Visueller Kräftevergleich -->
+                    <div style="height:3px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; display:flex; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);">
+                        <div style="width:${m.wr1}%; background:${m.wr1>=m.wr2?'#34c759':'#4FC3F7'};"></div>
+                        <div style="width:${m.wr2}%; background:${m.wr2>m.wr1?'#34c759':'#4FC3F7'};"></div>
                     </div>
                 </div>`;
 
@@ -1656,7 +1666,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
                 ctx.save();
                 ctx.beginPath();
-                ctx.arc(bar.x, posY + size/2, size/2, 0, Math.PI * 2);
+                ctx.roundRect(bar.x - size/2, posY, size, size, 8);
                 ctx.fillStyle = 'rgba(255,255,255,0.05)';
                 ctx.fill();
                 ctx.clip();
@@ -1672,7 +1682,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 }
                 ctx.restore();
                 ctx.beginPath();
-                ctx.arc(bar.x, posY + size/2, size/2, 0, Math.PI * 2);
+                ctx.roundRect(bar.x - size/2, posY, size, size, 8);
                 ctx.strokeStyle = 'rgba(255, 204, 0, 0.4)';
                 ctx.lineWidth = 1;
                 ctx.stroke();
@@ -1793,9 +1803,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
               <div onclick="window.openPlayerProfile('${r.name}')" class="${isFirst ? 'rank-1-card' : ''}" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isFirst ? 'linear-gradient(135deg, rgba(255, 204, 0, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'rgba(255,255,255,0.03)'}; padding: 12px; border-radius: 20px; border: 1px solid ${isFirst ? '#ffcc00' : 'rgba(255,255,255,0.08)'}; cursor:pointer; box-shadow: ${isFirst ? '0 0 20px rgba(255,204,0,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; ${isFirst ? '' : 'animation: ach-card-enter 0.4s ease-out forwards; opacity: 0;'} animation-delay: ${0.5 + i * 0.05}s;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${badge || (i+1 + '.')}</div>
                 <div class="avatar-frame ${streakClass}">
-                  <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.15); animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${i * 0.2}s;">
+                  <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15);">
                 </div>
-                <div style="display:none; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
+                <div style="display:none; width:30px; height:30px; border-radius:10px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1;">
                   <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2);">${r.name} ${streakEmoji}</div>
                   <div style="font-size:10px; color:#acacb0; margin-top:2px;">bewertete Spiele: ${r.games}</div>
@@ -1953,9 +1963,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
               <div onclick="window.openPlayerProfile('${r.name}')" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isTopForm ? 'linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'rgba(255,255,255,0.03)'}; padding: 12px; border-radius: 16px; border: 1px solid ${isTopForm ? '#34c759' : 'rgba(255,255,255,0.08)'}; box-shadow: ${isTopForm ? '0 0 20px rgba(52,199,89,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; cursor:pointer; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${0.5 + i * 0.05}s;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${i === 0 ? '🔥' : (i === 1 ? '✨' : (i === 2 ? '📈' : (i+1 + '.')))}</div>
                 <div class="avatar-frame ${streakClass}">
-                  <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.15); animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${i * 0.2}s;">
+                  <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15);">
                 </div>
-                <div style="display:none; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
+                <div style="display:none; width:30px; height:30px; border-radius:10px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1;">
                   <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2);">${r.name}</div>
                   <div style="font-size:10px; color:#acacb0; margin-top:2px;">letzte ${r.g}: ${r.w}-${r.l} (${r.wr}%)${r.streak > 1 ? ` • Serie: ${r.streak}` : ''}</div>
