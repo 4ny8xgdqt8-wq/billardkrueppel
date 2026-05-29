@@ -1,25 +1,6 @@
 // Variables used by Scriptable.
 // icon-color: purple; icon-glyph: magic;
 
-// Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.2.4"; 
-
-// Initiales Limit für die Historie
-window.historyLimit = 20;
-
-// Globale Avatar-Zuordnung (Spielername -> Pfad zum Bild)
-window.playerAvatars = {
-    "Daniel": "avatars/Daniel.png",
-    "Thorsten": "avatars/Thorsten.png",
-    "Peter": "avatars/Peter.png",
-    "Patrick": "avatars/Patrick.png",
-};
-
-// Hilfsfunktion zur Auflösung des Bildpfads
-window.getAvatarUrl = (name) => {
-    return window.playerAvatars[name] || `avatars/${name}.png`;
-};
-
 // Hilfsfunktion für deterministische Index-Auswahl (z.B. für Achievement-Phrasen)
 window.getFixedIndex = (name, arrayLength) => {
   let hash = 0;
@@ -577,7 +558,17 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         });
     });
 
-    window.lastProcessedStats = { pData, blackWins: globalBlackWins, breakWins: globalBreakWins, matchDeltas };
+    
+    // Pre-calculate aggregates for Dashboard to save CPU during render
+    const aggregates = {
+        vollWins: 0, halbWins: 0, totalBallMatches: 0,
+        teamResults: {}, // Duo Ranking
+        ballSpez: {},    // Kugel-Spezis
+        matchups: {},    // Angstgegner
+        meetings: {}
+    };
+
+    window.lastProcessedStats = { pData, blackWins: globalBlackWins, breakWins: globalBreakWins, matchDeltas, aggregates };
 
     let maxElo = -Infinity;
     let topEloPlayer = null;
@@ -768,14 +759,11 @@ window.getFilteredStats = () => {
     });
 };
 
-window.renderBillardStats = function(stats, filterToday = false, onlyAchievements = false, rootEl = document) {
+window.renderBillardStats = function(stats, filterToday = false, onlyAchievements = false, rootEl = document, precalculatedCareerStats = null, precalculatedCareerStatsBeforeToday = null) { 
     // --- Scope: suche IDs nur innerhalb der aktiven View (wichtig bei doppelten IDs im DOM)
     let root = rootEl || document;
-
-    // Sicherheits-Check: Falls root kein gültiges Element ist (z.B. durch Fehler im Export-Preview)
-    if (!root || typeof root.querySelector !== 'function') root = document;
-
     const byId = (id) => (root && root.querySelector) ? root.querySelector('#' + id) : document.getElementById(id);    
+    if (!root || typeof root.querySelector !== 'function') root = document;
 
     // --- DAILY ACHIVS LADEN (falls nicht bereits vorhanden) ---
     if (!window.dailyAchivs) {
@@ -784,15 +772,14 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     
     // --- Spieler aus spieler.json (kommt aus BillardPro.js: const spieler = [...]) ---
     const configuredPlayers = (() => {
+      let names = [];
       try {
-        if (typeof spieler !== 'undefined' && Array.isArray(spieler)) {
-          return new Set(spieler.map(s => String(s || '').trim()).filter(Boolean));
-        }
-        if (Array.isArray(window.spieler)) {
-          return new Set(window.spieler.map(s => String(s || '').trim()).filter(Boolean));
-        }
+        if (Array.isArray(window.spieler) && window.spieler.length > 0) names = window.spieler;
+        else if (typeof spieler !== 'undefined' && Array.isArray(spieler)) names = spieler;
       } catch (e) {}
-      return null;
+      const filtered = names.map(s => String(s || '').trim()).filter(Boolean);
+      // Nur ein Set zurückgeben, wenn wir wirklich Namen haben, sonst null (kein Filter)
+      return filtered.length > 0 ? new Set(filtered) : null;
     })();
 
     // --- DATUM & SICHERE DATEN ---
@@ -904,25 +891,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     const statsToday = safeStats.filter(g => g && g.d && g.d.startsWith(todayStr));
     const statsBeforeToday = safeStats.filter(g => !g.d.startsWith(todayStr));
     
-    const dataToday = window.processData(statsToday, todayStr); // Use global simpler processData for today's stats
-    const dataAll = (safeStats.length > 0) ? window.processAllStatsChronologically(safeStats, configuredPlayers) : { pData: {} };
-    const dataBeforeToday = (statsBeforeToday.length > 0) ? window.processAllStatsChronologically(statsBeforeToday, configuredPlayers) : { pData: {} };
+    const dataToday = window.processData(statsToday, todayStr);
+    const dataAll = precalculatedCareerStats || (safeStats.length > 0 ? window.processAllStatsChronologically(safeStats, configuredPlayers) : { pData: {} });
+    const dataBeforeToday = precalculatedCareerStatsBeforeToday || (statsBeforeToday.length > 0 ? window.processAllStatsChronologically(statsBeforeToday, configuredPlayers) : { pData: {} });
 
-    // ELO is already calculated within processAllStatsChronologically, map it to a simpler structure if needed
-    try {
-      Object.keys(dataAll.pData).forEach(p => { // Ensure elo and eloGames are directly on pData[p]
-        const hist = dataAll.pData[p].eloHistory;
-        if (hist && hist.length > 0) {
-          dataAll.pData[p].elo = Math.round(hist[hist.length - 1]);
-          dataAll.pData[p].eloGames = hist.length; 
-        } else {
-          dataAll.pData[p].elo = 1000; // Default ELO
-          dataAll.pData[p].eloGames = 0; // No ELO games played
-        }
-      });
-    } catch (e) {}
-
-    // --- ACHIEVEMENT HTML GENERATOR ---
     const getAchHtml = (proc, isTodayTab, procBefore) => {
       let achHtml = "";
 
@@ -945,19 +917,6 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             clutchWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0 
         };
         
-        // Mapping für Daily-Bedingungen (behebt Diskrepanz zwischen Scriptable/WebView)
-        if (isTodayTab) {
-            d.todayWins = d.wins;
-            d.todayGames = d.games;
-            d.todayMaxStreak = d.maxStreak;
-            d.todayClutchWins = d.clutchWins;
-            d.todayBreakWins = d.breakWins;
-            d.todayBlackWinsCount = d.blackWinsCount;
-            d.todayKillerPoints = d.killerPoints;
-            d.todayRest = d.rest;
-            d.todayAvgRest = (d.games - d.wins) > 0 ? (d.rest / (d.games - d.wins) || 0) : 0;
-        }
-
         const meta = getDailyMetaForPlayer(p);
         d.dailyDaysWithAch = meta.daysWithAch;
 
@@ -1088,16 +1047,6 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
               <div style="padding:12px 12px 6px 12px; display:none;">`;
         }
 
-        // --- Berechnung der Raten für d (jetzt) ---
-        d.winRate = Math.round((d.wins / (d.games || 1)) * 100);
-        d.avgKiller = d.wins > 0 ? (d.killerPoints / d.wins) : 0;
-        d.avgRest = (d.games - d.wins) > 0 ? (d.rest / (d.games - d.wins) || 1) : 0;
-
-        // --- Berechnung der Raten für dBefore (vor heute) ---
-        let winRateBefore = Math.round((dBefore.wins / (dBefore.games || 1)) * 100);
-        let avgKillerBefore = dBefore.wins > 0 ? (dBefore.killerPoints / dBefore.wins) : 0;
-        let avgRestBefore = (dBefore.games - dBefore.wins) > 0 ? (dBefore.rest / (dBefore.games - dBefore.wins) || 1) : 0;
-
         // Today-Unbeaten muss todayWins berücksichtigen
         const isUnbeatenToday = d.todayGames > 0 && d.todayWins === d.todayGames;
 
@@ -1177,23 +1126,24 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           const phraseIndex = getFixedIndex(name + item.t, item.d.length);
           const phrase = item.d[phraseIndex] || "";
           const isShame = (item.k === "shame");
-          const howColor = isShame ? "rgba(255, 59, 48, 0.85)" : "rgba(52, 199, 89, 0.85)";
           const howIcon  = isShame ? "💀" : "🏆";
           const isMaxTier = item.max === true;
-          const categoryColor = isShame ? 'var(--error)' : '#34c759';
           const newBadge = item.isNew ? `<span style="background:var(--accent); color:#000; font-size:8px; font-weight:900; padding:2px 5px; border-radius:4px; margin-left:8px; vertical-align:middle; animation: badge-pulse 1.5s infinite ease-in-out;">NEU</span>` : "";
           const tracker = d.achTracker ? d.achTracker[item.t] : null;
           const trackerHtml = tracker ? `<div style="font-size:9px; color:#8e8e93; margin-top:4px; font-weight:600;">Sammelrate: <span style="color:#34c759;">📈 ${tracker.earned}</span> ${tracker.lost > 0 ? `| <span style="color:#ff3b30;">📉 ${tracker.lost}</span>` : ''}</div>` : "";
 
+  const borderCol = isShame ? 'var(--error)' : '#34c759';
+  const textCol = isShame ? 'rgba(255, 59, 48, 0.85)' : 'rgba(52, 199, 89, 0.85)';
+
           return `
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 100%); padding: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid ${categoryColor}; box-shadow: ${isMaxTier ? '0 0 20px rgba(79, 195, 247, 0.2)' : '0 4px 12px rgba(0,0,0,0.2)'};">
-              <div style="font-size:22px; min-width:35px; text-align:center; animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${(aIdx || 0) * 0.1}s;">${item.i}</div>
+    <div class="stat-row-item" style="border-left: 4px solid ${borderCol}; box-shadow: ${isMaxTier ? '0 0 20px rgba(79, 195, 247, 0.2)' : '0 4px 12px rgba(0,0,0,0.2)'};">
+      <div class="achievement-icon" style="animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${(aIdx || 0) * 0.1}s;">${item.i}</div>
               <div style="flex:1;">
-                <div style="font-size:12px; font-weight:900; color:#fff;">
+        <div class="achievement-title">
                   <span style="${isMaxTier ? 'color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.4);' : ''}">${item.t}${isMaxTier ? ' ⭐' : ''}${newBadge}</span>
                 </div>
-                <div style="font-size:10px; color:#acacb0; font-style:italic; margin-top:2px;">"${phrase}"</div>
-                <div style="font-size:10px; margin-top:3px; color:${howColor};">${howIcon} ${item.h || ""}</div>
+        <div class="achievement-phrase">"${phrase}"</div>
+        <div class="achievement-how" style="color:${textCol};">${howIcon} ${item.h || ""}</div>
                 ${trackerHtml}
               </div>
             </div>`;
@@ -1814,7 +1764,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           }).filter(r => r.games > 0);
 
           // nur Spieler aus spieler.json anzeigen (und nur wenn Spiele vorhanden sind)
-          if (configuredPlayers) {
+          if (configuredPlayers && configuredPlayers.size > 0) {
             for (let i = rows.length - 1; i >= 0; i--) {
               if (!configuredPlayers.has(String(rows[i].name || '').trim())) rows.splice(i, 1);
             }
@@ -2085,3 +2035,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         }
     }
 };
+
+// UI-Update erzwingen, falls Chart.js nach den Firebase-Snapshots geladen wurde
+if (typeof window.recalculateAndRender === 'function') window.recalculateAndRender();
+else if (typeof window.updateAllViews === 'function') window.updateAllViews();

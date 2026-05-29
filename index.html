@@ -10,12 +10,26 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Billard">
     <link rel="apple-touch-icon" href="logo_html.png?v=2">
+
+    <!-- // Globale Avatar-Zuordnung (Spielername -> Pfad zum Bild) - Muss früh verfügbar sein -->
+    <script>
+        window.playerAvatars = {
+            "Daniel": "avatars/Daniel.webp",
+            "Thorsten": "avatars/Thorsten.webp",
+            "Peter": "avatars/Peter.webp",
+            "Patrick": "avatars/Patrick.webp",
+        };
+        // Hilfsfunktion zur Auflösung des Bildpfads
+        window.getAvatarUrl = (name) => {
+            return window.playerAvatars[name] || `avatars/${name}.webp`;
+        };
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    <!-- // Versions-Tracking für Cache-Validierung -->
-    <script src="Chart.js?v=1.2.4"></script>
-    <link rel="manifest" href="manifest.json?v=1.2.4">
+    <!-- // Core App Scripts & Manifest -->
+    <script src="Chart.js" defer></script>
+    <link rel="manifest" href="manifest.json">
     <!-- // --------------------------------------- -->
 
     <style>
@@ -44,8 +58,8 @@
         @keyframes particle-drift { 0% { background-position: 0% 0%, 0% 0%, 0% 0%; } 100% { background-position: 100% 100%, 200% 200%, -200% -200%; } }
 
         .app-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; position: fixed; }
-        .main-content { flex: 1; overflow-y: auto; padding: 0 16px 120px 16px; -webkit-overflow-scrolling: touch; }
-        .view { display: none; flex-direction: column; width: 100%; } 
+        .main-content { flex: 1; overflow-y: auto; padding: 0 16px 120px 16px; -webkit-overflow-scrolling: touch; contain: layout paint; }
+        .view { display: none; flex-direction: column; width: 100%; contain: layout paint; } 
         .view.active { display: flex; }
         .view.slide-right { animation: view-enter-right 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .view.slide-left { animation: view-enter-left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
@@ -446,6 +460,22 @@
             transform: rotate(180deg);
         }
 
+        /* Optimierte Klassen für dynamische Inhalte (spart JS-Rechenzeit) */
+        .stat-row-item {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+            padding: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 100%);
+            transition: transform 0.2s ease;
+        }
+        .stat-row-item:active { transform: scale(0.98); }
+        .achievement-icon { font-size: 22px; min-width: 35px; text-align: center; }
+        .achievement-title { font-size: 12px; font-weight: 900; color: #fff; }
+        .achievement-phrase { font-size: 10px; color: #acacb0; font-style: italic; margin-top: 2px; }
+        .achievement-how { font-size: 10px; margin-top: 3px; font-weight: 600; }
+
+        /* Hardware-Beschleunigung für flüssiges Scrollen */
+        #scroll-area { will-change: scroll-position; transform: translateZ(0); }
+
         /* Media Query for smaller screens (e.g., mobile phones) */
         @media (max-width: 480px) {
             .filter-row {
@@ -557,7 +587,7 @@
 </head>
 <body>
     <div id="loading-overlay" class="loading-overlay">
-        <img src="logo.png" class="loader-logo" onerror="this.style.display='none'">
+        <img loading="lazy" src="logo.png" class="loader-logo" onerror="this.style.display='none'">
         <div class="loader-title">Billardkrüppel</div>
         <div id="loader-avatars" class="loader-avatar-row"></div>
         <div class="spinner"></div>
@@ -572,9 +602,9 @@
             <!-- Ansicht: Aufzeichnen -->
             <div id="view-aufzeichnen" class="view active">
                 <div class="header-container">
-                    <div class="header-side"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
+                    <div class="header-side"><img loading="lazy" src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
                     <div class="title-stack"><div class="main-title">Billardkrüppel</div><div class="sub-title" id="dynamic-greeting">Match erfassen</div></div>
-                    <div class="header-side right"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
+                    <div class="header-side right"><img loading="lazy" src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
                 </div>
                 <div class="card cinematic-entry" style="animation-delay: 0.1s;">
                     <div style="display: flex; align-items: flex-end; gap: 10px; margin-bottom: 8px;">
@@ -671,14 +701,14 @@
 
             <div id="view-uebersicht" class="view">
                 <div class="header-container">
-                    <div class="header-side"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
+                    <div class="header-side"><img loading="lazy" src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
                     <div class="title-stack" onclick="window.toggleHeaderFilter(this)" style="cursor: pointer;">
                         <div class="main-title">Historie</div>
                         <div class="sub-title">Letzte Partien</div>
                         <div class="filter-toggle-bar">Zeitraum filtern <span class="filter-chevron">▼</span></div>
                     </div>
                     <div class="header-side right">
-                        <img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'">
+                        <img loading="lazy" src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'">
                     </div>
                     <div class="filter-row">
                         <button class="filter-reset-btn" onclick="window.handleFilterChange('all')">RESET</button>
@@ -713,14 +743,14 @@
 
             <div id="view-statistik" class="view">
                 <div class="header-container">
-                    <div class="header-side"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
+                    <div class="header-side"><img loading="lazy" src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
                     <div class="title-stack" onclick="window.toggleHeaderFilter(this)" style="cursor: pointer;">
                         <div class="main-title" id="stat-title">Statistik</div>
                         <div class="sub-title">Analysen</div>
                         <div class="filter-toggle-bar">Zeitraum filtern <span class="filter-chevron">▼</span></div>
                     </div>
                     <div class="header-side right">
-                        <img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'">
+                        <img loading="lazy" src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'">
                     </div>
                     <div class="filter-row">
                         <button class="filter-reset-btn" onclick="window.handleFilterChange('all')">RESET</button>
@@ -826,14 +856,14 @@
             <div id="view-erfolge" class="view">
                 <div style="position: sticky; top: 0; z-index: 1000; background: rgba(20, 20, 22, 0.55); backdrop-filter: blur(30px) saturate(210%) brightness(1.2); -webkit-backdrop-filter: blur(30px) saturate(210%) brightness(1.2); margin: 0 -16px 15px -16px; border-bottom: 0.5px solid rgba(255, 255, 255, 0.15); padding-top: calc(var(--safe-top) + 10px);">
                     <div class="header-container" style="position: relative; background: transparent; backdrop-filter: none; border-bottom: none; margin: 0; padding-top: 0;">
-                        <div class="header-side"><img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
+                        <div class="header-side"><img loading="lazy" src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
                         <div class="title-stack" onclick="window.toggleHeaderFilter(this)" style="cursor: pointer;">
                             <div class="main-title">Hall of Fame & Shame</div>
                             <div class="sub-title">Bestenliste</div>
                             <div class="filter-toggle-bar">Zeitraum filtern <span class="filter-chevron">▼</span></div>
                         </div>
                         <div class="header-side right">
-                            <img src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'">
+                            <img loading="lazy" src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" onerror="this.style.display='none'">
                         </div>
                         <div class="filter-row">
                             <button class="filter-reset-btn" onclick="window.handleFilterChange('all')">RESET</button>
@@ -1090,6 +1120,28 @@
         import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // Automatische Versions-Synchronisierung aus der sw.js
+        const updateVersionUI = (v) => {
+            window.BILLARD_APP_VERSION = v;
+            const verEl = document.getElementById('loader-version');
+            if (verEl) verEl.innerText = "App Version: " + v;
+        };
+
+        fetch('sw.js?t=' + Date.now()) // Cache-Busting für immer frische Daten
+            .then(r => {
+                if (!r.ok) throw new Error();
+                return r.text();
+            })
+            .then(text => {
+                // Sucht flexibler nach der Version (v1.2.5 oder 1.2.5)
+                const match = text.match(/CACHE_NAME\s*=\s*['"][^'"]*v?([^'"]+)['"]/);
+                if (match && match[1]) updateVersionUI(match[1]);
+                else updateVersionUI("Unbekannt"); 
+            }).catch(() => {
+                // Erklärender Fallback für lokales Öffnen ohne Webserver
+                updateVersionUI("Entwicklung");
+            });
+
         const firebaseConfig = { 
             apiKey: "AIzaSyD7bNfdV48Setz8aRNd4i3kzKO41kNOHio", 
             authDomain: "billardpro-35edb.firebaseapp.com", 
@@ -1124,20 +1176,51 @@
                     if (!n) return silhouette;
 
                     const src = (window.getAvatarUrl && typeof window.getAvatarUrl === 'function') ? window.getAvatarUrl(n) : `avatars/${n}.png`;
-                    return `
+                    return ` 
                         <div style="position:relative; width:${size}px; height:${size}px; min-width:${size}px; margin-right:${names.length > 1 ? '-8px' : '0px'}; z-index:${names.length > 1 ? '1' : '0'}; animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${idx * 0.2}s;">
-                            <img src="${src}" onerror="this.style.display='none'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,204,0,0.4); z-index:2; background:transparent;">
+                            <img loading="lazy" src="${src}" onerror="this.style.display='none'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,204,0,0.4); z-index:2; background:transparent;">
                             ${silhouette}
                         </div>`;
                 }).join('');
             });
         };
 
+        // Service Worker für Offline-Caching & Speed-Boost
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            });
+        }
+
         // -- INITIALISIERUNG DER GLOBALE VARIABLEN UND FUNKTIONEN --
         window.db = db; 
         window.dbFns = { doc, setDoc, getDoc, updateDoc };
         window.stats = []; window.spieler = []; window.dailyAchivs = { days: {} };
         window.winnerNum = 0; window.viewId = 'aufzeichnen'; window.breakLocked = false;
+        window.careerStats = null; window.careerStatsBeforeToday = null;
+        
+        // Status-Flags für den Ladeprozess
+        window.flags = { stats: false, spieler: false };
+
+        // Zentrale Berechnungslogik robust definieren
+        window.recalculateAndRender = () => {
+            // Nur rendern, wenn beide Datenquellen UND das Skript bereit sind
+            if (window.flags.stats && window.flags.spieler && typeof window.processAllStatsChronologically === 'function') {
+                const playerList = Array.isArray(window.spieler) ? window.spieler : [];
+                const playersSet = new Set(playerList.map(s => String(s || '').trim()).filter(Boolean));
+                
+                // Berechne Karriere-Stats
+                window.careerStats = window.processAllStatsChronologically(window.stats, playersSet);
+                
+                // Berechne Stats bis gestern für "NEU"-Badges
+                const now = new Date();
+                const todayStr = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
+                const statsBeforeToday = window.stats.filter(g => g && g.d && !g.d.startsWith(todayStr));
+                window.careerStatsBeforeToday = window.processAllStatsChronologically(statsBeforeToday, playersSet);
+                
+                window.updateAllViews();
+            }
+        };
 
         window.hideLoader = () => {
             const l = document.getElementById('loading-overlay');
@@ -1194,7 +1277,6 @@
                 document.documentElement.style.setProperty('--ambient-particle-color', particleColor);
 
                 // --- Ende Adaptive Ambient Mood Logic ---
-
 
                 if (oldActive && oldActive !== targetView) { // Wenn es eine alte aktive Ansicht gibt und diese nicht die Zielansicht ist
                     const exitDir = dir === 'next' ? 'exit-left' : 'exit-right'; // Entgegengesetzte Richtung für Exit
@@ -1445,7 +1527,7 @@
             });
 
             // UI-Update für den Match-Tab (benötigt nur computeEloRatings in Chart.js)
-            if (window.viewId === 'aufzeichnen' && typeof window.computeEloRatings === 'function') {
+            if (window.viewId === 'aufzeichnen' && typeof window.updateUI === 'function') {
                 window.updateUI();
             }
 
@@ -1471,17 +1553,15 @@
             const statsToUse = isToday ? window.stats : (typeof window.getFilteredStats === 'function' ? window.getFilteredStats() : window.stats);
 
             if (window.viewId === 'uebersicht') renderHistory(statsToUse);
-            if (window.viewId === 'statistik' || window.viewId === 'heute' || window.viewId === 'erfolge') {
-                window.renderBillardStats(statsToUse, isToday);
+            if ((window.viewId === 'statistik' || window.viewId === 'heute' || window.viewId === 'erfolge') && typeof window.renderBillardStats === 'function') {
+                // Sicherstellen, dass precalculatedCareerStats und precalculatedCareerStatsBeforeToday existieren
+                if (!window.careerStats || !window.careerStatsBeforeToday) window.recalculateAndRender();
+                window.renderBillardStats(statsToUse, isToday, false, document, window.careerStats, window.careerStatsBeforeToday);
             }
         };
 
         // Sicherheits-Timeout: Falls Firebase hängt, Loader nach 5 Sek trotzdem entfernen
         setTimeout(() => window.hideLoader(), 6000);
-
-        // Versionsnummer im Ladebildschirm anzeigen
-        const verEl = document.getElementById('loader-version');
-        if (verEl && window.BILLARD_APP_VERSION) verEl.innerText = "App Version: " + window.BILLARD_APP_VERSION;
 
         // Zufälligen Tipp im Loader anzeigen
         const tips = [
@@ -1515,12 +1595,12 @@
         // Alle hinterlegten Avatare im Loader anzeigen
         const loaderAvatars = document.getElementById('loader-avatars');
         if (loaderAvatars) {
-            const playersToShow = Object.keys(window.playerAvatars || {});
+            const playersToShow = Object.keys(window.playerAvatars || {}); // window.playerAvatars ist jetzt global
             loaderAvatars.innerHTML = playersToShow.map((p, i) => {
                 const src = (window.getAvatarUrl && typeof window.getAvatarUrl === 'function') ? window.getAvatarUrl(p) : `avatars/${p}.png`;
                 return `
                     <div class="loader-avatar-container" style="animation-delay: ${i * 0.4}s">
-                        <img src="${src}" class="loader-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <img loading="lazy" src="${src}" class="loader-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
                         <div style="display:none; width:100%; height:100%; border-radius:50%; background:rgba(255,255,255,0.05); align-items:center; justify-content:center; font-size:24px; border:1px solid var(--accent); color:rgba(255,255,255,0.2);">👤</div>
                     </div>`;
             }).join('');
@@ -1529,39 +1609,32 @@
         // -- FIREBASE LISTENERS (Erst nach Definition der Funktionen starten!) --
         signInAnonymously(auth).then(() => {
             onSnapshot(doc(db, "billard_data", "stats"), (snap) => {
-                if (snap.exists()) {
-                    window.stats = snap.data().matches || [];
-                    // Berechne Karriere-Stats für die Spieler-Profile vorab
-                    if (typeof window.processAllStatsChronologically === 'function') {
-                        window.careerStats = window.processAllStatsChronologically(window.stats, window.spieler);
-                    }
-                    window.updateAllViews();
-                }
-            tryHideLoader();
-        }, (err) => tryHideLoader());
+                window.stats = snap.exists() ? (snap.data().matches || []) : [];
+                window.flags.stats = true;
+                if (typeof window.recalculateAndRender === 'function') window.recalculateAndRender();
+                tryHideLoader();
+            }, (err) => {
+                console.error("Firebase Stats Fehler:", err);
+                window.flags.stats = true; 
+                tryHideLoader();
+            });
 
             onSnapshot(doc(db, "billard_data", "spieler"), (snap) => {
-              if (snap.exists()) {
-                  window.spieler = snap.data().names || [];
-                  window.initDropdowns();
-                  if (window.stats && window.stats.length > 0 && typeof window.processAllStatsChronologically === 'function') {
-                      window.careerStats = window.processAllStatsChronologically(window.stats, window.spieler);
-                  }
-              }
+                window.spieler = snap.exists() ? (snap.data().names || []) : [];
+                window.flags.spieler = true;
+                window.initDropdowns();
+                if (typeof window.recalculateAndRender === 'function') window.recalculateAndRender();
             }, (err) => console.error("Firebase Spieler Fehler:", err));
             
             onSnapshot(doc(db, "billard_data", "daily_achivs"), (snap) => { 
                 if (snap.exists()) {
                     window.dailyAchivs = snap.data();
-                    // WICHTIG: Karriere-Stats neu berechnen, da Daily-Achievements nun bekannt sind
-                    if (window.stats && window.stats.length > 0 && typeof window.processAllStatsChronologically === 'function') {
-                        window.careerStats = window.processAllStatsChronologically(window.stats, window.spieler);
-                    }
+                    if (typeof window.recalculateAndRender === 'function') window.recalculateAndRender();
                 }
             });
         }).catch(err => {
             console.error("Firebase Login Fehler:", err);
-            tryHideLoader();
+            tryHideLoader(); // Auch bei Login-Fehler den Loader verstecken
         });
 
         window.initDropdowns = () => {
@@ -1572,11 +1645,11 @@
                     window.breakLocked = false; 
                     window.winnerNum = 0;
                     document.querySelectorAll('.win-btn').forEach(btn => btn.classList.remove('selected'));
-                    window.updateUI(); 
+                    if (typeof window.updateUI === 'function') window.updateUI(); 
                 };
             });
-            if (window.updateAvatarPreviews) window.updateAvatarPreviews();
-            if (typeof window.computeEloRatings === 'function') window.updateUI();
+            if (typeof window.updateAvatarPreviews === 'function') window.updateAvatarPreviews();
+            if (typeof window.updateUI === 'function') window.updateUI(); // updateUI ruft updateMatchProbability auf, das computeEloRatings braucht
         };
 
         window.openTeamModal = () => {
@@ -1598,9 +1671,9 @@
                 const isSelected = currentlySelectedPlayers.includes(String(p).trim());
                 return `
                     <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding:16px; background:${isSelected ? 'rgba(52,199,89,0.12)' : 'rgba(255,255,255,0.03)'}; border-radius:18px; cursor: pointer; border: 1px solid ${isSelected ? '#34c759' : 'rgba(255,255,255,0.1)'}; transition: all 0.2s ease;">
-                        <input type="checkbox" value="${p}" class="team-p-check" style="display:none;" onchange="this.parentElement.style.background=this.checked?'rgba(52,199,89,0.12)':'rgba(255,255,255,0.03)'; this.parentElement.style.borderColor=this.checked?'#34c759':'rgba(255,255,255,0.1)'; this.parentElement.querySelector('.check-mark').style.opacity=this.checked?'1':'0.1';" ${isSelected ? 'checked' : ''}>
+                        <input type="checkbox" value="${p}" class="team-p-check" style="display:none;" onchange="this.parentElement.style.background=this.checked?'rgba(52,199,89,0.12)':'rgba(255,255,255,0.03)'; this.parentElement.style.borderColor=this.checked?'#34c759':'rgba(255,255,255,0.1)'; this.parentElement.querySelector('.check-mark').style.opacity=this.checked?'1':'0.1';" ${isSelected ? 'checked' : ''}> 
                         <div style="display:flex; align-items:center; gap:12px;">
-                            <img src="${window.getAvatarUrl ? window.getAvatarUrl(p) : `avatars/${p}.png`}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
+                            <img loading="lazy" src="${window.getAvatarUrl ? window.getAvatarUrl(p) : `avatars/${p}.png`}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
                             <div style="display:none; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                             <span style="font-size:16px; font-weight:800; color: #fff;">${p}</span>
                         </div>
@@ -1633,7 +1706,7 @@
                 document.getElementById('t2p1').value = shuffled[2];
                 document.getElementById('t2p2').value = shuffled[3];
             }
-            window.updateUI();
+            if (typeof window.updateUI === 'function') window.updateUI();
             window.closeTeamModal();
         };
 
@@ -1698,7 +1771,7 @@
                 if (el && el.value) window.removeHighlight(id);
             });
 
-            window.updateMatchProbability();
+            if (typeof window.updateMatchProbability === 'function') window.updateMatchProbability();
             if (window.updateAvatarPreviews) window.updateAvatarPreviews();
 
             // Check if form is fully ready for "Speichern" cinematic glow
@@ -1731,7 +1804,7 @@
             }
             if (b1.value) window.removeHighlight('ballType1');
             if (b2.value) window.removeHighlight('ballType2');
-            window.updateUI();
+            if (typeof window.updateUI === 'function') window.updateUI();
         };
 
         window.selectWinner = (n) => {
@@ -1739,7 +1812,7 @@
             document.getElementById('btn-win1').classList.toggle('selected', n===1);
             document.getElementById('btn-win2').classList.toggle('selected', n===2);
             window.removeHighlight('btn-win1');
-            window.removeHighlight('btn-win2');
+            window.removeHighlight('btn-win2'); 
             window.updateUI();
         };
 
@@ -1781,13 +1854,13 @@
                     const src = (window.getAvatarUrl && typeof window.getAvatarUrl === 'function') ? window.getAvatarUrl(n) : `avatars/${n}.png`;
                     return `
                         <div style="position:relative; width:${size}px; height:${size}px;">
-                            <img src="${src}" onerror="this.style.display='none'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:2px solid var(--accent); z-index:2; background:transparent;">
+                            <img loading="lazy" src="${src}" onerror="this.style.display='none'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:2px solid var(--accent); z-index:2; background:transparent;">
                             ${silhouette}
                         </div>`;
                 }).join('');
             }
 
-            if (window.updateAvatarPreviews) window.updateAvatarPreviews();
+            if (typeof window.updateAvatarPreviews === 'function') window.updateAvatarPreviews();
             window.updateUI();
 
             // Popup anzeigen
@@ -1872,7 +1945,7 @@
               newDaily.days[isoDay] = dayResults;
               await window.dbFns.setDoc(window.dbFns.doc(window.db, "billard_data", "daily_achivs"), newDaily);
             }
-            window.stats = updatedStats;
+            window.stats = updatedStats; 
             await window.dbFns.setDoc(window.dbFns.doc(window.db, "billard_data", "stats"), { matches: updatedStats });
             
             document.getElementById('leftover').value = "0"; 
@@ -1884,7 +1957,7 @@
             document.getElementById('ballType1').value = "";
             document.getElementById('ballType2').value = "";
             
-            window.updateUI();
+            if (typeof window.updateUI === 'function') window.updateUI();
             // Cinematic Confetti Celebration
             if (typeof confetti === 'function') {
                 confetti({
@@ -1898,7 +1971,7 @@
         };
 
         window.openPlayerProfile = (name) => {
-            // Nutze careerStats statt lastProcessedStats, um Filter-Einfluss zu vermeiden
+            // Nutze careerStats statt lastProcessedStats, um Filter-Einfluss zu vermeiden 
             const stats = window.careerStats || window.lastProcessedStats;
             if (!stats || !stats.pData[name]) return;
             const d = stats.pData[name];
@@ -1909,7 +1982,7 @@
             const streakClass = d.currentStreak >= 3 ? 'streak-fire' : (d.loseStreak >= 3 ? 'streak-frost' : '');
             header.innerHTML = `
                 <div class="avatar-frame ${streakClass}" style="margin-bottom:15px;">
-                    <img src="${window.getAvatarUrl(name)}" style="width:90px; height:90px; border-radius:50%; border:4px solid var(--accent); object-fit:cover; box-shadow: 0 0 20px rgba(255,204,0,0.5);">
+                    <img loading="lazy" src="${window.getAvatarUrl(name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" style="width:90px; height:90px; border-radius:50%; border:4px solid var(--accent); object-fit:cover; box-shadow: 0 0 20px rgba(255,204,0,0.5);">
                 </div>
                 <div style="font-size:28px; font-weight:900; color:#fff; text-shadow: 0 0 15px rgba(255,204,0,0.4);">${name}</div>
                 <div style="font-size:10px; color:#8e8e93; font-weight:800; text-transform:uppercase; margin-top:8px; letter-spacing:1.5px;">Spieler-Steckbrief</div>
@@ -1990,7 +2063,9 @@
             const content = document.getElementById('matchDetailsContent');
 
             const isWin1 = parseInt(g.w) === 1;
-            const isWin2 = parseInt(g.w) === 2;
+            const isWin2 = parseInt(g.w) === 2; 
+
+            if (typeof window.processAllStatsChronologically !== 'function') return; // Guard against Chart.js not loaded
 
             header.innerHTML = `
                 <div style="font-weight:900; color:var(--accent); font-size:18px; text-transform:uppercase; letter-spacing:1px;">Match Details</div>
@@ -2000,8 +2075,9 @@
             const getAvatarStack = (playerName, size = 50, effectClass = '') => {
                 const names = (playerName || "").split(' & ').map(n => n.trim()).filter(Boolean);
                 return names.map(n => `
-                    <div class="avatar-frame ${effectClass}" style="position:relative; width:${size}px; height:${size}px;">
-                        <img src="${window.getAvatarUrl(n)}" style="width:${size}px; height:${size}px; border-radius:50%; border:2px solid rgba(255,255,255,0.2); object-fit:cover; ${effectClass === 'match-shame' ? 'filter: grayscale(0.1); opacity: 0.9;' : ''}">
+                    <div class="avatar-frame ${effectClass}" style="position:relative; width:${size}px; height:${size}px; min-width:${size}px;">
+                        <img loading="lazy" src="${window.getAvatarUrl(n)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.2); z-index:2; background:transparent; ${effectClass === 'match-shame' ? 'filter: grayscale(0.1); opacity: 0.9;' : ''}">
+                        <div style="display:none; width:${size}px; height:${size}px; border-radius:50%; background:rgba(255,255,255,0.05); align-items:center; justify-content:center; font-size:${size*0.5}px; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.2);">👤</div>
                     </div>
                 `).join('');
             };
@@ -2050,7 +2126,7 @@
                         ${Object.entries(matchData.newAchievements).map(([playerName, achs], pIdx) => `
                             <div class="card" style="margin-bottom:0; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 20px; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${pIdx * 0.1}s; opacity: 0;">
                                 <div style="font-weight:900; font-size:14px; color:var(--accent); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-                                    <img src="${window.getAvatarUrl(playerName)}" style="width:20px; height:20px; border-radius:50%; border:1px solid var(--accent); object-fit:cover;">
+                                    <img loading="lazy" src="${window.getAvatarUrl(playerName)}" style="width:20px; height:20px; border-radius:50%; border:1px solid var(--accent); object-fit:cover;">
                                     ${playerName} hat erreicht:
                                 </div>
                                 ${achs.map((ach, aIdx) => {
@@ -2087,7 +2163,7 @@
         window.requestDelete = (i) => { window.openDeleteConfirmModal(i); };
         window.updateMatchProbability = () => {
             const m = document.getElementById('mode').value;
-            const b = document.getElementById('match-prob');
+            const b = document.getElementById('match-prob'); 
             const isReady = (m==='1:1' ? (document.getElementById('p1').value && document.getElementById('p2').value) : (document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value));
             
             if(!isReady) { 
@@ -2102,7 +2178,7 @@
                 return;
             }
             
-            const elo = window.computeEloRatings(window.stats);
+            const elo = (typeof window.computeEloRatings === 'function') ? window.computeEloRatings(window.stats) : {};
             const getE = (p) => (elo[p] ? elo[p].elo : 1000);
 
             let r1, r2, n1, n2;
@@ -2183,8 +2259,8 @@
             const container = document.getElementById('history-list');
             const list = statsToRender || window.stats;
             
-            // ELO Deltas berechnen
-            const processed = window.processAllStatsChronologically(window.stats, window.spieler);
+            // Nutze bereits berechnete Daten statt Neu-Berechnung
+            const processed = window.careerStats || { matchDeltas: {} };
             const deltas = processed.matchDeltas || {};
 
             const counter = document.getElementById('match-counter');
@@ -2197,7 +2273,7 @@
                     const avatarSrc = window.getAvatarUrl ? window.getAvatarUrl(p) : `avatars/${p}.png`;
                     const isLast = idx === players.length - 1;
                     const margin = isLast ? '0' : '-6px';
-                    return `<img src="${avatarSrc}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,0.2); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;"><div style="display:none; width:${size}px; height:${size}px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:${size*0.6}px; border:1px solid rgba(255,255,255,0.1); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;">👤</div>`;
+                    return `<img loading="lazy" src="${avatarSrc}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,0.2); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;"><div style="display:none; width:${size}px; height:${size}px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:${size*0.6}px; border:1px solid rgba(255,255,255,0.1); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;">👤</div>`;
                 }).join('');
             };
 
