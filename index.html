@@ -1316,9 +1316,11 @@
         window.stats = []; window.spieler = []; window.dailyAchivs = { days: {} };
         window.winnerNum = 0; window.viewId = 'aufzeichnen'; window.breakLocked = false;
         window.careerStats = null; window.careerStatsBeforeToday = null;
-
+        
         let workerFinished = false;
         let firebaseDataReady = false; 
+        let isCalculating = false;
+        let isHiding = false;
 
         // Status-Flags für den Ladeprozess
         window.flags = { stats: false, spieler: false };
@@ -1341,17 +1343,19 @@
             if (!firebaseDataReady || !workerFinished || isHiding) return;
             isHiding = true;
 
-            // Erzwungener Sprung auf 100% falls noch nicht geschehen
+            // Erzwungener Sprung auf 100% für das finale visuelle Feedback
             window.updateLoaderStatus("Analyse abgeschlossen", 100);
 
             const elapsed = Date.now() - loadStartTime;
-            // Wir geben dem Balken (0.6s Transition) 800ms Zeit, um sichtbar zu werden
-            const remaining = Math.max(800, MIN_LOADING_TIME - elapsed);
+            // Wir geben dem Balken (0.6s Transition) mind. 1000ms Zeit, um vollflächig sichtbar zu werden
+            const remaining = Math.max(1000, MIN_LOADING_TIME - elapsed);
             setTimeout(() => window.hideLoader(), remaining);
         };
 
         // Loader Status Helper mit Progress-Bar
         window.updateLoaderStatus = (msg, percent) => {
+            // Verhindert das Zurückspringen der Bar, wenn wir bereits im Ausblend-Prozess sind
+            if (isHiding && percent < 100) return;
             const el = document.getElementById('loader-status');
             const bar = document.getElementById('loader-progress');
             if (el) el.innerText = msg + "...";
@@ -1359,34 +1363,47 @@
         };
 
         // Worker Initialisierung
-        const statsWorker = new Worker('worker.js');
-        
-        statsWorker.onerror = (err) => {
-            console.error("Worker Fehler:", err);
-            workerFinished = true;
-            firebaseDataReady = true;
-            window.updateLoaderStatus("Analyse abgeschlossen", 100);
-            checkAllReadyAndHideLoader();
-        };
+        let statsWorker;
+        try {
+            statsWorker = new Worker('worker.js');
+            statsWorker.onmessage = (e) => handleWorkerResult(e.data);
+            statsWorker.onerror = () => handleCalculationFallback();
+        } catch (e) {
+            handleCalculationFallback();
+        }
 
-        statsWorker.onmessage = (e) => {
-            window.careerStats = e.data.careerStats;
-            window.careerStatsBeforeToday = e.data.careerStatsBeforeToday;
-            window.updateAllViews();
-            workerFinished = true;
-            isCalculating = false;
-            checkAllReadyAndHideLoader();
-        };
+        function handleWorkerResult(data) {
+            try {
+                const now = new Date();
+                const todayStr = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
+                window.careerStats = window.enrichStatsWithAchievements(data.careerStats, window.stats.map((g, i) => ({ g, i })), window.spieler, window.dailyAchivs);
+                window.careerStatsBeforeToday = window.enrichStatsWithAchievements(data.careerStatsBeforeToday, window.stats.map((g, i) => ({ g, i })).filter(x => x.g && x.g.d && !x.g.d.startsWith(todayStr)), window.spieler, window.dailyAchivs, false);
+                window.updateAllViews();
+            } catch (err) { console.error("Error processing worker data:", err); }
+            finally { workerFinished = true; isCalculating = false; checkAllReadyAndHideLoader(); }
+        }
+
+        function handleCalculationFallback() {
+            console.warn("Using local calculation fallback (Worker blocked).");
+            if (typeof window.calculateStatsLocally === 'function') {
+                const now = new Date();
+                const todayStr = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
+                const career = window.calculateStatsLocally(window.stats, window.spieler);
+                const before = window.calculateStatsLocally(window.stats.filter(g => !g.d.startsWith(todayStr)), window.spieler);
+                
+                handleWorkerResult({ careerStats: career, careerStatsBeforeToday: before });
+            }
+        }
 
         window.recalculateAndRender = () => {
-            if (window.flags.stats && window.flags.spieler && !isCalculating) {
+            if (!isHiding && window.flags.stats && window.flags.spieler && !isCalculating) {
                 isCalculating = true;
                 window.updateLoaderStatus("Analysiere Billard-Historie", 85);
-                statsWorker.postMessage({
-                    stats: JSON.parse(JSON.stringify(window.stats)),
-                    spieler: Array.from(window.spieler),
-                    dailyAchivs: JSON.parse(JSON.stringify(window.dailyAchivs))
-                });
+                if (statsWorker && statsWorker.postMessage) {
+                    statsWorker.postMessage({ stats: JSON.parse(JSON.stringify(window.stats)), spieler: Array.from(window.spieler) });
+                } else {
+                    handleCalculationFallback();
+                }
                 firebaseDataReady = true;
             }
         };
@@ -1753,9 +1770,9 @@
             loaderAvatars.innerHTML = playersToShow.map((p, i) => {
                 const src = (window.getAvatarUrl && typeof window.getAvatarUrl === 'function') ? window.getAvatarUrl(p) : `avatars/${p}.png`;
                 return `
-                    <div class="loader-avatar-container" style="animation-delay: ${i * 0.15}s">
+                    <div class="loader-avatar-container" style="animation-delay: ${i * 0.4}s">
                         <img loading="lazy" src="${src}" class="loader-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                        <div style="display:none; width:100%; height:100%; border-radius:12px; background:rgba(255,255,255,0.05); align-items:center; justify-content:center; font-size:24px; border:1px solid var(--accent); color:rgba(255,255,255,0.2);">👤</div>
+                        <div style="display:none; width:100%; height:100%; border-radius:50%; background:rgba(255,255,255,0.05); align-items:center; justify-content:center; font-size:24px; border:1px solid var(--accent); color:rgba(255,255,255,0.2);">👤</div>
                     </div>`;
             }).join('');
         }
@@ -1764,7 +1781,6 @@
         setTimeout(() => {
             if (!firebaseDataReady || !workerFinished) {
                 console.warn("Loader forced to hide due to timeout.");
-                window.updateLoaderStatus("Bereit", 100);
                 firebaseDataReady = true;
                 workerFinished = true;
                 checkAllReadyAndHideLoader();
@@ -2224,8 +2240,8 @@
             const g = window.stats[index];
             if (!g) return;
 
-            const processed = window.processAllStatsChronologically(window.stats, window.spieler); // Re-run to get updated matchDeltas
-            const matchData = processed.matchDeltas[index] || {};
+            // Nutze die bereits vom Worker berechneten globalen Stats
+            const matchData = (window.careerStats && window.careerStats.matchDeltas) ? window.careerStats.matchDeltas[index] : {};
             const delta = matchData.eloDelta || 0;
 
             const header = document.getElementById('matchDetailsHeader');

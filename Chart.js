@@ -25,7 +25,7 @@ window.animateNumber = (id, target) => {
 };
 // ---------------------------------------
 
-// --- GLOBALE POOLS (Verfügbar für WebView UND Scriptable) ---
+// --- GLOBALE POOLS ---
 window.dailyFamePool = [
   { k: "fame", cond: (d) => d.todayGames > 0 && d.todayWins === d.todayGames, i: "👑", t: "Tageskönig", d: ["Heute ungeschlagen!", "Der Chef im Haus (für heute).", "Niemand kam an ihm vorbei.", "Ein perfekter Tag.", "Heute spielt er in einer eigenen Liga.", "Die weiße Weste."] , h: "Spiel heute mindestens ein Match und bleib ungeschlagen"},
   { k: "fame", cond: (d) => d.todayMaxStreak >= 3, i: "🔥", t: "Tagesserie", d: ["Er ist heute im Tunnel!", "Die Serie lebt."], h: "Gewinne heute 3 Spiele in Folge" },
@@ -299,7 +299,10 @@ window.processData = function(dataArray, todayStr) {
         if (!pData[n]) pData[n] = { 
             wins: 0, games: 0, rest: 0, maxStreak: 0, streak: 0, 
             lastWin: false, clutchWins: 0, killerPoints: 0, 
-            blackWinsCount: 0, breakWins: 0, todayGames: 0, todayWins: 0
+            blackWinsCount: 0, breakWins: 0, todayGames: 0, todayWins: 0,
+            todayMaxStreak: 0, todayClutchWins: 0, todayBreakWins: 0, 
+            todayBlackWinsCount: 0, todayKillerPoints: 0, todayRest: 0, 
+            todayAvgRest: 0, currentStreak: 0
         }; 
     };
 
@@ -322,17 +325,27 @@ window.processData = function(dataArray, todayStr) {
         winners.forEach(p => {
             if(!p) return;
             pData[p].wins++;
-            if (isTodayMatch) pData[p].todayWins++;
+            if (isTodayMatch) {
+                pData[p].todayWins++;
+                pData[p].todayKillerPoints += rest;
+                if (g.t && g.t.includes("Schwarz")) pData[p].todayBlackWinsCount++;
+                if (winnerString && g.a && winnerString === g.a) pData[p].todayBreakWins++;
+                if (rest === 1) pData[p].todayClutchWins++;
+            }
             pData[p].killerPoints += rest;
             pData[p].streak = pData[p].lastWin ? pData[p].streak + 1 : 1;
+            pData[p].currentStreak = pData[p].streak;
             if (pData[p].streak > pData[p].maxStreak) pData[p].maxStreak = pData[p].streak;
+            if (isTodayMatch) pData[p].todayMaxStreak = Math.max(pData[p].todayMaxStreak || 0, pData[p].streak);
+            
             pData[p].lastWin = true;
             if (g.t && g.t.includes("Schwarz")) pData[p].blackWinsCount++;
             if (winnerString && g.a && winnerString === g.a) pData[p].breakWins++;
         });
         losers.forEach(p => {
             if(!p) return;
-            pData[p].streak = 0; pData[p].lastWin = false; pData[p].rest += rest;
+            pData[p].streak = 0; pData[p].currentStreak = 0; pData[p].lastWin = false; pData[p].rest += rest;
+            if (isTodayMatch) pData[p].todayRest += rest;
         });
         if (rest === 1) winners.forEach(p => { if(p) pData[p].clutchWins++; });
         if (g.t && g.t.includes("Schwarz")) blackWins++;
@@ -374,255 +387,196 @@ window.computeEloRatings = function(allMatches) {
     return out;
 };
 
-// Moved from inside renderBillardStats to global window scope for BillardPro.js access
-window.processAllStatsChronologically = function(allMatches, configuredPlayers) {
-    const pData = {};
-    const baseElo = 1000;
-    const eloRatings = {};
-    const eloGamesCount = {};
-
-    const getElo = (p) => (typeof eloRatings[p] === 'number') ? eloRatings[p] : baseElo;
-    const getEloGameCount = (p) => (typeof eloGamesCount[p] === 'number') ? eloGamesCount[p] : 0;
-    const getKFactor = (p) => (getEloGameCount(p) < 20 ? 40 : 20);
-
-    const initP = (n) => {
-        if (!pData[n]) {
-            pData[n] = {
-                wins: 0, games: 0, rest: 0, maxStreak: 0, currentStreak: 0, lastWin: false,
-                clutchWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0,
-                todayWins: 0, todayGames: 0, todayMaxStreak: 0, todayClutchWins: 0,
-                todayBreakWins: 0, todayBlackWinsCount: 0, todayKillerPoints: 0, todayRest: 0, todayAvgRest: 0,
-                loseStreak: 0, maxLoseStreak: 0,
-                gameResultsHistory: [], last30Games: [], last20Losses: [], last20WinsKiller: [],
-            eloHistory: [], maxElo: 1000, maxWinRate: 0, headToHead: {}, 
-                closeLosses: 0, closeWins: 0, dramaWins: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0,
-                winsVsTopElo: 0, achTracker: {},
-                achCountTotal: 0, completedTracks: 0,
-                dailyDaysWithAch: 0
-            };
-        }
-    };
-
-    const parseSortTime = (gd) => {
-        const s = String(gd || "");
-        const m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[^\d]+(\d{1,2}):(\d{2}))?/);
-        if (!m) return 0;
-        return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10), m[4] ? parseInt(m[4], 10) : 0, m[5] ? parseInt(m[5], 10) : 0).getTime();
-    };
-
-    // Filtert ungültige Matches aus, um Abstürze beim Sortieren zu verhindern
-    const sortedMatches = (allMatches || [])
-        .filter(m => m && m.d) 
-        .map((g, i) => ({ g, i }))
-        .sort((a, b) => (parseSortTime(a.g.d) || 0) - (parseSortTime(b.g.d) || 0) || a.i - b.i);
-
-    let globalBlackWins = 0;
-    let globalBreakWins = 0;
-    const matchDeltas = {};
+/**
+ * Diese Funktion nimmt die Basis-Daten vom Worker und fügt die Achievement-Logik hinzu.
+ * Achievements enthalten Funktionen (cond), die nicht über den Worker laufen können.
+ */
+window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredPlayers, dailyAchivs, isFullHistory = true) {
+    // Wir starten mit leeren/initialen Stats für die Simulation
+    const simPData = {};
+    const matchDeltas = JSON.parse(JSON.stringify(baseStats.matchDeltas || {}));
+    const aggregates = JSON.parse(JSON.stringify(baseStats.aggregates || {}));
 
     const allPools = [...window.famePool, ...window.shamePool];
+    const todayStr = `${String(new Date().getDate()).padStart(2, '0')}.${String(new Date().getMonth() + 1).padStart(2, '0')}.${new Date().getFullYear()}`;
 
-    sortedMatches.forEach(({ g, i: originalIndex }) => {
-        if (!g) return;
-        const isTeam = g.m === "2:2";
-        const p1Arr = isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1];
-        const p2Arr = isTeam ? (g.p2 ? g.p2.split(" & ") : []) : [g.p2];
-        const allPlayersInMatch = [...p1Arr, ...p2Arr].filter(Boolean);
-        
-        // Snapshot der Daten VOR dem Match für Achievement-Vergleich erstellen
-        const pDataBeforeMatch = {};
-        allPlayersInMatch.forEach(p => {
-            initP(p);
-            pDataBeforeMatch[p] = JSON.parse(JSON.stringify(pData[p]));
-        });
-
-        const winnerPlayers = (g.w == 1) ? p1Arr : p2Arr;
-        const loserPlayers = (g.w == 1) ? p2Arr : p1Arr;
-        const winnerString = (g.w == 1) ? g.p1 : g.p2;
-        const restValue = parseInt(g.l || 0);
-
-        const kFactorSample = allPlayersInMatch.length > 0 ? getKFactor(allPlayersInMatch[0]) : 20;
-        const avgEloTeam1 = p1Arr.reduce((sum, p) => sum + getElo(p), 0) / (p1Arr.length || 1);
-        const avgEloTeam2 = p2Arr.reduce((sum, p) => sum + getElo(p), 0) / (p2Arr.length || 1);
-        const expectedScoreTeam1 = 1 / (1 + Math.pow(10, (avgEloTeam2 - avgEloTeam1) / 400));
-        const actualScoreTeam1 = (g.w == 1) ? 1 : 0;
-        const eloChange = actualScoreTeam1 - expectedScoreTeam1;
-        
-        // Delta für dieses Spiel speichern (Index aus der Original-Liste nutzen)
-        matchDeltas[originalIndex] = {
-            eloDelta: Math.round(kFactorSample * Math.abs(eloChange)),
-            newAchievements: {} // Initialize newAchievements for this match
+    const initSimP = (n) => {
+        if (!simPData[n]) simPData[n] = {
+            wins: 0, games: 0, rest: 0, maxStreak: 0, currentStreak: 0, lastWin: false,
+            clutchWins: 0, closeWins: 0, closeLosses: 0, dramaWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0, 
+            todayWins: 0, todayGames: 0, todayMaxStreak: 0, todayClutchWins: 0, todayBreakWins: 0, todayBlackWinsCount: 0, todayKillerPoints: 0, todayRest: 0, todayAvgRest: 0,
+            loseStreak: 0, maxLoseStreak: 0, eloHistory: [], maxElo: 1000, 
+            maxWinRate: 0, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0, 
+            eloDelta10: 0, winRateDelta20: 0, winRateLast30: 0, avgRestLossLast20: 0, avgKillerLast20: 0,
+            headToHead: {}, achTracker: {}, achCountTotal: 0, completedTracks: 0, dailyDaysWithAch: 0,
+            last30Games: [], last20Losses: [], last20WinsKiller: [], gameResultsHistory: [], elo: 1000, eloGames: 0,
+            avgKiller: 0, avgRest: 0, winRate: 0 // Added winRate to initSimP
         };
+    };
 
-        // --- 1. BASIS STATS (Sieg/Niederlage/Streaks) AKTUALISIEREN ---
-        winnerPlayers.forEach(p => {
-            pData[p].wins++;
-            pData[p].killerPoints += restValue;
-            pData[p].currentStreak = pData[p].lastWin ? (pData[p].currentStreak + 1) : 1;
-            pData[p].streak = pData[p].currentStreak; // Alias für Ranking
-            if (pData[p].currentStreak > pData[p].maxStreak) pData[p].maxStreak = pData[p].currentStreak;
-            pData[p].lastWin = true;
-            pData[p].loseStreak = 0;
-            if (g.t && g.t.includes("Schwarz")) pData[p].blackWinsCount++;
-            if (winnerString === g.a) pData[p].breakWins++;
-            pData[p].last20WinsKiller.push(restValue);
-            if (pData[p].last20WinsKiller.length > 20) pData[p].last20WinsKiller.shift();
-            
-            // Head-to-Head befüllen (wichtig für Achievements und Analysen)
-            loserPlayers.forEach(l => {
-                if (!pData[p].headToHead[l]) pData[p].headToHead[l] = { wins: 0, games: 0 };
-                if (!pData[l].headToHead[p]) pData[l].headToHead[p] = { wins: 0, games: 0 };
-                pData[p].headToHead[l].wins++;
-                pData[p].headToHead[l].games++;
-                pData[l].headToHead[p].games++;
-            });
+    const getElo = (p) => (simPData[p] ? simPData[p].elo : 1000);
+
+    allMatches.forEach(({ g, i: originalIndex }) => {
+        if (!g || !g.d) return; // Skip if match data or date is missing
+        const isTeam = g.m === "2:2";
+        const p1A = isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1];
+        const p2A = isTeam ? (g.p2 ? g.p2.split(" & ") : []) : [g.p2];
+        const players = [...p1A, ...p2A].map(s => String(s || '').trim()).filter(Boolean);
+
+        players.forEach(initSimP);
+
+        // Wer war vor dem Match die Nr. 1? (Wichtig für Riesen-Jäger)
+        let currentTopPlayer = null;
+        let highestEloFound = -1;
+        Object.keys(simPData).forEach(pName => {
+            if (simPData[pName].elo > highestEloFound) {
+                highestEloFound = simPData[pName].elo;
+                currentTopPlayer = pName;
+            }
         });
 
-        loserPlayers.forEach(p => {
-            pData[p].currentStreak = 0;
-            pData[p].lastWin = false;
-            pData[p].rest += restValue;
-            pData[p].loseStreak++;
-            if (pData[p].loseStreak > pData[p].maxLoseStreak) pData[p].maxLoseStreak = pData[p].loseStreak;
-            pData[p].last20Losses.push(restValue);
-            if (pData[p].last20Losses.length > 20) pData[p].last20Losses.shift();
-            if (restValue === 1) pData[p].closeLosses++;
-        });
+        // Vor dem Match: Zustand sichern für "Neu"-Erkennung
+        const pDataBeforeMatch = {};
+        players.forEach(p => { pDataBeforeMatch[p] = JSON.parse(JSON.stringify(simPData[p])); });
 
-        if (restValue === 1) winnerPlayers.forEach(p => { 
-            if(p) { pData[p].clutchWins++; pData[p].closeWins++; pData[p].dramaWins++; } 
-        });
-        if (g.t && g.t.includes("Schwarz")) globalBlackWins++;
-        if (winnerString === g.a) globalBreakWins++;
+        const winners = (g.w == 1) ? p1A : p2A;
+        const losers = (g.w == 1) ? p2A : p1A;
+        const rest = parseInt(g.l || 0);
+        const winnerString = String((g.w == 1) ? g.p1 : g.p2 || '').trim(); // Trimmed winner string for break check
+        // ELO Berechnung für die Simulation
+        const avg1 = p1A.reduce((s, p) => s + getElo(p), 0) / (p1A.length || 1);
+        const avg2 = p2A.reduce((s, p) => s + getElo(p), 0) / (p2A.length || 1);
+        const exp1 = 1 / (1 + Math.pow(10, (avg2 - avg1) / 400));
+        const eloChangeBase = (g.w == 1 ? 1 : 0) - exp1;
 
-        // --- 2. ELO & ACHIEVEMENT TRACKER (nachdem Stats aktualisiert wurden) ---
-        allPlayersInMatch.forEach(p => {
-            const currentElo = getElo(p);
-            const kFactor = getKFactor(p);
-            // eloChange bezieht sich auf Team 1. Team 2 erhält die inverse Änderung.
-            let newElo = p1Arr.includes(p) ? (currentElo + kFactor * eloChange) : (currentElo - kFactor * eloChange);
-            eloRatings[p] = newElo;
-            eloGamesCount[p] = getEloGameCount(p) + 1;
-            
-            if (newElo > pData[p].maxElo) pData[p].maxElo = Math.round(newElo);
-            pData[p].eloHistory.push(Math.round(newElo));
-            pData[p].games++;
-            
-            const currentWR = (pData[p].wins / pData[p].games) * 100;
-            if (pData[p].games >= 5 && currentWR > pData[p].maxWinRate) pData[p].maxWinRate = currentWR;
+        players.forEach(p => {
+            const d = simPData[p];
+            const isW = winners.includes(p); // winners (p1A/p2A) are already trimmed arrays
 
-            const isWinner = winnerPlayers.includes(p);
-            pData[p].gameResultsHistory.push(isWinner);
-            pData[p].last30Games.push(isWinner);
-            if (pData[p].last30Games.length > 30) pData[p].last30Games.shift();
+            // H2H Simulation
+            if (isW) {
+                losers.forEach(l => { // losers (p1A/p2A) are already trimmed arrays
+                    if (!d.headToHead[l]) d.headToHead[l] = { w: 0, l: 0 };
+                    d.headToHead[l].w++;
+                });
+            } else { // Current player 'p' lost
+                winners.forEach(w => { // winners (p1A/p2A) are already trimmed arrays
+                    if (!d.headToHead[w]) d.headToHead[w] = { w: 0, l: 0 };
+                    d.headToHead[w].l++;
+                });
+            }
 
-            // --- DYNAMISCHE STATS AKTUALISIEREN ---
-            const d = pData[p];
-            d.winRate = Math.round((d.wins / (d.games || 1)) * 100);
+            d.games++;
+            d.gameResultsHistory.push(isW ? 1 : 0);
+            d.last30Games.push(isW ? 1 : 0);
+            if (d.last30Games.length > 30) d.last30Games.shift();
+
+            if (isW) {
+                d.wins++; d.currentStreak++; d.loseStreak = 0; d.lastWin = true;
+                if (d.currentStreak > d.maxStreak) d.maxStreak = d.currentStreak;
+                if (g.t?.includes("Schwarz")) d.blackWinsCount++;
+                
+                // Break-Win Simulation
+                if (g.a && String(g.a || '').trim() === winnerString) { // Ensure g.a is trimmed
+                    if (isTeam) {
+                        if (winnerString.split(" & ").map(s => s.trim()).includes(p)) d.breakWins++;
+                    } else if (p === winnerString) {
+                        d.breakWins++;
+                    }
+                }
+
+                if (rest === 1) { d.clutchWins++; d.closeWins++; d.dramaWins++; }
+                d.killerPoints += rest;
+                d.last20WinsKiller.push(rest);
+                if (d.last20WinsKiller.length > 20) d.last20WinsKiller.shift();
+
+                if (currentTopPlayer && losers.includes(currentTopPlayer)) d.winsVsTopElo++;
+                
+                let nemesis = null; let maxL = 0;
+                Object.entries(d.headToHead).forEach(([opp, st]) => { if (st.l > maxL) { maxL = st.l; nemesis = opp; } });
+                if (nemesis && losers.includes(nemesis)) d.vsNemesisWins++; // losers is already trimmed
+            } else {
+                d.rest += rest; d.currentStreak = 0; d.loseStreak++; d.lastWin = false;
+                if (d.loseStreak > d.maxLoseStreak) d.maxLoseStreak = d.loseStreak;
+                if (rest === 1) d.closeLosses++;
+                d.last20Losses.push(rest);
+                if (d.last20Losses.length > 20) d.last20Losses.shift();
+
+                let worstOpp = null; let maxL = 0;
+                Object.entries(d.headToHead).forEach(([opp, st]) => { if (st.l > maxL) { maxL = st.l; worstOpp = opp; } });
+                if (worstOpp && winners.includes(worstOpp)) d.vsWorstOpponentLosses++; // winners is already trimmed
+            }
+
+            // Elo Simulation
+            const k = d.eloGames < 20 ? 40 : 20;
+            const change = p1A.includes(p) ? (k * eloChangeBase) : -(k * eloChangeBase);
+            d.elo += change;
+            d.eloGames++;
+            d.eloHistory.push(Math.round(d.elo));
+            if (d.elo > d.maxElo) d.maxElo = Math.round(d.elo);
+
+            // Abgeleitete Metriken für Erfolge
+            d.winRate = Math.round((d.wins / d.games) * 100);
             d.avgKiller = d.wins > 0 ? (d.killerPoints / d.wins) : 0;
             d.avgRest = (d.games - d.wins) > 0 ? (d.rest / (d.games - d.wins)) : 0;
-            d.winRateLast30 = d.last30Games.length > 0 ? Math.round((d.last30Games.filter(r => r).length / d.last30Games.length) * 100) : 0;
-            if (d.eloHistory.length >= 10) d.eloDelta10 = d.eloHistory[d.eloHistory.length - 1] - d.eloHistory[d.eloHistory.length - 10];
+            d.winRateLast30 = d.last30Games.length > 0 ? Math.round((d.last30Games.reduce((a,b)=>a+b,0)/d.last30Games.length)*100) : 0;
+            d.avgRestLossLast20 = d.last20Losses.length > 0 ? (d.last20Losses.reduce((a,b)=>a+b,0)/d.last20Losses.length) : 0;
+            d.avgKillerLast20 = d.last20WinsKiller.length > 0 ? (d.last20WinsKiller.reduce((a,b)=>a+b,0)/d.last20WinsKiller.length) : 0;
 
-            // --- ACHIEVEMENT TRACKER LOGIK ---
+            if (d.eloHistory.length >= 10) {
+                const prevElo = d.eloHistory.length === 10 ? 1000 : d.eloHistory[d.eloHistory.length - 11];
+                d.eloDelta10 = d.eloHistory[d.eloHistory.length - 1] - prevElo;
+            }
+
+            if (d.games >= 40) {
+                const first20 = d.gameResultsHistory.slice(0, 20);
+                const last20 = d.gameResultsHistory.slice(-20);
+                d.winRateDelta20 = ((last20.reduce((a,b)=>a+b,0)/20)*100) - ((first20.reduce((a,b)=>a+b,0)/20)*100);
+            }
+        });
+
+        if (g.d && g.d.startsWith(todayStr)) {
+            players.forEach(p => {
+                if (!simPData[p]) return;
+                simPData[p].todayGames++;
+                if (winners.includes(p)) { // winners is already trimmed
+                    simPData[p].todayWins++;
+                    simPData[p].todayKillerPoints += rest;
+                    simPData[p].todayMaxStreak = Math.max(simPData[p].todayMaxStreak, simPData[p].currentStreak);
+                    if (g.t?.includes("Schwarz")) simPData[p].todayBlackWinsCount++;
+                    if (g.a === (g.w == 1 ? g.p1 : g.p2)) simPData[p].todayBreakWins++;
+                    if (rest === 1) simPData[p].todayClutchWins++;
+                } else { simPData[p].todayRest += rest; }
+                simPData[p].todayAvgRest = (simPData[p].todayGames - simPData[p].todayWins) > 0 ? (simPData[p].todayRest / (simPData[p].todayGames - simPData[p].todayWins)) : 0;
+            });
+        }
+
+        players.forEach(p => {
+            if (!simPData[p]) return;
+            const d = simPData[p], dBefore = pDataBeforeMatch[p] || { achTracker: {} };
             allPools.forEach(ach => {
                 const hasNow = ach.cond(d);
                 if (!d.achTracker[ach.t]) d.achTracker[ach.t] = { earned: 0, lost: 0, active: false };
-                const s = d.achTracker[ach.t];
+                if (hasNow && !d.achTracker[ach.t].active) { d.achTracker[ach.t].earned++; d.achTracker[ach.t].active = true; }
+                else if (!hasNow && d.achTracker[ach.t].active) { d.achTracker[ach.t].lost++; d.achTracker[ach.t].active = false; }
                 
-                if (hasNow && !s.active) {
-                    s.earned++;
-                    s.active = true;
-                } else if (!hasNow && s.active) {
-                    s.lost++;
-                    s.active = false;
+                if (hasNow && (!dBefore.achTracker[ach.t] || !dBefore.achTracker[ach.t].active)) {
+                    if (!matchDeltas[originalIndex]) matchDeltas[originalIndex] = { eloDelta: 0 };
+                    matchDeltas[originalIndex].newAchievements = matchDeltas[originalIndex].newAchievements || {};
+                    matchDeltas[originalIndex].newAchievements[p] = matchDeltas[originalIndex].newAchievements[p] || [];
+                    matchDeltas[originalIndex].newAchievements[p].push({
+                        i: ach.i, t: ach.t, d: ach.d, h: ach.h, k: ach.k || (window.famePool.includes(ach) ? 'fame' : 'shame'), max: ach.max
+                    });
                 }
             });
-
-            // NEUE ERFOLGE FÜR DIESES MATCH ERMITTELN
-            const newlyEarned = [];
-            allPools.forEach(ach => {
-                const wasActiveBefore = ach.cond(pDataBeforeMatch[p]);
-                const isActiveNow = ach.cond(d);
-                if (!wasActiveBefore && isActiveNow) newlyEarned.push(ach);
-            });
-
-            if (newlyEarned.length > 0) {
-                matchDeltas[originalIndex].newAchievements[p] = newlyEarned.map(a => ({
-                    i: a.i, t: a.t, d: a.d, h: a.h, k: a.k || (window.famePool.includes(a) ? 'fame' : 'shame'), max: a.max
-                }));
-            }
         });
     });
 
-    
-    // Pre-calculate aggregates for Dashboard to save CPU during render
-    const aggregates = {
-        vollWins: 0, halbWins: 0, totalBallMatches: 0,
-        teamResults: {}, // Duo Ranking
-        ballSpez: {},    // Kugel-Spezis
-        matchups: {},    // Angstgegner
-        meetings: {}
-    };
-
-    window.lastProcessedStats = { pData, blackWins: globalBlackWins, breakWins: globalBreakWins, matchDeltas, aggregates };
-
-    let maxElo = -Infinity;
-    let topEloPlayer = null;
-    Object.keys(eloRatings).forEach(p => { if (eloRatings[p] > maxElo) { maxElo = eloRatings[p]; topEloPlayer = p; } });
-
+    const pData = JSON.parse(JSON.stringify(baseStats.pData || {}));
     Object.keys(pData).forEach(p => {
         const d = pData[p];
-
-        // Berechnung der Tage mit Tageserfolgen (Daily Days)
-        if (window.dailyAchivs && window.dailyAchivs.days) {
-            let daysWithAch = 0;
-            for (const dayKey in window.dailyAchivs.days) {
-                const dayRec = window.dailyAchivs.days[dayKey] || {};
-                const arr = dayRec[p] || [];
-                if (Array.isArray(arr) && arr.length > 0) daysWithAch++;
-            }
-            d.dailyDaysWithAch = daysWithAch;
-        }
-
-        // Angstgegner-Metriken (Schlimmster Gegner = meiste Niederlagen)
-        let worstOpponent = null, maxLosses = -1;
-        Object.keys(d.headToHead).forEach(opp => {
-            const h = d.headToHead[opp];
-            const losses = h.games - h.wins;
-            if (losses > maxLosses) { maxLosses = losses; worstOpponent = opp; }
-        });
-        if (worstOpponent) {
-            d.vsWorstOpponentLosses = maxLosses;
-            d.vsNemesisWins = d.headToHead[worstOpponent].wins;
-        }
-
-        // Aktuelle ELO-Werte für direkten Zugriff im Steckbrief setzen
-        d.elo = Math.round(eloRatings[p]);
-        d.eloGames = eloGamesCount[p];
-
-        d.winRateLast30 = d.last30Games.length > 0 ? Math.round((d.last30Games.filter(r => r).length / d.last30Games.length) * 100) : 0;
-        d.avgRestLossLast20 = d.last20Losses.length > 0 ? (d.last20Losses.reduce((s, v) => s + v, 0) / d.last20Losses.length) : 0;
-        d.avgKillerLast20 = d.last20WinsKiller.length > 0 ? (d.last20WinsKiller.reduce((s, v) => s + v, 0) / d.last20WinsKiller.length) : 0;
-        
-        if (d.gameResultsHistory.length >= 40) {
-            const f20 = (d.gameResultsHistory.slice(0, 20).filter(r => r).length / 20) * 100;
-            const l20 = (d.gameResultsHistory.slice(-20).filter(r => r).length / 20) * 100;
-            d.winRateDelta20 = l20 - f20;
-        } else { d.winRateDelta20 = 0; }
-
-        if (d.eloHistory.length >= 10) {
-            d.eloDelta10 = d.eloHistory[d.eloHistory.length - 1] - d.eloHistory[d.eloHistory.length - 10];
-        } else { d.eloDelta10 = 0; }
-
-        if (topEloPlayer && d.headToHead[topEloPlayer]) { d.winsVsTopElo = d.headToHead[topEloPlayer].wins; }
-        else { d.winsVsTopElo = 0; }
-
-        // Achievement-Anzahl für Karriere berechnen
         let currentAchs = [];
-        [...window.famePool.map(a=>({...a,k:'fame'})), ...window.shamePool.map(a=>({...a,k:'shame'}))].forEach(ach => {
-            if (ach.cond(d)) currentAchs.push(ach);
-        });
+        allPools.forEach(ach => { if (ach.cond(d)) currentAchs.push(ach); });
         const tierBest = {};
         currentAchs.forEach(it => {
             if (!it.g || !it.tier) return;
@@ -633,26 +587,30 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         Object.values(tierBest).forEach(a => finalAchs.push(a));
         d.achCountTotal = finalAchs.length;
 
-        // Berechnung der abgeschlossenen Achievement-Tracks
-        const tracks = {};
-        finalAchs.forEach(ach => {
-            if (ach.g && ach.tier) {
-                if (!tracks[ach.g] || ach.tier > tracks[ach.g]) tracks[ach.g] = ach.tier;
+        if (dailyAchivs && dailyAchivs.days) {
+            for (const dayKey in dailyAchivs.days) {
+                const dayRec = dailyAchivs.days[dayKey] || {};
+                if (Array.isArray(dayRec[p]) && dayRec[p].length > 0) d.dailyDaysWithAch++;
             }
+        }
+
+        const tracks = {};
+        finalAchs.forEach(ach => { if (ach.g && ach.tier) tracks[ach.g] = Math.max(tracks[ach.g] || 0, ach.tier); });
+        const allTrackNames = new Set();
+        allPools.forEach(ach => { if (ach.g && ach.tier) allTrackNames.add(ach.g); });
+        allTrackNames.forEach(tn => {
+            const maxInPool = allPools.filter(a => a.g === tn).reduce((m, a) => Math.max(m, a.tier || 0), 0);
+            if (maxInPool > 0 && tracks[tn] === maxInPool) d.completedTracks++;
         });
-        let completedTracksCount = 0;
-        const allTracksInPool = new Set();
-        allPools.forEach(ach => { if (ach.g && ach.tier) allTracksInPool.add(ach.g); });
-        allTracksInPool.forEach(trackName => {
-            const maxTierInTrack = allPools
-                .filter(ach => ach.g === trackName)
-                .reduce((max, ach) => Math.max(max, ach.tier || 0), 0);
-            if (maxTierInTrack > 0 && tracks[trackName] === maxTierInTrack) completedTracksCount++;
-        });
-        d.completedTracks = completedTracksCount;
     });
 
-    return { pData, blackWins: globalBlackWins, breakWins: globalBreakWins, matchDeltas, aggregates };
+    return { 
+        pData, 
+        matchDeltas, 
+        aggregates, 
+        blackWins: baseStats.blackWins, 
+        breakWins: baseStats.breakWins 
+    };
 };
 
 // --- CONSOLIDATED FILTER FUNCTION ---
@@ -808,7 +766,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
       const parseSortTime = (gd) => {
         const s = String(gd || "");
-        const m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})(?:[^\d]+(\d{1,2}):(\d{2}))?/);
+        const m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[^\d]+(\d{1,2}):(\d{2}))?/);
         if (!m) return 0;
         const dd = parseInt(m[1], 10);
         const mm = parseInt(m[2], 10) - 1;
@@ -876,7 +834,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
       let daysWithAch = 0;
 
       for (const dayKey in days) {
-        const dayRec = days[dayKey] || {};
+        const dayRec = days[dayKey] || {}; // Correctly access day record
         const arr = dayRec[playerName] || [];
         if (Array.isArray(arr) && arr.length > 0) daysWithAch++;
       }
@@ -886,17 +844,17 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
     // --- DATEN FILTERN ---
     const statsToday = safeStats.filter(g => g && g.d && g.d.startsWith(todayStr));
-    const statsBeforeToday = safeStats.filter(g => !g.d.startsWith(todayStr));
+    const statsBeforeToday = safeStats.filter(g => g && g.d && !g.d.startsWith(todayStr));
     
-    const dataToday = window.processData(statsToday, todayStr);
-    const dataAll = precalculatedCareerStats || (safeStats.length > 0 ? window.processAllStatsChronologically(safeStats, configuredPlayers) : { pData: {} });
-    const dataBeforeToday = precalculatedCareerStatsBeforeToday || (statsBeforeToday.length > 0 ? window.processAllStatsChronologically(statsBeforeToday, configuredPlayers) : { pData: {} });
+    const dataToday = window.processData(statsToday, todayStr); // This is for the "Heute" tab, uses simpler processData
+    const dataAll = precalculatedCareerStats || { pData: {}, matchDeltas: {}, aggregates: {} }; // Worker output
+    const dataBeforeToday = precalculatedCareerStatsBeforeToday || { pData: {}, matchDeltas: {}, aggregates: {} }; // Worker output
 
     const getAchHtml = (proc, isTodayTab, procBefore) => {
       let achHtml = "";
 
       // Header nur fürs TODAY-Layout (hier KEIN daily-save!)
-      if (isTodayTab) {
+      if (isTodayTab && Object.keys(proc.pData).some(p => proc.pData[p].todayGames > 0)) { // Only show header if there are today's achievements
         achHtml += `
           <div style="margin: 45px 0 20px 5px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
             <div style="color: #ffcc00; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px;">Die heutigen Erfolge</div>
@@ -910,7 +868,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const d = proc.pData[p];
         // Vergleichsdaten für "NEU" Badge (Fallback auf leere Stats, falls Spieler heute neu ist)
         const dBefore = (procBefore && procBefore.pData[p]) ? procBefore.pData[p] : { 
-            wins: 0, games: 0, rest: 0, maxStreak: 0, streak: 0, lastWin: false, 
+            wins: 0, games: 0, rest: 0, maxStreak: 0, currentStreak: 0, lastWin: false, 
             clutchWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0 
         };
         
@@ -919,7 +877,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
         if (isTodayTab && (!d.todayGames || d.todayGames === 0)) return;
 
-        // --- ERWEITERTES LEVEL LOGIK ---
+        // --- ERWEITERTES LEVEL LOGIK (based on total wins) ---
         const levelSystem = [
           { min: 0,   title: "Billard-Embryo", icon: "🥚" },
           { min: 2,   title: "Kreide-Kenner", icon: "🖍️" },
@@ -1004,7 +962,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             <div class="achievement-card-hero" style="border-radius:24px; margin-bottom:15px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0;">
               <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
                    style="padding:18px; cursor:pointer; -webkit-tap-highlight-color: transparent;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; background: linear-gradient(135deg, rgba(255, 204, 0, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%);">
                   <div style="display:flex; align-items:center; gap:12px;">
                     <div class="ach-chevron collapsed"></div>
                     <div style="display:flex; align-items:center; gap:14px;">
@@ -1022,8 +980,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 </div>
 
                 <div class="progress-bar-container" style="margin-bottom:8px;">
-                  <div style="height:100%; width:${progressPercent}%; background: linear-gradient(90deg, #B8860B, #FFCC00); transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(255,204,0,0.5);">
-                    <div style="position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: progress-shimmer 2s infinite;"></div>
+                  <div class="progress-bar-fill" style="width:${progressPercent}%;">
                   </div>
                 </div>
 
@@ -1036,7 +993,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
               <div style="padding:12px 12px 6px 12px; display:none;">`;
         }
 
-        // Today-Unbeaten muss todayWins berücksichtigen
+        // Today-Unbeaten muss todayWins berücksichtigen (for achievement logic)
         const isUnbeatenToday = d.todayGames > 0 && d.todayWins === d.todayGames;
 
         const getFixedIndex = (name, arrayLength) => {
@@ -1044,7 +1001,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           for (let i = 0; i < name.length; i++) {
             hash = name.charCodeAt(i) + ((hash << 5) - hash);
           }
-          return Math.abs(hash) % arrayLength;
+          return Math.abs(hash) % (arrayLength || 1); // Avoid division by zero
         };
         // --- ACHIEVEMENT SAMMLUNG ---
         let currentAchs = [];
@@ -1116,7 +1073,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           const phrase = item.d[phraseIndex] || "";
           const isShame = (item.k === "shame");
           const howIcon  = isShame ? "💀" : "🏆";
-          const isMaxTier = item.max === true;
+          const isMaxTier = item.max === true; // Max tier achievements get special styling
           const newBadge = item.isNew ? `<span style="background:var(--accent); color:#000; font-size:8px; font-weight:900; padding:2px 5px; border-radius:4px; margin-left:8px; vertical-align:middle; animation: badge-pulse 1.5s infinite ease-in-out;">NEU</span>` : "";
           const tracker = d.achTracker ? d.achTracker[item.t] : null;
           const trackerHtml = tracker ? `<div style="font-size:9px; color:#8e8e93; margin-top:4px; font-weight:600;">Sammelrate: <span style="color:#34c759;">📈 ${tracker.earned}</span> ${tracker.lost > 0 ? `| <span style="color:#ff3b30;">📉 ${tracker.lost}</span>` : ''}</div>` : "";
@@ -1153,7 +1110,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 const ach = [...window.dailyFamePool, ...window.dailyShamePool].find(x => x.t === title);
                 if (!ach) return "";
                 const ic = ach.i || "🏷️";
-                const isShame = (ach.k === "shame");
+                const isShame = (ach.k === "shame" || window.dailyShamePool.some(s => s.t === title)); // Check if it's a shame achievement
                 const categoryColor = isShame ? 'var(--error)' : '#34c759';
                 const howColor = isShame ? "rgba(255, 69, 58, 0.70)" : "rgba(52, 199, 89, 0.70)";
                 const howIcon  = isShame ? "💀" : "🏆";
@@ -1176,7 +1133,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         }
 
         playerBoxHtml += achHtmlContent + `</div></div>`;
-        achHtml += playerBoxHtml;
+        achHtml += playerBoxHtml; // Add player's achievement box to the overall HTML
         if (isTodayTab) {
           const titles = currentAchs.map(x => x.t);
           if (!window.dailyAchivs.days[isoDay]) window.dailyAchivs.days[isoDay] = {};
@@ -1184,7 +1141,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         }
       });
 
-      if (isTodayTab) saveDailyAchivs();
+      if (isTodayTab) saveDailyAchivs(); // Save daily achievements if in today's tab
       return achHtml || '<div style="color:#8e8e93; text-align:center; padding:30px;">Noch keine Erfolge.</div>';
     };
 
@@ -1217,7 +1174,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     if (filterToday) {
         if (tEl) { tEl.innerHTML = getAchHtml(dataToday, true, null); tEl.style.display = "block"; }
         if (aEl) aEl.style.display = "none";
-    } else {
+    } else { // Overall or Achievements tab
         if (tEl) tEl.style.display = "none";
         if (aEl) { 
             // Hier nutzen wir += statt =, damit die Level stehen bleiben!
@@ -1238,7 +1195,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const topEloPlayers = labels
             .filter(p => res.pData[p].games > 0)
             .sort((a, b) => res.pData[b].elo - res.pData[a].elo)
-            .slice(0, 5);
+            .slice(0, 5); // Top 5 players for ELO chart
         const getPlayerColor = (name) => {
             const idx = topEloPlayers.indexOf(name);
             return idx > -1 ? graphColors[idx] : '#ffffff';
@@ -1248,7 +1205,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         byId('stat-total').innerText = currentStats.length;
 
         // --- KUGEL-STATISTIK BERECHNEN ---
-        const agg = res.aggregates || { totalBallMatches: 0, vollWins: 0, halbWins: 0 };
+        const agg = res.aggregates || { totalBallMatches: 0, vollWins: 0, halbWins: 0, playerBallWins: {} };
         const vRate = agg.totalBallMatches > 0 ? Math.round((agg.vollWins / (agg.totalBallMatches || 1)) * 100) : 0;
         const hRate = agg.totalBallMatches > 0 ? Math.round((agg.halbWins / (agg.totalBallMatches || 1)) * 100) : 0;
         const vEl = byId('stat-balls-voll'), hEl = byId('stat-balls-halb');
@@ -1256,29 +1213,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         if (hEl) hEl.innerText = hRate + "%";
         
         // --- TOP KUGEL-SPIELER BERECHNEN ---
-        const playerBallWins = {}; // { "PlayerName": { "Voll": X, "Halb": Y } }
-
-        currentStats.forEach(g => {
-            if (g.bt1 && g.bt2 && g.w) {
-                let winnerNameOrTeam, winnerBallType;
-                if (g.w == 1) {
-                    winnerNameOrTeam = g.p1;
-                    winnerBallType = g.bt1;
-                } else { // g.w == 2
-                    winnerNameOrTeam = g.p2;
-                    winnerBallType = g.bt2;
-                }
-
-                const playersInWinningSide = (g.m === "2:2") ? winnerNameOrTeam.split(" & ").map(s => s.trim()) : [winnerNameOrTeam];
-
-                playersInWinningSide.forEach(p => {
-                    if (!playerBallWins[p]) {
-                        playerBallWins[p] = { "Voll": 0, "Halb": 0 };
-                    }
-                    playerBallWins[p][winnerBallType]++;
-                });
-            }
-        });
+        // Use pre-calculated aggregates from worker
+        const playerBallWins = agg.playerBallWins || {};
 
         let topVollPlayers = [], maxVollWins = 0;
         let topHalbPlayers = [], maxHalbWins = 0;
@@ -1298,8 +1234,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             } else if (halbWins === maxHalbWins && halbWins > 0) { topHalbPlayers.push(player); }
         }
 
-        byId('stat-top-voll').innerText = maxVollWins > 0 ? `${topVollPlayers.join(' / ')} (${maxVollWins}x)` : "-";
-        byId('stat-top-halb').innerText = maxHalbWins > 0 ? `${topHalbPlayers.join(' / ')} (${maxHalbWins}x)` : "-";
+        if (byId('stat-top-voll')) byId('stat-top-voll').innerText = maxVollWins > 0 ? `${topVollPlayers.join(' / ')} (${maxVollWins}x)` : "-";
+        if (byId('stat-top-halb')) byId('stat-top-halb').innerText = maxHalbWins > 0 ? `${topHalbPlayers.join(' / ')} (${maxHalbWins}x)` : "-";
         
         // Global-Stats berechnen (unabhängig vom Filter für Vergleichswerte sinnvoll)
         const breakRate = Math.round(((res.breakWins || 0) / (currentStats.length || 1)) * 100);
@@ -1307,7 +1243,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         if (bAdvEl) bAdvEl.innerText = breakRate + "%";
         
         const blackRate = Math.round(((res.blackWins || 0) / (currentStats.length || 1)) * 100);
-        byId('stat-black').innerText = blackRate + "%";
+        if (byId('stat-black')) byId('stat-black').innerText = blackRate + "%";
 
         // Pechvogel (Ø Restkugeln bei Niederlage) – bei Gleichstand mehrere anzeigen
         const pechVals = labels.map(p => {
@@ -1322,9 +1258,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             .filter(x => x.avg === maxPech)
             .sort((a, b) => (b.ga - a.ga) || a.p.localeCompare(b.p, 'de'));
         
-          byId('stat-pechvogel').innerText = topPech.map(x => x.p).join(' / ') + " (" + maxPech.toFixed(1) + ")";
+          if (byId('stat-pechvogel')) byId('stat-pechvogel').innerText = topPech.map(x => x.p).join(' / ') + " (" + maxPech.toFixed(1) + ")";
         } else {
-          byId('stat-pechvogel').innerText = "-";
+          if (byId('stat-pechvogel')) byId('stat-pechvogel').innerText = "-";
         }
 
         // Killer (Ø Restkugeln beim Gegner pro Sieg) – bei Gleichstand mehrere anzeigen
@@ -1339,9 +1275,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             .filter(x => x.avg === maxKiller)
             .sort((a, b) => (b.ga - a.ga) || a.p.localeCompare(b.p, 'de'));
         
-          byId('stat-killer').innerText = topKiller.map(x => x.p).join(' / ') + " (" + maxKiller.toFixed(1) + ")";
+          if (byId('stat-killer')) byId('stat-killer').innerText = topKiller.map(x => x.p).join(' / ') + " (" + maxKiller.toFixed(1) + ")";
         } else {
-          byId('stat-killer').innerText = "-";
+          if (byId('stat-killer')) byId('stat-killer').innerText = "-";
         }
 
         // Die Mauer (Zäher Verlierer: Min Ø Restkugeln bei Niederlage)
@@ -1353,9 +1289,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             .filter(x => x.avg === minWall)
             .sort((a, b) => (b.ga - a.ga) || a.p.localeCompare(b.p, 'de'));
         
-          byId('stat-mauer').innerText = topWall.map(x => x.p).join(' / ') + " (" + minWall.toFixed(1) + ")";
+          if (byId('stat-mauer')) byId('stat-mauer').innerText = topWall.map(x => x.p).join(' / ') + " (" + minWall.toFixed(1) + ")";
         } else {
-          byId('stat-mauer').innerText = "-";
+          if (byId('stat-mauer')) byId('stat-mauer').innerText = "-";
         }
 
         // Nervenstärke (Meiste Clutch Wins) – bei Gleichstand mehrere anzeigen
@@ -1367,9 +1303,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             // Sortierung: zuerst mehr Spiele, dann alphabetisch (stabil/deterministisch)
             .sort((a, b) => (res.pData[b].games || 0) - (res.pData[a].games || 0) || a.localeCompare(b, 'de'));
         
-          byId('stat-clutch').innerText = topClutch.join(' / ') + ` (${maxClutch}x)`;
+          if (byId('stat-clutch')) byId('stat-clutch').innerText = topClutch.join(' / ') + ` (${maxClutch}x)`;
         } else {
-          byId('stat-clutch').innerText = "-";
+          if (byId('stat-clutch')) byId('stat-clutch').innerText = "-";
         }
 
 
@@ -1385,35 +1321,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           return parts.length ? parts.join(" & ") : "";
         };
 
-        const teamResults = {};
-        const ballSpez = {}; // { player: { Voll: {w,g}, Halb: {w,g} } }
-
-        currentStats.forEach(g => {
-            // Duo Logic
-            if (g.m === "2:2") {
-                const t1 = normTeamKey(g.p1), t2 = normTeamKey(g.p2);
-                if (t1 && t2) {
-                    if (!teamResults[t1]) teamResults[t1] = { w: 0, g: 0 };
-                    if (!teamResults[t2]) teamResults[t2] = { w: 0, g: 0 };
-                    teamResults[t1].g++; teamResults[t2].g++;
-                    if (g.w == 1) teamResults[t1].w++; else teamResults[t2].w++;
-                }
-            }
-            // Kugel Spez Logic
-            if (g.bt1 && g.bt2 && g.w) {
-                const p1Arr = (g.m === "2:2") ? g.p1.split(" & ") : [g.p1];
-                const p2Arr = (g.m === "2:2") ? g.p2.split(" & ") : [g.p2];
-                const processP = (arr, type, isWin) => arr.forEach(p => {
-                    const n = p.trim(); if (!n) return;
-                    if (!ballSpez[n]) ballSpez[n] = { Voll: {w:0, g:0}, Halb: {w:0, g:0} };
-                    ballSpez[n][type].g++; if (isWin) ballSpez[n][type].w++;
-                });
-                processP(p1Arr, g.bt1, g.w == 1);
-                processP(p2Arr, g.bt2, g.w == 2);
-            }
-        });
-
         // Render Partner-Power
+        const teamResults = agg.teamResults || {};
         const duoRanking = Object.entries(teamResults)
             .map(([name, s]) => ({ name, wr: Math.round((s.w / s.g) * 100), games: s.g, wins: s.w }))
             .filter(t => t.games >= 3)
@@ -1447,7 +1356,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         }
 
         // Render Kugel-Spezis
-        let topVollarbeiter = { n: '-', wr: 0 }, topHalbeExperte = { n: '-', wr: 0 };
+        let topVollarbeiter = { n: "-", wr: 0 };
+        let topHalbeExperte = { n: "-", wr: 0 };
+
+        const ballSpez = agg.ballSpez || {};
         Object.entries(ballSpez).forEach(([name, data]) => {
             if (data.Voll.g >= 3) { // Schwelle auf 3 Spiele gesetzt
                 const wr = (data.Voll.w / data.Voll.g) * 100;
@@ -1476,85 +1388,31 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                         <div style="font-size:14px; font-weight:900; color:#fff; text-shadow: 0 0 8px rgba(255,255,255,0.2);">${topHalbeExperte.n}</div>
                         <div style="font-size:11px; color:#34c759; font-weight:900; text-shadow: 0 0 8px rgba(52,199,89,0.3);">${topHalbeExperte.wr > 0 ? Math.round(topHalbeExperte.wr) + '%' : '-'}</div>
                     </div>
-                </div>`;
+                </div>
+              </div>`;
         }
 
         // --- ANGSTGEGNER LOGIK (Wer dominiert wen am meisten?) ---
-        const matchups = {};
-        const meetings = {}; // undirected: "A|B" -> Anzahl Begegnungen insgesamt
-
-        // Wir gehen durch alle Spiele der aktuellen Auswahl (Gesamt oder Heute)
-        currentStats.forEach(g => {
-          // Nur 1:1 Matches machen hier für eine klare "Angstgegner"-Aussage Sinn
-          if (g.m !== "1:1") return;
-        
-          const winner = (g.w == 1) ? g.p1 : g.p2;
-          const loser  = (g.w == 1) ? g.p2 : g.p1;
-          if (!winner || !loser) return;
-        
-          // 1) Dominanz zählen: Winner -> Loser
-          const key = winner + " -> " + loser;
-          matchups[key] = (matchups[key] || 0) + 1;
-        
-          // 2) Begegnungen insgesamt zählen (egal wer gewinnt)
-          const undirectedKey = [winner, loser].sort().join('|');
-          meetings[undirectedKey] = (meetings[undirectedKey] || 0) + 1;
+        // Use pre-calculated aggregates from worker
+        const matchups = agg.matchups || {};
+        const meetings = agg.meetings || {};
+        let maxWins = 0; for (const pair in matchups) { if (matchups[pair] > maxWins) maxWins = matchups[pair]; }
+        let topMatchups = Object.keys(matchups).filter(p => matchups[p] === maxWins).sort((a, b) => {
+            const pa = a.split(' -> '); const pb = b.split(' -> ');
+            const ka = (pa.length === 2) ? [pa[0], pa[1]].sort().join('|') : '';
+            const kb = (pb.length === 2) ? [pb[0], pb[1]].sort().join('|') : '';
+            const ma = ka ? (meetings[ka] || 0) : 0; const mb = kb ? (meetings[kb] || 0) : 0;
+            return (mb - ma) || a.localeCompare(b, 'de');
         });
-
-        // Top-Matchups bestimmen (bei Gleichstand mehrere anzeigen)
-        let maxWins = 0;
-        for (const pair in matchups) {
-          if (matchups[pair] > maxWins) maxWins = matchups[pair];
-        }
-
-        let topMatchups = [];
         if (maxWins > 0) {
-          topMatchups = Object.keys(matchups)
-            .filter(p => matchups[p] === maxWins)
-            .sort((a, b) => {
-              // Sortierung: mehr Begegnungen zuerst, dann alphabetisch
-              const pa = a.split(' -> ');
-              const pb = b.split(' -> ');
-              const ka = (pa.length === 2) ? [pa[0], pa[1]].sort().join('|') : '';
-              const kb = (pb.length === 2) ? [pb[0], pb[1]].sort().join('|') : '';
-              const ma = ka ? (meetings[ka] || 0) : 0;
-              const mb = kb ? (meetings[kb] || 0) : 0;
-              return (mb - ma) || a.localeCompare(b, 'de');
-            });
-        }
-
-        if (maxWins > 0) {
-          byId('stat-angst').innerText = topMatchups.join(' / ') + ` (${maxWins} Siege)`;
+          if (byId('stat-angst')) byId('stat-angst').innerText = topMatchups.join(' / ') + ` (${maxWins} Siege)`;
         } else {
-          byId('stat-angst').innerText = "-";
+          if (byId('stat-angst')) byId('stat-angst').innerText = "-";
         }
 
         // --- DIREKTE DUELLE (Dominanz) ---
-        const matchupStats = {}; // key: "P1|P2" (alphabetisch sortiert), value: { p1: "P1", p2: "P2", p1_wins: X, p2_wins: Y, games: Z }
-
-        currentStats.forEach(g => {
-            if (g.m !== "1:1") return; // Nur 1:1 Duelle betrachten
-            if (!g.p1 || !g.p2) return;
-
-            const playerA = g.p1;
-            const playerB = g.p2;
-            const winner = (g.w == 1) ? playerA : playerB;
-
-            // Kanonischer Schlüssel, um A vs B und B vs A gleich zu behandeln
-            const key = [playerA, playerB].sort().join('|');
-
-            if (!matchupStats[key]) {
-                matchupStats[key] = { p1: playerA, p2: playerB, p1_wins: 0, p2_wins: 0, games: 0 };
-            }
-
-            matchupStats[key].games++;
-            if (winner === playerA) {
-                matchupStats[key].p1_wins++;
-            } else {
-                matchupStats[key].p2_wins++;
-            }
-        });
-
+        // Use pre-calculated aggregates from worker
+        const matchupStats = agg.matchupStats || {};
         const dominantMatchups = Object.values(matchupStats)
             .map(m => {
                 const wr1 = Math.round((m.p1_wins / m.games) * 100);
@@ -1607,16 +1465,16 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         }
 
         // Längste Serie – bei Gleichstand mehrere anzeigen
-        const maxStreak = Math.max(...labels.map(p => res.pData[p].maxStreak || 0));
+        const maxStreak = Math.max(...labels.map(p => res.pData[p].maxStreak || 0)); // Max streak is calculated in worker
 
         if (maxStreak > 0) {
           const topStreak = labels
             .filter(p => (res.pData[p].maxStreak || 0) === maxStreak)
             .sort((a, b) => (res.pData[b].games || 0) - (res.pData[a].games || 0) || a.localeCompare(b, 'de'));
         
-          byId('stat-streak').innerText = topStreak.join(' / ') + ` (${maxStreak})`;
+          if (byId('stat-streak')) byId('stat-streak').innerText = topStreak.join(' / ') + ` (${maxStreak})`;
         } else {
-          byId('stat-streak').innerText = "-";
+          if (byId('stat-streak')) byId('stat-streak').innerText = "-";
         }
 
         // Chart.js Diagramm
@@ -1753,6 +1611,14 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             }
         }
 
+// Alias für Kompatibilität mit index.html
+window.processAllStatsChronologically = function(matches, players) {
+    // Nutzt die vorhandene computeEloRatings Logik für ELO und processData für Stats
+    const elo = window.computeEloRatings(matches);
+    const base = window.processData(matches);
+    return { pData: base.pData, matchDeltas: {}, aggregates: base.aggregates, blackWins: base.blackWins, breakWins: base.breakWins };
+};
+
         // --- ELO Rangliste + Erklärung (nur Gesamt) ---
         function renderEloRanking(pData, show) {
           const el = byId('eloRanking') || document.getElementById('eloRanking');
@@ -1835,7 +1701,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           // sortiere Matches stabil nach Datum/Zeit
           const parseSortTime = (gd) => {
             const s = String(gd || "");
-            const m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})(?:[^\d]+(\d{1,2}):(\d{2}))?/);
+            const m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[^\d]+(\d{1,2}):(\d{2}))?/);
             if (!m) return 0;
             const dd = parseInt(m[1], 10);
             const mm = parseInt(m[2], 10) - 1;
@@ -2019,10 +1885,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const eloHistoryContainer = document.getElementById('eloHistoryContainer');
         if (eloHistoryContainer) eloHistoryContainer.style.display = 'none';
 
-        // Chart wirklich zurücksetzen
-        if (window.myWinChart) {
-          window.myWinChart.destroy();
-          window.myWinChart = null;
+        // Chart-Reset Fix
+        const oldWinChart = document.getElementById('winChart');
+        if (oldWinChart && oldWinChart.__myWinChart) {
+            oldWinChart.__myWinChart.destroy();
         }
 
         const eloCanvas = document.getElementById('eloHistoryChart');
@@ -2041,6 +1907,175 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           canvas.width = w; canvas.height = h;
         }
     }
+};
+
+// Hilfsfunktion für lokale Berechnungen (Fallback, wenn Worker blockiert ist)
+window.calculateStatsLocally = function(allMatches, players) {
+    const pData = {};
+    const eloRatings = {};
+    const eloGamesCount = {};
+    let blackWins = 0;
+    let breakWinsCount = 0;
+    const aggregates = { totalBallMatches: 0, vollWins: 0, halbWins: 0, playerBallWins: {}, teamResults: {}, ballSpez: {}, matchupStats: {}, matchups: {}, meetings: {}, headToHead: {} }; // Add headToHead to initP
+    const matchDeltas = {};
+
+    const initP = (n) => {
+        if (!pData[n]) pData[n] = { wins: 0, games: 0, rest: 0, maxStreak: 0, currentStreak: 0, lastWin: false, clutchWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0, loseStreak: 0, maxLoseStreak: 0, eloHistory: [], maxElo: 1000, maxWinRate: 0, last30Games: [], last20Losses: [], last20WinsKiller: [], gameResultsHistory: [] };
+    };
+
+    const sorted = [...allMatches].sort((a,b) => {
+        const parse = (s) => {
+            const m = String(s || "").match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+            return m ? new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1])).getTime() : 0;
+        };
+        return parse(a.d) - parse(b.d);
+    });
+
+    sorted.forEach((g, originalIndex) => {
+        const isTeam = g.m === "2:2";
+        const p1A = (isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1]).map(s => String(s || '').trim()).filter(Boolean);
+        const p2A = (isTeam ? (g.p2 ? g.p2.split(" & ") : []) : [g.p2]).map(s => String(s || '').trim()).filter(Boolean);
+        const winnerString = String((g.w == 1) ? g.p1 : g.p2 || '').trim();
+        const breakerString = String(g.a || '').trim();
+        const playersInMatch = [...p1A, ...p2A];
+        playersInMatch.forEach(initP);
+
+        const winners = (g.w == 1) ? p1A : p2A;
+        const losers = (g.w == 1) ? p2A : p1A;
+        const rest = parseInt(g.l || 0);
+
+        if (g.t?.includes("Schwarz")) blackWins++;
+        if(breakerString === winnerString) {
+            breakWinsCount++;
+        }
+
+        // H2H Update for fallback
+        winners.forEach(w => {
+            losers.forEach(l => {
+                if (!pData[w].headToHead[l]) pData[w].headToHead[l] = { w: 0, l: 0 };
+                if (!pData[l].headToHead[w]) pData[l].headToHead[w] = { w: 0, l: 0 };
+                pData[w].headToHead[l].w++;
+                pData[l].headToHead[w].l++;
+            });
+        });
+
+        // Wer war vor dem Match die Nr. 1?
+        let currentTopPlayer = null;
+        let highestEloFound = -1;
+        Object.keys(eloRatings).forEach(p => {
+            if (eloRatings[p] > highestEloFound) {
+                highestEloFound = eloRatings[p];
+                currentTopPlayer = p;
+            }
+        });
+
+        const avg1 = p1A.reduce((s, p) => s + (eloRatings[p] || 1000), 0) / (p1A.length || 1);
+        const avg2 = p2A.reduce((s, p) => s + (eloRatings[p] || 1000), 0) / (p2A.length || 1);
+        const exp1 = 1 / (1 + Math.pow(10, (avg2 - avg1) / 400));
+        const eloChange = (g.w == 1 ? 1 : 0) - exp1;
+
+        matchDeltas[originalIndex] = { eloDelta: Math.round(20 * Math.abs(eloChange)) };
+
+        // Achievements-Metriken berechnen (for fallback)
+        winners.forEach(p => {
+            if (currentTopPlayer && losers.includes(currentTopPlayer)) pData[p].winsVsTopElo++;
+            let nemesis = null; let maxL = 0;
+            Object.entries(pData[p].headToHead).forEach(([opp, stats]) => {
+                if (stats.l > maxL) { maxL = stats.l; nemesis = opp; }
+            });
+            if (nemesis && losers.includes(nemesis)) pData[p].vsNemesisWins++;
+            if (rest === 1) { pData[p].closeWins++; pData[p].dramaWins++; }
+        });
+        losers.forEach(p => {
+            if (rest === 1) pData[p].closeLosses++;
+            let worstOpp = null; let maxL = 0;
+            Object.entries(pData[p].headToHead).forEach(([opp, stats]) => {
+                if (stats.l > maxL) { maxL = stats.l; worstOpp = opp; }
+            });
+            if (worstOpp && winners.includes(worstOpp)) pData[p].vsWorstOpponentLosses++;
+        });
+
+        playersInMatch.forEach(p => {
+            const isW = winners.includes(p);
+            const d = pData[p];
+            d.games++;
+            d.gameResultsHistory.push(isW ? 1 : 0);
+            if (isW) {
+                d.wins++; d.killerPoints += rest; d.currentStreak++; d.loseStreak = 0; d.lastWin = true;
+                if(d.currentStreak > d.maxStreak) d.maxStreak = d.currentStreak;
+                if(g.t?.includes("Schwarz")) d.blackWinsCount++;
+                // Corrected breakWins logic for individual players in fallback
+                if(breakerString === winnerString) {
+                    if (isTeam) {
+                        const teamNames = winnerString.split(" & ");
+                        if (teamNames.includes(p)) d.breakWins++;
+                    } else if (p === winnerString) {
+                        d.breakWins++;
+                    }
+                }
+                if(rest === 1) d.clutchWins++;
+                d.last20WinsKiller.push(rest);
+                if (d.last20WinsKiller.length > 20) d.last20WinsKiller.shift();
+            } else {
+                d.rest += rest; d.currentStreak = 0; d.loseStreak++; d.lastWin = false;
+                if(d.loseStreak > d.maxLoseStreak) d.maxLoseStreak = d.loseStreak;
+                d.last20Losses.push(rest);
+                if (d.last20Losses.length > 20) d.last20Losses.shift();
+            }
+            d.last30Games.push(isW ? 1 : 0);
+            if (d.last30Games.length > 30) d.last30Games.shift();
+
+            const k = (eloGamesCount[p] || 0) < 20 ? 40 : 20;
+            const change = p1A.includes(p) ? (k * eloChange) : -(k * eloChange);
+            eloRatings[p] = (eloRatings[p] || 1000) + change;
+            eloGamesCount[p] = (eloGamesCount[p] || 0) + 1;
+            d.eloHistory.push(Math.round(eloRatings[p]));
+            if(eloRatings[p] > d.maxElo) d.maxElo = Math.round(eloRatings[p]);
+        });
+
+        // Aggregates (Spezis etc.)
+        if (g.bt1 && g.bt2) {
+            aggregates.totalBallMatches++;
+            const winType = (g.w == 1) ? g.bt1 : g.bt2;
+            if (winType === 'Voll') aggregates.vollWins++; else if (winType === 'Halb') aggregates.halbWins++;
+            winners.forEach(n => {
+                if(!aggregates.playerBallWins[n]) aggregates.playerBallWins[n] = { Voll:0, Halb:0 };
+                aggregates.playerBallWins[n][winType]++;
+            });
+            const procSpez = (arr, type, isWin) => arr.forEach(p => {
+                if(!aggregates.ballSpez[p]) aggregates.ballSpez[p] = { Voll:{w:0,g:0}, Halb:{w:0,g:0} };
+                aggregates.ballSpez[p][type].g++; if(isWin) aggregates.ballSpez[p][type].w++;
+            });
+            procSpez(p1A, g.bt1, g.w==1); procSpez(p2A, g.bt2, g.w==2);
+        }
+    });
+
+    Object.keys(pData).forEach(p => {
+        const d = pData[p];
+        d.elo = Math.round(eloRatings[p]);
+        d.eloGames = eloGamesCount[p];
+        d.winRate = Math.round((d.wins / d.games) * 100);
+        d.avgKiller = d.wins > 0 ? (d.killerPoints / d.wins) : 0;
+        d.avgRest = (d.games - d.wins) > 0 ? (d.rest / (d.games - d.wins)) : 0;
+        if (d.eloHistory.length >= 10) {
+            const prevElo = d.eloHistory.length === 10 ? 1000 : d.eloHistory[d.eloHistory.length - 11];
+            d.eloDelta10 = d.eloHistory[d.eloHistory.length - 1] - prevElo;
+        } else d.eloDelta10 = 0;
+
+        d.winRateLast30 = d.last30Games.length > 0 ? Math.round((d.last30Games.reduce((a,b)=>a+b,0)/d.last30Games.length)*100) : 0;
+        d.avgRestLossLast20 = d.last20Losses.length > 0 ? (d.last20Losses.reduce((a,b)=>a+b,0)/d.last20Losses.length) : 0;
+        d.avgKillerLast20 = d.last20WinsKiller.length > 0 ? (d.last20WinsKiller.reduce((a,b)=>a+b,0)/d.last20WinsKiller.length) : 0;
+        
+        if (d.games >= 40) {
+            const first20 = d.gameResultsHistory.slice(0, 20);
+            const last20 = d.gameResultsHistory.slice(-20);
+            const wrFirst = (first20.reduce((a,b)=>a+b,0)/20)*100;
+            const wrLast = (last20.reduce((a,b)=>a+b,0)/20)*100;
+            d.winRateDelta20 = wrLast - wrFirst;
+        } else { d.winRateDelta20 = 0; }
+    });
+
+    return { pData, matchDeltas, aggregates, blackWins: blackWins, breakWins: breakWinsCount };
 };
 
 // UI-Update erzwingen, falls Chart.js nach den Firebase-Snapshots geladen wurde
