@@ -1308,6 +1308,14 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch(() => {});
             });
+
+            // Automatischer Reload, wenn ein neuer Service Worker die Kontrolle übernimmt (App-Update)
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (refreshing) return;
+                refreshing = true;
+                window.location.reload();
+            });
         }
 
         // -- INITIALISIERUNG DER GLOBALE VARIABLEN UND FUNKTIONEN --
@@ -1396,9 +1404,9 @@
         }
 
         window.recalculateAndRender = () => {
-            if (!isHiding && window.flags.stats && window.flags.spieler && !isCalculating) {
+            if (window.flags.stats && window.flags.spieler && !isCalculating) {
                 isCalculating = true;
-                window.updateLoaderStatus("Analysiere Billard-Historie", 85);
+                if (!isHiding) window.updateLoaderStatus("Analysiere Billard-Historie", 85);
                 if (statsWorker && statsWorker.postMessage) {
                     statsWorker.postMessage({ stats: JSON.parse(JSON.stringify(window.stats)), spieler: Array.from(window.spieler) });
                 } else {
