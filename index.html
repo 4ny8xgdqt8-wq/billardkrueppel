@@ -17,7 +17,6 @@
             "Daniel": "avatars/Daniel.webp",
             "Thorsten": "avatars/Thorsten.webp",
             "Peter": "avatars/Peter.webp",
-            "Patrick": "avatars/Patrick.webp",
         };
         // Hilfsfunktion zur Auflösung des Bildpfads
         window.getAvatarUrl = (name) => {
@@ -173,6 +172,7 @@
             content: ""; position: absolute; inset: 0;
             background:linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: progress-shimmer 2s infinite;
         }
+        .achievement-glow-fame { box-shadow: 0 0 15px rgba(255,204,0,0.4); }
         .achievement-glow-fame {
             background: linear-gradient(165deg, rgba(255, 204, 0, 0.15) 0%, rgba(28, 28, 30, 0.95) 100%) !important;
             border-color: rgba(255, 204, 0, 0.4) !important;
@@ -298,23 +298,73 @@
         .loading-overlay { 
             position: fixed; inset: 0; 
             background: radial-gradient(circle at center, #1c1c1e 0%, #000000 100%); 
+            overflow: hidden; perspective: 1000px;
             z-index: 30000; display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), filter 0.8s ease-out; 
             padding: 20px;
         }
+        /* Cinematic Background Grid */
+        .loader-grid {
+            position: absolute; inset: -100%;
+            background-image: 
+                linear-gradient(rgba(255, 204, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 204, 0, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: rotateX(60deg);
+            animation: grid-drift 60s linear infinite;
+            pointer-events: none; z-index: 0;
+        }
+        @keyframes grid-drift {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 1000px; }
+        }
+
+        /* Cinematic Scanline Effekt */
+        .loader-scanline {
+            position: absolute; inset: 0;
+            background: linear-gradient(to bottom, transparent, rgba(255, 204, 0, 0.02) 50%, transparent);
+            background-size: 100% 200px;
+            animation: loader-scan 3s linear infinite;
+            pointer-events: none; z-index: 1;
+        }
+        @keyframes loader-scan { from { transform: translateY(-100%); } to { transform: translateY(100vh); } }
+
         .loader-logo { 
             height: 70px; width: auto; margin-bottom: 15px; 
             filter: drop-shadow(0 0 20px rgba(255, 204, 0, 0.4));
+            animation: logo-pulse 2s infinite alternate ease-in-out;
         }
         .loader-title { font-weight: 900; font-size: 20px; color: var(--accent); text-transform: uppercase; margin-bottom: 25px; text-shadow: 0 0 15px rgba(255, 204, 0, 0.3); letter-spacing: 1.5px; }
-        .spinner { width: 40px; height: 40px; border: 3px solid rgba(255, 204, 0, 0.05); border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite; box-shadow: 0 0 10px rgba(255, 204, 0, 0.1); }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes logo-pulse { 
             0% { transform: scale(1) rotate(-1deg); filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.2)); } 
             100% { transform: scale(1.12) rotate(1deg); filter: drop-shadow(0 0 45px rgba(255, 204, 0, 0.7)); } 
         }
+        .loader-progress-container {
+            width: 200px; height: 3px; background: rgba(255,255,255,0.05); 
+            border-radius: 4px; margin-top: 15px; overflow: hidden; position: relative;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        .loader-progress-bar {
+            width: 0%; height: 100%; background: var(--accent);
+            box-shadow: 0 0 20px var(--accent); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        /* Scanning light effect on progress bar */
+        .loader-progress-bar::after {
+            content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 30px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6));
+            filter: blur(2px);
+        }
+
         .loader-avatar-row { display: flex; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; max-width: 300px; }
-        .loader-avatar-container { position: relative; width: 42px; height: 42px; }
+        .loader-avatar-container { 
+            position: relative; width: 42px; height: 42px; 
+            opacity: 0; animation: avatar-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes avatar-pop {
+            0% { transform: scale(0) translateY(20px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
         .loader-avatar { 
             width: 100%; height: 100%; border-radius: 12px; object-fit: cover; 
             border: 2px solid var(--accent); box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
@@ -651,13 +701,17 @@
 </head>
 <body>
     <div id="loading-overlay" class="loading-overlay">
+        <div class="loader-grid"></div>
+        <div class="loader-scanline"></div>
+        <div id="loader-content" style="display: flex; flex-direction: column; align-items: center; z-index: 2; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);">
         <img loading="lazy" src="logo.png" class="loader-logo" onerror="this.style.display='none'">
         <div class="loader-title">Billardkrüppel</div>
         <div id="loader-avatars" class="loader-avatar-row"></div>
-        <div class="spinner"></div>
+        <div class="loader-progress-container"><div id="loader-progress" class="loader-progress-bar"></div></div>
         <div id="loader-status" style="margin-top: 20px; font-weight: 900; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; animation: status-pulse 1.5s infinite ease-in-out;"></div>
         <div id="loader-tip" style="margin-top: 30px; color: #8e8e93; font-size: 11px; font-style: italic; width: 90%; max-width: 350px; text-align: center; line-height: 1.4; opacity: 0.7; font-weight: 500;"></div>
         <div id="loader-version" style="margin-top: 8px; font-size: 10px; color: #8e8e93; font-weight: 600; opacity: 0.8;"></div>
+        </div>
     </div>
 
     <div class="app-container">
@@ -1262,43 +1316,79 @@
         window.stats = []; window.spieler = []; window.dailyAchivs = { days: {} };
         window.winnerNum = 0; window.viewId = 'aufzeichnen'; window.breakLocked = false;
         window.careerStats = null; window.careerStatsBeforeToday = null;
-        
+
+        let workerFinished = false;
+        let firebaseDataReady = false; 
+
         // Status-Flags für den Ladeprozess
         window.flags = { stats: false, spieler: false };
 
-        // Zentrale Berechnungslogik robust definieren
-        window.recalculateAndRender = () => {
-            // Nur rendern, wenn beide Datenquellen UND das Skript bereit sind
-            if (window.flags.stats && window.flags.spieler && typeof window.processAllStatsChronologically === 'function') {
-                const playerList = Array.isArray(window.spieler) ? window.spieler : [];
-                const playersSet = new Set(playerList.map(s => String(s || '').trim()).filter(Boolean));
-                
-                // Berechne Karriere-Stats
-                window.careerStats = window.processAllStatsChronologically(window.stats, playersSet);
-                
-                // Berechne Stats bis gestern für "NEU"-Badges
-                const now = new Date();
-                const todayStr = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
-                const statsBeforeToday = window.stats.filter(g => g && g.d && !g.d.startsWith(todayStr));
-                window.careerStatsBeforeToday = window.processAllStatsChronologically(statsBeforeToday, playersSet);
-                
-                window.updateAllViews();
-            }
-        };
-
         window.hideLoader = () => {
             const l = document.getElementById('loading-overlay');
+            const content = document.getElementById('loader-content');
             if(l && l.style.display !== 'none') { 
-                l.style.opacity = '0'; 
-                setTimeout(() => l.style.display = 'none', 400); 
+                if (content) {
+                    content.style.transform = 'scale(1.1)';
+                    content.style.opacity = '0';
+                }
+                l.style.opacity = '0';
+                l.style.filter = 'blur(20px)';
+                setTimeout(() => l.style.display = 'none', 800); 
             }
         };
 
-        // Neue Hilfsfunktion: Prüft die Zeitdifferenz, bevor der Loader versteckt wird
-        const tryHideLoader = () => {
+        const checkAllReadyAndHideLoader = () => {
+            if (!firebaseDataReady || !workerFinished || isHiding) return;
+            isHiding = true;
+
+            // Erzwungener Sprung auf 100% falls noch nicht geschehen
+            window.updateLoaderStatus("Analyse abgeschlossen", 100);
+
             const elapsed = Date.now() - loadStartTime;
-            const remaining = Math.max(0, MIN_LOADING_TIME - elapsed);
+            // Wir geben dem Balken (0.6s Transition) 800ms Zeit, um sichtbar zu werden
+            const remaining = Math.max(800, MIN_LOADING_TIME - elapsed);
             setTimeout(() => window.hideLoader(), remaining);
+        };
+
+        // Loader Status Helper mit Progress-Bar
+        window.updateLoaderStatus = (msg, percent) => {
+            const el = document.getElementById('loader-status');
+            const bar = document.getElementById('loader-progress');
+            if (el) el.innerText = msg + "...";
+            if (bar && percent !== undefined) bar.style.width = percent + "%";
+        };
+
+        // Worker Initialisierung
+        const statsWorker = new Worker('worker.js');
+        
+        statsWorker.onerror = (err) => {
+            console.error("Worker Fehler:", err);
+            workerFinished = true;
+            firebaseDataReady = true;
+            window.updateLoaderStatus("Analyse abgeschlossen", 100);
+            checkAllReadyAndHideLoader();
+        };
+
+        statsWorker.onmessage = (e) => {
+            window.careerStats = e.data.careerStats;
+            window.careerStatsBeforeToday = e.data.careerStatsBeforeToday;
+            window.updateAllViews();
+            workerFinished = true;
+            isCalculating = false;
+            checkAllReadyAndHideLoader();
+        };
+
+        window.recalculateAndRender = () => {
+            if (window.flags.stats && window.flags.spieler && !isCalculating) {
+                isCalculating = true;
+                window.updateLoaderStatus("Analysiere Billard-Historie", 85);
+                statsWorker.postMessage({
+                    stats: JSON.parse(JSON.stringify(window.stats)),
+                    spieler: Array.from(window.spieler),
+                    dailyAchivs: JSON.parse(JSON.stringify(window.dailyAchivs))
+                });
+                firebaseDataReady = true;
+            }
         };
 
         window.switchV = (id, el, forcedDir) => {
@@ -1659,35 +1749,50 @@
         // Alle hinterlegten Avatare im Loader anzeigen
         const loaderAvatars = document.getElementById('loader-avatars');
         if (loaderAvatars) {
-            const playersToShow = Object.keys(window.playerAvatars || {}); // window.playerAvatars ist jetzt global
+            const playersToShow = ["Daniel", "Thorsten", "Peter"]; 
             loaderAvatars.innerHTML = playersToShow.map((p, i) => {
                 const src = (window.getAvatarUrl && typeof window.getAvatarUrl === 'function') ? window.getAvatarUrl(p) : `avatars/${p}.png`;
                 return `
-                    <div class="loader-avatar-container" style="animation-delay: ${i * 0.4}s">
+                    <div class="loader-avatar-container" style="animation-delay: ${i * 0.15}s">
                         <img loading="lazy" src="${src}" class="loader-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                        <div style="display:none; width:100%; height:100%; border-radius:50%; background:rgba(255,255,255,0.05); align-items:center; justify-content:center; font-size:24px; border:1px solid var(--accent); color:rgba(255,255,255,0.2);">👤</div>
+                        <div style="display:none; width:100%; height:100%; border-radius:12px; background:rgba(255,255,255,0.05); align-items:center; justify-content:center; font-size:24px; border:1px solid var(--accent); color:rgba(255,255,255,0.2);">👤</div>
                     </div>`;
             }).join('');
         }
 
+        // Sicherheits-Timeout: Falls Firebase hängt
+        setTimeout(() => {
+            if (!firebaseDataReady || !workerFinished) {
+                console.warn("Loader forced to hide due to timeout.");
+                window.updateLoaderStatus("Bereit", 100);
+                firebaseDataReady = true;
+                workerFinished = true;
+                checkAllReadyAndHideLoader();
+            }
+        }, 6000);
+
         // -- FIREBASE LISTENERS (Erst nach Definition der Funktionen starten!) --
+        window.updateLoaderStatus("Verbinde zur Cloud", 15);
         signInAnonymously(auth).then(() => {
+            window.updateLoaderStatus("Synchronisiere Daten", 40);
             onSnapshot(doc(db, "billard_data", "stats"), (snap) => {
                 window.stats = snap.exists() ? (snap.data().matches || []) : [];
                 window.flags.stats = true;
                 if (typeof window.recalculateAndRender === 'function') window.recalculateAndRender();
-                tryHideLoader();
+                checkAllReadyAndHideLoader();
             }, (err) => {
                 console.error("Firebase Stats Fehler:", err);
                 window.flags.stats = true; 
-                tryHideLoader();
+                checkAllReadyAndHideLoader();
             });
 
             onSnapshot(doc(db, "billard_data", "spieler"), (snap) => {
                 window.spieler = snap.exists() ? (snap.data().names || []) : [];
                 window.flags.spieler = true;
+                window.updateLoaderStatus("Spieler geladen", 60);
                 window.initDropdowns();
                 if (typeof window.recalculateAndRender === 'function') window.recalculateAndRender();
+                checkAllReadyAndHideLoader();
             }, (err) => console.error("Firebase Spieler Fehler:", err));
             
             onSnapshot(doc(db, "billard_data", "daily_achivs"), (snap) => { 

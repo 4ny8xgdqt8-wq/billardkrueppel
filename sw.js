@@ -1,15 +1,15 @@
-const CACHE_NAME = 'billard-v1.2.6';
+const CACHE_NAME = 'billard-v1.2.7';
 const ASSETS = [
   './',
   'index.html',
   'Chart.js',
+  'worker.js',
   'logo.png',
   'logo_html.png',
   'manifest.json',
   'avatars/Daniel.webp',
   'avatars/Thorsten.webp',
   'avatars/Peter.webp',
-  'avatars/Patrick.webp'
 ];
 
 // Installation: Dateien in den Cache laden

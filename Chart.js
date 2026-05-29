@@ -1,6 +1,3 @@
-// Variables used by Scriptable.
-// icon-color: purple; icon-glyph: magic;
-
 // Hilfsfunktion für deterministische Index-Auswahl (z.B. für Achievement-Phrasen)
 window.getFixedIndex = (name, arrayLength) => {
   let hash = 0;
@@ -341,7 +338,7 @@ window.processData = function(dataArray, todayStr) {
         if (g.t && g.t.includes("Schwarz")) blackWins++;
         if (winnerString && g.a && winnerString === g.a) breakWinsCount++;
     });
-    return { pData, blackWins, breakWins: breakWinsCount };
+    return { pData, blackWins, breakWins: breakWinsCount, aggregates: {} };
 };
 
 window.computeEloRatings = function(allMatches) {
@@ -1251,9 +1248,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         byId('stat-total').innerText = currentStats.length;
 
         // --- KUGEL-STATISTIK BERECHNEN ---
-        const agg = res.aggregates || {};
-        const vRate = agg.totalBallMatches > 0 ? Math.round((agg.vollWins / agg.totalBallMatches) * 100) : 0;
-        const hRate = agg.totalBallMatches > 0 ? Math.round((agg.halbWins / agg.totalBallMatches) * 100) : 0;
+        const agg = res.aggregates || { totalBallMatches: 0, vollWins: 0, halbWins: 0 };
+        const vRate = agg.totalBallMatches > 0 ? Math.round((agg.vollWins / (agg.totalBallMatches || 1)) * 100) : 0;
+        const hRate = agg.totalBallMatches > 0 ? Math.round((agg.halbWins / (agg.totalBallMatches || 1)) * 100) : 0;
         const vEl = byId('stat-balls-voll'), hEl = byId('stat-balls-halb');
         if (vEl) vEl.innerText = vRate + "%";
         if (hEl) hEl.innerText = hRate + "%";
