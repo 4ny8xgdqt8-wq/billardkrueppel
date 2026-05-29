@@ -2,7 +2,7 @@
 // icon-color: purple; icon-glyph: magic;
 
 // Versions-Tracking für Cache-Validierung
-window.BILLARD_APP_VERSION = "1.2.2"; 
+window.BILLARD_APP_VERSION = "1.2.3"; 
 
 // Initiales Limit für die Historie
 window.historyLimit = 20;
@@ -18,6 +18,32 @@ window.playerAvatars = {
 // Hilfsfunktion zur Auflösung des Bildpfads
 window.getAvatarUrl = (name) => {
     return window.playerAvatars[name] || `avatars/${name}.png`;
+};
+
+// Hilfsfunktion für deterministische Index-Auswahl (z.B. für Achievement-Phrasen)
+window.getFixedIndex = (name, arrayLength) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % arrayLength;
+};
+
+// Animation utility for numbers (moved from index.html)
+window.animateNumber = (id, target) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const duration = 800; // Dauer der Animation in ms
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const current = Math.floor(progress * target);
+        el.innerText = id.includes('winrate') ? current + "%" : current;
+        if (progress < 1) window.requestAnimationFrame(step);
+        else el.innerText = id.includes('winrate') ? Math.round(target) + "%" : Math.round(target);
+    };
+    window.requestAnimationFrame(step);
 };
 // ---------------------------------------
 
@@ -407,11 +433,10 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
     };
 
     // Filtert ungültige Matches aus, um Abstürze beim Sortieren zu verhindern
-    const orderedMatches = (allMatches || [])
+    const sortedMatches = (allMatches || [])
         .filter(m => m && m.d) 
         .map((g, i) => ({ g, i }))
-        .sort((a, b) => (parseSortTime(a.g.d) || 0) - (parseSortTime(b.g.d) || 0) || a.i - b.i)
-        .map(x => x.g);
+        .sort((a, b) => (parseSortTime(a.g.d) || 0) - (parseSortTime(b.g.d) || 0) || a.i - b.i);
 
     let globalBlackWins = 0;
     let globalBreakWins = 0;
@@ -419,19 +444,26 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
 
     const allPools = [...window.famePool, ...window.shamePool];
 
-    orderedMatches.forEach(g => {
+    sortedMatches.forEach(({ g, i: originalIndex }) => {
         if (!g) return;
         const isTeam = g.m === "2:2";
         const p1Arr = isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1];
         const p2Arr = isTeam ? (g.p2 ? g.p2.split(" & ") : []) : [g.p2];
         const allPlayersInMatch = [...p1Arr, ...p2Arr].filter(Boolean);
-        allPlayersInMatch.forEach(initP);
+        
+        // Snapshot der Daten VOR dem Match für Achievement-Vergleich erstellen
+        const pDataBeforeMatch = {};
+        allPlayersInMatch.forEach(p => {
+            initP(p);
+            pDataBeforeMatch[p] = JSON.parse(JSON.stringify(pData[p]));
+        });
 
         const winnerPlayers = (g.w == 1) ? p1Arr : p2Arr;
         const loserPlayers = (g.w == 1) ? p2Arr : p1Arr;
         const winnerString = (g.w == 1) ? g.p1 : g.p2;
         const restValue = parseInt(g.l || 0);
 
+        const kFactorSample = allPlayersInMatch.length > 0 ? getKFactor(allPlayersInMatch[0]) : 20;
         const avgEloTeam1 = p1Arr.reduce((sum, p) => sum + getElo(p), 0) / (p1Arr.length || 1);
         const avgEloTeam2 = p2Arr.reduce((sum, p) => sum + getElo(p), 0) / (p2Arr.length || 1);
         const expectedScoreTeam1 = 1 / (1 + Math.pow(10, (avgEloTeam2 - avgEloTeam1) / 400));
@@ -439,7 +471,10 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
         const eloChange = actualScoreTeam1 - expectedScoreTeam1;
         
         // Delta für dieses Spiel speichern (Index aus der Original-Liste nutzen)
-        matchDeltas[allMatches.indexOf(g)] = Math.round(getKFactor(allPlayersInMatch[0]) * Math.abs(eloChange));
+        matchDeltas[originalIndex] = {
+            eloDelta: Math.round(kFactorSample * Math.abs(eloChange)),
+            newAchievements: {} // Initialize newAchievements for this match
+        };
 
         // --- 1. BASIS STATS (Sieg/Niederlage/Streaks) AKTUALISIEREN ---
         winnerPlayers.forEach(p => {
@@ -503,7 +538,7 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
             pData[p].last30Games.push(isWinner);
             if (pData[p].last30Games.length > 30) pData[p].last30Games.shift();
 
-            // --- DYNAMISCHE STATS FÜR TRACKER BERECHNEN ---
+            // --- DYNAMISCHE STATS AKTUALISIEREN ---
             const d = pData[p];
             d.winRate = Math.round((d.wins / (d.games || 1)) * 100);
             d.avgKiller = d.wins > 0 ? (d.killerPoints / d.wins) : 0;
@@ -525,6 +560,20 @@ window.processAllStatsChronologically = function(allMatches, configuredPlayers) 
                     s.active = false;
                 }
             });
+
+            // NEUE ERFOLGE FÜR DIESES MATCH ERMITTELN
+            const newlyEarned = [];
+            allPools.forEach(ach => {
+                const wasActiveBefore = ach.cond(pDataBeforeMatch[p]);
+                const isActiveNow = ach.cond(d);
+                if (!wasActiveBefore && isActiveNow) newlyEarned.push(ach);
+            });
+
+            if (newlyEarned.length > 0) {
+                matchDeltas[originalIndex].newAchievements[p] = newlyEarned.map(a => ({
+                    i: a.i, t: a.t, d: a.d, h: a.h, k: a.k || (window.famePool.includes(a) ? 'fame' : 'shame'), max: a.max
+                }));
+            }
         });
     });
 
@@ -1126,7 +1175,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         // Achievement-HTML bauen
         const createAchRow2 = (item, name, aIdx) => {
           const phraseIndex = getFixedIndex(name + item.t, item.d.length);
-          const phrase = item.d[phraseIndex];
+          const phrase = item.d[phraseIndex] || "";
           const isShame = (item.k === "shame");
           const howColor = isShame ? "rgba(255, 59, 48, 0.85)" : "rgba(52, 199, 89, 0.85)";
           const howIcon  = isShame ? "💀" : "🏆";
@@ -1802,7 +1851,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                   <div style="font-size:10px; color:#acacb0; margin-top:2px;">bewertete Spiele: ${r.games}</div>
                 </div>
                 <div style="text-align:right;">
-                  <div style="font-size:16px; font-weight:900; color:#34c759; text-shadow: 0 0 10px rgba(52,199,89,0.3);">${r.elo}</div>
+                  <div id="rank-elo-${i}" style="font-size:16px; font-weight:900; color:#34c759; text-shadow: 0 0 10px rgba(52,199,89,0.3);">0</div>
                   <div style="font-size:9px; color:#8e8e93; text-transform:uppercase; font-weight:800; margin-top:2px;">ELO</div>
                 </div>
               </div>
@@ -1811,6 +1860,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
           html += `</div>`;
           el.innerHTML = html;
+          // Synchronisiere die Zahlen-Animation mit dem Einblenden der Karten (matching animation-delay)
+          rows.forEach((r, i) => {
+              setTimeout(() => window.animateNumber(`rank-elo-${i}`, r.elo), 500 + (i * 50));
+          });
         }
 
         // --- 🔥 Formanzeige / Trending Player (letzte 10 Spiele) ---

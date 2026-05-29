@@ -14,8 +14,8 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <!-- // Versions-Tracking für Cache-Validierung -->
-    <script src="Chart.js?v=1.2.1"></script>
-    <link rel="manifest" href="manifest.json?v=1.2.2">
+    <script src="Chart.js?v=1.2.3"></script>
+    <link rel="manifest" href="manifest.json?v=1.2.3">
     <!-- // --------------------------------------- -->
 
     <style>
@@ -525,10 +525,23 @@
             background: #4FC3F7; filter: blur(6px); opacity: 0.6;
             animation: pulse-frost 2.5s infinite ease-in-out; z-index: -1;
         }
+        .match-shame::after {
+            content: "💧"; position: absolute; top: 42%; left: 8%;
+            font-size: 15px; animation: tears-fall 2s infinite ease-in;
+            opacity: 0; text-shadow: 25px 0 0 rgba(79, 195, 247, 1);
+            z-index: 5; pointer-events: none;
+        }
+
         @keyframes rotate-fire { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes pulse-fire { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.3); opacity: 0.8; } }
         @keyframes pulse-frost { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.2); opacity: 1; } }
-
+        @keyframes tears-fall {
+            0% { transform: translateY(0) scale(0.8); opacity: 0; }
+            20% { opacity: 1; transform: translateY(1px) scale(1); }
+            80% { opacity: 0.9; }
+            100% { transform: translateY(42px) scale(1.4); opacity: 0; }
+        }
+        
         @keyframes pulse-gold {
             0% { 
                 box-shadow: 0 0 12px rgba(255, 204, 0, 0.15); 
@@ -862,9 +875,9 @@
             <div id="tab-indicator" class="tab-indicator"></div>
             <div class="tab-item active" onclick="switchV('aufzeichnen',this)"><span class="tab-icon">🎱</span><span>Match</span></div>
             <div class="tab-item" onclick="switchV('heute',this)"><span class="tab-icon">📅</span><span>Heute</span></div>
+            <div class="tab-item" onclick="switchV('uebersicht',this)"><span class="tab-icon">📜</span><span>Historie</span></div>
             <div class="tab-item" onclick="switchV('statistik',this)"><span class="tab-icon">📊</span><span>Gesamt</span></div>
             <div class="tab-item" onclick="switchV('erfolge',this)"><span class="tab-icon">🎖️</span><span>Erfolge</span></div>
-            <div class="tab-item" onclick="switchV('uebersicht',this)"><span class="tab-icon">📜</span><span>Historie</span></div>
         </div>
     </div>
 
@@ -1026,6 +1039,17 @@
             </div>
             <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
                 <button class="btn-save" style="margin-top:0; background: var(--error);" onclick="window.closeErrorModal()">Verstanden</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="matchDetailsModal" class="modal">
+        <div class="modal-backdrop" onclick="window.closeMatchDetailsModal()"></div>
+        <div class="modal-card">
+            <div id="matchDetailsHeader" style="padding: 25px 20px 15px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.08); background: linear-gradient(180deg, rgba(255, 204, 0, 0.05) 0%, rgba(28, 28, 30, 0.7) 100%);"></div>
+            <div id="matchDetailsContent" style="flex:1; overflow-y:auto; padding: 20px;"></div>
+            <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.15);">
+                <button class="btn-save" style="margin-top:0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%); border: 1px solid rgba(255,255,255,0.1);" onclick="window.closeMatchDetailsModal()">Schließen</button>
             </div>
         </div>
     </div>
@@ -1891,7 +1915,7 @@
                 <div style="font-size:10px; color:#8e8e93; font-weight:800; text-transform:uppercase; margin-top:8px; letter-spacing:1.5px;">Spieler-Steckbrief</div>
             `;
 
-            const winRate = Math.round((d.wins / d.games) * 100);
+            const winRate = d.games > 0 ? Math.round((d.wins / d.games) * 100) : 0;
 
             // Bestimme Lieblingskugel basierend auf allen Spielen (Karriere)
             let favBall = "-";
@@ -1918,8 +1942,9 @@
                     </div>
                 </div>
                 
-                ${setTimeout(() => { window.animateNumber('prof-elo', d.elo || 1000); window.animateNumber('prof-winrate', winRate); }, 100) && ''}
+                <!-- Call animateNumber directly after content is set -->
 
+                
                 <div class="section-label" style="margin-top:0;">📊 Karriere-Highlights</div>
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     <div style="display:flex; justify-content:space-between; font-size:13px; padding:12px; background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border-radius:14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
@@ -1942,8 +1967,120 @@
                     </div>
                 </div>
             `;
+            // Call animateNumber directly after content is set
+            window.animateNumber('prof-elo', d.elo || 1000);
+            window.animateNumber('prof-winrate', winRate);
 
             document.getElementById('playerProfileModal').style.display = 'flex';
+        };
+
+        window.closeMatchDetailsModal = () => {
+            document.getElementById('matchDetailsModal').style.display = 'none';
+        };
+
+        window.openMatchDetails = (index) => {
+            const g = window.stats[index];
+            if (!g) return;
+
+            const processed = window.processAllStatsChronologically(window.stats, window.spieler); // Re-run to get updated matchDeltas
+            const matchData = processed.matchDeltas[index] || {};
+            const delta = matchData.eloDelta || 0;
+
+            const header = document.getElementById('matchDetailsHeader');
+            const content = document.getElementById('matchDetailsContent');
+
+            const isWin1 = parseInt(g.w) === 1;
+            const isWin2 = parseInt(g.w) === 2;
+
+            header.innerHTML = `
+                <div style="font-weight:900; color:var(--accent); font-size:18px; text-transform:uppercase; letter-spacing:1px;">Match Details</div>
+                <div style="font-size:11px; color:#8e8e93; font-weight:700; margin-top:4px;">${g.d || ''}</div>
+            `;
+
+            const getAvatarStack = (playerName, size = 50, effectClass = '') => {
+                const names = (playerName || "").split(' & ').map(n => n.trim()).filter(Boolean);
+                return names.map(n => `
+                    <div class="avatar-frame ${effectClass}" style="position:relative; width:${size}px; height:${size}px;">
+                        <img src="${window.getAvatarUrl(n)}" style="width:${size}px; height:${size}px; border-radius:50%; border:2px solid rgba(255,255,255,0.2); object-fit:cover; ${effectClass === 'match-shame' ? 'filter: grayscale(0.1); opacity: 0.9;' : ''}">
+                    </div>
+                `).join('');
+            };
+
+            content.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                    <div style="flex:1; text-align:center; opacity:${isWin1 ? '1' : '0.5'}; transform:${isWin1 ? 'scale(1.1)' : 'scale(0.95) translateY(5px)'}; transition:all 0.3s;">
+                        <div style="display:flex; justify-content:center; gap:12px; margin-bottom:10px;">${getAvatarStack(g.p1, 50, isWin1 ? 'streak-fire' : 'match-shame')}</div>
+                        <div style="font-weight:900; font-size:16px; color:#fff;">${g.p1 || '-'}</div>
+                        ${isWin1 ? '<div style="color:#34c759; font-size:10px; font-weight:800; margin-top:4px;">WINNER</div>' : ''}
+                    </div>
+                    <div style="padding:0 15px; font-weight:900; color:#8e8e93; font-size:12px;">VS</div>
+                    <div style="flex:1; text-align:center; opacity:${isWin2 ? '1' : '0.5'}; transform:${isWin2 ? 'scale(1.1)' : 'scale(0.95) translateY(5px)'}; transition:all 0.3s;">
+                        <div style="display:flex; justify-content:center; gap:12px; margin-bottom:10px;">${getAvatarStack(g.p2, 50, isWin2 ? 'streak-fire' : 'match-shame')}</div>
+                        <div style="font-weight:900; font-size:16px; color:#fff;">${g.p2 || '-'}</div>
+                        ${isWin2 ? '<div style="color:#34c759; font-size:10px; font-weight:800; margin-top:4px;">WINNER</div>' : ''}
+                    </div>
+                </div>
+
+                <div class="section-label" style="margin-top:0;">📝 Spielbericht</div>
+                <div class="card" style="margin-bottom:0; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);">
+                    <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;">
+                        <span style="color:#8e8e93;">Modus</span><span style="color:#fff; font-weight:800;">${g.m || '-'}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;">
+                        <span style="color:#8e8e93;">ELO Änderung</span><span style="color:#34c759; font-weight:800;">± ${delta} Pkt.</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;">
+                        <span style="color:#8e8e93;">Sieg-Typ</span><span style="color:#fff; font-weight:800;">${g.t || '-'}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;">
+                        <span style="color:#8e8e93;">Anstoß durch</span><span style="color:var(--accent); font-weight:800;">⚡ ${g.a || '-'}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:12px;">
+                        <span style="color:#8e8e93;">Restkugeln</span><span style="color:#fff; font-weight:800;">${g.l || 0}</span>
+                    </div>
+                    <div style="display:flex; justify-content:center; gap:20px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06);">
+                        <div style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:800; color:#8e8e93;">${window.getBallIcon ? window.getBallIcon(g.bt1) : ''} ${g.p1 || ''}</div>
+                        <div style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:800; color:#8e8e93;">${window.getBallIcon ? window.getBallIcon(g.bt2) : ''} ${g.p2 || ''}</div>
+                    </div>
+                </div>
+
+                ${Object.keys(matchData.newAchievements || {}).length > 0 ? `
+                    <div class="section-label" style="margin-top:20px;">🏆 Match-Erfolge</div>
+                    <div style="display:flex; flex-direction:column; gap:15px;">
+                        ${Object.entries(matchData.newAchievements).map(([playerName, achs], pIdx) => `
+                            <div class="card" style="margin-bottom:0; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 20px; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${pIdx * 0.1}s; opacity: 0;">
+                                <div style="font-weight:900; font-size:14px; color:var(--accent); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                                    <img src="${window.getAvatarUrl(playerName)}" style="width:20px; height:20px; border-radius:50%; border:1px solid var(--accent); object-fit:cover;">
+                                    ${playerName} hat erreicht:
+                                </div>
+                                ${achs.map((ach, aIdx) => {
+                                    const isShame = (ach.k === "shame");
+                                    const categoryColor = isShame ? 'var(--error)' : '#34c759';
+                                    const howColor = isShame ? "rgba(255, 59, 48, 0.85)" : "rgba(52, 199, 89, 0.85)";
+                                    const howIcon  = isShame ? "💀" : "🏆";
+                                    const isMaxTier = ach.max === true;
+                                    const phraseIndex = window.getFixedIndex ? window.getFixedIndex(playerName + ach.t, ach.d.length) : 0;
+                                    const phrase = ach.d[phraseIndex] || "";
+                                    return `
+                                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 100%); padding: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid ${categoryColor}; box-shadow: ${isMaxTier ? '0 0 20px rgba(79, 195, 247, 0.2)' : '0 4px 12px rgba(0,0,0,0.2)'};">
+                                            <div style="font-size:22px; min-width:35px; text-align:center; animation: icon-float-subtle 3s infinite ease-in-out; animation-delay: ${(aIdx + pIdx) * 0.1}s;">${ach.i}</div>
+                                            <div style="flex:1;">
+                                                <div style="font-size:12px; font-weight:900; color:#fff;">
+                                                    <span style="${isMaxTier ? 'color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.4);' : ''}">${ach.t}${isMaxTier ? ' ⭐' : ''}</span>
+                                                </div>
+                                                <div style="font-size:10px; color:#acacb0; font-style:italic; margin-top:2px;">"${phrase}"</div>
+                                                <div style="font-size:10px; margin-top:3px; color:${howColor}; font-weight:600;">${howIcon} ${ach.h || ""}</div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            `;
+
+            document.getElementById('matchDetailsModal').style.display = 'flex';
         };
 
         // Die ursprüngliche requestDelete Funktion ruft jetzt das Modal auf
@@ -1967,21 +2104,16 @@
             
             const elo = window.computeEloRatings(window.stats);
             const getE = (p) => (elo[p] ? elo[p].elo : 1000);
-            const getG = (p) => (elo[p] ? elo[p].eloGames : 0);
-            const getK = (p) => (getG(p) < 20 ? 40 : 20);
 
-            let r1, r2, n1, n2, k1, k2;
+            let r1, r2, n1, n2;
             if(m==='1:1') { 
                 n1 = document.getElementById('p1').value; n2 = document.getElementById('p2').value;
                 r1 = getE(n1); r2 = getE(n2); 
-                k1 = getK(n1); k2 = getK(n2);
             } else { 
                 n1 = document.getElementById('t1p1').value + " & " + document.getElementById('t1p2').value;
                 n2 = document.getElementById('t2p1').value + " & " + document.getElementById('t2p2').value;
                 r1 = (getE(document.getElementById('t1p1').value)+getE(document.getElementById('t1p2').value))/2; 
                 r2 = (getE(document.getElementById('t2p1').value)+getE(document.getElementById('t2p2').value))/2; 
-                k1 = (getK(document.getElementById('t1p1').value) + getK(document.getElementById('t1p2').value)) / 2;
-                k2 = (getK(document.getElementById('t2p1').value) + getK(document.getElementById('t2p2').value)) / 2;
             }
 
             const getBP = (searchStr) => {
@@ -2012,12 +2144,6 @@
             const prob1 = Math.round((1 / (1 + Math.pow(10, (r2 - r1) / 400))) * 100);
             const prob2 = 100 - prob1;
 
-            // ELO Vorschau berechnen
-            const winDelta1 = Math.round(k1 * (1 - prob1/100));
-            const lossDelta1 = Math.round(k1 * (prob1/100));
-            const winDelta2 = Math.round(k2 * (1 - prob2/100));
-            const lossDelta2 = Math.round(k2 * (prob2/100));
-
             const l1 = (m==='1:1' ? n1 : "Team 1");
             const l2 = (m==='1:1' ? n2 : "Team 2");
 
@@ -2045,16 +2171,8 @@
                     <div style="font-size:12px; font-weight:900; color:${c1}; flex:1; display:flex; align-items:center;">
                         <span style="white-space:nowrap;">${l1}: ${prob1}%</span>
                         ${pref1 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref1.c}; opacity:0.8; margin-left:6px;">${window.getBallIcon(pref1.t).replace('14','11')}${pref1.t}</span>` : ''}
-                        <div style="font-size:8px; font-weight:900; margin-left:auto; text-align:right; background:rgba(255,255,255,0.03); padding:3px 6px; border-radius:8px; border:0.5px solid rgba(255,255,255,0.05); line-height:1.1;">
-                            <div style="color:#34c759; margin-bottom:1px;">+${winDelta1} ELO</div>
-                            <div style="color:#ff3b30;">-${lossDelta1} ELO</div>
-                        </div>
                     </div>
                     <div style="font-size:12px; font-weight:900; color:${c2}; flex:1; display:flex; align-items:center; justify-content:flex-end; gap:6px;">
-                        <div style="font-size:8px; font-weight:900; margin-right:auto; text-align:left; background:rgba(255,255,255,0.03); padding:3px 6px; border-radius:8px; border:0.5px solid rgba(255,255,255,0.05); line-height:1.1;">
-                            <div style="color:#34c759; margin-bottom:1px;">+${winDelta2} ELO</div>
-                            <div style="color:#ff3b30;">-${lossDelta2} ELO</div>
-                        </div>
                         ${pref2 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref2.c}; opacity:0.8; margin-right:6px;">${window.getBallIcon(pref2.t).replace('14','11')}${pref2.t}</span>` : ''}
                         <span style="white-space:nowrap;">${l2}: ${prob2}%</span>
                     </div>
@@ -2111,7 +2229,8 @@
 
                 const isWin1 = g.w == 1;
                 const isWin2 = g.w == 2;
-                const delta = deltas[i] || 0;
+                const dData = deltas[i] || { eloDelta: 0 };
+                const delta = (typeof dData === 'object') ? (dData.eloDelta || 0) : dData;
                 
                 // Cinematic Card Style
                 const winGlow = "0 0 20px rgba(52, 199, 89, 0.15)";
@@ -2120,7 +2239,7 @@
                 const hasBreak2 = g.a === g.p2;
 
                 html += `
-                <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; ${borderStyle} animation: history-card-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: ${idx * 0.05}s; opacity: 0; box-shadow: ${isWin1 ? winGlow : (isWin2 ? winGlow : 'none')}; background: linear-gradient(to bottom, rgba(28,28,30,0.7) 0%, rgba(20,20,22,0.8) 100%); transition: all 0.3s ease;">
+                <div class="card" onclick="window.openMatchDetails(${i})" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; ${borderStyle} animation: history-card-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: ${idx * 0.05}s; opacity: 0; box-shadow: ${isWin1 ? winGlow : (isWin2 ? winGlow : 'none')}; background: linear-gradient(to bottom, rgba(28,28,30,0.7) 0%, rgba(20,20,22,0.8) 100%); transition: all 0.3s ease; cursor:pointer;">
                     <div style="padding: 15px 14px 12px 14px; display: flex; align-items: center; justify-content: space-between; position: relative;">
                         <!-- Team 1 -->
                         <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; overflow: hidden;">
@@ -2168,7 +2287,7 @@
                             <span style="font-size: 9px; color: #8e8e93; font-weight: 700;">SIEG: ${g.t}</span>
                         </div>
                         <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
-                             <div style="font-size:10px; color:rgba(255,255,255,0.2); transition: color 0.3s;" onmouseover="this.style.color='var(--error)'" onmouseout="this.style.color='rgba(255,255,255,0.2)'" onclick="requestDelete(${i})">Löschen</div>
+                             <div style="font-size:10px; color:rgba(255,255,255,0.2); transition: color 0.3s;" onmouseover="this.style.color='var(--error)'" onmouseout="this.style.color='rgba(255,255,255,0.2)'" onclick="event.stopPropagation(); window.requestDelete(${i})">Löschen</div>
                         </div>
                     </div>
                 </div>`;
