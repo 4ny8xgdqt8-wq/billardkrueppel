@@ -685,7 +685,12 @@
             80% { opacity: 0.9; }
             100% { transform: translateY(42px) scale(1.4); opacity: 0; }
         }
-        
+        /* Cinematic Würfel-Animationen */
+        @keyframes cup-shake { 0%, 100% { transform: rotate(0) translateX(0); } 25% { transform: rotate(-15deg) translateX(-5px); } 75% { transform: rotate(15deg) translateX(5px); } }
+        @keyframes cup-pour { 0% { transform: rotate(0) translateY(0); } 100% { transform: rotate(150deg) translateY(20px) translateX(40px); } }
+        .cup-shake { display: inline-block; animation: cup-shake 0.1s infinite; }
+        .cup-pour { display: inline-block; animation: cup-pour 0.4s ease-in forwards; }
+
         @keyframes pulse-gold {
             0% { 
                 box-shadow: 0 0 12px rgba(255, 204, 0, 0.15); 
@@ -703,13 +708,13 @@
     <div id="loading-overlay" class="loading-overlay">
         <div class="loader-grid"></div>
         <div class="loader-scanline"></div>
-        <div id="loader-content" style="display: flex; flex-direction: column; align-items: center; z-index: 2; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);">
+        <div id="loader-content" style="display: flex; flex-direction: column; align-items: center; z-index: 2; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); width: 100%;">
         <img loading="lazy" src="logo.png" class="loader-logo" onerror="this.style.display='none'">
         <div class="loader-title">Billardkrüppel</div>
         <div id="loader-avatars" class="loader-avatar-row"></div>
         <div class="loader-progress-container"><div id="loader-progress" class="loader-progress-bar"></div></div>
         <div id="loader-status" style="margin-top: 20px; font-weight: 900; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; animation: status-pulse 1.5s infinite ease-in-out;"></div>
-        <div id="loader-tip" style="margin-top: 30px; color: #8e8e93; font-size: 11px; font-style: italic; width: 90%; max-width: 350px; text-align: center; line-height: 1.4; opacity: 0.7; font-weight: 500;"></div>
+        <div id="loader-tip" style="margin-top: 30px; color: #8e8e93; font-size: 12px; font-style: italic; width: 85%; max-width: 800px; text-align: center; line-height: 1.4; opacity: 0.7; font-weight: 500;"></div>
         <div id="loader-version" style="margin-top: 8px; font-size: 10px; color: #8e8e93; font-weight: 600; opacity: 0.8;"></div>
         </div>
     </div>
@@ -1026,6 +1031,16 @@
             <div class="tab-item" onclick="switchV('statistik',this)"><span class="tab-icon">📊</span><span>Gesamt</span></div>
             <div class="tab-item" onclick="switchV('erfolge',this)"><span class="tab-icon">🎖️</span><span>Erfolge</span></div>
             <div class="tab-item" onclick="switchV('uebersicht',this)"><span class="tab-icon">📜</span><span>Historie</span></div>
+        </div>
+    </div>
+
+    <!-- Cinematic Animation Overlay -->
+    <div id="diceAnimationOverlay" class="modal" style="background: rgba(0,0,0,0.95); z-index: 35000;">
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content: center; width: 100%; height: 100%;">
+            <div style="position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
+                <div id="animCup" style="font-size: 120px; z-index: 5; position: relative;">🗑️</div>
+            </div>
+            <div id="animText" style="margin-top: 100px; color: var(--accent); font-weight: 900; letter-spacing: 2px; text-transform: uppercase; font-size: 12px; animation: status-pulse 1s infinite;">Mische Würfel...</div>
         </div>
     </div>
 
@@ -1749,7 +1764,26 @@
             "Billard ist 10% Talent und 90% Konzentration.",
             "Ein sanfter Stoß ist oft präziser als rohe Gewalt.",
             "Achte auf den Winkel der Weißen nach dem Einschlag.",
-            "Symmetrie im Aufbau ist das A und O."
+            "Symmetrie im Aufbau ist das A und O.",
+            "Ein Queue ist kein Wanderstock – fass ihn mit Gefühl an.",
+            "Wenn die Weiße fällt, weint der Spieler.",
+            "Banden sind deine Freunde, wenn du sie richtig ansprichst.",
+            "Loch ist Loch – egal wie die Kugel reingeeiert ist.",
+            "Wer die 8 zu früh locht, hat mehr Zeit für Kaltgetränke.",
+            "Nicht gezielt ist auch daneben.",
+            "Billard: Das ist wie Schach, nur mit mehr Physik.",
+            "Der Tisch verzeiht nichts, aber er vergisst schnell.",
+            "Ein guter Stoß beginnt mit einem ruhigen Atemzug.",
+            "Effet ist keine Zauberei, sondern pure Wissenschaft.",
+            "Wer zittert, verliert – wer zielt, gewinnt.",
+            "Ein blindes Huhn locht auch mal eine Schwarze.",
+            "Spielst du noch oder lochst du schon?",
+            "Die Kugel weiß nicht, wer du bist. Überzeuge sie.",
+            "Geduld ist die wichtigste Eigenschaft am Tisch.",
+            "Manchmal ist ein Sicherheitsschlag besser als ein Risiko.",
+            "Der Diamant am Rand ist nicht nur Deko.",
+            "Bleib tief über dem Queue für mehr Präzision.",
+            "Ein sauberer Stand ist das Fundament des Erfolgs."
         ];
         const tipEl = document.getElementById('loader-tip');
         if (tipEl) {
@@ -1977,12 +2011,6 @@
                 if (isFormComplete) saveBtn.classList.add('btn-ready');
                 else saveBtn.classList.remove('btn-ready');
             }
-
-            // Add glow to selected avatars
-            document.querySelectorAll('[id$="-avatar-preview"] img').forEach(img => {
-                if (img.style.display !== 'none') img.classList.add('avatar-active');
-                else img.classList.remove('avatar-active');
-            });
         };
 
         window.syncBallTypes = (n) => {
@@ -2023,24 +2051,17 @@
             window.removeHighlight('breakPlayer');
             window.breakLocked = true;
 
-            // Haptik beim Würfeln (kurzes Rattern für das Würfel-Gefühl)
-            if ("vibrate" in navigator) {
-                navigator.vibrate([30, 50, 30, 50, 30]);
-            }
-
             // Deaktivieren nach dem Würfeln
             const diceBtn = document.getElementById('btn-breakcalc');
             const breakSel = document.getElementById('breakPlayer');
             if (diceBtn) { diceBtn.disabled = true; diceBtn.style.opacity = "0.3"; }
             if (breakSel) breakSel.disabled = true;
             
-            // Den Namen der ermittelten Person/Team in das Modal schreiben
             document.getElementById('diceResultName').innerText = res;
+            const names = res.split(' & ').map(n => n.trim());
             
-            // Avatar im Würfel-Modal anzeigen
             const avatarContainer = document.getElementById('diceResultAvatar');
             if (avatarContainer) {
-                const names = res.split(' & ').map(n => n.trim());
                 const size = names.length > 1 ? 44 : 64;
                 avatarContainer.innerHTML = names.map(n => {
                     const silhouette = `<div style="width:${size}px; height:${size}px; border-radius:15px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:${size*0.5}px; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.2);">👤</div>`;
@@ -2055,9 +2076,27 @@
 
             if (typeof window.updateAvatarPreviews === 'function') window.updateAvatarPreviews();
             window.updateUI();
-
-            // Popup anzeigen
-            document.getElementById('diceModal').style.display = 'flex';
+            
+            // Cinematic Animation starten
+            const animOverlay = document.getElementById('diceAnimationOverlay');
+            const animCup = document.getElementById('animCup');
+            const animText = document.getElementById('animText');
+            
+            animCup.className = 'cup-shake';
+            if (animText) animText.innerText = "Mische Würfel...";
+            animOverlay.style.display = 'flex';
+            
+            setTimeout(() => {
+                animCup.className = 'cup-pour';
+                if (animText) animText.innerText = "Auswertung...";
+                
+                setTimeout(() => {
+                    animOverlay.style.display = 'none';
+                    animCup.className = '';
+                    // Jetzt erst das echte Ergebnis-Fenster anzeigen
+                    document.getElementById('diceModal').style.display = 'flex';
+                }, 1000);
+            }, 1000);
         };
 
         window.doSave = async () => {
