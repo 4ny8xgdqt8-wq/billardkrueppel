@@ -1252,7 +1252,7 @@
             })
             .then(text => {
                 // Sucht gezielt nach der Versionsnummer (z.B. 1.2.5) im CACHE_NAME
-                const match = text.match(/CACHE_NAME\s*=\s*['"][^'"]*?v?(\d+\.\d+(?:\.\d+)?)['"]/);
+                const match = text.match(/CACHE_NAME\s*=\s*['"][^'"]*?v?(\d+(?:\.\d+)*)['"]/);
                 if (match && match[1]) updateVersionUI(match[1]);
                 else updateVersionUI("Unbekannt"); 
             }).catch(() => {
@@ -2172,6 +2172,11 @@
             const header = document.getElementById('profileHeader');
             const content = document.getElementById('profileStats');
             
+            if (content) content.scrollTop = 0;
+            setTimeout(() => {
+                if (content) content.scrollTop = 0;
+            }, 50);
+            
             const streakClass = d.currentStreak >= 3 ? 'streak-fire' : (d.loseStreak >= 3 ? 'streak-frost' : '');
             header.innerHTML = `
                 <div class="avatar-frame ${streakClass}" style="margin-bottom:15px;">
@@ -2255,6 +2260,8 @@
             const header = document.getElementById('matchDetailsHeader');
             const content = document.getElementById('matchDetailsContent');
 
+            if (content) content.scrollTop = 0;
+
             const isWin1 = parseInt(g.w) === 1;
             const isWin2 = parseInt(g.w) === 2; 
 
@@ -2280,13 +2287,11 @@
                     <div style="flex:1; text-align:center; opacity:${isWin1 ? '1' : '0.5'}; transform:${isWin1 ? 'scale(1.1)' : 'scale(0.95) translateY(5px)'}; transition:all 0.3s;">
                         <div style="display:flex; justify-content:center; gap:12px; margin-bottom:10px;">${getAvatarStack(g.p1, 50, isWin1 ? 'streak-fire' : 'match-shame')}</div>
                         <div style="font-weight:900; font-size:16px; color:#fff;">${g.p1 || '-'}</div>
-                        ${isWin1 ? '<div style="color:#34c759; font-size:10px; font-weight:800; margin-top:4px;">WINNER</div>' : ''}
                     </div>
                     <div style="padding:0 15px; font-weight:900; color:#8e8e93; font-size:12px;">VS</div>
                     <div style="flex:1; text-align:center; opacity:${isWin2 ? '1' : '0.5'}; transform:${isWin2 ? 'scale(1.1)' : 'scale(0.95) translateY(5px)'}; transition:all 0.3s;">
                         <div style="display:flex; justify-content:center; gap:12px; margin-bottom:10px;">${getAvatarStack(g.p2, 50, isWin2 ? 'streak-fire' : 'match-shame')}</div>
                         <div style="font-weight:900; font-size:16px; color:#fff;">${g.p2 || '-'}</div>
-                        ${isWin2 ? '<div style="color:#34c759; font-size:10px; font-weight:800; margin-top:4px;">WINNER</div>' : ''}
                     </div>
                 </div>
 
@@ -2351,6 +2356,7 @@
             `;
 
             document.getElementById('matchDetailsModal').style.display = 'flex';
+            if (content) content.scrollTop = 0;
         };
 
         // Die ursprüngliche requestDelete Funktion ruft jetzt das Modal auf
@@ -2566,10 +2572,16 @@
             container.innerHTML = html;
         }
 
-        window.openAchListModal = () => { renderAchList('all'); document.getElementById('achListModal').style.display='flex'; };
+        window.openAchListModal = () => { 
+            const container = document.getElementById('achListContainer');
+            renderAchList('all'); 
+            document.getElementById('achListModal').style.display='flex'; 
+            if (container) container.scrollTop = 0;
+        };
         window.closeAchListModal = () => { document.getElementById('achListModal').style.display='none'; };
         window.renderAchList = (filter) => { 
             const c = document.getElementById('achListContainer');
+            if (c) c.scrollTop = 0;
             const pills = document.querySelectorAll('.filter-pill');
             const fNames = ['all', 'fame', 'shame', 'daily'];
             pills.forEach((p, idx) => p.classList.toggle('active', fNames[idx] === filter));

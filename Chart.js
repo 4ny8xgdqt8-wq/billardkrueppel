@@ -575,6 +575,7 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
     const pData = JSON.parse(JSON.stringify(baseStats.pData || {}));
     Object.keys(pData).forEach(p => {
         const d = pData[p];
+        if (simPData[p]) d.achTracker = simPData[p].achTracker;
         let currentAchs = [];
         allPools.forEach(ach => { if (ach.cond(d)) currentAchs.push(ach); });
         const tierBest = {};
@@ -962,7 +963,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             <div class="achievement-card-hero" style="border-radius:24px; margin-bottom:15px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0;">
               <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
                    style="padding:18px; cursor:pointer; -webkit-tap-highlight-color: transparent;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; background: linear-gradient(135deg, rgba(255, 204, 0, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                   <div style="display:flex; align-items:center; gap:12px;">
                     <div class="ach-chevron collapsed"></div>
                     <div style="display:flex; align-items:center; gap:14px;">
@@ -1076,7 +1077,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           const isMaxTier = item.max === true; // Max tier achievements get special styling
           const newBadge = item.isNew ? `<span style="background:var(--accent); color:#000; font-size:8px; font-weight:900; padding:2px 5px; border-radius:4px; margin-left:8px; vertical-align:middle; animation: badge-pulse 1.5s infinite ease-in-out;">NEU</span>` : "";
           const tracker = d.achTracker ? d.achTracker[item.t] : null;
-          const trackerHtml = tracker ? `<div style="font-size:9px; color:#8e8e93; margin-top:4px; font-weight:600;">Sammelrate: <span style="color:#34c759;">📈 ${tracker.earned}</span> ${tracker.lost > 0 ? `| <span style="color:#ff3b30;">📉 ${tracker.lost}</span>` : ''}</div>` : "";
+          const trackerHtml = tracker ? `<div style="font-size:9px; color:#8e8e93; margin-top:4px; font-weight:600;">Sammelrate: <span style="color:#34c759;">📈 ${tracker.earned}</span> | <span style="color:#ff3b30;">📉 ${tracker.lost}</span></div>` : "";
 
   const borderCol = isShame ? 'var(--error)' : '#34c759';
   const textCol = isShame ? 'rgba(255, 59, 48, 0.85)' : 'rgba(52, 199, 89, 0.85)';
@@ -1663,7 +1664,7 @@ window.processAllStatsChronologically = function(matches, players) {
             const streakClass = r.streak >= 3 ? 'streak-fire' : (r.loseStreak >= 3 ? 'streak-frost' : '');
             const streakEmoji = (r.streak >= 3) ? ' <span style="display:inline-block; color:var(--accent); text-shadow: 0 0 8px rgba(255,204,0,0.4); animation: streak-pulse 1.5s infinite ease-in-out;">🔥</span>' : ''; // Pulsierendes Flammen-Emoji
             html += `
-              <div onclick="window.openPlayerProfile('${r.name}')" class="${isFirst ? 'rank-1-card' : ''}" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isFirst ? 'linear-gradient(135deg, rgba(255, 204, 0, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'rgba(255,255,255,0.03)'}; padding: 12px; border-radius: 20px; border: 1px solid ${isFirst ? '#ffcc00' : 'rgba(255,255,255,0.08)'}; cursor:pointer; box-shadow: ${isFirst ? '0 0 20px rgba(255,204,0,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; ${isFirst ? '' : 'animation: ach-card-enter 0.4s ease-out forwards; opacity: 0;'} animation-delay: ${0.5 + i * 0.05}s;">
+              <div onclick="window.openPlayerProfile('${r.name}')" class="${isFirst ? 'rank-1-card' : ''}" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 20px; border: 1px solid ${isFirst ? '#ffcc00' : 'rgba(255,255,255,0.08)'}; cursor:pointer; box-shadow: ${isFirst ? '0 0 20px rgba(255,204,0,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; ${isFirst ? '' : 'animation: ach-card-enter 0.4s ease-out forwards; opacity: 0;'} animation-delay: ${0.5 + i * 0.05}s;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${badge || (i+1 + '.')}</div>
                 <div class="avatar-frame ${streakClass}">
                   <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15);">
