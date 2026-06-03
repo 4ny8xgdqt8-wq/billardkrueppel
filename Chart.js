@@ -1687,16 +1687,30 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
                 if (topEloPlayers.length > 0) {
                     eloHistoryContainer.style.display = 'block';
-                    const maxGames = Math.max(...topEloPlayers.map(p => res.pData[p].eloHistory.length));
-                    const chartLabels = Array.from({length: maxGames + 1}, (_, i) => i);
+                    const WINDOW_SIZE = 20; // Fokus auf die Form (letzte 20 Spiele)
+                    const maxH = Math.max(...topEloPlayers.map(p => res.pData[p].eloHistory.length));
+                    const displayCount = Math.min(WINDOW_SIZE, maxH);
+                    
+                    const chartLabels = Array.from({length: displayCount}, (_, i) => i + 1);
 
-                    const datasets = topEloPlayers.map((p, i) => ({
-                        label: p,
-                        data: [1000, ...res.pData[p].eloHistory],
-                        borderColor: graphColors[i % graphColors.length],
-                        backgroundColor: graphColors[i % graphColors.length] + '22',
-                        tension: 0.3, pointRadius: 2, borderWidth: 2
-                    }));
+                    const datasets = topEloPlayers.map((p, i) => {
+                        const h = res.pData[p].eloHistory || [];
+                        const d = h.slice(-displayCount); // Nimm die aktuellsten X Werte
+                        
+                        // Falls ein Spieler weniger Spiele hat, wird die Linie bis zum rechten Rand
+                        // mit seinem aktuellsten Wert verlängert (Wunsch: alle Linien enden gleich).
+                        const lastVal = d.length > 0 ? d[d.length - 1] : 1000;
+                        while (d.length < displayCount) d.push(lastVal);
+
+                        return {
+                            label: p,
+                            data: d,
+                            borderColor: graphColors[i % graphColors.length],
+                            backgroundColor: graphColors[i % graphColors.length] + '22',
+                            tension: 0.3, pointRadius: 2, borderWidth: 2,
+                            fill: false
+                        };
+                    });
 
                     eloCanvas.__myEloChart = new Chart(eloCtx, {
                         type: 'line',
