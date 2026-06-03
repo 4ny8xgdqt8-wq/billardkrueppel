@@ -444,7 +444,13 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
     const aggregates = JSON.parse(JSON.stringify(baseStats.aggregates || {}));
 
     const allPools = [...window.famePool, ...window.shamePool];
-    const todayStr = `${String(new Date().getDate()).padStart(2, '0')}.${String(new Date().getMonth() + 1).padStart(2, '0')}.${new Date().getFullYear()}`;
+    
+    const nowObj = new Date();
+    const dStr = String(nowObj.getDate()).padStart(2, '0');
+    const mStr = String(nowObj.getMonth() + 1).padStart(2, '0');
+    const yStr = nowObj.getFullYear();
+    const todayStr = `${dStr}.${mStr}.${yStr}`; // Für den Vergleich mit g.d
+    const isoTodayStr = `${yStr}-${mStr}-${dStr}`; // Für die Speicherung in dailyAchivs
 
     const initSimP = (n) => {
         if (!simPData[n]) simPData[n] = {
@@ -605,6 +611,43 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
         players.forEach(p => {
             if (!simPData[p]) return;
             const d = simPData[p], dBefore = pDataBeforeMatch[p] || { achTracker: {} };
+
+            const isMatchFromToday = g.d && g.d.startsWith(todayStr);
+            
+            // Zentrale Funktion zum Speichern neuer Erfolge (Daily + Langzeit)
+            const recordNewAch = (ach) => {
+                if (!matchDeltas[originalIndex]) matchDeltas[originalIndex] = { eloDelta: Math.round(20 * Math.abs(eloChangeBase)) };
+                matchDeltas[originalIndex].newAchievements = matchDeltas[originalIndex].newAchievements || {};
+                matchDeltas[originalIndex].newAchievements[p] = matchDeltas[originalIndex].newAchievements[p] || [];
+                matchDeltas[originalIndex].newAchievements[p].push({
+                    i: ach.i, t: ach.t, d: ach.d, h: ach.h, k: ach.k || (window.famePool.includes(ach) ? 'fame' : 'shame'), max: ach.max
+                });
+
+                // In die persistente Tages-Statistik schreiben (für Daily-Sammler & Historie)
+                if (isMatchFromToday && isFullHistory && dailyAchivs) {
+                    if (!dailyAchivs.days) dailyAchivs.days = {};
+                    if (!dailyAchivs.days[isoTodayStr]) dailyAchivs.days[isoTodayStr] = {};
+                    if (!dailyAchivs.days[isoTodayStr][p]) dailyAchivs.days[isoTodayStr][p] = [];
+                    if (!dailyAchivs.days[isoTodayStr][p].includes(ach.t)) dailyAchivs.days[isoTodayStr][p].push(ach.t);
+                }
+            };
+
+            // 1. Tägliche Erfolge prüfen
+            if (isMatchFromToday) {
+                const dailyPool = [...window.dailyFamePool, ...window.dailyShamePool];
+                dailyPool.forEach(ach => {
+                    const hasNow = ach.cond(d);
+                    const hadBefore = ach.cond(dBefore);
+                    if (hasNow && !hadBefore) recordNewAch(ach);
+                    else if (!hasNow && hadBefore && isFullHistory && dailyAchivs?.days?.[isoTodayStr]?.[p]) {
+                        // Entfernen, falls Bedingung nicht mehr erfüllt (z.B. Tageskönig durch Niederlage weg)
+                        const idx = dailyAchivs.days[isoTodayStr][p].indexOf(ach.t);
+                        if (idx > -1) dailyAchivs.days[isoTodayStr][p].splice(idx, 1);
+                    }
+                });
+            }
+
+            // 2. Langzeit-Erfolge prüfen
             allPools.forEach(ach => {
                 const hasNow = ach.cond(d);
                 if (!d.achTracker[ach.t]) d.achTracker[ach.t] = { earned: 0, lost: 0, active: false };
@@ -612,12 +655,7 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
                 else if (!hasNow && d.achTracker[ach.t].active) { d.achTracker[ach.t].lost++; d.achTracker[ach.t].active = false; }
                 
                 if (hasNow && (!dBefore.achTracker[ach.t] || !dBefore.achTracker[ach.t].active)) {
-                    if (!matchDeltas[originalIndex]) matchDeltas[originalIndex] = { eloDelta: Math.round(20 * Math.abs(eloChangeBase)) };
-                    matchDeltas[originalIndex].newAchievements = matchDeltas[originalIndex].newAchievements || {};
-                    matchDeltas[originalIndex].newAchievements[p] = matchDeltas[originalIndex].newAchievements[p] || [];
-                    matchDeltas[originalIndex].newAchievements[p].push({
-                        i: ach.i, t: ach.t, d: ach.d, h: ach.h, k: ach.k || (window.famePool.includes(ach) ? 'fame' : 'shame'), max: ach.max
-                    });
+                    recordNewAch(ach);
                 }
             });
         });
@@ -626,7 +664,19 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
     const pData = JSON.parse(JSON.stringify(baseStats.pData || {}));
     Object.keys(pData).forEach(p => {
         const d = pData[p];
-        if (simPData[p]) d.achTracker = simPData[p].achTracker;
+        if (simPData[p]) {
+            d.achTracker = simPData[p].achTracker;
+            // Heutige Statistiken aus der Simulation in das Ergebnis-Objekt übertragen
+            d.todayGames = simPData[p].todayGames || 0;
+            d.todayWins = simPData[p].todayWins || 0;
+            d.todayMaxStreak = simPData[p].todayMaxStreak || 0;
+            d.todayClutchWins = simPData[p].todayClutchWins || 0;
+            d.todayBreakWins = simPData[p].todayBreakWins || 0;
+            d.todayBlackWinsCount = simPData[p].todayBlackWinsCount || 0;
+            d.todayKillerPoints = simPData[p].todayKillerPoints || 0;
+            d.todayRest = simPData[p].todayRest || 0;
+            d.todayAvgRest = simPData[p].todayAvgRest || 0;
+        }
         let currentAchs = [];
         allPools.forEach(ach => { if (ach.cond(d)) currentAchs.push(ach); });
         const tierBest = {};
@@ -898,9 +948,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     const statsToday = safeStats.filter(g => g && g.d && g.d.startsWith(todayStr));
     const statsBeforeToday = safeStats.filter(g => g && g.d && !g.d.startsWith(todayStr));
     
-    const dataToday = window.processData(statsToday, todayStr); // This is for the "Heute" tab, uses simpler processData
     const dataAll = precalculatedCareerStats || { pData: {}, matchDeltas: {}, aggregates: {} }; // Worker output
     const dataBeforeToday = precalculatedCareerStatsBeforeToday || { pData: {}, matchDeltas: {}, aggregates: {} }; // Worker output
+    const dataToday = filterToday ? window.processData(statsToday, todayStr) : null;
 
     const getAchHtml = (proc, isTodayTab, procBefore) => {
       let achHtml = "";
@@ -1057,23 +1107,32 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         };
         // --- ACHIEVEMENT SAMMLUNG ---
         let currentAchs = [];
-        const activeFamePool  = isTodayTab ? window.dailyFamePool  : window.famePool;
-        const activeShamePool = isTodayTab ? window.dailyShamePool : window.shamePool;
 
-        const collect = (pool, kind) => {
-            pool.forEach(it => {
+        if (isTodayTab) {
+            // "Heute" Tab: Alle heutigen Erfolge (Tages-Pool + neu erreichte Karriere-Pool)
+            window.dailyFamePool.forEach(it => { if (it.cond(d)) currentAchs.push({ ...it, k: "fame", isNew: false }); });
+            window.dailyShamePool.forEach(it => { if (it.cond(d)) currentAchs.push({ ...it, k: "shame", isNew: false }); });
+
+            // Langzeit-Erfolge, die HEUTE neu dazugekommen sind (Vergleich mit dBefore)
+            if (dBefore) {
+                window.famePool.forEach(it => { if (it.cond(d) && !it.cond(dBefore)) currentAchs.push({ ...it, k: "fame", isNew: true }); });
+                window.shamePool.forEach(it => { if (it.cond(d) && !it.cond(dBefore)) currentAchs.push({ ...it, k: "shame", isNew: true }); });
+            }
+        } else {
+            // "Alle" Tab: Aktive Langzeit-Erfolge
+            window.famePool.forEach(it => {
                 if (it.cond(d)) {
-                  let isNew = false;
-                  if (!isTodayTab && procBefore && procBefore.pData[p]) {
-                    if (!it.cond(procBefore.pData[p])) isNew = true;
-                  }
-                  currentAchs.push({ ...it, k: kind, isNew });
+                    const isNew = dBefore ? !it.cond(dBefore) : false;
+                    currentAchs.push({ ...it, k: "fame", isNew });
                 }
             });
-        };
-
-        collect(activeFamePool, "fame");
-        collect(activeShamePool, "shame");
+            window.shamePool.forEach(it => {
+                if (it.cond(d)) {
+                    const isNew = dBefore ? !it.cond(dBefore) : false;
+                    currentAchs.push({ ...it, k: "shame", isNew });
+                }
+            });
+        }
 
         // Tier-System
         const tierBest = {};
@@ -1218,7 +1277,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     if (aEl) aEl.innerHTML = '';
 
     if (filterToday) {
-        if (tEl) { tEl.innerHTML = getAchHtml(dataToday, true, null); tEl.style.display = "block"; }
+        if (tEl) { tEl.innerHTML = getAchHtml(dataAll, true, dataBeforeToday); tEl.style.display = "block"; }
         if (aEl) aEl.style.display = "none";
     } else { // Overall or Achievements tab
         if (tEl) tEl.style.display = "none";
