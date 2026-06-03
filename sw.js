@@ -1,4 +1,4 @@
-const CACHE_NAME = 'billard-v5.6';
+const CACHE_NAME = 'billard-v5.7';
 const ASSETS = [
   './',
   'index.html',
@@ -33,15 +33,22 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch: Erst im Cache suchen, dann Netzwerk (Cache-First-Strategie)
+// Fetch: Stale-While-Revalidate Strategie
+// Liefert sofort aus dem Cache für Speed, aktualisiert aber im Hintergrund.
 self.addEventListener('fetch', (event) => {
   // Firebase-Anfragen ignorieren (die brauchen Echtzeit-Daten)
   if (event.request.url.includes('firestore.googleapis.com')) return;
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
-      return fetch(event.request);
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.match(event.request).then((cachedResponse) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        });
+        // Gib die Cache-Antwort zurück, falls vorhanden, sonst warte auf das Netzwerk
+        return cachedResponse || fetchPromise;
+      });
     })
   );
 });

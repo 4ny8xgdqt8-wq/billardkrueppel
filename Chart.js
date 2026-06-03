@@ -1687,7 +1687,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
                 if (topEloPlayers.length > 0) {
                     eloHistoryContainer.style.display = 'block';
-                    const WINDOW_SIZE = 10; // Fokus auf die Form (letzte 20 Spiele)
+                    const WINDOW_SIZE = 10; // Fokus auf die Form (letzte 10 Spiele)
                     const maxH = Math.max(...topEloPlayers.map(p => res.pData[p].eloHistory.length));
                     const displayCount = Math.min(WINDOW_SIZE, maxH);
                     
@@ -1698,7 +1698,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                         const d = h.slice(-displayCount); // Nimm die aktuellsten X Werte
                         
                         // Falls ein Spieler weniger Spiele hat, wird die Linie bis zum rechten Rand
-                        // mit seinem aktuellsten Wert verlängert (Wunsch: alle Linien enden gleich).
+                        // mit seinem aktuellsten Wert verlängert.
                         const lastVal = d.length > 0 ? d[d.length - 1] : 1000;
                         while (d.length < displayCount) d.push(lastVal);
 
