@@ -1419,7 +1419,7 @@
         }
 
         window.recalculateAndRender = () => {
-            if (window.flags.stats && window.flags.spieler && !isCalculating) {
+            if (window.flags.stats && window.flags.spieler && !isCalculating && typeof window.enrichStatsWithAchievements === 'function') {
                 isCalculating = true;
                 if (!isHiding) window.updateLoaderStatus("Analysiere Billard-Historie", 85);
                 if (statsWorker && statsWorker.postMessage) {
@@ -2100,6 +2100,9 @@
         };
 
         window.doSave = async () => {
+            const saveBtn = document.querySelector('.btn-save');
+            if (saveBtn.disabled) return;
+
             const m = document.getElementById('mode').value;
             const b = document.getElementById('breakPlayer').value;
             const bt1 = document.getElementById('ballType1').value;
@@ -2108,6 +2111,12 @@
 
             const missingMessages = [];
             const missingElements = [];
+
+            // Alte Highlights entfernen
+            window.highlightedElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('error-highlight');
+            });
 
             if (m === '1:1') {
                 const v1 = document.getElementById('p1').value;
@@ -2142,64 +2151,95 @@
                 return;
             }
 
+            if (typeof window.processAllStatsChronologically !== 'function' || !window.dailyFamePool || !window.spieler || window.spieler.length === 0) {
+                window.openErrorModal("Die App-Logik wird noch geladen. Bitte kurz warten...");
+                return;
+            }
+
+            saveBtn.disabled = true;
+            const originalText = saveBtn.innerText;
+            saveBtn.innerText = "Speichert...";
+
             const now = new Date();
             
             const pad = (n) => String(n).padStart(2, '0');
             const dStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-            const todayStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
 
             const data = { m, p1, p2, w: window.winnerNum, t: document.getElementById('winType').value, a: b, l: parseInt(document.getElementById('leftover').value), d: dStr, bt1, bt2 };
             
-            const isoDay = now.toISOString().split('T')[0];
-            const updatedStats = [...window.stats, data];
-            
-            // Robuster Vergleich für die heutige Berechnung
-            const isSameDay = (d1, d2) => {
-                const m1 = String(d1 || "").match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
-                if (!m1) return false;
-                return parseInt(m1[1], 10) === d2.getDate() && parseInt(m1[2], 10) === (d2.getMonth() + 1) && parseInt(m1[3], 10) === d2.getFullYear();
-            };
+            try {
+                const isoDay = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+                const todayStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
+                const updatedStats = [...window.stats, data];
+                
+                const isSameDay = (dateString, refDate) => {
+                    const m = String(dateString || "").match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+                    if (!m) return false;
+                    return parseInt(m[1], 10) === refDate.getDate() && parseInt(m[2], 10) === (refDate.getMonth() + 1) && parseInt(m[3], 10) === refDate.getFullYear();
+                };
 
-            const todayMatches = updatedStats.filter(g => g && g.d && isSameDay(g.d, now));
-            const procData = window.processAllStatsChronologically(todayMatches, window.spieler);
-            const dayResults = {};
-            Object.keys(procData.pData).forEach(player => {
-              const d = procData.pData[player];
-              d.todayWins = d.wins; d.todayGames = d.games; d.todayMaxStreak = d.maxStreak; d.todayClutchWins = d.clutchWins;
-              d.todayBreakWins = d.breakWins; d.todayBlackWinsCount = d.blackWinsCount; d.todayKillerPoints = d.killerPoints; d.todayRest = d.rest;
-              d.todayAvgRest = (d.games - d.wins) > 0 ? (d.rest / (d.games - d.wins)) : 0;
-              const active = [...window.dailyFamePool.filter(ach => ach.cond(d)), ...window.dailyShamePool.filter(ach => ach.cond(d))].map(ach => ach.t);
-              if (active.length > 0) dayResults[player] = Array.from(new Set(active));
-            });
+                // 1. Match in der Cloud speichern (Priorität)
+                window.stats = updatedStats; 
+                await window.dbFns.setDoc(window.dbFns.doc(window.db, "billard_data", "stats"), { matches: updatedStats });
 
-            if (Object.keys(dayResults).length > 0) {
-              const newDaily = { ...window.dailyAchivs };
-              newDaily.days[isoDay] = dayResults;
-              await window.dbFns.setDoc(window.dbFns.doc(window.db, "billard_data", "daily_achivs"), newDaily);
+                // 2. Tageserfolge berechnen und mergen (Robust)
+                try {
+                    const todayMatches = updatedStats.filter(g => g && g.d && isSameDay(g.d, now));
+                    const procData = window.processAllStatsChronologically(todayMatches, window.spieler, todayStr);
+                    const dayResults = {};
+                    const existingDayData = (window.dailyAchivs && window.dailyAchivs.days && window.dailyAchivs.days[isoDay]) ? window.dailyAchivs.days[isoDay] : {};
+
+                    Object.keys(procData.pData).forEach(player => {
+                        const d = procData.pData[player];
+                        const active = [...window.dailyFamePool.filter(ach => ach.cond(d)), ...window.dailyShamePool.filter(ach => ach.cond(d))].map(ach => ach.t);
+                        
+                        const existingForPlayer = existingDayData[player] || [];
+                        const merged = Array.from(new Set([...existingForPlayer, ...active]));
+                        if (merged.length > 0) dayResults[player] = merged;
+                    });
+
+                    const finalDayResults = { ...existingDayData, ...dayResults };
+                    if (Object.keys(finalDayResults).length > 0) {
+                        const newDaily = { days: {}, ...window.dailyAchivs }; // Sicherstellen, dass 'days' existiert
+                        newDaily.days[isoDay] = finalDayResults;
+                        await window.dbFns.setDoc(window.dbFns.doc(window.db, "billard_data", "daily_achivs"), newDaily);
+                    }
+                } catch (achErr) {
+                    console.warn("Erfolge konnten nicht aktualisiert werden, Match wurde aber gespeichert:", achErr);
+                }
+                
+                document.getElementById('leftover').value = "0"; 
+                window.winnerNum = 0; 
+                window.breakLocked = false;
+                document.querySelectorAll('.win-btn').forEach(b => b.classList.remove('selected'));
+                document.querySelectorAll('.player-sel').forEach(s => s.value = "");
+                document.getElementById('breakPlayer').value = "";
+                document.getElementById('ballType1').value = "";
+                document.getElementById('ballType2').value = "";
+                
+                if (typeof window.updateUI === 'function') window.updateUI();
+                
+                window.openSuccessModal();
+                
+                // Cinematic Confetti Celebration
+                if (typeof confetti === 'function') {
+                    setTimeout(() => {
+                        confetti({
+                            particleCount: 150,
+                            spread: 70,
+                            origin: { y: 0.6 },
+                            colors: ['#ffcc00', '#34c759', '#ffffff'],
+                            zIndex: 99999 // Höchster Z-Index, um über dem Modal-Backdrop zu liegen
+                        });
+                    }, 50);
+                }
+            } catch (err) {
+                console.error("Firebase Save Error:", err);
+                window.openErrorModal("Fehler beim Speichern:\n" + (err.message || "Unbekannter Fehler"));
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerText = originalText;
             }
-            window.stats = updatedStats; 
-            await window.dbFns.setDoc(window.dbFns.doc(window.db, "billard_data", "stats"), { matches: updatedStats });
-            
-            document.getElementById('leftover').value = "0"; 
-            window.winnerNum = 0; 
-            window.breakLocked = false;
-            document.querySelectorAll('.win-btn').forEach(b => b.classList.remove('selected'));
-            document.querySelectorAll('.player-sel').forEach(s => s.value = "");
-            document.getElementById('breakPlayer').value = "";
-            document.getElementById('ballType1').value = "";
-            document.getElementById('ballType2').value = "";
-            
-            if (typeof window.updateUI === 'function') window.updateUI();
-            // Cinematic Confetti Celebration
-            if (typeof confetti === 'function') {
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#ffcc00', '#34c759', '#ffffff']
-                });
-            }
-            window.openSuccessModal();
         };
 
         window.openPlayerProfile = (name) => {
@@ -2717,6 +2757,9 @@
                 }
             }
         }, { passive: true });
+
+        // Sicherstellen, dass die Berechnung startet, sobald die App geladen ist
+        window.recalculateAndRender();
     </script>
 </body>
 </html>

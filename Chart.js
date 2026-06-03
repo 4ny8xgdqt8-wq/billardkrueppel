@@ -288,6 +288,7 @@ window.shamePool = [
 window.processData = function(dataArray, todayStr) {
     const now = new Date();
     const checkToday = (dateStr) => {
+        if (todayStr && dateStr && dateStr.startsWith(todayStr)) return true;
         const m = String(dateStr || "").match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
         if (!m) return false;
         return parseInt(m[1], 10) === now.getDate() && parseInt(m[2], 10) === (now.getMonth() + 1) && parseInt(m[3], 10) === now.getFullYear();
@@ -295,6 +296,7 @@ window.processData = function(dataArray, todayStr) {
 
     const pData = {};
     let blackWins = 0, breakWinsCount = 0;
+    const aggregates = { totalBallMatches: 0, vollWins: 0, halbWins: 0, playerBallWins: {}, teamResults: {}, ballSpez: {}, matchupStats: {}, matchups: {}, meetings: {} };
     const initP = (n) => { 
         if (!pData[n]) pData[n] = { 
             wins: 0, games: 0, rest: 0, maxStreak: 0, streak: 0, 
@@ -309,11 +311,12 @@ window.processData = function(dataArray, todayStr) {
     dataArray.forEach(g => {
         const isTodayMatch = checkToday(g.d);
         const isTeam = g.m === "2:2";
-        const p1Arr = isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1];
-        const p2Arr = isTeam ? (g.p2 ? g.p2.split(" & ") : []) : [g.p2];
+        const p1Arr = (isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1]).map(s => String(s || '').trim()).filter(Boolean);
+        const p2Arr = (isTeam ? (g.p2 ? g.p2.split(" & ") : []) : [g.p2]).map(s => String(s || '').trim()).filter(Boolean);
         const winners = (g.w == 1) ? p1Arr : p2Arr;
         const losers = (g.w == 1) ? p2Arr : p1Arr;
-        const winnerString = (g.w == 1) ? g.p1 : g.p2;
+        const winnerString = (g.w == 1) ? String(g.p1 || '') : String(g.p2 || '');
+        const breaker = String(g.a || '').trim();
         const rest = parseInt(g.l || 0);
 
         [...p1Arr, ...p2Arr].forEach(p => { 
@@ -329,7 +332,7 @@ window.processData = function(dataArray, todayStr) {
                 pData[p].todayWins++;
                 pData[p].todayKillerPoints += rest;
                 if (g.t && g.t.includes("Schwarz")) pData[p].todayBlackWinsCount++;
-                if (winnerString && g.a && winnerString === g.a) pData[p].todayBreakWins++;
+                if (breaker && winners.map(s => String(s).trim()).includes(breaker)) pData[p].todayBreakWins++;
                 if (rest === 1) pData[p].todayClutchWins++;
             }
             pData[p].killerPoints += rest;
@@ -340,7 +343,7 @@ window.processData = function(dataArray, todayStr) {
             
             pData[p].lastWin = true;
             if (g.t && g.t.includes("Schwarz")) pData[p].blackWinsCount++;
-            if (winnerString && g.a && winnerString === g.a) pData[p].breakWins++;
+            if (breaker && winners.map(s => String(s).trim()).includes(breaker)) pData[p].breakWins++;
         });
         losers.forEach(p => {
             if(!p) return;
@@ -349,9 +352,52 @@ window.processData = function(dataArray, todayStr) {
         });
         if (rest === 1) winners.forEach(p => { if(p) pData[p].clutchWins++; });
         if (g.t && g.t.includes("Schwarz")) blackWins++;
-        if (winnerString && g.a && winnerString === g.a) breakWinsCount++;
+        if (breaker && winners.map(s => String(s).trim()).includes(breaker)) breakWinsCount++;
+
+        // Aggregates Berechnung für Dashboard (Kugeln, Teams, Duelle)
+        if (g.bt1 && g.bt2 && g.w) {
+            aggregates.totalBallMatches++;
+            const winType = (g.w == 1) ? g.bt1 : g.bt2;
+            if (winType === 'Voll') aggregates.vollWins++; else if (winType === 'Halb') aggregates.halbWins++;
+            winners.forEach(n => {
+                if(!aggregates.playerBallWins[n]) aggregates.playerBallWins[n] = { Voll:0, Halb:0 };
+                aggregates.playerBallWins[n][winType]++;
+            });
+            const procSpez = (arr, type, isWin) => arr.forEach(p => {
+                if(!aggregates.ballSpez[p]) aggregates.ballSpez[p] = { Voll:{w:0,g:0}, Halb:{w:0,g:0} };
+                aggregates.ballSpez[p][type].g++; if(isWin) aggregates.ballSpez[p][type].w++;
+            });
+            procSpez(p1Arr, g.bt1, g.w==1); procSpez(p2Arr, g.bt2, g.w==2);
+        }
+
+        if (isTeam && p1Arr.length === 2 && p2Arr.length === 2) {
+            const t1 = [...p1Arr].sort().join(" & "), t2 = [...p2Arr].sort().join(" & ");
+            if(!aggregates.teamResults[t1]) aggregates.teamResults[t1] = {w:0, g:0};
+            if(!aggregates.teamResults[t2]) aggregates.teamResults[t2] = {w:0, g:0};
+            aggregates.teamResults[t1].g++; aggregates.teamResults[t2].g++;
+            if(g.w == 1) aggregates.teamResults[t1].w++; else aggregates.teamResults[t2].w++;
+        }
+
+        if (!isTeam && p1Arr.length === 1 && p2Arr.length === 1) {
+            const name1 = p1Arr[0], name2 = p2Arr[0];
+            const winName = (g.w == 1) ? name1 : name2;
+            const loseName = (g.w == 1) ? name2 : name1;
+            const mKey = winName + " -> " + loseName;
+            const uKey = [name1, name2].sort().join('|');
+            aggregates.matchups[mKey] = (aggregates.matchups[mKey] || 0) + 1;
+            aggregates.meetings[uKey] = (aggregates.meetings[uKey] || 0) + 1;
+            if(!aggregates.matchupStats[uKey]) aggregates.matchupStats[uKey] = {p1: name1, p2: name2, p1_wins:0, p2_wins:0, games:0};
+            aggregates.matchupStats[uKey].games++;
+            if(winName === aggregates.matchupStats[uKey].p1) aggregates.matchupStats[uKey].p1_wins++; else aggregates.matchupStats[uKey].p2_wins++;
+        }
     });
-    return { pData, blackWins, breakWins: breakWinsCount, aggregates: {} };
+
+    Object.keys(pData).forEach(p => {
+        const d = pData[p];
+        d.todayAvgRest = (d.todayGames - d.todayWins) > 0 ? (d.todayRest / (d.todayGames - d.todayWins)) : 0;
+    });
+
+    return { pData, blackWins, breakWins: breakWinsCount, aggregates };
 };
 
 window.computeEloRatings = function(allMatches) {
@@ -406,7 +452,10 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
             clutchWins: 0, closeWins: 0, closeLosses: 0, dramaWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0, 
             todayWins: 0, todayGames: 0, todayMaxStreak: 0, todayClutchWins: 0, todayBreakWins: 0, todayBlackWinsCount: 0, todayKillerPoints: 0, todayRest: 0, todayAvgRest: 0,
             loseStreak: 0, maxLoseStreak: 0, eloHistory: [], maxElo: 1000, 
-            maxWinRate: 0, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0, 
+            maxWinRate: 0, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0,
+            closeWins: 0, closeLosses: 0, dramaWins: 0,
+            winRate: 0, avgKiller: 0, avgRest: 0, winRateLast30: 0,
+            avgRestLossLast20: 0, avgKillerLast20: 0, eloDelta10: 0, winRateDelta20: 0,
             eloDelta10: 0, winRateDelta20: 0, winRateLast30: 0, avgRestLossLast20: 0, avgKillerLast20: 0,
             headToHead: {}, achTracker: {}, achCountTotal: 0, completedTracks: 0, dailyDaysWithAch: 0,
             last30Games: [], last20Losses: [], last20WinsKiller: [], gameResultsHistory: [], elo: 1000, eloGames: 0,
@@ -419,8 +468,8 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
     allMatches.forEach(({ g, i: originalIndex }) => {
         if (!g || !g.d) return; // Skip if match data or date is missing
         const isTeam = g.m === "2:2";
-        const p1A = isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1];
-        const p2A = isTeam ? (g.p2 ? g.p2.split(" & ") : []) : [g.p2];
+        const p1A = (isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1]).map(s => String(s || '').trim()).filter(Boolean);
+        const p2A = (isTeam ? (g.p2 ? g.p2.split(" & ") : []) : [g.p2]).map(s => String(s || '').trim()).filter(Boolean);
         const players = [...p1A, ...p2A].map(s => String(s || '').trim()).filter(Boolean);
 
         players.forEach(initSimP);
@@ -443,11 +492,13 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
         const losers = (g.w == 1) ? p2A : p1A;
         const rest = parseInt(g.l || 0);
         const winnerString = String((g.w == 1) ? g.p1 : g.p2 || '').trim(); // Trimmed winner string for break check
+        const breakerString = String(g.a || '').trim();
         // ELO Berechnung für die Simulation
         const avg1 = p1A.reduce((s, p) => s + getElo(p), 0) / (p1A.length || 1);
         const avg2 = p2A.reduce((s, p) => s + getElo(p), 0) / (p2A.length || 1);
         const exp1 = 1 / (1 + Math.pow(10, (avg2 - avg1) / 400));
         const eloChangeBase = (g.w == 1 ? 1 : 0) - exp1;
+        matchDeltas[originalIndex] = { eloDelta: Math.round(20 * Math.abs(eloChangeBase)) };
 
         players.forEach(p => {
             const d = simPData[p];
@@ -477,7 +528,7 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
                 if (g.t?.includes("Schwarz")) d.blackWinsCount++;
                 
                 // Break-Win Simulation
-                if (g.a && String(g.a || '').trim() === winnerString) { // Ensure g.a is trimmed
+                if (breakerString && breakerString === winnerString) { // Ensure g.a is trimmed
                     if (isTeam) {
                         if (winnerString.split(" & ").map(s => s.trim()).includes(p)) d.breakWins++;
                     } else if (p === winnerString) {
@@ -544,7 +595,7 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
                     simPData[p].todayKillerPoints += rest;
                     simPData[p].todayMaxStreak = Math.max(simPData[p].todayMaxStreak, simPData[p].currentStreak);
                     if (g.t?.includes("Schwarz")) simPData[p].todayBlackWinsCount++;
-                    if (g.a === (g.w == 1 ? g.p1 : g.p2)) simPData[p].todayBreakWins++;
+                    if (breakerString === winnerString) simPData[p].todayBreakWins++;
                     if (rest === 1) simPData[p].todayClutchWins++;
                 } else { simPData[p].todayRest += rest; }
                 simPData[p].todayAvgRest = (simPData[p].todayGames - simPData[p].todayWins) > 0 ? (simPData[p].todayRest / (simPData[p].todayGames - simPData[p].todayWins)) : 0;
@@ -561,7 +612,7 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
                 else if (!hasNow && d.achTracker[ach.t].active) { d.achTracker[ach.t].lost++; d.achTracker[ach.t].active = false; }
                 
                 if (hasNow && (!dBefore.achTracker[ach.t] || !dBefore.achTracker[ach.t].active)) {
-                    if (!matchDeltas[originalIndex]) matchDeltas[originalIndex] = { eloDelta: 0 };
+                    if (!matchDeltas[originalIndex]) matchDeltas[originalIndex] = { eloDelta: Math.round(20 * Math.abs(eloChangeBase)) };
                     matchDeltas[originalIndex].newAchievements = matchDeltas[originalIndex].newAchievements || {};
                     matchDeltas[originalIndex].newAchievements[p] = matchDeltas[originalIndex].newAchievements[p] || [];
                     matchDeltas[originalIndex].newAchievements[p].push({
@@ -971,7 +1022,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                     <div style="display:none; width:36px; height:36px; border-radius:12px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:20px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                     <div>
                       <div style="color:#ffffff; font-weight:900; font-size:20px; line-height:1; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${p}</div>
-                      <div style="color:var(--accent); font-weight:900; font-size:9px; text-transform:uppercase; margin-top:5px; letter-spacing:1.5px; display:flex; align-items:center; gap:5px;">${currentLvl.icon} RANG ${currentLvlIndex} • ${currentLvl.title}</div>
+                      <div style="color:var(--accent); font-weight:900; font-size:9px; text-transform:uppercase; margin-top:6px; letter-spacing:1px; display:flex; align-items:center; gap:8px;"><span style="font-size:22px; filter: drop-shadow(0 0 10px rgba(255,204,0,0.5)); line-height: 1;">${currentLvl.icon}</span> <span>RANG ${currentLvlIndex} • ${currentLvl.title}</span></div>
                     </div>
                   </div>
                   </div>
@@ -1135,14 +1186,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
         playerBoxHtml += achHtmlContent + `</div></div>`;
         achHtml += playerBoxHtml; // Add player's achievement box to the overall HTML
-        if (isTodayTab) {
-          const titles = currentAchs.map(x => x.t);
-          if (!window.dailyAchivs.days[isoDay]) window.dailyAchivs.days[isoDay] = {};
-          window.dailyAchivs.days[isoDay][p] = titles;
-        }
       });
 
-      if (isTodayTab) saveDailyAchivs(); // Save daily achievements if in today's tab
       return achHtml || '<div style="color:#8e8e93; text-align:center; padding:30px;">Noch keine Erfolge.</div>';
     };
 
@@ -1910,6 +1955,14 @@ window.processAllStatsChronologically = function(matches, players) {
     }
 };
 
+// Alias für Kompatibilität mit index.html - Global definiert, damit Speichern immer möglich ist
+window.processAllStatsChronologically = function(matches, players, todayStr) {
+    // Nutzt die vorhandene computeEloRatings Logik für ELO und processData für Stats
+    const elo = window.computeEloRatings(matches);
+    const base = window.processData(matches, todayStr);
+    return { pData: base.pData, matchDeltas: {}, aggregates: base.aggregates, blackWins: base.blackWins, breakWins: base.breakWins };
+};
+
 // Hilfsfunktion für lokale Berechnungen (Fallback, wenn Worker blockiert ist)
 window.calculateStatsLocally = function(allMatches, players) {
     const pData = {};
@@ -1917,11 +1970,18 @@ window.calculateStatsLocally = function(allMatches, players) {
     const eloGamesCount = {};
     let blackWins = 0;
     let breakWinsCount = 0;
-    const aggregates = { totalBallMatches: 0, vollWins: 0, halbWins: 0, playerBallWins: {}, teamResults: {}, ballSpez: {}, matchupStats: {}, matchups: {}, meetings: {}, headToHead: {} }; // Add headToHead to initP
+    const aggregates = { totalBallMatches: 0, vollWins: 0, halbWins: 0, playerBallWins: {}, teamResults: {}, ballSpez: {}, matchupStats: {}, matchups: {}, meetings: {} };
     const matchDeltas = {};
 
     const initP = (n) => {
-        if (!pData[n]) pData[n] = { wins: 0, games: 0, rest: 0, maxStreak: 0, currentStreak: 0, lastWin: false, clutchWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0, loseStreak: 0, maxLoseStreak: 0, eloHistory: [], maxElo: 1000, maxWinRate: 0, last30Games: [], last20Losses: [], last20WinsKiller: [], gameResultsHistory: [] };
+        if (!pData[n]) pData[n] = { 
+            wins: 0, games: 0, rest: 0, maxStreak: 0, currentStreak: 0, lastWin: false, 
+            clutchWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0, loseStreak: 0, 
+            maxLoseStreak: 0, eloHistory: [], maxElo: 1000, maxWinRate: 0, last30Games: [], 
+            last20Losses: [], last20WinsKiller: [], gameResultsHistory: [],
+            headToHead: {}, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0,
+            closeWins: 0, closeLosses: 0, dramaWins: 0
+        };
     };
 
     const sorted = [...allMatches].sort((a,b) => {
@@ -2033,6 +2093,30 @@ window.calculateStatsLocally = function(allMatches, players) {
             d.eloHistory.push(Math.round(eloRatings[p]));
             if(eloRatings[p] > d.maxElo) d.maxElo = Math.round(eloRatings[p]);
         });
+
+        // Duo & Duell Logic für Aggregates (Hier außerhalb des Spieler-Loops, damit nicht mehrfach gezählt wird!)
+        if (isTeam && p1A.length === 2 && p2A.length === 2) {
+            const t1 = [...p1A].sort().join(" & "), t2 = [...p2A].sort().join(" & ");
+            if(!aggregates.teamResults[t1]) aggregates.teamResults[t1] = {w:0, g:0};
+            if(!aggregates.teamResults[t2]) aggregates.teamResults[t2] = {w:0, g:0};
+            aggregates.teamResults[t1].g++; aggregates.teamResults[t2].g++;
+            if(g.w == 1) aggregates.teamResults[t1].w++; else aggregates.teamResults[t2].w++;
+        }
+
+        if (!isTeam && p1A.length === 1 && p2A.length === 1) {
+            const name1 = p1A[0], name2 = p2A[0];
+            const winName = (g.w == 1) ? name1 : name2;
+            const loseName = (g.w == 1) ? name2 : name1;
+            const mKey = winName + " -> " + loseName;
+            const uKey = [name1, name2].sort().join('|');
+            
+            aggregates.matchups[mKey] = (aggregates.matchups[mKey] || 0) + 1;
+            aggregates.meetings[uKey] = (aggregates.meetings[uKey] || 0) + 1;
+            
+            if(!aggregates.matchupStats[uKey]) aggregates.matchupStats[uKey] = {p1: name1, p2: name2, p1_wins:0, p2_wins:0, games:0};
+            aggregates.matchupStats[uKey].games++;
+            if(winName === aggregates.matchupStats[uKey].p1) aggregates.matchupStats[uKey].p1_wins++; else aggregates.matchupStats[uKey].p2_wins++;
+        }
 
         // Aggregates (Spezis etc.)
         if (g.bt1 && g.bt2) {

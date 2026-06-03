@@ -248,10 +248,14 @@ self.onmessage = function(e) {
         
         const sorted = indexed.sort((a,b) => {
             const parse = (s) => {
-                const m = String(s || "").match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
-                return m ? new Date(m[3], m[2]-1, m[1]).getTime() : 0;
+                const str = String(s || "");
+                const m = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[^\d]+(\d{1,2}):(\d{2}))?/);
+                if (!m) return 0;
+                const dd = parseInt(m[1], 10), mm = parseInt(m[2], 10) - 1, yy = parseInt(m[3], 10);
+                const hh = m[4] ? parseInt(m[4], 10) : 0, mi = m[5] ? parseInt(m[5], 10) : 0;
+                return new Date(yy, mm, dd, hh, mi).getTime();
             };
-            return parse(a.g.d) - parse(b.g.d);
+            return (parse(a.g.d) - parse(b.g.d)) || (a.i - b.i);
         });
 
         const careerStats = processAllStats(sorted, spieler, true);
