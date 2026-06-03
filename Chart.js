@@ -1687,7 +1687,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
                 if (topEloPlayers.length > 0) {
                     eloHistoryContainer.style.display = 'block';
-                    const WINDOW_SIZE = 20; // Fokus auf die Form (letzte 20 Spiele)
+                    const WINDOW_SIZE = 10; // Fokus auf die Form (letzte 20 Spiele)
                     const maxH = Math.max(...topEloPlayers.map(p => res.pData[p].eloHistory.length));
                     const displayCount = Math.min(WINDOW_SIZE, maxH);
                     
