@@ -756,7 +756,7 @@
                             </select>
                         </div>
                         <button id="btn-random-teams" onclick="window.openTeamModal()" style="height: 46px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: var(--accent); font-size: 11px; font-weight: 800; padding: 0 12px; white-space: nowrap;">🎲 Startteam</button>
-                        <button id="btn-setup-help" onclick="window.openSetupModal()" style="height: 46px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: #4FC3F7; font-size: 11px; font-weight: 800; padding: 0 12px; white-space: nowrap;">🎱-Anordnung</button>
+                        <button id="btn-setup-help" onclick="window.openSetupModal()" style="height: 46px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: #4FC3F7; font-size: 11px; font-weight: 800; padding: 0 12px; white-space: nowrap;">🎱-Regeln</button>
                     </div>
 
                     <div id="ui-1-1">
@@ -1107,73 +1107,149 @@
 
     <div id="setupModal" class="modal">
         <div class="modal-backdrop" onclick="window.closeSetupModal()"></div>
-        <div class="modal-card" style="max-width: 380px;">
-            <div style="padding: 30px 20px; text-align: center;">
-                <div style="font-size: 40px; margin-bottom: 15px;">📐</div>
-                <div style="font-weight: 900; color: var(--accent); font-size: 16px; text-transform: uppercase; margin-bottom: 10px;">Kugel-Aufbau (8-Ball)</div>
-                <div style="color: #ffffff; font-size: 13px; line-height: 1.5; font-weight: 600; margin-bottom: 20px;">
-                    Die offizielle Anordnung der Kugeln im Dreieck:
+        <div class="modal-card" style="max-width: 440px; border: 1px solid rgba(255, 204, 0, 0.3); box-shadow: 0 0 30px rgba(0,0,0,0.6), 0 0 15px rgba(255, 204, 0, 0.1);">
+            <div style="padding: 25px 20px 15px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); background: linear-gradient(180deg, rgba(255, 204, 0, 0.1) 0%, rgba(28, 28, 30, 0.8) 100%);">
+                <div style="font-size: 32px; margin-bottom: 5px; filter: drop-shadow(0 0 8px var(--accent));">🎱</div>
+                <div style="font-weight: 900; color: var(--accent); font-size: 18px; text-transform: uppercase; letter-spacing: 2px;">Regeln & Aufbau</div>
+            </div>
+            <div style="flex: 1; overflow-y: auto; padding: 20px; background: rgba(0,0,0,0.2);">                
+                <div class="card-modern card-hud" style="margin-bottom: 20px; padding: 15px; border-left: 3px solid var(--accent) !important;">
+                    <div style="font-weight: 900; color: var(--accent); font-size: 11px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">📐 Kugel-Aufbau</div>
+                    <svg width="100%" height="200" viewBox="0 0 200 200" style="background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 15px;">
+                        <defs>
+                            <radialGradient id="gradSetupV" cx="30%" cy="30%" r="50%">
+                                <stop offset="0%" stop-color="white" stop-opacity="0.3"/>
+                                <stop offset="100%" stop-color="black" stop-opacity="0.2"/>
+                            </radialGradient>
+                            <radialGradient id="gradSetupH" cx="30%" cy="30%" r="50%">
+                                <stop offset="0%" stop-color="white" stop-opacity="0.2"/>
+                                <stop offset="100%" stop-color="black" stop-opacity="0.2"/>
+                            </radialGradient>
+                            <radialGradient id="gradSetup8" cx="30%" cy="30%" r="50%">
+                                <stop offset="0%" stop-color="white" stop-opacity="0.4"/>
+                                <stop offset="100%" stop-color="black" stop-opacity="0.1"/>
+                            </radialGradient>
+                        </defs>
+                        <!-- Triangle Outline -->
+                        <polygon points="100,10 10,190 190,190" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+                        
+                        <!-- Apex (Ball 1) - Solid -->
+                        <g transform="translate(100,25)">
+                            <circle cx="0" cy="0" r="10" fill="#ffcc00"/>
+                            <circle cx="0" cy="0" r="10" fill="url(#gradSetupV)"/>
+                            <text x="0" y="3.5" font-family="-apple-system" font-size="10" fill="#000" text-anchor="middle" font-weight="bold">1</text>
+                        </g>
+                        <text x="100" y="45" font-family="-apple-system" font-size="10" fill="#ffcc00" text-anchor="middle" font-weight="bold">Vorderste Kugel (liegt auf dem Anstosspunkt)</text>
+                        
+                        <!-- Middle (Ball 8) - Black -->
+                        <g transform="translate(100,100)">
+                            <circle cx="0" cy="0" r="10" fill="#000"/>
+                            <circle cx="0" cy="0" r="10" fill="url(#gradSetup8)"/>
+                            <text x="0" y="3.5" font-family="-apple-system" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold">8</text>
+                        </g>
+                        <text x="100" y="120" font-family="-apple-system" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="bold">Mitte des Dreiecks</text>
+                        
+                        <!-- Bottom Left Corner (Solid) -->
+                        <g transform="translate(30,175)">
+                            <circle cx="0" cy="0" r="10" fill="#ffcc00"/>
+                            <circle cx="0" cy="0" r="10" fill="url(#gradSetupV)"/>
+                            <text x="0" y="3.5" font-family="-apple-system" font-size="10" fill="#000" text-anchor="middle" font-weight="bold">V</text>
+                        </g>
+                        <text x="30" y="195" font-family="-apple-system" font-size="10" fill="#ffcc00" text-anchor="middle" font-weight="bold">Eine Volle</text>
+                        
+                        <!-- Bottom Right Corner (Half) -->
+                        <g transform="translate(170,175)">
+                            <circle cx="0" cy="0" r="10" fill="white"/>
+                            <path d="M-9.5 -3.2 A 10 10 0 0 0 -9.5 3.2 L 9.5 3.2 A 10 10 0 0 0 9.5 -3.2 Z" fill="#4FC3F7"/>
+                            <circle cx="0" cy="0" r="10" fill="url(#gradSetupH)"/>
+                            <text x="0" y="3.5" font-family="-apple-system" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold">H</text>
+                        </g>
+                        <text x="170" y="195" font-family="-apple-system" font-size="10" fill="#4FC3F7" text-anchor="middle" font-weight="bold">Eine Halbe</text>
+                    </svg>
+                    
+                    <div style="color: #ffffff; font-size: 11px; line-height: 1.5; font-weight: 600; margin-top: 15px; text-align: left; padding: 0 10px;">
+                        • Alle anderen Kugeln beliebig verteilen.<br>
+                        • Die vorderste Kugel liegt auf dem "<b>Anstosspunkt</b>".<br>
+                        • Der Anstoß erfolgt von der gegenüberliegenden Seite (auf der Anstoßlinie, nicht nur auf dem Punkt).
+                    </div>
+                </div>
+                
+                <div class="card-modern card-hud" style="margin-bottom: 20px; padding: 15px; border-left: 3px solid var(--accent) !important;">
+                    <div style="font-weight: 900; color: var(--accent); font-size: 11px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">📜 Allgemeine Regeln</div>
+                    <div style="color: #ffffff; font-size: 11px; line-height: 1.6; font-weight: 600;">
+                        • <span style="color: var(--accent); font-weight: 900;">ZIEL:</span> Erst alle eigenen Kugeln (Voll oder Halb), dann die schwarze 8 versenken.<br>
+                        • <span style="color: var(--accent); font-weight: 900;">ANSTOSS (BREAK):</span>
+                            <ul>
+                                <li>Die Weiße muss die vorderste Kugel des Dreiecks treffen.</li>
+                                <li>Es ist ein legaler Anstoß, wenn:
+                                    <ul>
+                                        <li>Mindestens 4 farbige Kugeln eine Bande berühren ODER</li>
+                                        <li>Mindestens eine farbige Kugel versenkt wird.</li>
+                                    </ul>
+                                </li>
+                                <li>Wird der Anstoß nicht legal ausgeführt, ist es ein Foul (Ball-in-Hand für den Gegner).</li>
+                            </ul>
+                        • <span style="color: var(--accent); font-weight: 900;">GRUPPENWAHL:</span>
+                            <ul>
+                                <li>Nach dem Anstoß ist der Tisch "offen". Das bedeutet, die Gruppen (Voll/Halb) sind noch nicht festgelegt.</li>
+                                <li>Die Gruppen werden erst durch die erste Kugel bestimmt, die nach dem Anstoß *legal* versenkt wird.</li>
+                                <li>Beim Anstoß versenkte Kugeln legen die Gruppen NICHT fest. Der Spieler ist weiter am Tisch und kann eine beliebige Kugel (außer der 8) spielen, um seine Gruppe zu wählen.</li>
+                            </ul>
+                        • <span style="color: var(--accent); font-weight: 900;">KOMBINATIONEN:</span> Erlaubt, wenn eigene Gruppe zuerst getroffen wird.<br>
+                        • <span style="color: var(--accent); font-weight: 900;">MITLOCHEN:</span> Fällt eine gegnerische Kugel zusätzlich zur eigenen korrekten Kugel, ist das kein Foul.
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+                        <div style="padding: 10px; background: rgba(255, 204, 0, 0.08); border-radius: 10px; border: 1px solid rgba(255, 204, 0, 0.2);">
+                            <div style="font-weight: 900; color: var(--accent); font-size: 10px; text-transform: uppercase; margin-bottom: 5px;">📍 Ansage (Call Shot)</div>
+                            <div style="color: rgba(255,255,255,0.9); font-size: 10px; line-height: 1.4;">
+                                Kugel und Loch müssen (außer beim Break) klar sein. Fällt sie anders: Stoß ungültig, Gegner am Tisch.
+                            </div>
+                        </div>
+                        <div style="padding: 10px; background: rgba(255, 204, 0, 0.08); border-radius: 10px; border: 1px solid rgba(255, 204, 0, 0.2);">
+                            <div style="font-weight: 900; color: var(--accent); font-size: 10px; text-transform: uppercase; margin-bottom: 5px;">🛡️ Sicherheit (Safety Call)</div>
+                            <div style="color: rgba(255,255,255,0.9); font-size: 10px; line-height: 1.4;">
+                                Wer vor dem Stoß "Sicherheit" ansagt, gibt den Spielzug taktisch ab. Dein Zug endet danach sofort, auch wenn du eine Kugel versenkst.
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <svg width="100%" height="200" viewBox="0 0 200 200" style="background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 15px;">
-                    <defs>
-                        <radialGradient id="gradSetupV" cx="30%" cy="30%" r="50%">
-                            <stop offset="0%" stop-color="white" stop-opacity="0.3"/>
-                            <stop offset="100%" stop-color="black" stop-opacity="0.2"/>
-                        </radialGradient>
-                        <radialGradient id="gradSetupH" cx="30%" cy="30%" r="50%">
-                            <stop offset="0%" stop-color="white" stop-opacity="0.2"/>
-                            <stop offset="100%" stop-color="black" stop-opacity="0.2"/>
-                        </radialGradient>
-                        <radialGradient id="gradSetup8" cx="30%" cy="30%" r="50%">
-                            <stop offset="0%" stop-color="white" stop-opacity="0.4"/>
-                            <stop offset="100%" stop-color="black" stop-opacity="0.1"/>
-                        </radialGradient>
-                    </defs>
-                    <!-- Triangle Outline -->
-                    <polygon points="100,10 10,190 190,190" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
-                    
-                    <!-- Apex (Ball 1) - Solid -->
-                    <g transform="translate(100,25)">
-                        <circle cx="0" cy="0" r="10" fill="#ffcc00"/>
-                        <circle cx="0" cy="0" r="10" fill="url(#gradSetupV)"/>
-                        <text x="0" y="3.5" font-family="-apple-system" font-size="10" fill="#000" text-anchor="middle" font-weight="bold">1</text>
-                    </g>
-                    <text x="100" y="45" font-family="-apple-system" font-size="10" fill="#ffcc00" text-anchor="middle" font-weight="bold">Vorderste Kugel (liegt auf dem Anstosspunkt)</text>
-                    
-                    <!-- Middle (Ball 8) - Black -->
-                    <g transform="translate(100,100)">
-                        <circle cx="0" cy="0" r="10" fill="#000"/>
-                        <circle cx="0" cy="0" r="10" fill="url(#gradSetup8)"/>
-                        <text x="0" y="3.5" font-family="-apple-system" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold">8</text>
-                    </g>
-                    <text x="100" y="120" font-family="-apple-system" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="bold">Mitte des Dreiecks</text>
-                    
-                    <!-- Bottom Left Corner (Solid) -->
-                    <g transform="translate(30,175)">
-                        <circle cx="0" cy="0" r="10" fill="#ffcc00"/>
-                        <circle cx="0" cy="0" r="10" fill="url(#gradSetupV)"/>
-                        <text x="0" y="3.5" font-family="-apple-system" font-size="10" fill="#000" text-anchor="middle" font-weight="bold">V</text>
-                    </g>
-                    <text x="30" y="195" font-family="-apple-system" font-size="10" fill="#ffcc00" text-anchor="middle" font-weight="bold">Eine Volle</text>
-                    
-                    <!-- Bottom Right Corner (Half) -->
-                    <g transform="translate(170,175)">
-                        <circle cx="0" cy="0" r="10" fill="white"/>
-                        <path d="M-9.5 -3.2 A 10 10 0 0 0 -9.5 3.2 L 9.5 3.2 A 10 10 0 0 0 9.5 -3.2 Z" fill="#4FC3F7"/>
-                        <circle cx="0" cy="0" r="10" fill="url(#gradSetupH)"/>
-                        <text x="0" y="3.5" font-family="-apple-system" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold">H</text>
-                    </g>
-                    <text x="170" y="195" font-family="-apple-system" font-size="10" fill="#4FC3F7" text-anchor="middle" font-weight="bold">Eine Halbe</text>
-                </svg>
-                
-                <div style="color: #ffffff; font-size: 11px; line-height: 1.5; font-weight: 600; margin-top: 15px; text-align: left; padding: 0 10px;">
-                    • Alle anderen Kugeln beliebig verteilen.<br>
-                    • Die vorderste Kugel liegt auf dem "<b>Anstosspunkt</b>".<br>
-                    • Der Anstoß erfolgt von der gegenüberliegenden Seite (auf der Anstoßlinie, nicht nur auf dem Punkt).
+                <div class="card-modern card-hud" style="margin-bottom: 20px; padding: 15px; border-left: 3px solid var(--error) !important;">
+                    <div style="font-weight: 900; color: var(--error); font-size: 11px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">⚠️ Fouls (Ball-in-Hand)</div>
+                    <div style="color: #ffffff; font-size: 11px; line-height: 1.6; font-weight: 600;">
+                        Der Gegner darf die Weiße <b style="color: #34c759;">ÜBERALL</b> auf dem Tisch platzieren (nicht nur hinter der Kopflinie).<br>
+                        • <span style="color: var(--error); font-weight: 900;">SCRATCH / VOM TISCH:</span> Die Weiße fällt ins Loch oder verlässt die Spielfläche. Springt eine farbige Kugel ab, gilt sie als versenkt (außer die 8 -> Niederlage).<br>
+                        • <span style="color: var(--error); font-weight: 900;">KEIN TREFFER:</span> Die Weiße berührt überhaupt keine Kugel.<br>
+                        • <span style="color: var(--error); font-weight: 900;">FALSCHE KUGEL:</span> Die Weiße trifft zuerst eine gegnerische Kugel oder die 8 (solange noch eigene Kugeln auf dem Tisch liegen).<br>
+                        • <span style="color: var(--error); font-weight: 900;">DURCHSTOSS / SCHIEBEN:</span> Das Queue berührt die Weiße beim Stoß doppelt oder "schiebt" sie (Tip bleibt zu lange an der Kugel).<br>
+                        • <span style="color: var(--error); font-weight: 900;">BERÜHRUNG:</span> Eine Kugel (auch die Weiße beim Zielen) wird versehentlich mit der Hand, Kleidung oder dem Queue-Holz berührt.<br>
+                        • <span style="color: var(--error); font-weight: 900;">FUSS AM BODEN:</span> Beim Ausführen des Stoßes muss mindestens ein Fuß den Boden berühren.<br>
+                        <div style="margin-top: 10px; padding: 8px; background: rgba(255, 59, 48, 0.1); border-radius: 8px; border: 1px solid rgba(255, 59, 48, 0.3);">
+                            <span style="color: var(--error); font-weight: 900;">BANDEN-PFLICHT:</span> Nach dem Treffer zwischen Weiß und deiner Kugel muss <b>danach</b> zwingend eine beliebige Kugel eine Bande berühren oder versenkt werden. Nur Berühren ohne Bande ist ein Foul!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-modern card-hud" style="padding: 15px; border-left: 3px solid #fff !important;">
+                    <div style="font-weight: 900; color: #fff; font-size: 11px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">🎱 Die schwarze 8</div>
+                    <div style="color: #ffffff; font-size: 11px; line-height: 1.6; font-weight: 600;">
+                        • <span style="color: #34c759; font-weight: 900;">SIEG:</span> Erst wenn alle Kugeln deiner Gruppe versenkt sind, darfst du die 8 spielen. Sie muss in ein <b style="color: #fff;">angesagtes</b> Loch fallen.<br><br>
+                        Das Spiel ist sofort <b style="color: var(--error); text-decoration: underline;">VERLOREN</b>, wenn:<br>
+                        • <span style="color: #fff; font-weight: 900; border-bottom: 1px solid rgba(255,255,255,0.4);">ZU FRÜH:</span> Die 8 fällt, während du noch Kugeln deiner Gruppe auf dem Tisch hast.<br>
+                        • <span style="color: #fff; font-weight: 900; border-bottom: 1px solid rgba(255,255,255,0.4);">SCRATCH:</span> Die Weiße fällt ins Loch (oder springt ab), während die 8 versenkt wird.<br>
+                        • <span style="color: #fff; font-weight: 900; border-bottom: 1px solid rgba(255,255,255,0.4);">FALSCHES LOCH:</span> Die 8 fällt in ein Loch, das du nicht angesagt hast.<br>
+                        • <span style="color: #fff; font-weight: 900; border-bottom: 1px solid rgba(255,255,255,0.4);">VOM TISCH:</span> Die 8 springt von der Spielfläche ab.<br>
+                        • <span style="color: #fff; font-weight: 900; border-bottom: 1px solid rgba(255,255,255,0.4);">FOUL BEIM VERSENKEN:</span> Ein beliebiges Foul passiert im gleichen Stoß, in dem die 8 fällt.<br><br>
+                        <div style="margin-top: 5px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                            <span style="font-weight: 900; color: var(--accent); font-size: 10px; text-transform: uppercase;">⚡ Sonderfall Anstoß (Break)</span><br>
+                            <span style="font-size: 10px; color: rgba(255,255,255,0.8); line-height: 1.4; display: block; margin-top: 4px;">
+                                Fällt die 8 beim Anstoß, ist das Spiel weder gewonnen noch verloren. Der Spieler darf entscheiden: Die 8 wird auf den Punkt zurückgelegt oder es wird neu aufgebaut.
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+            <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.15);">
                 <button class="btn-save" style="margin-top:0;" onclick="window.closeSetupModal()">Verstanden</button>
             </div>
         </div>
