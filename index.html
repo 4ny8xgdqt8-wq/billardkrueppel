@@ -1735,7 +1735,22 @@
             window.updateAllViews(); // UI aktualisieren nach dem Löschen
         };
 
-        window.doForceUpdate = () => {
+        window.doForceUpdate = async () => {
+            // 1. Alle Caches löschen
+            if ('caches' in window) {
+                const keys = await caches.keys();
+                for (const key of keys) {
+                    await caches.delete(key);
+                }
+            }
+            // 2. Service Worker deinstallieren
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    await registration.unregister();
+                }
+            }
+            // 3. Seite hart neu laden
             const url = window.location.href.split('?')[0];
             window.location.href = url + '?u=' + Date.now();
         };
