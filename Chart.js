@@ -1695,7 +1695,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
                     const datasets = topEloPlayers.map((p, i) => {
                         const h = res.pData[p].eloHistory || [];
-                        const d = h.slice(-displayCount); // Nimm die aktuellsten X Werte
+                        const realDataCount = Math.min(h.length, displayCount);
+                        const d = h.slice(-displayCount); 
                         
                         // Falls ein Spieler weniger Spiele hat, wird die Linie bis zum rechten Rand
                         // mit seinem aktuellsten Wert verlängert.
@@ -1707,7 +1708,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                             data: d,
                             borderColor: graphColors[i % graphColors.length],
                             backgroundColor: graphColors[i % graphColors.length] + '22',
-                            tension: 0.3, pointRadius: 2, borderWidth: 2,
+                            tension: 0.3, 
+                            pointRadius: d.map((_, idx) => idx < realDataCount ? 2 : 0),
+                            pointHoverRadius: d.map((_, idx) => idx < realDataCount ? 4 : 0),
+                            borderWidth: 2,
                             fill: false
                         };
                     });
