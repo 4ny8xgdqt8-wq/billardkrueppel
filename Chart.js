@@ -949,19 +949,16 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     const statsBeforeToday = safeStats.filter(g => g && g.d && !g.d.startsWith(todayStr));
     
     const dataAll = precalculatedCareerStats || { pData: {}, matchDeltas: {}, aggregates: {} }; // Worker output
+    if (!precalculatedCareerStats && !filterToday) return; // Nicht rendern wenn Daten fehlen und nicht im Heute-Tab
+
     const dataBeforeToday = precalculatedCareerStatsBeforeToday || { pData: {}, matchDeltas: {}, aggregates: {} }; // Worker output
     const dataToday = filterToday ? window.processData(statsToday, todayStr) : null;
 
     const getAchHtml = (proc, isTodayTab, procBefore) => {
       let achHtml = "";
 
-      // Header nur fürs TODAY-Layout (hier KEIN daily-save!)
-      if (isTodayTab && Object.keys(proc.pData).some(p => proc.pData[p].todayGames > 0)) { // Only show header if there are today's achievements
-        achHtml += `
-          <div style="margin: 45px 0 20px 5px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <div style="color: #ffcc00; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px;">Die heutigen Erfolge</div>
-            <div style="height: 3px; width: 30px; background: #ffcc00; margin-top: 5px; border-radius: 2px;"></div>
-          </div>`;
+      if (isTodayTab && proc.pData && Object.keys(proc.pData).some(p => proc.pData[p].todayGames > 0)) {
+        achHtml += `<div class="section-label" style="margin-top: 40px;">📅 Die heutigen Erfolge</div>`;
       }
 
       const labels = Object.keys(proc.pData).sort();
@@ -1272,17 +1269,20 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     // --- UI UPDATE ---
     const tEl = byId('achievements-today');
     const aEl = byId('achievements-alltime');
+    const sEl = byId('achievements-stat-view');
     
     if (tEl) tEl.innerHTML = '';
     if (aEl) aEl.innerHTML = '';
+    if (sEl) sEl.innerHTML = '';
 
     if (filterToday) {
-        if (tEl) { tEl.innerHTML = getAchHtml(dataAll, true, dataBeforeToday); tEl.style.display = "block"; }
+        // if (tEl) { tEl.innerHTML = getAchHtml(dataAll, true, dataBeforeToday); tEl.style.display = "block"; } // Dieser Container ist redundant und wird nicht mehr verwendet
         if (aEl) aEl.style.display = "none";
+        if (sEl) { sEl.innerHTML = getAchHtml(dataAll, true, dataBeforeToday); sEl.style.display = "block"; }
     } else { // Overall or Achievements tab
         if (tEl) tEl.style.display = "none";
+        if (sEl) sEl.style.display = "none";
         if (aEl) { 
-            // Hier nutzen wir += statt =, damit die Level stehen bleiben!
             aEl.innerHTML = getAchHtml(dataAll, false, dataBeforeToday); 
             aEl.style.display = "block"; 
         }
@@ -1786,15 +1786,15 @@ window.processAllStatsChronologically = function(matches, players) {
             const streakClass = r.streak >= 3 ? 'streak-fire' : (r.loseStreak >= 3 ? 'streak-frost' : '');
             const streakEmoji = (r.streak >= 3) ? ' <span style="display:inline-block; color:var(--accent); text-shadow: 0 0 8px rgba(255,204,0,0.4); animation: streak-pulse 1.5s infinite ease-in-out;">🔥</span>' : ''; // Pulsierendes Flammen-Emoji
             html += `
-              <div onclick="window.openPlayerProfile('${r.name}')" class="${isFirst ? 'rank-1-card' : ''}" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 20px; border: 1px solid ${isFirst ? '#ffcc00' : 'rgba(255,255,255,0.08)'}; cursor:pointer; box-shadow: ${isFirst ? '0 0 20px rgba(255,204,0,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; ${isFirst ? '' : 'animation: ach-card-enter 0.4s ease-out forwards; opacity: 0;'} animation-delay: ${0.5 + i * 0.05}s;">
+              <div onclick="window.openPlayerProfile('${r.name}')" class="card-modern ${isFirst ? 'rank-1-card' : ''}" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; padding: 12px; border-radius: 20px; border: 1px solid ${isFirst ? '#ffcc00' : 'rgba(255,255,255,0.08)'}; cursor:pointer; box-shadow: ${isFirst ? '0 0 20px rgba(255,204,0,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; ${isFirst ? '' : 'animation: ach-card-enter 0.4s ease-out forwards; opacity: 0;'} animation-delay: ${0.5 + i * 0.05}s;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${badge || (i+1 + '.')}</div>
                 <div class="avatar-frame ${streakClass}">
                   <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15);">
                 </div>
                 <div style="display:none; width:30px; height:30px; border-radius:10px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
-                <div style="flex:1;">
-                  <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2);">${r.name} ${streakEmoji}</div>
-                  <div style="font-size:10px; color:#acacb0; margin-top:2px;">bewertete Spiele: ${r.games}</div>
+                <div style="flex:1; overflow:hidden;">
+                  <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.name} ${streakEmoji}</div>
+                  <div style="font-size:10px; color:#acacb0; margin-top:2px;">Matches: ${r.games}</div>
                 </div>
                 <div style="text-align:right;">
                   <div id="rank-elo-${i}" style="font-size:16px; font-weight:900; color:#34c759; text-shadow: 0 0 10px rgba(52,199,89,0.3);">0</div>
@@ -1946,15 +1946,15 @@ window.processAllStatsChronologically = function(matches, players) {
             const isTopForm = i === 0;
             const streakClass = r.streak >= 3 ? 'streak-fire' : (r.loseStreak >= 3 ? 'streak-frost' : '');
             listHtml += `
-              <div onclick="window.openPlayerProfile('${r.name}')" style="display:flex; align-items:center; gap:12px; margin-bottom:10px; background: ${isTopForm ? 'linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)' : 'rgba(255,255,255,0.03)'}; padding: 12px; border-radius: 16px; border: 1px solid ${isTopForm ? '#34c759' : 'rgba(255,255,255,0.08)'}; box-shadow: ${isTopForm ? '0 0 20px rgba(52,199,89,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; cursor:pointer; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${0.5 + i * 0.05}s;">
+              <div onclick="window.openPlayerProfile('${r.name}')" class="card-modern" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; background: ${isTopForm ? 'linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)' : ''}; padding: 12px; border-radius: 20px; border: 1px solid ${isTopForm ? '#34c759' : 'rgba(255,255,255,0.08)'}; box-shadow: ${isTopForm ? '0 0 20px rgba(52,199,89,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; cursor:pointer; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${0.5 + i * 0.05}s;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${i === 0 ? '🔥' : (i === 1 ? '✨' : (i === 2 ? '📈' : (i+1 + '.')))}</div>
                 <div class="avatar-frame ${streakClass}">
                   <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15);">
                 </div>
                 <div style="display:none; width:30px; height:30px; border-radius:10px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
-                <div style="flex:1;">
-                  <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2);">${r.name}</div>
-                  <div style="font-size:10px; color:#acacb0; margin-top:2px;">letzte ${r.g}: ${r.w}-${r.l} (${r.wr}%)${r.streak > 1 ? ` • Serie: ${r.streak}` : ''}</div>
+                <div style="flex:1; overflow:hidden;">
+                  <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.name}</div>
+                  <div style="font-size:10px; color:#acacb0; margin-top:2px;">Letzte ${r.g}: ${r.w}-${r.l} (${r.wr}%)${r.streak > 1 ? ` • S: ${r.streak}` : ''}</div>
                 </div>
                 <div style="text-align:right;">
                   <div style="font-size:16px; font-weight:900; ${deltaStyle(r.eloDelta)} text-shadow: 0 0 10px ${r.eloDelta > 0 ? 'rgba(52,199,89,0.3)' : (r.eloDelta < 0 ? 'rgba(255,59,48,0.3)' : 'rgba(255,255,255,0.1)')};">${deltaSign(r.eloDelta)}</div>
