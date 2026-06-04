@@ -17,7 +17,7 @@ self.onmessage = function(e) {
         let blackWins = 0;
         let breakWinsCount = 0;
         const aggregates = {
-            totalBallMatches: 0, vollWins: 0, halbWins: 0,
+            totalBallMatches: 0, vollWins: 0, halbWins: 0, eloTransfers: {}, sessionEloGains: {},
             playerBallWins: {}, teamResults: {}, ballSpez: {}, matchupStats: {},
             matchups: {}, meetings: {}
         };
@@ -30,7 +30,7 @@ self.onmessage = function(e) {
                 wins: 0, games: 0, rest: 0, maxStreak: 0, currentStreak: 0, lastWin: false,
                 clutchWins: 0, closeWins: 0, closeLosses: 0, dramaWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0,
                 loseStreak: 0, maxLoseStreak: 0, eloHistory: [], maxElo: 1000, 
-                maxWinRate: 0, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0,
+                maxWinRate: 0, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0, stolenServiceWins: 0, opponentStartedGames: 0,
                 regularWins: 0, foul8Wins: 0, lostBy8BallError: 0, // New
                 headToHead: {}, // Format: { opponentName: { w: 0, l: 0 } }
                 last30Games: [], last20Losses: [], last20WinsKiller: [], gameResultsHistory: []
@@ -40,6 +40,10 @@ self.onmessage = function(e) {
         const matchDeltas = {};
 
         allMatches.forEach(({ g, i: originalIndex }) => {
+            const dateStr = g.d.split(',')[0].trim();
+            const dp = dateStr.split('.');
+            const isoDate = dp.length === 3 ? `${dp[2]}-${dp[1].padStart(2, '0')}-${dp[0].padStart(2, '0')}` : 'unknown';
+
             const isTeam = g.m === "2:2";
             const p1A = (isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1]).map(s => String(s || '').trim()).filter(Boolean); // Sicherstellen, dass Namen getrimmt und leere entfernt werden
             const p2A = (isTeam ? (g.p2 ? g.p2.split(" & ") : []) : [g.p2]).map(s => String(s || '').trim()).filter(Boolean); // Sicherstellen, dass Namen getrimmt und leere entfernt werden
@@ -58,13 +62,15 @@ self.onmessage = function(e) {
 
             const winners = (g.w == 1) ? p1A : p2A;
             const losers = (g.w == 1) ? p2A : p1A;
+            const winnerStr = String((g.w == 1) ? g.p1 : g.p2 || '').trim();
+            const loserStr = String((g.w == 1) ? g.p2 : g.p1 || '').trim();
+            const breakerString = String(g.a || '').trim();
             const rest = parseInt(g.l || 0);
 
             if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) blackWins++;
 
             // Global Break Win Check
-            const winnerStr = String((g.w == 1) ? g.p1 : g.p2 || '').trim();
-            if(g.a && winnerStr && String(g.a || '').trim() === winnerStr) {
+            if(breakerString && winners.includes(breakerString)) {
                 breakWinsCount++;
             }
 
@@ -84,7 +90,26 @@ self.onmessage = function(e) {
             const exp1 = 1 / (1 + Math.pow(10, (avg2 - avg1) / 400));
             const eloChange = (g.w == 1 ? 1 : 0) - exp1;
 
-            matchDeltas[originalIndex] = { eloDelta: Math.round(20 * Math.abs(eloChange)) };
+            // Calculate total ELO transferred for the match (for ELO-Vampir and matchDelta)
+            let totalEloTransferredForMatch = 0;
+            winners.forEach(p => {
+                const k = getK(p); // Get K-factor for this player
+                const change = p1A.includes(p) ? (k * eloChange) : -(k * eloChange);
+                totalEloTransferredForMatch += Math.round(Math.abs(change));
+            });
+
+            // Durchschnittlicher Gewinn pro Spieler im Team (verhindert Verdopplung in der Anzeige)
+            const avgMatchEloDelta = Math.round(totalEloTransferredForMatch / (winners.length || 1));
+
+            // Normalisierung der Teamnamen für konsistente Vampir-Keys (A & B -> C & D)
+            const winnerKey = [...winners].sort().join(" & ");
+            const loserKey = [...losers].sort().join(" & ");
+
+            if (winnerKey && loserKey && avgMatchEloDelta > 0) {
+                const transferKey = `${winnerKey} -> ${loserKey}`;
+                aggregates.eloTransfers[transferKey] = (aggregates.eloTransfers[transferKey] || 0) + avgMatchEloDelta;
+            }
+            matchDeltas[originalIndex] = { eloDelta: avgMatchEloDelta };
 
             // Achievements-Metriken berechnen
             winners.forEach(p => {
@@ -145,16 +170,9 @@ self.onmessage = function(e) {
                     if (g.t === 'Gegner-Fehler: Foul bei der 8') {
                         d.foul8Wins++;
                     }
-                    // Korrekte Break-Win Prüfung für Achievements
-                    const currentWinnerStr = String((g.w == 1) ? g.p1 : g.p2 || '').trim();
-                    if(g.a && currentWinnerStr && String(g.a).trim() === currentWinnerStr) {
-                         // Bei Team-Anstoß bekommen beide Partner den Punkt
-                         if (isTeam) {
-                             const teamNames = currentWinnerStr.split(" & ").map(s => s.trim());
-                             if (teamNames.includes(p)) d.breakWins++;
-                         } else if (p === currentWinnerStr) {
-                             d.breakWins++;
-                         }
+                    // Break-Win Prüfung
+                    if(breakerString && winners.includes(breakerString)) {
+                        d.breakWins++;
                     }
                     if(rest === 1) d.clutchWins++;
                 } else {
@@ -172,6 +190,19 @@ self.onmessage = function(e) {
                 eloGamesCount[p] = (eloGamesCount[p] || 0) + 1;
                 d.eloHistory.push(Math.round(eloRatings[p]));
                 if(eloRatings[p] > d.maxElo) d.maxElo = Math.round(eloRatings[p]);
+
+                // Service thief logic
+                const myTeam = winners.includes(p) ? winners : losers;
+                if (breakerString && !myTeam.includes(breakerString) && (winners.includes(breakerString) || losers.includes(breakerString))) {
+                    d.opponentStartedGames++;
+                    if (isW) d.stolenServiceWins++;
+                }
+                
+                // Session gain logic
+                if (isoDate !== 'unknown') {
+                    if (!aggregates.sessionEloGains[isoDate]) aggregates.sessionEloGains[isoDate] = {};
+                    aggregates.sessionEloGains[isoDate][p] = (aggregates.sessionEloGains[isoDate][p] || 0) + change;
+                }
             });
 
             // Aggregates (Kugel-Spezis, Duos etc.) nur im Full-History Modus

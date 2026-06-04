@@ -208,6 +208,9 @@ window.famePool = [
   { cond: (d) => d.dailyDaysWithAch >= 100, i:"📆", t:"Daily‑Sammler IX", d:["100 Tage Erfolg.","Das ist absurd gut.","Du bist die Routine.","Du hast den Kalender besiegt.","Wahnsinn."], h:"Sammle an 100 Tagen mindestens einen Tageserfolg", g:"Daily‑Sammler", tier:9 },
   { cond: (d) => d.achCountTotal >= 10,  i:"📚", t:"Sammler I",  d:["Er sammelt Titel.","Die Vitrine füllt sich.","Mehr als nur Matches.","Schöne Sammlung.","Weiter!"], h:"Schalte insgesamt 10 Achievements frei", g:"Sammler", tier:1 },
   { cond: (d) => d.achCountTotal >= 25,  i:"📚", t:"Sammler II", d:["Das wird eine Kollektion.","Du jagst Badges.","Wird langsam voll.","Respekt.","Sammler-Vibes."], h:"Schalte insgesamt 25 Achievements frei", g:"Sammler", tier:2 },
+  { cond: (d) => d.stolenServiceWins >= 3, i: "🕵️", t: "Einbruch-Spezialist I", d: ["Gegner stößt an, er gewinnt.", "Einbruch geglückt.", "Service-Diebstahl."], h: "Gewinne 3 Matches, bei denen der Gegner Anstoß hatte", g: "Einbruch-Spezialist", tier: 1 },
+  { cond: (d) => d.stolenServiceWins >= 10, i: "🕵️", t: "Einbruch-Spezialist II", d: ["Klaut Siege wie am Fließband.", "Kein Respekt vor dem Anstoßrecht.", "Profieinbrecher."], h: "Gewinne 10 Matches, bei denen der Gegner Anstoß hatte", g: "Einbruch-Spezialist", tier: 2 },
+  { cond: (d) => d.stolenServiceWins >= 25, i: "🕵️", t: "Einbruch-Spezialist III", d: ["Anstoßvorteil? Nicht gegen ihn.", "Ein Albtraum für Break-Spieler.", "Meisterdieb."], h: "Gewinne 25 Matches, bei denen der Gegner Anstoß hatte", g: "Einbruch-Spezialist", tier: 3, max: true },
   { cond: (d) => d.achCountTotal >= 50,  i:"📚", t:"Sammler III",d:["Das ist ernst.","Du hast Content durchgespielt.","Schon viel gesehen.","Große Sammlung.","Stark."], h:"Schalte insgesamt 50 Achievements frei", g:"Sammler", tier:3 },
   { cond: (d) => d.achCountTotal >= 90,  i:"📚", t:"Sammler IV", d:["Maschine.","Fast alles offen.","Das ist Arbeit.","Du bist ein Hunter.","Weiter so."], h:"Schalte insgesamt 90 Achievements frei", g:"Sammler", tier:4 },
   { cond: (d) => d.achCountTotal >= 130, i:"📚", t:"Sammler V",  d:["MAX-Hunter.","Du bist das Achievement-Menü.","Alles eingesammelt.","Legendär.","Unfassbar."], h:"Schalte insgesamt 130 Achievements frei", g:"Sammler", tier:5, max:true },
@@ -302,7 +305,12 @@ window.processData = function(dataArray, todayStr) {
 
     const pData = {};
     let blackWins = 0, breakWinsCount = 0;
-    const aggregates = { totalBallMatches: 0, vollWins: 0, halbWins: 0, playerBallWins: {}, teamResults: {}, ballSpez: {}, matchupStats: {}, matchups: {}, meetings: {} };
+    const aggregates = { 
+        totalBallMatches: 0, vollWins: 0, halbWins: 0, 
+        playerBallWins: {}, teamResults: {}, ballSpez: {}, 
+        matchupStats: {}, matchups: {}, meetings: {},
+        eloTransfers: {}, sessionEloGains: {}
+    };
     const initP = (n) => { 
         if (!pData[n]) pData[n] = { 
             wins: 0, games: 0, rest: 0, maxStreak: 0, streak: 0, 
@@ -310,7 +318,9 @@ window.processData = function(dataArray, todayStr) {
             blackWinsCount: 0, breakWins: 0, todayGames: 0, todayWins: 0,
             todayMaxStreak: 0, todayClutchWins: 0, todayBreakWins: 0, 
             todayBlackWinsCount: 0, todayKillerPoints: 0, todayRest: 0, 
-            todayAvgRest: 0, currentStreak: 0,
+            todayAvgRest: 0, currentStreak: 0, 
+            stolenServiceWins: 0, opponentStartedGames: 0, 
+            todayStolenServiceWins: 0, todayOpponentStartedGames: 0,
             regularWins: 0, foul8Wins: 0, lostBy8BallError: 0, // New
             todayRegularWins: 0, todayFoul8Wins: 0, todayLostBy8BallError: 0 // New today versions
         }; 
@@ -323,9 +333,14 @@ window.processData = function(dataArray, todayStr) {
         const p2Arr = (isTeam ? (g.p2 ? g.p2.split(" & ") : []) : [g.p2]).map(s => String(s || '').trim()).filter(Boolean);
         const winners = (g.w == 1) ? p1Arr : p2Arr;
         const losers = (g.w == 1) ? p2Arr : p1Arr;
-        const winnerString = (g.w == 1) ? String(g.p1 || '') : String(g.p2 || '');
+        const winnerString = String((g.w == 1) ? g.p1 : g.p2 || '').trim();
+        const loserString = (g.w == 1) ? String(g.p2 || '') : String(g.p1 || '');
         const breaker = String(g.a || '').trim();
         const rest = parseInt(g.l || 0);
+
+        // Normalisierung für Team-Vampir (einmal pro Match berechnen, sortiert Kopien)
+        const winnerKey = [...winners].sort().join(" & ");
+        const loserKey = [...losers].sort().join(" & ");
 
         [...p1Arr, ...p2Arr].forEach(p => { 
             if(p) {
@@ -342,7 +357,7 @@ window.processData = function(dataArray, todayStr) {
                 if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) pData[p].todayBlackWinsCount++;
                 if (g.t === 'Regulär (8er gelocht)') pData[p].todayRegularWins++; // New
                 if (g.t === 'Gegner-Fehler: Foul bei der 8') pData[p].todayFoul8Wins++; // New
-                if (breaker && winners.map(s => String(s).trim()).includes(breaker)) pData[p].todayBreakWins++;
+                if (breaker && winners.includes(breaker)) pData[p].todayBreakWins++;
                 if (rest === 1) pData[p].todayClutchWins++;
             }
             pData[p].killerPoints += rest;
@@ -363,7 +378,18 @@ window.processData = function(dataArray, todayStr) {
             
             pData[p].lastWin = true;
             if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) pData[p].blackWinsCount++;
-            if (breaker && winners.map(s => String(s).trim()).includes(breaker)) pData[p].breakWins++;
+            if (breaker && winners.includes(breaker)) pData[p].breakWins++;
+
+            // Service thief logic
+            const myTeam = winners.includes(p) ? winners : losers;
+            if (breaker && !myTeam.includes(breaker) && (winners.includes(breaker) || losers.includes(breaker))) {
+                pData[p].opponentStartedGames++;
+                if (isTodayMatch) pData[p].todayOpponentStartedGames++;
+                if (winners.includes(p)) {
+                    pData[p].stolenServiceWins++;
+                    if (isTodayMatch) pData[p].todayStolenServiceWins++;
+                }
+            }
         });
         losers.forEach(p => {
             if(!p) return;
@@ -377,7 +403,7 @@ window.processData = function(dataArray, todayStr) {
         });
         if (rest === 1) winners.forEach(p => { if(p) pData[p].clutchWins++; });
         if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) blackWins++;
-        if (breaker && winners.map(s => String(s).trim()).includes(breaker)) breakWinsCount++;
+        if (breaker && winners.includes(breaker)) breakWinsCount++;
 
         // Aggregates Berechnung für Dashboard (Kugeln, Teams, Duelle)
         if (g.bt1 && g.bt2 && g.w) {
@@ -464,6 +490,7 @@ window.computeEloRatings = function(allMatches) {
  */
 window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredPlayers, dailyAchivs, isFullHistory = true) {
     // Wir starten mit leeren/initialen Stats für die Simulation, aber übernehmen matchDeltas und aggregates
+    if (!baseStats) baseStats = { pData: {}, matchDeltas: {}, aggregates: {} };
     const simPData = {};
     const matchDeltas = JSON.parse(JSON.stringify(baseStats.matchDeltas || {}));
     const aggregates = JSON.parse(JSON.stringify(baseStats.aggregates || {}));
@@ -481,6 +508,7 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
             todayWins: 0, todayGames: 0, todayMaxStreak: 0, todayClutchWins: 0, todayBreakWins: 0, todayBlackWinsCount: 0, todayKillerPoints: 0, todayRest: 0, todayAvgRest: 0,
             loseStreak: 0, maxLoseStreak: 0, eloHistory: [], maxElo: 1000,
             regularWins: 0, foul8Wins: 0, lostBy8BallError: 0,
+            stolenServiceWins: 0, opponentStartedGames: 0, todayStolenServiceWins: 0, todayOpponentStartedGames: 0,
             todayRegularWins: 0, todayFoul8Wins: 0, todayLostBy8BallError: 0, // Missing Inits
             maxWinRate: 0, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0, // Initialisiert
             winRate: 0, avgKiller: 0, avgRest: 0, winRateLast30: 0, // Initialisiert
@@ -494,7 +522,12 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
     const getElo = (p) => (simPData[p] && typeof simPData[p].elo === 'number' ? simPData[p].elo : 1000);
 
     allMatches.forEach(({ g, i: originalIndex }) => {
-        if (!g || !g.d) return; // Skip if match data or date is missing
+        if (!g || !g.d || !g.p1 || !g.p2 || !g.w) return; // Robustheit: Korrupte Matches überspringen
+        matchDeltas[originalIndex] = matchDeltas[originalIndex] || { eloDelta: 0 };
+        const dateStr = g.d.split(',')[0].trim();
+        const dp = dateStr.split('.');
+        const isoDate = dp.length === 3 ? `${dp[2]}-${dp[1].padStart(2, '0')}-${dp[0].padStart(2, '0')}` : 'unknown';
+
         const isTeam = g.m === "2:2";
         const p1A = (isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1]).map(s => String(s || '').trim()).filter(Boolean);
         const p2A = (isTeam ? (g.p2 ? g.p2.split(" & ") : []) : [g.p2]).map(s => String(s || '').trim()).filter(Boolean);
@@ -518,6 +551,7 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
 
         const winners = (g.w == 1) ? p1A : p2A;
         const losers = (g.w == 1) ? p2A : p1A;
+        const loserString = (g.w == 1) ? String(g.p2 || '') : String(g.p1 || '');
         const rest = parseInt(g.l || 0);
         const winnerString = String((g.w == 1) ? g.p1 : g.p2 || '').trim(); // Trimmed winner string for break check
         const breakerString = String(g.a || '').trim();
@@ -526,7 +560,6 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
         const avg2 = p2A.reduce((s, p) => s + getElo(p), 0) / (p2A.length || 1);
         const exp1 = 1 / (1 + Math.pow(10, (avg2 - avg1) / 400));
         const eloChangeBase = (g.w == 1 ? 1 : 0) - exp1;
-        matchDeltas[originalIndex] = { eloDelta: Math.round(20 * Math.abs(eloChangeBase)) };
 
         players.forEach(p => {
             const d = simPData[p];
@@ -562,12 +595,9 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
                 if (g.t === 'Gegner-Fehler: Foul bei der 8') {
                     d.foul8Wins++;
                 }
-                if (breakerString && breakerString === winnerString) { // Ensure g.a is trimmed
-                    if (isTeam) {
-                        if (winnerString.split(" & ").map(s => s.trim()).includes(p)) d.breakWins++;
-                    } else if (p === winnerString) {
-                        d.breakWins++;
-                    }
+                // Break-Win Simulation
+                if(breakerString && winners.includes(breakerString)) {
+                    d.breakWins++;
                 }
 
                 if (rest === 1) { d.clutchWins++; d.closeWins++; d.dramaWins++; }
@@ -603,6 +633,13 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
             d.eloHistory.push(Math.round(d.elo));
             if (d.elo > d.maxElo) d.maxElo = Math.round(d.elo);
 
+            // Service thief logic
+            const isMyTeamBreaker = isW ? winners.includes(breakerString) : losers.includes(breakerString);
+            if (breakerString && !isMyTeamBreaker && (winners.includes(breakerString) || losers.includes(breakerString))) {
+                d.opponentStartedGames++;
+                if (isW) d.stolenServiceWins++;
+            }
+
             // Abgeleitete Metriken für Erfolge
             d.winRate = Math.round((d.wins / d.games) * 100);
             d.avgKiller = d.wins > 0 ? (d.killerPoints / d.wins) : 0;
@@ -623,6 +660,20 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
             }
         });
 
+        let totalMatchDeltaSum = 0;
+        winners.forEach(p => {
+            const k = simPData[p].eloGames < 20 ? 40 : 20;
+            const change = p1A.includes(p) ? (k * eloChangeBase) : -(k * eloChangeBase);
+            totalMatchDeltaSum += Math.round(Math.abs(change));
+        });
+
+        const matchEloDelta = Math.round(totalMatchDeltaSum / (winners.length || 1));
+        matchDeltas[originalIndex].eloDelta = matchEloDelta;
+
+        // Keine Mutation mehr! Normalisierung für Vampir-Transfers (Check nur für Simulation)
+        const winnerKey = [...winners].sort().join(" & ");
+        const loserKey = [...losers].sort().join(" & ");
+
         if (g.d && g.d.startsWith(todayStr)) {
             players.forEach(p => {
                 if (!simPData[p]) return;
@@ -634,9 +685,16 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
                     if (g.t?.includes("Schwarz") || g.t?.includes("Gegner-Fehler")) simPData[p].todayBlackWinsCount++;
                     if (g.t === 'Regulär (8er gelocht)') simPData[p].todayRegularWins++; // New
                     if (g.t === 'Gegner-Fehler: Foul bei der 8') simPData[p].todayFoul8Wins++; // New
-
-                    if (breakerString === winnerString) simPData[p].todayBreakWins++;
+                    
+                    if (breakerString && winners.includes(breakerString)) simPData[p].todayBreakWins++;
                     if (rest === 1) simPData[p].todayClutchWins++;
+
+                    // Today Service thief
+                    const isMyTeamBreakerToday = winners.includes(breakerString);
+                    if (breakerString && !isMyTeamBreakerToday && (winners.includes(breakerString) || losers.includes(breakerString))) {
+                        simPData[p].todayOpponentStartedGames++;
+                        simPData[p].todayStolenServiceWins++;
+                    }
                 } else { simPData[p].todayRest += rest; }
                 simPData[p].todayAvgRest = (simPData[p].todayGames - simPData[p].todayWins) > 0 ? (simPData[p].todayRest / (simPData[p].todayGames - simPData[p].todayWins)) : 0;
             });
@@ -871,6 +929,17 @@ window.getFilteredStats = () => {
     });
 };
 
+// Globaler State für den Session-Filter
+window.currentSessionDate = window.currentSessionDate || 'all';
+
+window.getTodayStr = () => {
+    const now = new Date();
+    const d = String(now.getDate()).padStart(2, '0');
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const y = now.getFullYear();
+    return `${d}.${m}.${y}`;
+};
+
 window.renderBillardStats = function(stats, filterToday = false, onlyAchievements = false, rootEl = document, precalculatedCareerStats = null, precalculatedCareerStatsBeforeToday = null) { 
     // --- Scope: suche IDs nur innerhalb der aktiven View (wichtig bei doppelten IDs im DOM)
     let root = rootEl || document;
@@ -898,12 +967,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     })();
 
     // --- DATUM & SICHERE DATEN ---
-    const now = new Date();
-    const d = String(now.getDate()).padStart(2, '0');
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const y = now.getFullYear();
-    let todayStr = `${d}.${m}.${y}`; // DD.MM.YYYY (default for "Heute")
-    const actualTodayStr = todayStr;
+    const actualTodayStr = window.getTodayStr();
+    let todayStr = actualTodayStr; 
 
     // --- SPIELEABEND FILTER FÜR HEUTE-TAB IM HEADER ---
     const statHeader = document.querySelector('#view-statistik .header-container');
@@ -929,7 +994,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             select.className = 'extra-filter-select';
             select.style = 'flex: 1; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 6px 10px; font-size: 12px; outline: none; max-width: 180px; text-align: center;'; 
             
-            select.onchange = () => {
+            select.onchange = (e) => {
+                window.currentSessionDate = e.target.value;
                 if (window.updateAllViews) window.updateAllViews();
                 else if (window.recalculateAndRender) window.recalculateAndRender();
             };
@@ -944,27 +1010,36 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             todayHeaderFilterBox.style.pointerEvents = 'auto'; // Sicherstellen, dass Klicks durchgehen
             todayHeaderFilterBox.style.maxWidth = '250px'; // Ensure it doesn't stretch too wide
             const select = todayHeaderFilterBox.querySelector('.extra-filter-select');
-            const currentVal = select.value || 'all';
+            
             const uniqueDates = [...new Set((window.stats || []).map(g => g.d ? g.d.split(',')[0] : null))].filter(Boolean).sort((a,b) => {
                 const p = (s) => { const parts = s.split('.'); return new Date(parts[2], parts[1]-1, parts[0]); };
                 return p(b) - p(a);
             });
             
+            // Robustheit gegen unterschiedliches Padding (z.B. 4.6. vs 04.06.)
+            const unpaddedToday = actualTodayStr.split('.').map(p => parseInt(p, 10).toString()).join('.');
+            const foundTodayStr = uniqueDates.find(d => d === actualTodayStr || d === unpaddedToday) || actualTodayStr;
+
+            // Fix: Falls 'all' oder nicht gesetzt, auf das gefundene heutige Datum defaulten
+            let currentVal = window.currentSessionDate;
+            if (!currentVal || currentVal === 'all') currentVal = foundTodayStr;
+
             let opts = '';
-            // Add "Heute" option, selected by default if currentVal is 'all' or the actual todayStr
-            opts += `<option value="${actualTodayStr}" ${currentVal === actualTodayStr || currentVal === 'all' ? 'selected' : ''}>Heute</option>`;
+            // "Heute" Option mit dem in den Daten gefundenen Format hinzufügen
+            opts += `<option value="${foundTodayStr}" ${currentVal === foundTodayStr ? 'selected' : ''}>Heute</option>`;
             
             // Add unique dates from history, excluding the actual todayStr if already present
             uniqueDates.forEach(ds => {
-                if (ds !== actualTodayStr) {
+                if (ds !== foundTodayStr) {
                     opts += `<option value="${ds}" ${currentVal === ds ? 'selected' : ''}>${ds}</option>`;
                 }
             });
             select.innerHTML = opts;
+            select.value = currentVal; // Wichtig: Wert explizit setzen
             
-            // Update todayStr based on selection, defaulting to actualTodayStr if 'all' was selected
-            if (currentVal === 'all') todayStr = actualTodayStr;
-            else todayStr = currentVal;
+            // Update todayStr und globalen State basierend auf der Auswahl
+            todayStr = currentVal;
+            window.currentSessionDate = currentVal;
         }
     } else {
         // Revert changes for other tabs
@@ -979,11 +1054,14 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         }
     }
 
-    const isoDay = `${y}-${m}-${d}`; // YYYY-MM-DD
     const safeStats = (stats || []).filter(m => m && m.d);
 
     // --- DATEN FILTERN NACHDEM todayStr FESTSTEHT ---
-    const statsToday = safeStats.filter(g => g && g.d && g.d.startsWith(todayStr));
+    const normalizeDate = (s) => (s || "").split(',')[0].trim().split('.').map(p => parseInt(p, 10)).join('.');
+    const targetDateNorm = normalizeDate(todayStr);
+    const statsToday = safeStats.filter(g => {
+        return g && g.d && normalizeDate(g.d) === targetDateNorm;
+    });
 
     // --- Daily Achievements Storage (wird von BillardPro.js in daily_achivs.json geschrieben)
     if (!window.dailyAchivs || !window.dailyAchivs.days) {
@@ -1087,7 +1165,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     if (!precalculatedCareerStats && !filterToday) return; // Nicht rendern wenn Daten fehlen und nicht im Heute-Tab
 
     const dataBeforeToday = precalculatedCareerStatsBeforeToday || { pData: {}, matchDeltas: {}, aggregates: {} }; // Worker output
-    const dataToday = filterToday ? window.processData(statsToday, todayStr) : { pData: {}, aggregates: {} };
+    // FIX: Nutze calculateStatsLocally für gefilterte Ansichten
+    const dataToday = filterToday ? window.calculateStatsLocally(statsToday, window.spieler, todayStr) : null;
     const dataFiltered = isFiltered ? window.calculateStatsLocally(stats, window.spieler) : null; // Nutze calculateStatsLocally für gefilterte ELO
     const res = filterToday ? dataToday : (isFiltered ? dataFiltered : dataAll);
     const currentStats = filterToday ? statsToday : stats;
@@ -1307,6 +1386,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           currentAchs.push(...Object.values(tierBest));
         }
 
+        // Sortiere Erfolge innerhalb der Karte alphabetisch nach Titel
+        currentAchs.sort((a, b) => a.t.localeCompare(b.t, 'de'));
+
         // Calculate achCountTotal and completedTracks
         dLvl.achCountTotal = currentAchs.length;
         const tracks = {}; // group -> maxTierAchieved
@@ -1373,7 +1455,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         // Daily-Historie im Gesamt-Tab
         if (!isTodayTab) {
           const counts = getDailyCountsForPlayer(p);
-          const entries = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+          const entries = Object.entries(counts).sort((a,b) => a[0].localeCompare(b[0], 'de'));
           if (entries.length > 0) {
             achHtmlContent += `
               <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
@@ -1418,14 +1500,46 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
     if (filterToday && mCard && mList && statsToday.length > 0) {
         mCard.style.display = 'block';
-        mList.innerHTML = [...statsToday].reverse().map(g => {
+        const deltas = (precalculatedCareerStats && precalculatedCareerStats.matchDeltas) ? precalculatedCareerStats.matchDeltas : {};
+        
+        mList.innerHTML = [...statsToday].reverse().map((g, idx) => {
+            const i = window.stats.indexOf(g);
             const time = (g.d || "").includes(", ") ? g.d.split(", ")[1] : "";
-            return `<div style="padding: 10px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 8px; border: 0.5px solid rgba(255,255,255,0.05);">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-size:13px; font-weight:800;"><span style="color: ${g.w == 1 ? '#34c759' : '#fff'}">${g.p1}</span> vs <span style="color: ${g.w == 2 ? '#34c759' : '#fff'}">${g.p2}</span></div>
-                    <div style="font-size:10px; color:#8e8e93;">${time}</div>
+            const isWin1 = g.w == 1;
+            const isWin2 = g.w == 2;
+            const dData = deltas[i] || { eloDelta: 0 };
+            const delta = (typeof dData === 'object') ? (dData.eloDelta || 0) : dData;
+            const hasBreak1 = g.a === g.p1;
+            const hasBreak2 = g.a === g.p2;
+
+            const getAv = (pName, size = 22) => {
+                if (!pName) return '';
+                const names = pName.split(' & ').map(s => s.trim());
+                return names.map((n, pIdx) => {
+                    const src = window.getAvatarUrl(n);
+                    const margin = pIdx === names.length - 1 ? '0' : '-8px';
+                    return `<img src="${src}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; border-radius:8px; object-fit:cover; border:1.5px solid rgba(255,255,255,0.2); margin-right:${margin}; position:relative; z-index:${names.length - pIdx};">
+                            <div style="display:none; width:${size}px; height:${size}px; border-radius:8px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:${size*0.6}px; border:1px solid rgba(255,255,255,0.1); margin-right:${margin}; position:relative; z-index:${names.length - pIdx};">👤</div>`;
+                }).join('');
+            };
+
+            return `
+            <div onclick="window.openMatchDetails(${i})" class="card-modern" style="padding: 12px; border-radius: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); cursor:pointer; background: rgba(28, 28, 30, 0.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: transform 0.2s; -webkit-tap-highlight-color: transparent;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:8px; flex:1; overflow:hidden;">
+                        <div style="display:flex; flex-shrink:0;">${getAv(g.p1)}</div>
+                        <div style="font-size:13px; font-weight:900; color:${isWin1 ? '#34c759' : '#fff'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${g.p1} ${hasBreak1 ? '<span style="color:var(--accent); font-size:10px;">⚡</span>' : ''}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: rgba(255,255,255,0.03); border-radius: 50%; font-size: 8px; font-weight: 900; color: #555; margin: 0 10px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.06); letter-spacing: 0.5px;">VS</div>
+                    <div style="display:flex; align-items:center; gap:8px; flex:1; justify-content:flex-end; overflow:hidden; text-align:right;">
+                        <div style="font-size:13px; font-weight:900; color:${isWin2 ? '#34c759' : '#fff'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${hasBreak2 ? '<span style="color:var(--accent); font-size:10px;">⚡</span>' : ''} ${g.p2}</div>
+                        <div style="display:flex; flex-shrink:0;">${getAv(g.p2)}</div>
+                    </div>
                 </div>
-                <div style="font-size:10px; color:#8e8e93; margin-top:4px;">${g.t} | Rest: ${g.l} | Anstoß: ${g.a}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size:10px; color:#8e8e93; font-weight:600; display:flex; align-items:center; gap:6px;"><span style="color:var(--accent); font-weight:900;">${time}</span><span style="opacity:0.4;">•</span><span>${g.t || 'Match'}</span><span style="opacity:0.4;">•</span><span>Rest: ${g.l}</span></div>
+                    <div class="stat-value-badge ${delta > 0 ? 'green' : (delta < 0 ? 'red' : '')}" style="font-size:9px; padding:2px 6px;">${delta > 0 ? '+' : ''}${delta} ELO</div>
+                </div>
             </div>`;
         }).join("");
     }
@@ -1550,10 +1664,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         // 4. 8er-Fehler-Quote (Niederlagen durch eigenen Fehler an der 8)
         const lost8Vals = labels.map(p => {
             const d = res.pData[p];
-            const losses = filterToday ? (d.todayGames - d.todayWins) : (d.games - d.wins);
+            const games = filterToday ? d.todayGames : d.games;
             const errLosses = filterToday ? (d.todayLostBy8BallError || 0) : (d.lostBy8BallError || 0);
-            const val = losses > 0 ? Math.round((errLosses / losses) * 100) : 0;
-            return { p, val, relevantGames: losses };
+            const val = games > 0 ? Math.round((errLosses / games) * 100) : 0;
+            return { p, val, relevantGames: games };
         });
         if (byId('stat-lost-by-8error')) byId('stat-lost-by-8error').innerText = getTopPlayerStr(lost8Vals, 'val', "%", filterToday ? 1 : 3);
 
@@ -1581,6 +1695,54 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         });
         if (byId('stat-killer')) byId('stat-killer').innerText = getTopPlayerStr(killerVals, 'val');
 
+        // 8. Service-Dieb (Best Winrate after Opponent Break)
+        const thiefVals = labels.map(p => {
+            const d = res.pData[p];
+            const stolenWins = filterToday ? (d.todayStolenServiceWins || 0) : (d.stolenServiceWins || 0);
+            const oppGames = filterToday ? (d.todayOpponentStartedGames || 0) : (d.opponentStartedGames || 0);
+            const val = oppGames > 0 ? Math.round((stolenWins / oppGames) * 100) : 0;
+            return { p, val, relevantGames: oppGames };
+        });
+        if (byId('stat-service-thief')) byId('stat-service-thief').innerText = getTopPlayerStr(thiefVals, 'val', "%", filterToday ? 1 : 5);
+
+        // 9. ELO-Vampir (Wer hat wen am meisten geschröpft)
+        const transfers = res.aggregates?.eloTransfers || {};
+        let topVampireStr = "-";
+        const sortedTransfers = Object.entries(transfers).sort((a,b) => b[1] - a[1]);
+        if (sortedTransfers.length > 0) {
+            const [key, val] = sortedTransfers[0];
+            topVampireStr = `${key} (${val} Pkt.)`;
+        }
+        if (byId('stat-vampire')) byId('stat-vampire').innerText = topVampireStr;
+
+        // 10. Session-Rekord (Höchster ELO-Gewinn an einem Tag)
+        let sessionRecStr = "-";
+        if (filterToday) {
+            const dayGains = res.aggregates?.sessionEloGains?.[todayStr.split('.').reverse().join('-')] || {};
+            const topToday = Object.entries(dayGains).sort((a,b) => b[1] - a[1]);
+            if (topToday.length > 0 && topToday[0][1] > 0) {
+                sessionRecStr = `${topToday[0][0]} (+${Math.round(topToday[0][1])})`;
+            }
+        } else {
+            const allSessionGains = res.aggregates?.sessionEloGains || {};
+            let maxGain = 0; let recEntry = null;
+            for (const date in allSessionGains) {
+                for (const player in allSessionGains[date]) {
+                    if (allSessionGains[date][player] > maxGain) {
+                        maxGain = allSessionGains[date][player];
+                        recEntry = { p: player, d: date, v: maxGain };
+                    }
+                }
+            }
+            if (recEntry) {
+                const dParts = recEntry.d.split('-');
+                const formattedDate = `${dParts[2]}.${dParts[1]}.`;
+                sessionRecStr = `${recEntry.p} (+${Math.round(recEntry.v)}) am ${formattedDate}`;
+            }
+        }
+        if (byId('stat-session-record')) byId('stat-session-record').innerText = sessionRecStr;
+
+
         // Die Mauer (Zäher Verlierer: Min Ø Restkugeln bei Niederlage)
         const wallCandidates = pechVals.filter(x => x.relevantGames > 0);
         if (wallCandidates.length > 0) {
@@ -1594,9 +1756,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           if (byId('stat-mauer')) byId('stat-mauer').innerText = "-";
         }
 
-        // --- BESTES TEAM (nur 2:2) ---
-        const teamWins = {};
-
+        // --- TEAM-AUSWERTUNG ---
         const normTeamKey = (teamStr) => {
           const parts = String(teamStr || "")
             .split(" & ")
@@ -1890,8 +2050,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                             borderColor: graphColors[i % graphColors.length],
                             backgroundColor: graphColors[i % graphColors.length] + '22',
                             tension: 0.3, 
-                            pointRadius: d.map((_, idx) => idx < realDataCount ? 2 : 0),
-                            pointHoverRadius: d.map((_, idx) => idx < realDataCount ? 4 : 0),
+                            pointRadius: 0,
+                            pointHoverRadius: 0,
                             borderWidth: 2,
                             fill: false
                         };
@@ -2171,9 +2331,14 @@ window.processAllStatsChronologically = function(matches, players) {
         setText('stat-killer', '-');
         setText('stat-clutch', '-');
         setText('stat-nutzniesser', '-');
+        setText('stat-top-voll', '-');
+        setText('stat-top-halb', '-');
         setText('stat-regular-wins', '0%');
         setText('stat-foul8-wins', '0x');
         setText('stat-lost-by-8error', '0%');
+        setText('stat-service-thief', '0%');
+        setText('stat-vampire', '-');
+        setText('stat-session-record', '-');
         setText('stat-angst', '-');
         setText('stat-streak', '-');
         setText('stat-mauer', '-');
@@ -2224,13 +2389,18 @@ window.processAllStatsChronologically = function(matches, players, todayStr) {
 };
 
 // Hilfsfunktion für lokale Berechnungen (Fallback, wenn Worker blockiert ist)
-window.calculateStatsLocally = function(allMatches, players) {
+window.calculateStatsLocally = function(allMatches, players, todayStr = null) {
     const pData = {};
     const eloRatings = {};
     const eloGamesCount = {};
     let blackWins = 0;
     let breakWinsCount = 0;
-    const aggregates = { totalBallMatches: 0, vollWins: 0, halbWins: 0, playerBallWins: {}, teamResults: {}, ballSpez: {}, matchupStats: {}, matchups: {}, meetings: {} };
+    const aggregates = { 
+        totalBallMatches: 0, vollWins: 0, halbWins: 0, 
+        playerBallWins: {}, teamResults: {}, ballSpez: {}, 
+        matchupStats: {}, matchups: {}, meetings: {},
+        eloTransfers: {}, sessionEloGains: {}
+    };
     const matchDeltas = {};
 
     const initP = (n) => {
@@ -2239,9 +2409,13 @@ window.calculateStatsLocally = function(allMatches, players) {
             clutchWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0, loseStreak: 0, 
             maxLoseStreak: 0, eloHistory: [], maxElo: 1000, maxWinRate: 0, last30Games: [], 
             last20Losses: [], last20WinsKiller: [], gameResultsHistory: [], 
-            regularWins: 0, foul8Wins: 0, lostBy8BallError: 0, // New
+            regularWins: 0, foul8Wins: 0, lostBy8BallError: 0,
             headToHead: {}, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0,
-            closeWins: 0, closeLosses: 0, dramaWins: 0
+            closeWins: 0, closeLosses: 0, dramaWins: 0,
+            todayGames: 0, todayWins: 0, todayMaxStreak: 0, todayClutchWins: 0, todayBreakWins: 0,
+            todayBlackWinsCount: 0, todayKillerPoints: 0, todayRest: 0, todayAvgRest: 0,
+            todayRegularWins: 0, todayFoul8Wins: 0, todayLostBy8BallError: 0,
+            stolenServiceWins: 0, opponentStartedGames: 0, todayStolenServiceWins: 0, todayOpponentStartedGames: 0
         };
     };
 
@@ -2254,10 +2428,18 @@ window.calculateStatsLocally = function(allMatches, players) {
     });
 
     sorted.forEach((g, originalIndex) => {
+        const dateStr = g.d.split(',')[0].trim();
+        const dp = dateStr.split('.');
+        const isoDate = dp.length === 3 ? `${dp[2]}-${dp[1].padStart(2, '0')}-${dp[0].padStart(2, '0')}` : 'unknown';
+        const normalizeDate = (s) => (s || "").split(',')[0].trim().split('.').map(p => parseInt(p, 10)).join('.');
+        const targetNorm = todayStr ? normalizeDate(todayStr) : null;
+        const isTodayMatch = targetNorm && g.d && normalizeDate(g.d) === targetNorm;
+
         const isTeam = g.m === "2:2";
         const p1A = (isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1]).map(s => String(s || '').trim()).filter(Boolean);
         const p2A = (isTeam ? (g.p2 ? g.p2.split(" & ") : []) : [g.p2]).map(s => String(s || '').trim()).filter(Boolean);
-        const winnerString = String((g.w == 1) ? g.p1 : g.p2 || '').trim();
+        const winnerStr = String((g.w == 1) ? g.p1 : g.p2 || '').trim();
+        const loserStr = String((g.w == 1) ? g.p2 : g.p1 || '').trim();
         const breakerString = String(g.a || '').trim();
         const playersInMatch = [...p1A, ...p2A];
         playersInMatch.forEach(initP);
@@ -2267,7 +2449,7 @@ window.calculateStatsLocally = function(allMatches, players) {
         const rest = parseInt(g.l || 0);
 
         if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) blackWins++;
-        if(breakerString === winnerString) {
+        if(breakerString && winners.includes(breakerString)) {
             breakWinsCount++;
         }
 
@@ -2295,8 +2477,6 @@ window.calculateStatsLocally = function(allMatches, players) {
         const avg2 = p2A.reduce((s, p) => s + (eloRatings[p] || 1000), 0) / (p2A.length || 1);
         const exp1 = 1 / (1 + Math.pow(10, (avg2 - avg1) / 400));
         const eloChange = (g.w == 1 ? 1 : 0) - exp1;
-
-        matchDeltas[originalIndex] = { eloDelta: Math.round(20 * Math.abs(eloChange)) };
 
         // Achievements-Metriken berechnen (for fallback)
         winners.forEach(p => {
@@ -2327,45 +2507,98 @@ window.calculateStatsLocally = function(allMatches, players) {
             const d = pData[p];
             d.games++;
             d.gameResultsHistory.push(isW ? 1 : 0);
+
+            if (isTodayMatch) d.todayGames++;
+
             if (isW) {
                 d.wins++; d.killerPoints += rest; d.currentStreak++; d.loseStreak = 0; d.lastWin = true;
                 if(d.currentStreak > d.maxStreak) d.maxStreak = d.currentStreak;
-                if(g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) d.blackWinsCount++;
+
+                if (isTodayMatch) {
+                    d.todayWins++;
+                    d.todayKillerPoints += rest;
+                    d.todayMaxStreak = Math.max(d.todayMaxStreak, d.currentStreak);
+                }
+
+                if(g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) {
+                    d.blackWinsCount++;
+                    if (isTodayMatch) d.todayBlackWinsCount++;
+                }
                 // New win type counts
                 if (g.t === 'Regulär (8er gelocht)') {
                     d.regularWins++;
+                    if (isTodayMatch) d.todayRegularWins++;
                 }
                 if (g.t === 'Gegner-Fehler: Foul bei der 8') {
                     d.foul8Wins++;
+                    if (isTodayMatch) d.todayFoul8Wins++;
                 }
                 // Corrected breakWins logic for individual players in fallback
-                if(breakerString === winnerString) {
-                    if (isTeam) {
-                        const teamNames = winnerString.split(" & ");
-                        if (teamNames.includes(p)) d.breakWins++;
-                    } else if (p === winnerString) {
-                        d.breakWins++;
-                    }
+                if(breakerString && winners.includes(breakerString)) {
+                    d.breakWins++;
+                    if (isTodayMatch) d.todayBreakWins++;
                 }
-                if(rest === 1) d.clutchWins++;
+                if(rest === 1) {
+                    d.clutchWins++;
+                    if (isTodayMatch) d.todayClutchWins++;
+                }
                 d.last20WinsKiller.push(rest);
                 if (d.last20WinsKiller.length > 20) d.last20WinsKiller.shift();
             } else {
                 d.rest += rest; d.currentStreak = 0; d.loseStreak++; d.lastWin = false;
                 if(d.loseStreak > d.maxLoseStreak) d.maxLoseStreak = d.loseStreak;
+                if (isTodayMatch) d.todayRest += rest;
+                // New loss type counts
+                if (g.t && g.t.startsWith('Gegner-Fehler:')) {
+                    d.lostBy8BallError++;
+                    if (isTodayMatch) d.todayLostBy8BallError++;
+                }
                 d.last20Losses.push(rest);
                 if (d.last20Losses.length > 20) d.last20Losses.shift();
             }
+
             d.last30Games.push(isW ? 1 : 0);
             if (d.last30Games.length > 30) d.last30Games.shift();
 
             const k = (eloGamesCount[p] || 0) < 20 ? 40 : 20;
             const change = p1A.includes(p) ? (k * eloChange) : -(k * eloChange);
+
+            // Service thief logic (Fallback)
+            const myTeam = winners.includes(p) ? winners : losers;
+            if (breakerString && !myTeam.includes(breakerString) && (winners.includes(breakerString) || losers.includes(breakerString))) {
+                d.opponentStartedGames++;
+                if (isW) d.stolenServiceWins++;
+                if (isTodayMatch) {
+                    d.todayOpponentStartedGames++;
+                    if (isW) d.todayStolenServiceWins++;
+                }
+            }
+
             eloRatings[p] = (eloRatings[p] || 1000) + change;
             eloGamesCount[p] = (eloGamesCount[p] || 0) + 1;
             d.eloHistory.push(Math.round(eloRatings[p]));
             if(eloRatings[p] > d.maxElo) d.maxElo = Math.round(eloRatings[p]);
+
+            // Session gain logic
+            if (isoDate !== 'unknown') {
+                if (!aggregates.sessionEloGains[isoDate]) aggregates.sessionEloGains[isoDate] = {};
+                aggregates.sessionEloGains[isoDate][p] = (aggregates.sessionEloGains[isoDate][p] || 0) + change;
+            }
         });
+
+        // Calculate total ELO transferred for the match (for ELO-Vampir and matchDelta)
+        let totalEloTransferredForMatch = 0;
+        winners.forEach(p => {
+            const k = (eloGamesCount[p] || 0) < 20 ? 40 : 20; // Get K-factor for this player
+            const change = p1A.includes(p) ? (k * eloChange) : -(k * eloChange);
+            totalEloTransferredForMatch += Math.round(Math.abs(change));
+        });
+
+        if (winnerStr && loserStr && totalEloTransferredForMatch > 0) {
+            const transferKey = `${winnerStr} -> ${loserStr}`;
+            aggregates.eloTransfers[transferKey] = (aggregates.eloTransfers[transferKey] || 0) + totalEloTransferredForMatch;
+        }
+        matchDeltas[originalIndex] = { eloDelta: totalEloTransferredForMatch }; // Use the actual sum of ELO changes for matchDelta
 
         // Duo & Duell Logic für Aggregates (Hier außerhalb des Spieler-Loops, damit nicht mehrfach gezählt wird!)
         if (isTeam && p1A.length === 2 && p2A.length === 2) {
@@ -2411,6 +2644,7 @@ window.calculateStatsLocally = function(allMatches, players) {
     Object.keys(pData).forEach(p => {
         const d = pData[p];
         d.elo = Math.round(eloRatings[p]);
+        d.todayAvgRest = (d.todayGames - d.todayWins) > 0 ? (d.todayRest / (d.todayGames - d.todayWins)) : 0;
         d.eloGames = eloGamesCount[p];
         d.winRate = Math.round((d.wins / d.games) * 100);
         d.avgKiller = d.wins > 0 ? (d.killerPoints / d.wins) : 0;

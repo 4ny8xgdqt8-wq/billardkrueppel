@@ -941,9 +941,9 @@
 
                     <div class="section-label" style="animation-delay: 0.4s;">🔬 Spielstil & Analyse</div>
                     <div class="stat-grid">
-                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.5s;"><label>🎲 Spiele gesamt</label><div id="stat-total" style="font-size:24px; font-weight:900; color:var(--accent); text-shadow: 0 0 15px rgba(255,204,0,0.4);">0</div></div>
-                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.55s;"><label>⚡ Anstoß-Vorteil</label><div id="stat-break-adv" style="font-size:24px; font-weight:900; color:#34c759; text-shadow: 0 0 15px rgba(52,199,89,0.4);">0%</div></div>
-                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.6s;"><label>🐀 Sieg durch Foul</label><div id="stat-black" style="font-size:24px; font-weight:900; color:#ff3b30; text-shadow: 0 0 15px rgba(255,59,48,0.4);">0%</div></div>
+                        <div class="card cinematic-entry card-hud" style="grid-column: span 2; animation-delay: 0.5s; text-align: center;"><label>🎲 Spiele gesamt</label><div id="stat-total" style="font-size:14px; font-weight:900; color:var(--accent); text-shadow: 0 0 15px rgba(255,204,0,0.4);">0</div></div>
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.55s;"><label>⚡ Anstoß-Vorteil</label><div id="stat-break-adv" style="font-size:14px; font-weight:900; color:#34c759; text-shadow: 0 0 15px rgba(52,199,89,0.4);">0%</div></div>
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.6s;"><label>🐀 Sieg durch Foul</label><div id="stat-black" style="font-size:14px; font-weight:900; color:#ff3b30; text-shadow: 0 0 15px rgba(255,59,48,0.4);">0%</div></div>
                         <div class="card cinematic-entry card-hud" style="animation-delay: 0.65s;">
                             <label>🫠 Pechvogel</label>
                             <div id="stat-pechvogel" style="font-size:14px; font-weight:900; color:#fff; text-shadow: 0 0 8px rgba(255,255,255,0.2);">-</div>
@@ -961,7 +961,7 @@
                         </div>
                         <div class="card cinematic-entry card-hud" style="animation-delay: 0.78s;">
                             <label>🪤 Nutznießer</label>
-                            <div id="stat-nutzniesser" style="font-size:16px; font-weight:900; color:var(--accent); text-shadow: 0 0 10px rgba(255,204,0,0.3);">-</div>
+                            <div id="stat-nutzniesser" style="font-size:14px; font-weight:900; color:var(--accent); text-shadow: 0 0 10px rgba(255,204,0,0.3);">-</div>
                             <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Meiste Siege durch Gegner-Fehler an der 8</div>
                         </div>
                         <div class="card cinematic-entry card-hud" style="animation-delay: 0.8s;">
@@ -979,9 +979,24 @@
                             <div id="stat-lost-by-8error" style="font-size:14px; font-weight:900; color:#ff3b30; text-shadow: 0 0 8px rgba(255,59,48,0.3);">0%</div>
                             <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Anteil der Niederlagen durch eigenen 8er-Fehler</div>
                         </div>
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.92s;">
+                            <label>🕵️ Service-Dieb</label>
+                            <div id="stat-service-thief" style="font-size:14px; font-weight:900; color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.3);">0%</div>
+                            <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Siegquote wenn der Gegner Anstoß hatte</div>
+                        </div>
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.94s;">
+                            <label>🧛 ELO-Vampir</label>
+                            <div id="stat-vampire" style="font-size:14px; font-weight:900; color:#fff; text-shadow: 0 0 8px rgba(255,255,255,0.2);">-</div>
+                            <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Wer hat wen am meisten geschröpft</div>
+                        </div>
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.96s;">
+                            <label>🏆 Session-Rekord</label>
+                            <div id="stat-session-record" style="font-size:14px; font-weight:900; color:var(--accent); text-shadow: 0 0 8px rgba(255,204,0,0.3);">-</div>
+                            <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Höchster ELO-Gewinn an einem Tag</div>
+                        </div>
                         <div class="card cinematic-entry card-hud" style="animation-delay: 0.88s;">
                             <label>🏆 Sieg-Serie</label>
-                            <div id="stat-streak" style="font-weight:900; font-size:20px; color:var(--accent); text-shadow: 0 0 10px rgba(255,204,0,0.3);">0</div>
+                            <div id="stat-streak" style="font-weight:900; font-size:14px; color:var(--accent); text-shadow: 0 0 10px rgba(255,204,0,0.3);">0</div>
                             <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Höchste Anzahl Siege in Folge</div>
                         </div>
                         <div class="card cinematic-entry card-hud" style="animation-delay: 0.9s;">
@@ -997,12 +1012,12 @@
                             <div style="display: flex; justify-content: space-around; align-items: center; padding: 5px 0;">
                                 <div style="text-align: center;">
                                     <div style="font-size: 10px; color: #8e8e93; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Voll</div>
-                                    <div id="stat-top-voll" style="font-size: 16px; font-weight: 900; color: #ffcc00; text-shadow: 0 0 8px rgba(255,204,0,0.3);">-</div>
+                                    <div id="stat-top-voll" style="font-size: 14px; font-weight: 900; color: #ffcc00; text-shadow: 0 0 8px rgba(255,204,0,0.3);">-</div>
                                 </div>
                                 <div style="height: 30px; width: 1px; background: rgba(255,255,255,0.1);"></div>
                                 <div style="text-align: center;">
                                     <div style="font-size: 10px; color: #8e8e93; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Halb</div>
-                                    <div id="stat-top-halb" style="font-size: 16px; font-weight: 900; color: #4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.3);">-</div>
+                                    <div id="stat-top-halb" style="font-size: 14px; font-weight: 900; color: #4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.3);">-</div>
                                 </div>
                             </div>
                         </div>
@@ -1011,12 +1026,12 @@
                             <div style="display: flex; justify-content: space-around; align-items: center; padding: 5px 0;">
                                 <div style="text-align: center;">
                                     <div style="font-size: 10px; color: #8e8e93; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Voll</div>
-                                    <div id="stat-balls-voll" style="font-size: 20px; font-weight: 900; color: #ffcc00; text-shadow: 0 0 10px rgba(255,204,0,0.3);">0%</div>
+                                    <div id="stat-balls-voll" style="font-size: 14px; font-weight: 900; color: #ffcc00; text-shadow: 0 0 10px rgba(255,204,0,0.3);">0%</div>
                                 </div>
                                 <div style="height: 30px; width: 1px; background: rgba(255,255,255,0.1);"></div>
                                 <div style="text-align: center;">
                                     <div style="font-size: 10px; color: #8e8e93; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Halb</div>
-                                    <div id="stat-balls-halb" style="font-size: 20px; font-weight: 900; color: #4FC3F7; text-shadow: 0 0 10px rgba(79,195,247,0.3);">0%</div>
+                                    <div id="stat-balls-halb" style="font-size: 14px; font-weight: 900; color: #4FC3F7; text-shadow: 0 0 10px rgba(79,195,247,0.3);">0%</div>
                                 </div>
                             </div>
                         </div>
@@ -1378,7 +1393,7 @@
                 <div style="font-size: 40px; margin-bottom: 15px;">🔄</div>
                 <div style="font-weight: 900; color: var(--accent); font-size: 16px; text-transform: uppercase; margin-bottom: 10px;">Verlauf korrigieren?</div>
                 <div style="color: #8e8e93; font-size: 13px; line-height: 1.6; font-weight: 600; text-align: left; padding: 0 10px;">
-                    Diese Funktion durchsucht deine gesamte Spiel-Historie und ergänzt fehlende Tages-Erfolge (z.B. nach App-Updates).<br><br>
+                    Diese Funktion durchsucht deine gesamte Spiel-Historie und ergänzt fehlende Tages-Erfolge (z.B. nach App-Updates, neue Erfolge).<br><br>
                     Deine bestehenden Daten bleiben erhalten. Der Vorgang dauert nur wenige Sekunden.
                 </div>
             </div>
