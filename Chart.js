@@ -331,7 +331,7 @@ window.processData = function(dataArray, todayStr) {
             if (isTodayMatch) {
                 pData[p].todayWins++;
                 pData[p].todayKillerPoints += rest;
-                if (g.t && g.t.includes("Schwarz")) pData[p].todayBlackWinsCount++;
+                if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) pData[p].todayBlackWinsCount++;
                 if (breaker && winners.map(s => String(s).trim()).includes(breaker)) pData[p].todayBreakWins++;
                 if (rest === 1) pData[p].todayClutchWins++;
             }
@@ -342,7 +342,7 @@ window.processData = function(dataArray, todayStr) {
             if (isTodayMatch) pData[p].todayMaxStreak = Math.max(pData[p].todayMaxStreak || 0, pData[p].streak);
             
             pData[p].lastWin = true;
-            if (g.t && g.t.includes("Schwarz")) pData[p].blackWinsCount++;
+            if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) pData[p].blackWinsCount++;
             if (breaker && winners.map(s => String(s).trim()).includes(breaker)) pData[p].breakWins++;
         });
         losers.forEach(p => {
@@ -351,7 +351,7 @@ window.processData = function(dataArray, todayStr) {
             if (isTodayMatch) pData[p].todayRest += rest;
         });
         if (rest === 1) winners.forEach(p => { if(p) pData[p].clutchWins++; });
-        if (g.t && g.t.includes("Schwarz")) blackWins++;
+        if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) blackWins++;
         if (breaker && winners.map(s => String(s).trim()).includes(breaker)) breakWinsCount++;
 
         // Aggregates Berechnung für Dashboard (Kugeln, Teams, Duelle)
@@ -531,7 +531,7 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
             if (isW) {
                 d.wins++; d.currentStreak++; d.loseStreak = 0; d.lastWin = true;
                 if (d.currentStreak > d.maxStreak) d.maxStreak = d.currentStreak;
-                if (g.t?.includes("Schwarz")) d.blackWinsCount++;
+                if (g.t?.includes("Schwarz") || g.t?.includes("Gegner-Fehler")) d.blackWinsCount++;
                 
                 // Break-Win Simulation
                 if (breakerString && breakerString === winnerString) { // Ensure g.a is trimmed
@@ -600,7 +600,7 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
                     simPData[p].todayWins++;
                     simPData[p].todayKillerPoints += rest;
                     simPData[p].todayMaxStreak = Math.max(simPData[p].todayMaxStreak, simPData[p].currentStreak);
-                    if (g.t?.includes("Schwarz")) simPData[p].todayBlackWinsCount++;
+                    if (g.t?.includes("Schwarz") || g.t?.includes("Gegner-Fehler")) simPData[p].todayBlackWinsCount++;
                     if (breakerString === winnerString) simPData[p].todayBreakWins++;
                     if (rest === 1) simPData[p].todayClutchWins++;
                 } else { simPData[p].todayRest += rest; }

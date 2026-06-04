@@ -36,30 +36,29 @@
             --bg: #000000; --card: #1c1c1e; --accent: #ffcc00; --error: #ff3b30; --text: #ffffff;
             --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom);
             --safe-left: env(safe-area-inset-left); --safe-right: env(safe-area-inset-right);
-            /* Ambient Mood Variables - Default for 'aufzeichnen' (Match) */
-            --ambient-main-start: #2c2c2e;
-            --ambient-main-end: #000000;
+            /* Ambient Mood Variables - Fixed Black-to-Green Gradient for Match, Stats, Heute, Regeln */
+            --ambient-main-start: #000000;
+            --ambient-main-end: #1a2a2a;
             --ambient-particle-color: rgba(255,204,0,0.03); /* Accent yellow for particles */
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body {
             /* Partikel-Hintergrund Effekt */
             background: 
-                radial-gradient(circle at 50% 50%, var(--ambient-main-start) 0%, var(--ambient-main-end) 100%) fixed,
+                linear-gradient(to bottom, var(--ambient-main-start) 0%, var(--ambient-main-end) 40%) fixed,
                 radial-gradient(circle at 10% 20%, var(--ambient-particle-color) 1px, transparent 1px),
                 radial-gradient(circle at 90% 80%, var(--ambient-particle-color) 1px, transparent 1px);
-            background-size: 200% 200%, 60px 60px, 80px 80px;
-            animation: bg-drift 20s infinite alternate ease-in-out, particle-drift 100s infinite linear; /* bg-drift is on background-position */
+            background-size: 100% 100%, 60px 60px, 80px 80px;
+            animation: particle-drift 100s infinite linear;
             color: var(--text); margin: 0; padding: 0; 
             font-family: -apple-system, sans-serif; height: 100vh; width: 100%; 
             overflow: hidden; -webkit-user-select: none;
         }
-        @keyframes bg-drift { 0% { background-position: 0% 0%; } 100% { background-position: 100% 100%; } }
         @keyframes particle-drift { 0% { background-position: 0% 0%, 0% 0%, 0% 0%; } 100% { background-position: 100% 100%, 200% 200%, -200% -200%; } }
 
         .app-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; position: fixed; }
-        .main-content { flex: 1; overflow-y: auto; padding: 0 16px 120px 16px; -webkit-overflow-scrolling: touch; contain: layout paint; }
-        .view { display: none; flex-direction: column; width: 100%; contain: layout paint; } 
+        .main-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 16px 120px 16px; -webkit-overflow-scrolling: touch; }
+        .view { display: none; flex-direction: column; width: 100%; } 
         .view.active { display: flex; }
         .view.slide-right { animation: view-enter-right 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .view.slide-left { animation: view-enter-left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
@@ -90,16 +89,20 @@
             position: sticky; 
             top: 0; 
             z-index: 1000; 
-            background: rgba(20, 20, 22, 0.75);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,0) 100%);
             backdrop-filter: blur(25px) saturate(210%) brightness(1.2);
             -webkit-backdrop-filter: blur(25px) saturate(210%) brightness(1.2);
-            padding: calc(var(--safe-top) + 10px) calc(16px + var(--safe-right)) 10px calc(16px + var(--safe-left));
+            padding: calc(var(--safe-top) + 10px) 16px 10px 16px;
             display: flex; align-items: center; justify-content: center; gap: 12px; 
-            margin: 0 calc(-16px - var(--safe-right)) 15px calc(-16px - var(--safe-left));
-            border-bottom: 0.5px solid rgba(255, 255, 255, 0.15); 
+            margin-left: -16px;
+            margin-right: -16px;
+            margin-bottom: 15px;
+            border-bottom: none; 
+            mask-image: linear-gradient(to bottom, black 0%, black 80%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 0%, black 80%, transparent 100%);
             -webkit-backface-visibility: hidden;
             transform: translateZ(0);
-            width: auto;
+            width: 100vw;
         }
         .header-side { display: flex; align-items: center; }
         .header-side.right { justify-content: flex-end; }
@@ -329,23 +332,8 @@
                 linear-gradient(90deg, rgba(255, 204, 0, 0.03) 1px, transparent 1px);
             background-size: 50px 50px;
             transform: rotateX(60deg);
-            animation: grid-drift 60s linear infinite;
             pointer-events: none; z-index: 0;
         }
-        @keyframes grid-drift {
-            0% { background-position: 0 0; }
-            100% { background-position: 0 1000px; }
-        }
-
-        /* Cinematic Scanline Effekt */
-        .loader-scanline {
-            position: absolute; inset: 0;
-            background: linear-gradient(to bottom, transparent, rgba(255, 204, 0, 0.02) 50%, transparent);
-            background-size: 100% 200px;
-            animation: loader-scan 3s linear infinite;
-            pointer-events: none; z-index: 1;
-        }
-        @keyframes loader-scan { from { transform: translateY(-100%); } to { transform: translateY(100vh); } }
 
         .loader-logo { 
             height: 70px; width: auto; margin-bottom: 15px; 
@@ -513,7 +501,7 @@
             pointer-events: none; /* Prevent interaction when hidden */
             /* Snappy Close: Geht schneller zu als auf */
             transition: max-height 0.3s ease-in, opacity 0.2s ease-in, transform 0.3s ease-in;
-            background: rgba(28, 28, 30, 0.75);
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(40px) saturate(180%);
             -webkit-backdrop-filter: blur(40px) saturate(180%);
             padding: 15px;
@@ -648,7 +636,8 @@
         /* Optimierte Styles für die Historie Datumsgruppierung */
         .history-date-header {
             position: sticky;
-            top: 65px; 
+            position: -webkit-sticky;
+            top: calc(var(--safe-top) + 55px); 
             background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -727,7 +716,6 @@
 <body>
     <div id="loading-overlay" class="loading-overlay">
         <div class="loader-grid"></div>
-        <div class="loader-scanline"></div>
         <div id="loader-content" style="display: flex; flex-direction: column; align-items: center; z-index: 2; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); width: 100%;">
         <img loading="lazy" src="logo.png" class="loader-logo" onerror="this.style.display='none'">
         <div class="loader-title">Billardkrüppel</div>
@@ -834,8 +822,17 @@
                         </div>
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                        <div><label>Wie gewonnen</label><select id="winType" style="margin-bottom:0;" onchange="window.updateUI()"><option value="Normal">Normal</option><option value="Verlierer hat Schwarz versenkt">Verlierer hat Schwarz versenkt</option></select></div>
-                        <div><label>Restkugeln Verlierer</label><input type="number" inputmode="numeric" id="leftover" value="0" style="margin-bottom:0;" onfocus="if(this.value==='0')this.value=''" oninput="window.updateUI()"></div>
+                        <div>
+                            <label>Wie gewonnen</label>
+                            <select id="winType" style="margin-bottom:0;" onchange="window.updateUI()">
+                                <option value="" disabled selected>Wählen</option>
+                                <option value="Regulär (8er gelocht)">Regulär (8er gelocht)</option>
+                                <option value="Gegner-Fehler: 8er zu früh">Gegner-Fehler: 8er zu früh</option>
+                                <option value="Gegner-Fehler: 8er falsches Loch">Gegner-Fehler: 8er falsches Loch</option>
+                                <option value="Gegner-Fehler: Foul bei der 8">Gegner-Fehler: Foul bei der 8</option>
+                            </select>
+                        </div>
+                        <div><label>Restkugeln Verlierer</label><input type="number" inputmode="numeric" id="leftover" value="" placeholder="0-7" style="margin-bottom:0;" oninput="window.updateUI()"></div>
                     </div>
                     <button class="btn-save" onclick="window.doSave()">Speichern</button>
                 </div>
@@ -997,7 +994,7 @@
             </div>
 
             <div id="view-erfolge" class="view">
-                <div style="position: sticky; top: 0; z-index: 1000; background: rgba(20, 20, 22, 0.75); backdrop-filter: blur(25px) saturate(210%) brightness(1.2); -webkit-backdrop-filter: blur(25px) saturate(210%) brightness(1.2); margin: 0 calc(-16px - var(--safe-right)) 15px calc(-16px - var(--safe-left)); border-bottom: 0.5px solid rgba(255, 255, 255, 0.15); padding-top: calc(var(--safe-top) + 10px); padding-left: calc(16px + var(--safe-left)); padding-right: calc(16px + var(--safe-right));">
+                <div style="position: sticky; top: 0; z-index: 1000; background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 80%, rgba(0, 0, 0, 0) 100%); backdrop-filter: blur(25px) saturate(210%) brightness(1.2); -webkit-backdrop-filter: blur(25px) saturate(210%) brightness(1.2); margin: 0 -16px 15px -16px; border-bottom: none; padding-top: calc(var(--safe-top) + 10px); width: 100vw; mask-image: linear-gradient(to bottom, black 0%, black 85%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 0%, black 85%, transparent 100%);">
                     <div class="header-container" style="position: relative; background: transparent; backdrop-filter: none; border-bottom: none; margin: 0; padding-top: 0;">
                         <div class="header-side"><img loading="lazy" src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
                         <div class="title-stack" onclick="window.toggleHeaderFilter(this)" style="cursor: pointer;">
@@ -1608,18 +1605,18 @@
             
             if (targetView) {
                 // --- Adaptive Ambient Mood Logic ---
-                let mainStartColor = '#2c2c2e'; // Default for 'aufzeichnen' (Match)
-                let mainEndColor = '#000000'; // Always black for the deep background
+                let mainStartColor = '#000000'; // Fixed: Black at top
+                let mainEndColor = '#1a2a2a';   // Default Green at bottom
                 let particleColor = 'rgba(255,204,0,0.03)'; // Accent yellow for particles
 
                 if (id === 'uebersicht') { // Historie
-                    mainStartColor = '#1a1a2a'; // Cooler, dunkler Blauton
+                    mainEndColor = '#1a1a2a'; // Cooler, dunkler Blauton
                     particleColor = 'rgba(79,195,247,0.03)'; // Passendes Hellblau für Partikel
                 } else if (id === 'statistik' || id === 'heute' || id === 'aufzeichnen' || id === 'regeln') { // Statistik, Heute, Match & Regeln
-                    mainStartColor = '#1a2a2a'; // Analytischer, dunkler Grünton
+                    mainEndColor = '#1a2a2a'; // Analytischer, dunkler Grünton
                     particleColor = 'rgba(52,199,89,0.03)'; // Passendes Grün für Partikel
                 } else if (id === 'erfolge') { // Erfolge
-                    mainStartColor = '#3a2a1a'; // Warmer, dunkler Goldton
+                    mainEndColor = '#3a2a1a'; // Warmer, dunkler Goldton
                     particleColor = 'rgba(255,149,0,0.03)'; // Passendes Orange für Partikel
                 }
 
@@ -2167,7 +2164,7 @@
             }
 
             // Highlights entfernen, wenn Spieler gewählt wurden
-            ['p1', 'p2', 't1p1', 't1p2', 't2p1', 't2p2'].forEach(id => {
+            ['p1', 'p2', 't1p1', 't1p2', 't2p1', 't2p2', 'winType', 'leftover'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el && el.value) window.removeHighlight(id);
             });
@@ -2178,6 +2175,8 @@
             // Check if form is fully ready for "Speichern" cinematic glow
             const isFormComplete = (m==='1:1' ? (document.getElementById('p1').value && document.getElementById('p2').value) : (document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value)) 
                                    && document.getElementById('breakPlayer').value 
+                                   && document.getElementById('winType').value
+                                   && document.getElementById('leftover').value !== ""
                                    && document.getElementById('ballType1').value 
                                    && window.winnerNum !== 0;
             
@@ -2313,6 +2312,10 @@
             if (!b) { missingMessages.push("Anstoß"); missingElements.push('breakPlayer'); }
             if (!bt1) { missingMessages.push("Kugeln Team 1"); missingElements.push('ballType1'); }
             if (!bt2) { missingMessages.push("Kugeln Team 2"); missingElements.push('ballType2'); }
+            const wt = document.getElementById('winType').value;
+            if (!wt) { missingMessages.push("Wie gewonnen"); missingElements.push('winType'); }
+            const lo = document.getElementById('leftover').value;
+            if (lo === "") { missingMessages.push("Restkugeln Verlierer"); missingElements.push('leftover'); }
             if (!window.winnerNum) { 
                 missingMessages.push("Gewinner"); 
                 // Highlight both winner buttons if winner is not selected
@@ -2339,7 +2342,7 @@
             const pad = (n) => String(n).padStart(2, '0');
             const dStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-            const data = { m, p1, p2, w: window.winnerNum, t: document.getElementById('winType').value, a: b, l: parseInt(document.getElementById('leftover').value), d: dStr, bt1, bt2 };
+            const data = { m, p1, p2, w: window.winnerNum, t: wt, a: b, l: parseInt(lo), d: dStr, bt1, bt2 };
             
             try {
                 const isoDay = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
@@ -2390,6 +2393,7 @@
                 document.getElementById('breakPlayer').value = "";
                 document.getElementById('ballType1').value = "";
                 document.getElementById('ballType2').value = "";
+                document.getElementById('winType').value = "";
                 
                 if (typeof window.updateUI === 'function') window.updateUI();
                 
