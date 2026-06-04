@@ -852,10 +852,85 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     const d = String(now.getDate()).padStart(2, '0');
     const m = String(now.getMonth() + 1).padStart(2, '0');
     const y = now.getFullYear();
-    const todayStr = d + "." + m + "." + y; // DD.MM.YYYY
-    const isoDay = `${y}-${m}-${d}`; // YYYY-MM-DD
+    let todayStr = `${d}.${m}.${y}`; // DD.MM.YYYY (default for "Heute")
+    const actualTodayStr = todayStr;
 
+    // --- SPIELEABEND FILTER FÜR HEUTE-TAB IM HEADER ---
+    const statHeader = document.querySelector('#view-statistik .header-container');
+    const titleStack = statHeader ? statHeader.querySelector('.title-stack') : null;
+    let todayHeaderFilterBox = statHeader ? statHeader.querySelector('.today-header-filter-box') : null;
+    
+    if (filterToday) {
+        // Hide the default filter toggle bar in the "Heute" tab
+        const toggleBar = statHeader ? statHeader.querySelector('.filter-toggle-bar') : null;
+        if (toggleBar) toggleBar.style.display = 'none';
+        if (titleStack) titleStack.style.pointerEvents = 'none'; // Disable click on title to toggle filter-row
+        if (statHeader) statHeader.classList.remove('filter-active'); // Ensure main filter-row is hidden
+    
+        if (!todayHeaderFilterBox && titleStack) {
+            todayHeaderFilterBox = document.createElement('div');
+            todayHeaderFilterBox.className = 'today-header-filter-box';
+            todayHeaderFilterBox.style = 'margin-top: 5px; display: flex; align-items: center; justify-content: center; width: 100%; pointer-events: auto;';
+            
+            const select = document.createElement('select');
+            select.className = 'extra-filter-select';
+            select.style = 'flex: 1; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 6px 10px; font-size: 12px; outline: none; max-width: 180px; text-align: center;'; 
+            
+            select.onchange = () => {
+                if (window.updateAllViews) window.updateAllViews();
+                else if (window.recalculateAndRender) window.recalculateAndRender();
+            };
+            todayHeaderFilterBox.appendChild(select);
+    
+            // Insert after the sub-title within the title-stack
+            const subTitle = titleStack.querySelector('.sub-title');
+            if (subTitle) subTitle.parentNode.insertBefore(todayHeaderFilterBox, subTitle.nextSibling);
+        }
+        if (todayHeaderFilterBox) {
+            todayHeaderFilterBox.style.display = 'flex';
+            todayHeaderFilterBox.style.pointerEvents = 'auto'; // Sicherstellen, dass Klicks durchgehen
+            todayHeaderFilterBox.style.maxWidth = '250px'; // Ensure it doesn't stretch too wide
+            const select = todayHeaderFilterBox.querySelector('.extra-filter-select');
+            const currentVal = select.value || 'all';
+            const uniqueDates = [...new Set((window.stats || []).map(g => g.d ? g.d.split(',')[0] : null))].filter(Boolean).sort((a,b) => {
+                const p = (s) => { const parts = s.split('.'); return new Date(parts[2], parts[1]-1, parts[0]); };
+                return p(b) - p(a);
+            });
+            
+            let opts = '';
+            // Add "Heute" option, selected by default if currentVal is 'all' or the actual todayStr
+            opts += `<option value="${actualTodayStr}" ${currentVal === actualTodayStr || currentVal === 'all' ? 'selected' : ''}>Heute</option>`;
+            
+            // Add unique dates from history, excluding the actual todayStr if already present
+            uniqueDates.forEach(ds => {
+                if (ds !== actualTodayStr) {
+                    opts += `<option value="${ds}" ${currentVal === ds ? 'selected' : ''}>${ds}</option>`;
+                }
+            });
+            select.innerHTML = opts;
+            
+            // Update todayStr based on selection, defaulting to actualTodayStr if 'all' was selected
+            if (currentVal === 'all') todayStr = actualTodayStr;
+            else todayStr = currentVal;
+        }
+    } else {
+        // Revert changes for other tabs
+        if (statHeader) {
+            const toggleBar = statHeader.querySelector('.filter-toggle-bar');
+            const titleStack = statHeader.querySelector('.title-stack');
+            if (toggleBar) toggleBar.style.display = 'flex'; // Show default toggle bar
+            if (titleStack) titleStack.style.pointerEvents = 'auto'; // Re-enable click on title
+        }
+        if (todayHeaderFilterBox) {
+            todayHeaderFilterBox.style.display = 'none'; // Hide the "Heute" tab filter
+        }
+    }
+
+    const isoDay = `${y}-${m}-${d}`; // YYYY-MM-DD
     const safeStats = (stats || []).filter(m => m && m.d);
+
+    // --- DATEN FILTERN NACHDEM todayStr FESTSTEHT ---
+    const statsToday = safeStats.filter(g => g && g.d && g.d.startsWith(todayStr));
 
     // --- Daily Achievements Storage (wird von BillardPro.js in daily_achivs.json geschrieben)
     if (!window.dailyAchivs || !window.dailyAchivs.days) {
@@ -953,14 +1028,13 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     }
 
     // --- DATEN FILTERN ---
-    const statsToday = safeStats.filter(g => g && g.d && g.d.startsWith(todayStr));
     const statsBeforeToday = safeStats.filter(g => g && g.d && !g.d.startsWith(todayStr));
     
     const dataAll = precalculatedCareerStats || { pData: {}, matchDeltas: {}, aggregates: {} }; // Worker output
     if (!precalculatedCareerStats && !filterToday) return; // Nicht rendern wenn Daten fehlen und nicht im Heute-Tab
 
     const dataBeforeToday = precalculatedCareerStatsBeforeToday || { pData: {}, matchDeltas: {}, aggregates: {} }; // Worker output
-    const dataToday = filterToday ? window.processData(statsToday, todayStr) : null;
+    const dataToday = filterToday ? window.processData(statsToday, todayStr) : { pData: {}, aggregates: {} };
     const dataFiltered = isFiltered ? window.calculateStatsLocally(stats, window.spieler) : null; // Nutze calculateStatsLocally für gefilterte ELO
     const res = filterToday ? dataToday : (isFiltered ? dataFiltered : dataAll);
     const currentStats = filterToday ? statsToday : stats;

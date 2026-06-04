@@ -1292,7 +1292,7 @@
         <div class="tab-bar">
             <div id="tab-indicator" class="tab-indicator"></div>
             <div class="tab-item active" onclick="switchV('aufzeichnen',this)"><span class="tab-icon">🎱</span><span>Match</span></div>
-            <div class="tab-item" onclick="switchV('heute',this)"><span class="tab-icon">📅</span><span>Heute</span></div>
+            <div class="tab-item" onclick="switchV('heute',this)"><span class="tab-icon">📅</span><span>Session</span></div>
             <div class="tab-item" onclick="switchV('statistik',this)"><span class="tab-icon">📊</span><span>Gesamt</span></div>
             <div class="tab-item" onclick="switchV('erfolge',this)"><span class="tab-icon">🎖️</span><span>Erfolge</span></div>
             <div class="tab-item" onclick="switchV('uebersicht',this)"><span class="tab-icon">📜</span><span>Historie</span></div>
@@ -2016,11 +2016,14 @@
             if (statHeader) {
                 const toggleBar = statHeader.querySelector('.filter-toggle-bar');
                 const titleStack = statHeader.querySelector('.title-stack');
+                const mainTitle = statHeader.querySelector('.main-title');
                 if (isToday) {
+                    if (mainTitle) mainTitle.innerText = 'Session';
                     if (toggleBar) toggleBar.style.display = 'none';
                     if (titleStack) titleStack.style.pointerEvents = 'none';
                     statHeader.classList.remove('filter-active');
                 } else {
+                    if (mainTitle) mainTitle.innerText = 'Statistik';
                     if (toggleBar) toggleBar.style.display = 'flex';
                     if (titleStack) titleStack.style.pointerEvents = 'auto';
                 }
