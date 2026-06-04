@@ -959,10 +959,25 @@
                             <div id="stat-killer" style="font-size:14px; font-weight:900; color:#ff3b30; text-shadow: 0 0 8px rgba(255,59,48,0.3);">-</div>
                             <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Höchste Ø Restkugeln beim Gegner</div>
                         </div>
-                        <div class="card cinematic-entry card-hud" style="grid-column: span 2; animation-delay: 0.78s;">
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.78s;">
                             <label>🪤 Nutznießer</label>
                             <div id="stat-nutzniesser" style="font-size:16px; font-weight:900; color:var(--accent); text-shadow: 0 0 10px rgba(255,204,0,0.3);">-</div>
                             <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Meiste Siege durch Gegner-Fehler an der 8</div>
+                        </div>
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.8s;">
+                            <label>🎯 Reguläre Siege</label>
+                            <div id="stat-regular-wins" style="font-size:14px; font-weight:900; color:#34c759; text-shadow: 0 0 8px rgba(52,199,89,0.3);">0%</div>
+                            <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Anteil der Siege durch reguläres Lochen der 8</div>
+                        </div>
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.8s;">
+                            <label>😈 Foul-Spezialist</label>
+                            <div id="stat-foul8-wins" style="font-size:14px; font-weight:900; color:var(--accent); text-shadow: 0 0 8px rgba(255,204,0,0.3);">0%</div>
+                            <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Anteil der Siege durch Gegner-Foul an der 8</div>
+                        </div>
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.9s;">
+                            <label>🤦‍♂️ 8er-Fehler-Quote</label>
+                            <div id="stat-lost-by-8error" style="font-size:14px; font-weight:900; color:#ff3b30; text-shadow: 0 0 8px rgba(255,59,48,0.3);">0%</div>
+                            <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Anteil der Niederlagen durch eigenen 8er-Fehler</div>
                         </div>
                         <div class="card cinematic-entry card-hud" style="grid-column: span 2; animation-delay: 0.8s;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
@@ -1014,7 +1029,7 @@
                     </div>
                     
                     <div id="today-matches-card" class="card cinematic-entry" style="display:none; animation-delay: 1.4s;">
-                        <label>Heutige Matches</label>
+                        <label>Session Matches</label>
                         <div id="today-match-list" style="margin-top:8px;"></div>
                     </div>
                     <div id="achievements-stat-view" style="-webkit-backface-visibility: hidden; transform: translateZ(0); isolation: isolate;"></div>
@@ -1292,7 +1307,7 @@
         <div class="tab-bar">
             <div id="tab-indicator" class="tab-indicator"></div>
             <div class="tab-item active" onclick="switchV('aufzeichnen',this)"><span class="tab-icon">🎱</span><span>Match</span></div>
-            <div class="tab-item" onclick="switchV('heute',this)"><span class="tab-icon">📅</span><span>Heute</span></div>
+            <div class="tab-item" onclick="switchV('heute',this)"><span class="tab-icon">🕒</span><span>Session</span></div>
             <div class="tab-item" onclick="switchV('statistik',this)"><span class="tab-icon">📊</span><span>Gesamt</span></div>
             <div class="tab-item" onclick="switchV('erfolge',this)"><span class="tab-icon">🎖️</span><span>Erfolge</span></div>
             <div class="tab-item" onclick="switchV('uebersicht',this)"><span class="tab-icon">📜</span><span>Historie</span></div>

@@ -30,7 +30,8 @@ self.onmessage = function(e) {
                 wins: 0, games: 0, rest: 0, maxStreak: 0, currentStreak: 0, lastWin: false,
                 clutchWins: 0, closeWins: 0, closeLosses: 0, dramaWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0,
                 loseStreak: 0, maxLoseStreak: 0, eloHistory: [], maxElo: 1000, 
-                maxWinRate: 0, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0,
+                maxWinRate: 0, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0, 
+                regularWins: 0, foul8Wins: 0, lostBy8BallError: 0, // New
                 headToHead: {}, // Format: { opponentName: { w: 0, l: 0 } }
                 last30Games: [], last20Losses: [], last20WinsKiller: [], gameResultsHistory: []
             };
@@ -137,6 +138,13 @@ self.onmessage = function(e) {
                     d.currentStreak++; if(d.currentStreak > d.maxStreak) d.maxStreak = d.currentStreak;
                     if(g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) d.blackWinsCount++;
                     
+                    // New win type counts
+                    if (g.t === 'Regulär (8er gelocht)') {
+                        d.regularWins++;
+                    }
+                    if (g.t === 'Gegner-Fehler: Foul bei der 8') {
+                        d.foul8Wins++;
+                    }
                     // Korrekte Break-Win Prüfung für Achievements
                     const currentWinnerStr = String((g.w == 1) ? g.p1 : g.p2 || '').trim();
                     if(g.a && currentWinnerStr && String(g.a).trim() === currentWinnerStr) {
@@ -152,6 +160,10 @@ self.onmessage = function(e) {
                 } else {
                     d.rest += rest; d.lastWin = false; d.currentStreak = 0; d.loseStreak++;
                     if(d.loseStreak > d.maxLoseStreak) d.maxLoseStreak = d.loseStreak;
+                    // New loss type counts
+                    if (g.t && g.t.startsWith('Gegner-Fehler:')) {
+                        d.lostBy8BallError++;
+                    }
                 }
                 
                 const k = getK(p);

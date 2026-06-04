@@ -44,6 +44,8 @@ window.dailyFamePool = [
   { k: "fame", cond: (d) => d.todayBreakWins >= 2, i: "🚀", t: "Express-Service", d: ["Anstoß, abräumen, Feierabend.", "Der Gegner saß nur rum.", "Kurzer Prozess heute."], h: "Heute mindestens 2 Siege direkt nach eigenem Anstoß" },
   { k: "fame", cond: (d) => d.todayClutchWins >= 3, i: "💎", t: "Crunchtime-König", d: ["Druck ist sein Hobby.", "Eiskalt bei der letzten Kugel.", "Nerven aus Stahl-Seilen."], h: "Heute 3+ Siege, bei denen der Gegner nur noch 1 Kugel hatte" },
   { k: "fame", cond: (d) => d.todayWins >= 3 && (d.todayKillerPoints / d.todayWins) >= 6.5, i: "🧹", t: "Tisch-Staubsauger", d: ["Hinterlässt klinisch reine Tische.", "Gegner braucht ein Fernrohr für seine Kugeln."], h: "Heute 3+ Siege mit Ø 6,5+ Restkugeln beim Gegner" },
+  { k: "fame", cond: (d) => (d.todayRegularWins / (d.todayWins || 1)) >= 0.8 && d.todayWins >= 3, i: "🎯", t: "Präzisions-Schütze", d: ["Nur saubere Siege heute.", "Keine Geschenke, nur Skill."], h: "Gewinne heute 80% deiner Matches regulär (mind. 3 Siege)" },
+  { k: "fame", cond: (d) => d.todayFoul8Wins >= 2, i: "😈", t: "Foul-Profiteur", d: ["Gegner macht die Arbeit.", "Profitiert von Fehlern."], h: "Gewinne heute 2 Matches durch Gegner-Foul an der 8" },
 ];
 
 window.dailyShamePool = [
@@ -59,6 +61,7 @@ window.dailyShamePool = [
   { k: "shame", cond: (d) => d.todayRest >= 25, i: "🚜", t: "Tages-Ackerer", d: ["Hat heute ordentlich Furchen gezogen.", "Viel Arbeit, kein Ertrag."], h: "Heute insgesamt 25+ Reste bei Niederlagen gesammelt" },
   { k: "shame", cond: (d) => d.todayBlackWinsCount >= 4, i: "🐀", t: "Ratten-König", d: ["Der König des Schmutzes.", "Gewinnt heute nur durch Patzer."], h: "Heute mindestens 4 Siege durch Schwarz-Fehler" },
   { k: "shame", cond: (d) => d.todayGames >= 3 && d.todayWins === 0 && d.todayClutchWins === 0, i: "🕯️", t: "Tages-Licht", d: ["War heute nur zur Beleuchtung da.", "Kein einziger Sieg in Sicht."], h: "Heute mindestens 3 Spiele ohne jeglichen Erfolg" },
+  { k: "shame", cond: (d) => (d.todayLostBy8BallError / ((d.todayGames - d.todayWins) || 1)) >= 0.5 && (d.todayGames - d.todayWins) >= 2, i: "🤦", t: "8er-Pechvogel", d: ["Die 8 ist sein Endgegner.", "Immer wieder die 8."], h: "Verliere heute 50% deiner Matches durch eigenen 8er-Fehler (mind. 2 Niederlagen)" },
   { k: "shame", cond: (d) => (d.todayGames - d.todayWins) >= 2 && d.todayAvgRest <= 1.2, i: "😭", t: "Tragik-Meister", d: ["So nah und doch so fern.", "Die letzte Kugel ist sein Endgegner heute.", "Pechvogel-Abo abgeschlossen."], h: "Verliere heute mind. 2 Matches extrem knapp (Gegner Rest 1)" },
   { k: "shame", cond: (d) => d.todayAvgRest >= 7.2 && d.todayGames >= 3, i: "🍃", t: "Eco-Modus", d: ["Schont die Taschen.", "Bewegt Kugeln heute nur minimal.", "Energiesparmodell am Tisch."], h: "Heute Ø 7,2+ Reste bei mindestens 3 Niederlagen" },
   { k: "shame", cond: (d) => d.todayGames >= 6 && (d.todayWins / d.todayGames) <= 0.2, i: "🪑", t: "Sitzriese", d: ["Hat heute ein Abo auf der Bank.", "Bester Zuschauer des Abends.", "Sitzfleisch-Champion."], h: "Heute mindestens 6 Spiele und maximal 20% Siegquote" },
@@ -141,6 +144,8 @@ window.famePool = [
   { cond: (d) => d.wins >= 5 && d.blackWinsCount === 0 && d.clutchWins >= 2, i: "🤺", t: "Musketier", d: ["Kämpft mit Ehre und Geschick.", "Einer für alle, alle für den Sieg.", "Fechtkunst am grünen Tisch.", "Präzision statt roher Gewalt.", "Ein edler Kämpfer.", "Stilvoll zum Erfolg."] , h: "Hol dir mindestens 5 Siege – und Gewinne ohne Schwarz-Fehler-Sieg und Gewinne mindestens 2 1-Kugel-Krimis (Gegner hat nur 1 Kugel übrig)"},
   { cond: (d) => d.maxStreak >= 10, i: "♾️", t: "Gott-Modus", d: ["Er hat die Matrix gehackt.", "Sieg ist seine einzige Sprache.", "Physik gilt für ihn nicht mehr.", "Wird nie wieder verlieren.", "Ein Gott unter Sterblichen.", "Die ultimative Dominanz."] , h: "Gewinne mindestens 10 Spiele in Folge"},
   { cond: (d) => d.games > 20 && d.winRate > 66, i: "🛡️", t: "Die Festung", d: ["An ihm prallt alles ab.", "Kaum zu bezwingen.", "Ein Bollwerk der Beständigkeit.", "Man braucht eine Belagerung, um ihn zu schlagen.", "Sicherheit geht vor - und führt zum Sieg.", "Der Fels in der Brandung."] , h: "Spiele mehr als 20 Matches – und Gewinne mindestens 66% deiner Matches"},
+  { cond: (d) => (d.regularWins / (d.wins || 1)) >= 0.7 && d.wins >= 10, i: "🎯", t: "Meister-Schütze", d: ["Nur saubere Siege.", "Präzision ist sein zweiter Vorname."], h: "Gewinne 70% deiner Matches regulär (mind. 10 Siege)" },
+  { cond: (d) => d.foul8Wins >= 5, i: "😈", t: "Foul-König", d: ["Gegner macht die Arbeit.", "Profitiert von Fehlern."], h: "Gewinne 5 Matches durch Gegner-Foul an der 8" },
   { cond: (d) => d.wins > 5 && d.killerPoints > d.wins * 5.5, i: "🪓", t: "Der Schlächter", d: ["Hinterlässt keine Gefangenen.", "Zerstört jeden Widerstand.", "Ein Massaker auf dem Filz.", "Seine Queue ist eine Axt.", "Brutale Effizienz.", "Ein blutiger Pfad zum Sieg."] , h: "Gewinne mindestens 6 Matches – und Lass im Schnitt mehr als 5,5 Kugeln beim Gegner übrig (pro Sieg)"},
   { cond: (d) => d.blackWinsCount >= 1 && d.wins >= 1, i: "🕵️", t: "Schwarzmagier I", d: ["Einmal dunkel, einmal Sieg.", "Schwarz war auf deiner Seite.", "Die Acht arbeitet für dich.", "Timing passt.", "Hauptsache Sieg."], h: "Hol dir mindestens 1 Sieg durch Schwarz-Fehler", g: "Schwarzmagier", tier: 1 },
   { cond: (d) => d.blackWinsCount >= 3 && d.wins >= 5, i: "🕵️", t: "Schwarzmagier II", d: ["Schwarz kennt deinen Namen.", "Drei Mal abgegriffen.", "Die Acht ist dein Joker.", "Dunkle Künste aktiv.", "Macht der Acht."], h: "Hol dir mindestens 5 Siege durch Schwarz-Fehler", g: "Schwarzmagier", tier: 2 },
@@ -268,6 +273,7 @@ window.shamePool = [
   { cond: (d) => d.games >= 5 && d.avgRest >= 5.5 && d.blackWinsCount >= 1, i: "🪤", t: "Selbstfalle", d: ["Er stellt sich Fallen selbst.", "Chaos im eigenen Kopf.", "Unnötige Fehler.", "Zu viele Geschenke.", "Das war selbst verursacht."] , h: "Spiele mindestens 5 Matches – und Lass im Schnitt mindestens 5,5 Kugeln bei Niederlagen übrig und Hol dir mindestens 1 Sieg durch Schwarz-Fehler"},
   { cond: (d) => d.games >= 12 && d.winRate < 35, i: "🧟", t: "Dauerkrise", d: ["Der Negativlauf lebt.", "Heute wieder schwer.", "Form sucht ihn.", "Das ist hart zu sehen.", "Er kommt nicht raus."] , h: "Spiele mindestens 12 Matches – und Gewinne höchstens 35% deiner Matches"},
   { cond: (d) => d.games >= 8 && d.breakWins === 0, i: "🐌", t: "Startprobleme", d: ["Kein Vorteil aus dem Break.", "Anstoß verpufft.", "Startet nie richtig.", "Der Motor stottert.", "Ohne Start kein Ziel."] , h: "Spiele mindestens 8 Matches – und Keinen Sieg direkt nach dem Anstoß holen"},
+  { cond: (d) => (d.lostBy8BallError / ((d.games - d.wins) || 1)) >= 0.4 && (d.games - d.wins) >= 5, i: "🤦", t: "8er-Albtraum", d: ["Die 8 ist sein Endgegner.", "Immer wieder die 8."], h: "Verliere 40% deiner Matches durch eigenen 8er-Fehler (mind. 5 Niederlagen)" },
   { cond: (d) => d.games >= 10 && d.blackWinsCount >= 1 && d.clutchWins === 0, i: "🤹", t: "Chaos-Artist", d: ["Schwarz hier, Druck da…", "Alles gleichzeitig falsch.", "Kurz vor Ziel stolpert er.", "Zu viel Show, zu wenig Erfolg.", "Unruhiges Spiel."] , h: "Spiele mindestens 10 Matches – und Hol dir mindestens 1 Sieg durch Schwarz-Fehler und Keine 1-Kugel-Krimis gewinnen"},
   { cond: (d) => d.games >= 15 && d.winRate < 20, i: "⚓", t: "Ballast", d: ["Zieht die Bilanz runter.", "Heute schwerer Anker.", "Wenig Erfolg, viel Aufwand.", "Das tut weh.", "Da muss was passieren."] , h: "Spiele mindestens 15 Matches – und Gewinne höchstens 20% deiner Matches"},
   { cond: (d) => d.games >= 6 && d.winRate < 30 && d.avgRest >= 6.5, i: "🚧", t: "Baustelle", d: ["Hier wird noch gebaut.", "Viel offen, wenig fertig.", "Das Fundament fehlt.", "Zu viele Fehler gleichzeitig.", "Wird Zeit für einen Plan."] , h: "Spiele mindestens 6 Matches – und Gewinne höchstens 30% deiner Matches und Lass im Schnitt mindestens 6,5 Kugeln bei Niederlagen übrig"},
@@ -304,7 +310,9 @@ window.processData = function(dataArray, todayStr) {
             blackWinsCount: 0, breakWins: 0, todayGames: 0, todayWins: 0,
             todayMaxStreak: 0, todayClutchWins: 0, todayBreakWins: 0, 
             todayBlackWinsCount: 0, todayKillerPoints: 0, todayRest: 0, 
-            todayAvgRest: 0, currentStreak: 0
+            todayAvgRest: 0, currentStreak: 0,
+            regularWins: 0, foul8Wins: 0, lostBy8BallError: 0, // New
+            todayRegularWins: 0, todayFoul8Wins: 0, todayLostBy8BallError: 0 // New today versions
         }; 
     };
 
@@ -332,12 +340,24 @@ window.processData = function(dataArray, todayStr) {
                 pData[p].todayWins++;
                 pData[p].todayKillerPoints += rest;
                 if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) pData[p].todayBlackWinsCount++;
+                if (g.t === 'Regulär (8er gelocht)') pData[p].todayRegularWins++; // New
+                if (g.t === 'Gegner-Fehler: Foul bei der 8') pData[p].todayFoul8Wins++; // New
                 if (breaker && winners.map(s => String(s).trim()).includes(breaker)) pData[p].todayBreakWins++;
                 if (rest === 1) pData[p].todayClutchWins++;
             }
             pData[p].killerPoints += rest;
             pData[p].streak = pData[p].lastWin ? pData[p].streak + 1 : 1;
             pData[p].currentStreak = pData[p].streak;
+
+            // New win type counts
+            if (g.t === 'Regulär (8er gelocht)') {
+                pData[p].regularWins++;
+            }
+            if (g.t === 'Gegner-Fehler: Foul bei der 8') {
+                pData[p].foul8Wins++;
+            }
+
+
             if (pData[p].streak > pData[p].maxStreak) pData[p].maxStreak = pData[p].streak;
             if (isTodayMatch) pData[p].todayMaxStreak = Math.max(pData[p].todayMaxStreak || 0, pData[p].streak);
             
@@ -349,6 +369,11 @@ window.processData = function(dataArray, todayStr) {
             if(!p) return;
             pData[p].streak = 0; pData[p].currentStreak = 0; pData[p].lastWin = false; pData[p].rest += rest;
             if (isTodayMatch) pData[p].todayRest += rest;
+            // New loss type counts
+            if (g.t && g.t.startsWith('Gegner-Fehler:')) {
+                pData[p].lostBy8BallError++;
+                if (isTodayMatch) pData[p].todayLostBy8BallError++;
+            }
         });
         if (rest === 1) winners.forEach(p => { if(p) pData[p].clutchWins++; });
         if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) blackWins++;
@@ -454,7 +479,9 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
             wins: 0, games: 0, rest: 0, maxStreak: 0, currentStreak: 0, lastWin: false,
             clutchWins: 0, closeWins: 0, closeLosses: 0, dramaWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0, 
             todayWins: 0, todayGames: 0, todayMaxStreak: 0, todayClutchWins: 0, todayBreakWins: 0, todayBlackWinsCount: 0, todayKillerPoints: 0, todayRest: 0, todayAvgRest: 0,
-            loseStreak: 0, maxLoseStreak: 0, eloHistory: [], maxElo: 1000, 
+            loseStreak: 0, maxLoseStreak: 0, eloHistory: [], maxElo: 1000,
+            regularWins: 0, foul8Wins: 0, lostBy8BallError: 0,
+            todayRegularWins: 0, todayFoul8Wins: 0, todayLostBy8BallError: 0, // Missing Inits
             maxWinRate: 0, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0, // Initialisiert
             winRate: 0, avgKiller: 0, avgRest: 0, winRateLast30: 0, // Initialisiert
             avgRestLossLast20: 0, avgKillerLast20: 0, eloDelta10: 0, winRateDelta20: 0, // Initialisiert
@@ -529,6 +556,12 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
                 if (g.t?.includes("Schwarz") || g.t?.includes("Gegner-Fehler")) d.blackWinsCount++;
                 
                 // Break-Win Simulation
+                if (g.t === 'Regulär (8er gelocht)') {
+                    d.regularWins++;
+                }
+                if (g.t === 'Gegner-Fehler: Foul bei der 8') {
+                    d.foul8Wins++;
+                }
                 if (breakerString && breakerString === winnerString) { // Ensure g.a is trimmed
                     if (isTeam) {
                         if (winnerString.split(" & ").map(s => s.trim()).includes(p)) d.breakWins++;
@@ -553,6 +586,9 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
                 if (rest === 1) d.closeLosses++;
                 d.last20Losses.push(rest);
                 if (d.last20Losses.length > 20) d.last20Losses.shift();
+                if (g.t && g.t.startsWith('Gegner-Fehler:')) {
+                    d.lostBy8BallError++;
+                }
 
                 let worstOpp = null; let maxL = 0;
                 Object.entries(d.headToHead).forEach(([opp, st]) => { if (st.l > maxL) { maxL = st.l; worstOpp = opp; } });
@@ -596,6 +632,9 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
                     simPData[p].todayKillerPoints += rest;
                     simPData[p].todayMaxStreak = Math.max(simPData[p].todayMaxStreak, simPData[p].currentStreak);
                     if (g.t?.includes("Schwarz") || g.t?.includes("Gegner-Fehler")) simPData[p].todayBlackWinsCount++;
+                    if (g.t === 'Regulär (8er gelocht)') simPData[p].todayRegularWins++; // New
+                    if (g.t === 'Gegner-Fehler: Foul bei der 8') simPData[p].todayFoul8Wins++; // New
+
                     if (breakerString === winnerString) simPData[p].todayBreakWins++;
                     if (rest === 1) simPData[p].todayClutchWins++;
                 } else { simPData[p].todayRest += rest; }
@@ -630,6 +669,9 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
             // 1. Tägliche Erfolge prüfen
             if (isMatchFromToday) {
                 const dailyPool = [...window.dailyFamePool, ...window.dailyShamePool];
+                // Ensure today's stats are correctly calculated before checking conditions
+                d.todayAvgRest = (d.todayGames - d.todayWins) > 0 ? (d.todayRest / (d.todayGames - d.todayWins)) : 0;
+
                 dailyPool.forEach(ach => {
                     const hasNow = ach.cond(d);
                     const hadBefore = ach.cond(dBefore);
@@ -664,6 +706,12 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
         // Sicherstellen, dass alle benötigten Eigenschaften vorhanden sind
         if (!d.achTracker) d.achTracker = {};
         if (typeof d.blackWinsCount === 'undefined') d.blackWinsCount = 0;
+        if (typeof d.regularWins === 'undefined') d.regularWins = 0;
+        if (typeof d.foul8Wins === 'undefined') d.foul8Wins = 0;
+        if (typeof d.lostBy8BallError === 'undefined') d.lostBy8BallError = 0;
+        if (typeof d.todayRegularWins === 'undefined') d.todayRegularWins = 0;
+        if (typeof d.todayFoul8Wins === 'undefined') d.todayFoul8Wins = 0;
+        if (typeof d.todayLostBy8BallError === 'undefined') d.todayLostBy8BallError = 0;
         if (typeof d.todayBlackWinsCount === 'undefined') d.todayBlackWinsCount = 0;
 
         // Achievement-Zähler und Track-Abschlüsse berechnen
@@ -1047,7 +1095,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
       let achHtml = "";
 
       if (isTodayTab && proc.pData && Object.keys(proc.pData).some(p => proc.pData[p].todayGames > 0)) {
-        achHtml += `<div class="section-label" style="margin-top: 40px;">📅 Die heutigen Erfolge</div>`;
+        achHtml += `<div class="section-label" style="margin-top: 40px;">🕒 Session Erfolge</div>`;
       }
 
       const labels = Object.keys(proc.pData).sort();
@@ -1457,69 +1505,89 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const blackRate = Math.round(((res.blackWins || 0) / (currentStats.length || 1)) * 100);
         if (byId('stat-black')) byId('stat-black').innerText = blackRate + "%";
 
-        // Pechvogel (Ø Restkugeln bei Niederlage) – bei Gleichstand mehrere anzeigen
+        // --- TOP-SPIELER BERECHNUNGEN ---
+        const getTopPlayerStr = (valArray, key, suffix = "", minThreshold = 0) => {
+            const maxVal = valArray.length > 0 ? Math.max(...valArray.map(x => x.val)) : 0;
+            if (maxVal <= 0) return "-";
+            const tops = valArray.filter(x => x.val === maxVal && x.relevantGames >= minThreshold);
+            if (tops.length === 0) return "-";
+            return tops.map(x => x.p).join(' / ') + ` (${maxVal}${suffix})`;
+        };
+
+        // 1. Pechvogel (Ø Restkugeln bei Niederlage)
         const pechVals = labels.map(p => {
-          const losses = (res.pData[p].games - res.pData[p].wins) || 0;
-          const avg = res.pData[p].rest / (losses || 1);
-          return { p, avg, ga: res.pData[p].games || 0 };
+            const d = res.pData[p];
+            const losses = filterToday ? (d.todayGames - d.todayWins) : (d.games - d.wins);
+            const rest = filterToday ? d.todayRest : d.rest;
+            const val = losses > 0 ? parseFloat((rest / losses).toFixed(1)) : 0;
+            return { p, val, relevantGames: losses };
         });
+        if (byId('stat-pechvogel')) byId('stat-pechvogel').innerText = getTopPlayerStr(pechVals, 'val');
 
-        const maxPech = Math.max(...pechVals.map(x => x.avg));
-        if (maxPech > 0) {
-          const topPech = pechVals
-            .filter(x => x.avg === maxPech)
-            .sort((a, b) => (b.ga - a.ga) || a.p.localeCompare(b.p, 'de'));
-        
-          if (byId('stat-pechvogel')) byId('stat-pechvogel').innerText = topPech.map(x => x.p).join(' / ') + " (" + maxPech.toFixed(1) + ")";
-        } else {
-          if (byId('stat-pechvogel')) byId('stat-pechvogel').innerText = "-";
-        }
+        // 2. Reguläre Siege (Präzisions-Schütze)
+        const regWinVals = labels.map(p => {
+            const d = res.pData[p];
+            const wins = filterToday ? d.todayWins : d.wins;
+            const reg = filterToday ? d.todayRegularWins : d.regularWins;
+            const val = wins > 0 ? Math.round((reg / wins) * 100) : 0;
+            return { p, val, relevantGames: wins };
+        });
+        if (byId('stat-regular-wins')) byId('stat-regular-wins').innerText = getTopPlayerStr(regWinVals, 'val', "%", filterToday ? 1 : 3);
 
-        // Killer (Ø Restkugeln beim Gegner pro Sieg) – bei Gleichstand mehrere anzeigen
+        // 3. Foul-Spezialist (Absolute Siege durch Gegner-Foul an der 8)
+        const foul8Vals = labels.map(p => {
+            const d = res.pData[p];
+            const val = filterToday ? (d.todayFoul8Wins || 0) : (d.foul8Wins || 0);
+            return { p, val, relevantGames: val };
+        });
+        if (byId('stat-foul8-wins')) byId('stat-foul8-wins').innerText = getTopPlayerStr(foul8Vals, 'val', "x");
+
+        // 4. 8er-Fehler-Quote (Niederlagen durch eigenen Fehler an der 8)
+        const lost8Vals = labels.map(p => {
+            const d = res.pData[p];
+            const losses = filterToday ? (d.todayGames - d.todayWins) : (d.games - d.wins);
+            const errLosses = filterToday ? (d.todayLostBy8BallError || 0) : (d.lostBy8BallError || 0);
+            const val = losses > 0 ? Math.round((errLosses / losses) * 100) : 0;
+            return { p, val, relevantGames: losses };
+        });
+        if (byId('stat-lost-by-8error')) byId('stat-lost-by-8error').innerText = getTopPlayerStr(lost8Vals, 'val', "%", filterToday ? 1 : 3);
+
+        // 5. Nutzniesser (Gesamte Siege durch Schwarz-Fehler)
+        const nutzVals = labels.map(p => {
+            const d = res.pData[p];
+            const val = filterToday ? (d.todayBlackWinsCount || 0) : (d.blackWinsCount || 0);
+            return { p, val, relevantGames: val };
+        });
+        if (byId('stat-nutzniesser')) byId('stat-nutzniesser').innerText = getTopPlayerStr(nutzVals, 'val', "x");
+
+        // 6. Nervenstärke (Clutch Wins)
+        const clutchVals = labels.map(p => {
+            const val = filterToday ? (res.pData[p].todayClutchWins || 0) : (res.pData[p].clutchWins || 0);
+            return { p, val, relevantGames: val };
+        });
+        if (byId('stat-clutch')) byId('stat-clutch').innerText = getTopPlayerStr(clutchVals, 'val', "x");
+
+        // 7. Killer-Instinkt
         const killerVals = labels.map(p => {
-          const avg = res.pData[p].killerPoints / ((res.pData[p].wins) || 1);
-          return { p, avg, ga: res.pData[p].games || 0 };
+            const d = res.pData[p];
+            const wins = filterToday ? d.todayWins : d.wins;
+            const val = wins > 0 ? parseFloat(((filterToday ? d.todayKillerPoints : d.killerPoints) / wins).toFixed(1)) : 0;
+            return { p, val, relevantGames: wins };
         });
-
-        const maxKiller = Math.max(...killerVals.map(x => x.avg));
-        if (maxKiller > 0) {
-          const topKiller = killerVals
-            .filter(x => x.avg === maxKiller)
-            .sort((a, b) => (b.ga - a.ga) || a.p.localeCompare(b.p, 'de'));
-        
-          if (byId('stat-killer')) byId('stat-killer').innerText = topKiller.map(x => x.p).join(' / ') + " (" + maxKiller.toFixed(1) + ")";
-        } else {
-          if (byId('stat-killer')) byId('stat-killer').innerText = "-";
-        }
+        if (byId('stat-killer')) byId('stat-killer').innerText = getTopPlayerStr(killerVals, 'val');
 
         // Die Mauer (Zäher Verlierer: Min Ø Restkugeln bei Niederlage)
-        // Nur Spieler mit mindestens einer Niederlage berücksichtigen
-        const wallCandidates = pechVals.filter(x => (res.pData[x.p].games - res.pData[x.p].wins) > 0);
+        const wallCandidates = pechVals.filter(x => x.relevantGames > 0);
         if (wallCandidates.length > 0) {
-          const minWall = Math.min(...wallCandidates.map(x => x.avg));
+          const minWall = Math.min(...wallCandidates.map(x => x.val));
           const topWall = wallCandidates
-            .filter(x => x.avg === minWall)
-            .sort((a, b) => (b.ga - a.ga) || a.p.localeCompare(b.p, 'de'));
+            .filter(x => x.val === minWall)
+            .sort((a, b) => (b.relevantGames - a.relevantGames) || a.p.localeCompare(b.p, 'de'));
         
           if (byId('stat-mauer')) byId('stat-mauer').innerText = topWall.map(x => x.p).join(' / ') + " (" + minWall.toFixed(1) + ")";
         } else {
           if (byId('stat-mauer')) byId('stat-mauer').innerText = "-";
         }
-
-        // Nervenstärke (Meiste Clutch Wins) – bei Gleichstand mehrere anzeigen
-        const maxClutch = Math.max(...labels.map(p => res.pData[p].clutchWins || 0));
-
-        if (maxClutch > 0) {
-          const topClutch = labels
-            .filter(p => (res.pData[p].clutchWins || 0) === maxClutch)
-            // Sortierung: zuerst mehr Spiele, dann alphabetisch (stabil/deterministisch)
-            .sort((a, b) => (res.pData[b].games || 0) - (res.pData[a].games || 0) || a.localeCompare(b, 'de'));
-        
-          if (byId('stat-clutch')) byId('stat-clutch').innerText = topClutch.join(' / ') + ` (${maxClutch}x)`;
-        } else {
-          if (byId('stat-clutch')) byId('stat-clutch').innerText = "-";
-        }
-
 
         // --- BESTES TEAM (nur 2:2) ---
         const teamWins = {};
@@ -2092,14 +2160,15 @@ window.processAllStatsChronologically = function(matches, players) {
         setText('stat-total', '0');
         setText('stat-balls-voll', '0%');
         setText('stat-balls-halb', '0%');
-        setText('stat-top-voll', '-');
-        setText('stat-top-halb', '-');
         setText('stat-break-adv', '0%');
         setText('stat-black', '0%');
         setText('stat-pechvogel', '-');
         setText('stat-killer', '-');
         setText('stat-clutch', '-');
         setText('stat-nutzniesser', '-');
+        setText('stat-regular-wins', '0%');
+        setText('stat-foul8-wins', '0x');
+        setText('stat-lost-by-8error', '0%');
         setText('stat-angst', '-');
         setText('stat-streak', '-');
         setText('stat-mauer', '-');
@@ -2164,7 +2233,8 @@ window.calculateStatsLocally = function(allMatches, players) {
             wins: 0, games: 0, rest: 0, maxStreak: 0, currentStreak: 0, lastWin: false, 
             clutchWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0, loseStreak: 0, 
             maxLoseStreak: 0, eloHistory: [], maxElo: 1000, maxWinRate: 0, last30Games: [], 
-            last20Losses: [], last20WinsKiller: [], gameResultsHistory: [],
+            last20Losses: [], last20WinsKiller: [], gameResultsHistory: [], 
+            regularWins: 0, foul8Wins: 0, lostBy8BallError: 0, // New
             headToHead: {}, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0,
             closeWins: 0, closeLosses: 0, dramaWins: 0
         };
@@ -2235,6 +2305,11 @@ window.calculateStatsLocally = function(allMatches, players) {
         });
         losers.forEach(p => {
             if (rest === 1) pData[p].closeLosses++;
+            // New loss type counts
+            if (g.t && g.t.startsWith('Gegner-Fehler:')) {
+                pData[p].lostBy8BallError++;
+            }
+
             let worstOpp = null; let maxL = 0;
             Object.entries(pData[p].headToHead).forEach(([opp, stats]) => {
                 if (stats.l > maxL) { maxL = stats.l; worstOpp = opp; }
@@ -2251,6 +2326,13 @@ window.calculateStatsLocally = function(allMatches, players) {
                 d.wins++; d.killerPoints += rest; d.currentStreak++; d.loseStreak = 0; d.lastWin = true;
                 if(d.currentStreak > d.maxStreak) d.maxStreak = d.currentStreak;
                 if(g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) d.blackWinsCount++;
+                // New win type counts
+                if (g.t === 'Regulär (8er gelocht)') {
+                    d.regularWins++;
+                }
+                if (g.t === 'Gegner-Fehler: Foul bei der 8') {
+                    d.foul8Wins++;
+                }
                 // Corrected breakWins logic for individual players in fallback
                 if(breakerString === winnerString) {
                     if (isTeam) {
