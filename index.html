@@ -979,6 +979,16 @@
                             <div id="stat-lost-by-8error" style="font-size:14px; font-weight:900; color:#ff3b30; text-shadow: 0 0 8px rgba(255,59,48,0.3);">0%</div>
                             <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Anteil der Niederlagen durch eigenen 8er-Fehler</div>
                         </div>
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.88s;">
+                            <label>🏆 Sieg-Serie</label>
+                            <div id="stat-streak" style="font-weight:900; font-size:20px; color:var(--accent); text-shadow: 0 0 10px rgba(255,204,0,0.3);">0</div>
+                            <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Höchste Anzahl Siege in Folge</div>
+                        </div>
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.9s;">
+                            <label>🛡️ Die Mauer</label>
+                            <div id="stat-mauer" style="font-weight:900; font-size:14px; color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.3);">-</div>
+                            <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Wenigste Ø Reste bei Niederlage</div>
+                        </div>
                         <div class="card cinematic-entry card-hud" style="grid-column: span 2; animation-delay: 0.8s;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                 <label style="margin:0;">Kugel-Favoriten</label>
@@ -1012,22 +1022,14 @@
                         </div>
                     </div>
 
-                    <div class="section-label" style="animation-delay: 0.9s;">👥 Social & Teams</div>
+                    <div class="section-label" style="animation-delay: 1.0s;">👥 Social & Teams</div>
                     <div class="stat-grid">
-                        <div class="card cinematic-entry" style="grid-column: span 2; animation-delay: 1.0s;"><label>Partner-Power (Top Duos %)</label><div id="stat-duo-ranking"></div></div>
-                        <div class="card cinematic-entry" style="grid-column: span 2; animation-delay: 1.05s;"><label>Kugel-Spezis (Beste Siegrate pro Kugeltyp)</label><div id="stat-ball-spez"></div></div>
-                        <div class="card cinematic-entry" style="grid-column: span 2; animation-delay: 1.1s;"><label>Absoluter Angstgegner</label><div id="stat-angst" style="font-weight:900; font-size:14px; color:#ff9500; text-shadow: 0 0 8px rgba(255,149,0,0.3);">-</div></div>
-                        <div class="card cinematic-entry" style="grid-column: span 2; animation-delay: 1.15s;"><label>Direkte Duelle</label><div id="stat-head-to-head"></div></div>
+                        <div class="card cinematic-entry" style="grid-column: span 2; animation-delay: 1.1s;"><label>Partner-Power (Top Duos %)</label><div id="stat-duo-ranking"></div></div>
+                        <div class="card cinematic-entry" style="grid-column: span 2; animation-delay: 1.15s;"><label>Kugel-Spezis (Beste Siegrate pro Kugeltyp)</label><div id="stat-ball-spez"></div></div>
+                        <div class="card cinematic-entry" style="grid-column: span 2; animation-delay: 1.2s;"><label>Absoluter Angstgegner</label><div id="stat-angst" style="font-weight:900; font-size:14px; color:#ff9500; text-shadow: 0 0 8px rgba(255,149,0,0.3);">-</div></div>
+                        <div class="card cinematic-entry" style="grid-column: span 2; animation-delay: 1.25s;"><label>Direkte Duelle</label><div id="stat-head-to-head"></div></div>
                     </div>
 
-                    <div class="section-label" style="animation-delay: 1.2s;">🏆 Meilensteine</div>
-                    <div class="card cinematic-entry" style="animation-delay: 1.3s;"><label>Längste Sieg-Serie</label><div id="stat-streak" style="font-weight:900; font-size:20px; color:var(--accent); text-shadow: 0 0 10px rgba(255,204,0,0.3);">0</div></div>
-                    <div class="card cinematic-entry" style="animation-delay: 1.35s;">
-                        <label>Die Mauer</label>
-                        <div id="stat-mauer" style="font-weight:900; font-size:14px; color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.3);">-</div>
-                        <div style="font-size:8px; color:#8e8e93; margin-top:4px; font-weight:800; text-transform:uppercase;">Wenigste Ø Restkugeln bei Niederlage</div>
-                    </div>
-                    
                     <div id="today-matches-card" class="card cinematic-entry" style="display:none; animation-delay: 1.4s;">
                         <label>Session Matches</label>
                         <div id="today-match-list" style="margin-top:8px;"></div>

@@ -920,6 +920,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             todayHeaderFilterBox.className = 'today-header-filter-box';
             todayHeaderFilterBox.style = 'margin-top: 5px; display: flex; align-items: center; justify-content: center; width: 100%; pointer-events: auto;';
             
+            // Verhindert, dass der Klick auf das Dropdown die normale Filterleiste öffnet
+            todayHeaderFilterBox.onclick = (e) => e.stopPropagation();
+
             const select = document.createElement('select');
             select.className = 'extra-filter-select';
             select.style = 'flex: 1; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 6px 10px; font-size: 12px; outline: none; max-width: 180px; text-align: center;'; 
