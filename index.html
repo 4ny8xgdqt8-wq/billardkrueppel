@@ -98,11 +98,16 @@
             margin-right: -16px;
             margin-bottom: 15px;
             border-bottom: none; 
-            mask-image: linear-gradient(to bottom, black 0%, black 80%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 0%, black 80%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 0%, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 0%, black 90%, transparent 100%);
             -webkit-backface-visibility: hidden;
             transform: translateZ(0);
             width: 100vw;
+        }
+        .header-container.filter-active {
+            background: rgba(0, 0, 0, 0.98) !important;
+            mask-image: none !important;
+            -webkit-mask-image: none !important;
         }
         .header-side { display: flex; align-items: center; }
         .header-side.right { justify-content: flex-end; }
@@ -546,11 +551,15 @@
             display: none !important;
             -webkit-appearance: none;
         }
-        .time-filter-select {
+        .time-filter-select, .extra-filter-select {
             margin-bottom: 0 !important;
             border-color: rgba(255, 204, 0, 0.3) !important;
             color: var(--accent) !important;
             font-weight: 700;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffcc00' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 12px center !important;
+            background-size: 16px !important;
         }
         .filter-toggle-bar {
             display: flex;
@@ -852,20 +861,28 @@
                     <div class="filter-row">
                         <button class="filter-reset-btn" onclick="window.handleFilterChange('all')">RESET</button>
                         <div class="filter-controls-stack">
-                            <div class="filter-dropdown-col">
-                                <label>Zeitraum</label>
-                                <select class="time-filter-select" onchange="window.handleFilterChange(this.value)">
-                                    <option value="all">Gesamt</option>
-                                    <option value="month">Aktueller Monat</option>
-                                    <option value="quarter">Aktuelles Quartal</option>
-                                    <option value="year">Aktuelles Jahr</option>
-                                    <option value="30days">Letzte 30 Tage</option>
-                                    <option value="60days">Letzte 60 Tage</option>
-                                    <option value="90days">Letzte 90 Tage</option>
-                                    <option value="lastMonth">Letzter Monat</option>
-                                    <option value="lastQuarter">Letztes Quartal</option>
-                                    <option value="lastYear">Letztes Jahr</option>
-                                </select>
+                            <div style="display: flex; gap: 8px;">
+                                <div class="filter-dropdown-col" style="flex: 1;">
+                                    <label>Zeitraum</label>
+                                    <select class="time-filter-select" onchange="window.handleFilterChange(this.value)">
+                                        <option value="all">Gesamt</option>
+                                        <option value="month">Aktueller Monat</option>
+                                        <option value="quarter">Aktuelles Quartal</option>
+                                        <option value="year">Aktuelles Jahr</option>
+                                        <option value="30days">Letzte 30 Tage</option>
+                                        <option value="60days">Letzte 60 Tage</option>
+                                        <option value="90days">Letzte 90 Tage</option>
+                                        <option value="lastMonth">Letzter Monat</option>
+                                        <option value="lastQuarter">Letztes Quartal</option>
+                                        <option value="lastYear">Letztes Jahr</option>
+                                    </select>
+                                </div>
+                                <div class="filter-dropdown-col" style="flex: 1;">
+                                    <label>Spieleabend</label>
+                                    <select class="extra-filter-select" onchange="window.handleExtraFilterChange(this.value)">
+                                        <option value="all">Alle Tage</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="filter-date-col">
                                 <label>Von - Bis</label>
@@ -894,20 +911,28 @@
                     <div class="filter-row">
                         <button class="filter-reset-btn" onclick="window.handleFilterChange('all')">RESET</button>
                         <div class="filter-controls-stack">
-                            <div class="filter-dropdown-col">
-                                <label>Zeitraum</label>
-                                <select class="time-filter-select" onchange="window.handleFilterChange(this.value)">
-                                    <option value="all">Gesamt</option>
-                                    <option value="month">Aktueller Monat</option>
-                                    <option value="quarter">Aktuelles Quartal</option>
-                                    <option value="year">Aktuelles Jahr</option>
-                                    <option value="30days">Letzte 30 Tage</option>
-                                    <option value="60days">Letzte 60 Tage</option>
-                                    <option value="90days">Letzte 90 Tage</option>
-                                    <option value="lastMonth">Letzter Monat</option>
-                                    <option value="lastQuarter">Letztes Quartal</option>
-                                    <option value="lastYear">Letztes Jahr</option>
-                                </select>
+                            <div style="display: flex; gap: 8px;">
+                                <div class="filter-dropdown-col" style="flex: 1;">
+                                    <label>Zeitraum</label>
+                                    <select class="time-filter-select" onchange="window.handleFilterChange(this.value)">
+                                        <option value="all">Gesamt</option>
+                                        <option value="month">Aktueller Monat</option>
+                                        <option value="quarter">Aktuelles Quartal</option>
+                                        <option value="year">Aktuelles Jahr</option>
+                                        <option value="30days">Letzte 30 Tage</option>
+                                        <option value="60days">Letzte 60 Tage</option>
+                                        <option value="90days">Letzte 90 Tage</option>
+                                        <option value="lastMonth">Letzter Monat</option>
+                                        <option value="lastQuarter">Letztes Quartal</option>
+                                        <option value="lastYear">Letztes Jahr</option>
+                                    </select>
+                                </div>
+                                <div class="filter-dropdown-col" style="flex: 1;">
+                                    <label>Spieleabend</label>
+                                    <select class="extra-filter-select" onchange="window.handleExtraFilterChange(this.value)">
+                                        <option value="all">Alle Tage</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="filter-date-col">
                                 <label>Von - Bis</label>
@@ -994,7 +1019,7 @@
             </div>
 
             <div id="view-erfolge" class="view">
-                <div style="position: sticky; top: 0; z-index: 1000; background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 80%, rgba(0, 0, 0, 0) 100%); backdrop-filter: blur(25px) saturate(210%) brightness(1.2); -webkit-backdrop-filter: blur(25px) saturate(210%) brightness(1.2); margin: 0 -16px 15px -16px; border-bottom: none; padding-top: calc(var(--safe-top) + 10px); width: 100vw; mask-image: linear-gradient(to bottom, black 0%, black 85%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 0%, black 85%, transparent 100%);">
+                <div id="erfolge-header-wrapper" style="position: sticky; top: 0; z-index: 1000; background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 80%, rgba(0, 0, 0, 0) 100%); backdrop-filter: blur(25px) saturate(210%) brightness(1.2); -webkit-backdrop-filter: blur(25px) saturate(210%) brightness(1.2); margin: 0 -16px 15px -16px; border-bottom: none; padding-top: calc(var(--safe-top) + 10px); width: 100vw; mask-image: linear-gradient(to bottom, black 0%, black 85%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 0%, black 85%, transparent 100%);">
                     <div class="header-container" style="position: relative; background: transparent; backdrop-filter: none; border-bottom: none; margin: 0; padding-top: 0;">
                         <div class="header-side"><img loading="lazy" src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.7;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
                         <div class="title-stack" onclick="window.toggleHeaderFilter(this)" style="cursor: pointer;">
@@ -1008,20 +1033,28 @@
                         <div class="filter-row">
                             <button class="filter-reset-btn" onclick="window.handleFilterChange('all')">RESET</button>
                             <div class="filter-controls-stack">
-                                <div class="filter-dropdown-col">
-                                    <label>Zeitraum</label>
-                                    <select class="time-filter-select" onchange="window.handleFilterChange(this.value)">
-                                        <option value="all">Gesamt</option>
-                                        <option value="month">Aktueller Monat</option>
-                                        <option value="quarter">Aktuelles Quartal</option>
-                                        <option value="year">Aktuelles Jahr</option>
-                                        <option value="30days">Letzte 30 Tage</option>
-                                        <option value="60days">Letzte 60 Tage</option>
-                                        <option value="90days">Letzte 90 Tage</option>
-                                        <option value="lastMonth">Letzter Monat</option>
-                                        <option value="lastQuarter">Letztes Quartal</option>
-                                        <option value="lastYear">Letztes Jahr</option>
-                                    </select>
+                                <div style="display: flex; gap: 8px;">
+                                    <div class="filter-dropdown-col" style="flex: 1;">
+                                        <label>Zeitraum</label>
+                                        <select class="time-filter-select" onchange="window.handleFilterChange(this.value)">
+                                            <option value="all">Gesamt</option>
+                                            <option value="month">Aktueller Monat</option>
+                                            <option value="quarter">Aktuelles Quartal</option>
+                                            <option value="year">Aktuelles Jahr</option>
+                                            <option value="30days">Letzte 30 Tage</option>
+                                            <option value="60days">Letzte 60 Tage</option>
+                                            <option value="90days">Letzte 90 Tage</option>
+                                            <option value="lastMonth">Letzter Monat</option>
+                                            <option value="lastQuarter">Letztes Quartal</option>
+                                            <option value="lastYear">Letztes Jahr</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-dropdown-col" style="flex: 1;">
+                                        <label>Spieleabend</label>
+                                        <select class="extra-filter-select" onchange="window.handleExtraFilterChange(this.value)">
+                                            <option value="all">Alle Tage</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div class="filter-date-col">
                                     <label>Von - Bis</label>
@@ -1577,6 +1610,10 @@
             if (window.flags.stats && window.flags.spieler && !isCalculating && typeof window.enrichStatsWithAchievements === 'function') {
                 isCalculating = true;
                 if (!isHiding) window.updateLoaderStatus("Analysiere Billard-Historie", 85);
+
+                // Dropdowns für Spieleabende befüllen
+                if (typeof window.populateDateFilter === 'function') window.populateDateFilter();
+
                 if (statsWorker && statsWorker.postMessage) {
                     statsWorker.postMessage({ stats: JSON.parse(JSON.stringify(window.stats)), spieler: Array.from(window.spieler) });
                 } else {
@@ -1828,6 +1865,9 @@
             // Synchronisiere alle Filter-Dropdowns in der App
             document.querySelectorAll('.time-filter-select').forEach(s => s.value = val);
 
+            // Spieleabend-Filter zurücksetzen, wenn ein Zeitraum-Preset gewählt wird
+            document.querySelectorAll('.extra-filter-select').forEach(s => s.value = 'all');
+
             // Wenn ein Preset gewählt wird, leere die benutzerdefinierten Daten
             if (val !== 'custom') {
                 document.querySelectorAll('.custom-date-input').forEach(i => i.value = '');
@@ -1866,6 +1906,8 @@
 
             if (startVal || endVal) {
                 window.timeFilter = 'custom';
+                // Spieleabend-Filter zurücksetzen, wenn ein benutzerdefiniertes Datum gewählt wird
+                document.querySelectorAll('.extra-filter-select').forEach(s => s.value = 'all');
                 // Dropdown auf "Gesamte Historie" zurücksetzen
                 document.querySelectorAll('.time-filter-select').forEach(s => s.value = 'all');
             } else {
@@ -1874,15 +1916,84 @@
             window.updateAllViews();
         };
 
+        // Funktion zum Synchronisieren der Spieleabend-Filter
+        window.handleExtraFilterChange = (val) => {
+            document.querySelectorAll('.extra-filter-select').forEach(s => s.value = val);
+            if (val !== 'all') {
+                // Wenn ein Spieleabend gewählt wird, andere Filter zurücksetzen
+                window.timeFilter = 'all';
+                document.querySelectorAll('.time-filter-select').forEach(s => s.value = 'all');
+                document.querySelectorAll('.custom-date-input').forEach(i => i.value = '');
+                window.customStartDate = null;
+                window.customEndDate = null;
+            }
+            window.updateAllViews();
+        };
+
+        // Funktion zum Befüllen des Spieleabend-Dropdowns mit eindeutigen Daten aus den Stats
+        window.populateDateFilter = () => {
+            const dropdowns = document.querySelectorAll('.extra-filter-select');
+            if (!dropdowns.length || !window.stats) return;
+
+            // Alle Daten extrahieren (DD.MM.YYYY)
+            const dates = window.stats.map(g => g.d ? g.d.split(',')[0].trim() : null).filter(Boolean);
+            // Eindeutige Werte und sortieren (Neueste zuerst)
+            const uniqueDates = [...new Set(dates)].sort((a, b) => {
+                const parse = (s) => {
+                    const parts = s.split('.');
+                    if (parts.length < 3) return 0;
+                    return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
+                };
+                return parse(b) - parse(a);
+            });
+
+            dropdowns.forEach(s => {
+                const currentVal = s.value;
+                s.innerHTML = '<option value="all">Alle Tage</option>';
+                uniqueDates.forEach(d => s.options.add(new Option(d, d)));
+                // Alten Wert beibehalten, falls er noch existiert
+                if (currentVal && Array.from(s.options).some(opt => opt.value === currentVal)) s.value = currentVal;
+            });
+        };
+
+        // Hilfsfunktion zur Steuerung der Maske und des Hintergrunds im Erfolge-Tab
+        window.updateErfolgeMask = () => {
+            const wrapper = document.getElementById('erfolge-header-wrapper');
+            const header = wrapper?.querySelector('.header-container');
+            if (!wrapper || !header) return;
+            
+            if (header.classList.contains('filter-active')) {
+                wrapper.style.background = 'rgba(0, 0, 0, 0.98)';
+                wrapper.style.maskImage = 'none';
+                wrapper.style.webkitMaskImage = 'none';
+            } else {
+                wrapper.style.background = 'linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 80%, rgba(0, 0, 0, 0) 100%)';
+                wrapper.style.maskImage = 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)';
+                wrapper.style.webkitMaskImage = 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)';
+            }
+        };
+
         window.toggleHeaderFilter = (trigger) => {
             const header = trigger.closest('.header-container');
-            header.classList.toggle('filter-active');
+            const isActive = header.classList.toggle('filter-active');
+            // Wenn der Filter geöffnet wird, Dropdowns befüllen
+            if (isActive) window.populateDateFilter();
+            window.updateErfolgeMask();
         };
 
         // Zentrale Funktion zum Rendern der aktiven Ansicht
         window.updateAllViews = () => {
             // Filter-Labels im Header aktualisieren (Farbe & Leuchten)
-            const isFilterActive = window.timeFilter !== 'all';
+            const extraSelect = document.querySelector('.extra-filter-select');
+            const isDayFilterActive = extraSelect && extraSelect.value !== 'all';
+            
+            const startInput = document.querySelector('.custom-date-start');
+            const endInput = document.querySelector('.custom-date-end');
+            const isCustomDateActive = (startInput && startInput.value) || (endInput && endInput.value);
+
+            // Grün wenn: Ein Preset gewählt ist ODER ein Datum eingegeben wurde ODER ein Spieleabend aktiv ist
+            const isFilterActive = (window.timeFilter !== 'all' && window.timeFilter !== 'custom') || isCustomDateActive || isDayFilterActive;
+            
             document.querySelectorAll('.filter-toggle-bar').forEach(bar => {
                 bar.classList.toggle('active', isFilterActive);
             });
@@ -2880,12 +2991,14 @@
             const activeHeader = document.querySelector('.header-container.filter-active');
             if (activeHeader && !activeHeader.contains(e.target)) {
                 activeHeader.classList.remove('filter-active');
+                window.updateErfolgeMask();
             }
         });
 
         // Filter-Menü schließen beim Scrollen
         document.getElementById('scroll-area')?.addEventListener('scroll', () => {
-            document.querySelector('.header-container.filter-active')?.classList.remove('filter-active');
+            const active = document.querySelector('.header-container.filter-active');
+            if (active) { active.classList.remove('filter-active'); window.updateErfolgeMask(); }
         }, { passive: true });
 
         // --- SWIPE GESTEN FÜR TAB-NAVIGATION ---

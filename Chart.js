@@ -717,6 +717,14 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
 
 // --- CONSOLIDATED FILTER FUNCTION ---
 window.getFilteredStats = () => {
+    const extraSelect = document.querySelector('.extra-filter-select');
+    const dayFilter = extraSelect ? extraSelect.value : 'all';
+
+    let baseSet = window.stats;
+    if (dayFilter !== 'all') {
+        baseSet = baseSet.filter(g => g.d && g.d.startsWith(dayFilter));
+    }
+
     if (window.timeFilter === 'custom') {
         let start = null;
         if (window.customStartDate) {
@@ -735,7 +743,7 @@ window.getFilteredStats = () => {
             end.setUTCHours(23, 59, 59, 999);
         }
 
-        return window.stats.filter(g => {
+        return baseSet.filter(g => {
             if (!g || !g.d) return false;
             // Format: DD.MM.YYYY, HH:MM
             const parts = g.d.split(', ')[0].split('.');
@@ -751,13 +759,13 @@ window.getFilteredStats = () => {
         });
     }
 
-    if (window.timeFilter === 'all') return window.stats;
+    if (window.timeFilter === 'all') return baseSet;
     
     const now = new Date();
     // Referenzdatum für heutige Berechnungen in UTC
     const todayStartUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
     
-    return window.stats.filter(g => {
+    return baseSet.filter(g => {
         if (!g || !g.d) return false;
         // Format: DD.MM.YYYY, HH:MM
         const parts = g.d.split(', ')[0].split('.');
@@ -826,7 +834,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     if (!window.dailyAchivs) {
       window.dailyAchivs = { days: {} };
     }
-    
+
+    const allSafeStats = (window.stats || []).filter(m => m && m.d);
+    const isFiltered = !filterToday && stats && stats.length !== allSafeStats.length;
+
     // --- Spieler aus spieler.json (kommt aus BillardPro.js: const spieler = [...]) ---
     const configuredPlayers = (() => {
       let names = [];
@@ -953,6 +964,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
     const dataBeforeToday = precalculatedCareerStatsBeforeToday || { pData: {}, matchDeltas: {}, aggregates: {} }; // Worker output
     const dataToday = filterToday ? window.processData(statsToday, todayStr) : null;
+    const dataFiltered = isFiltered ? window.calculateStatsLocally(stats, window.spieler) : null; // Nutze calculateStatsLocally für gefilterte ELO
+    const res = filterToday ? dataToday : (isFiltered ? dataFiltered : dataAll);
+    const currentStats = filterToday ? statsToday : stats;
+    const labels = Object.keys(res.pData).sort();
 
     const getAchHtml = (proc, isTodayTab, procBefore) => {
       let achHtml = "";
@@ -965,6 +980,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
       labels.forEach((p, idx) => {
         const d = proc.pData[p];
+        const dCareer = dataAll.pData[p] || d;
         // Vergleichsdaten für "NEU" Badge (Fallback auf leere Stats, falls Spieler heute neu ist)
         const dBefore = (procBefore && procBefore.pData[p]) ? procBefore.pData[p] : { 
             wins: 0, games: 0, rest: 0, maxStreak: 0, currentStreak: 0, lastWin: false, 
@@ -972,7 +988,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         };
         
         const meta = getDailyMetaForPlayer(p);
-        d.dailyDaysWithAch = meta.daysWithAch;
+        const dLvl = d; // Level und Wins sollen sich immer nach den aktuell gefilterten Daten richten
+        dLvl.dailyDaysWithAch = meta.daysWithAch;
 
         if (isTodayTab && (!d.todayGames || d.todayGames === 0)) return;
 
@@ -1010,7 +1027,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         let currentLvlIndex = 1;
         let nextLvl = null;
         for (let i = 0; i < levelSystem.length; i++) {
-          if (d.wins >= levelSystem[i].min) {
+          if (dLvl.wins >= levelSystem[i].min) {
             currentLvl = levelSystem[i];
             currentLvlIndex = i + 1;
             nextLvl = levelSystem[i + 1] || null;
@@ -1023,10 +1040,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
         if (nextLvl) {
           const range = nextLvl.min - currentLvl.min;
-          const earned = d.wins - currentLvl.min;
+          const earned = dLvl.wins - currentLvl.min;
           progressPercent = Math.min(100, Math.round((earned / range) * 100));
 
-          const missing = nextLvl.min - d.wins;
+          const missing = nextLvl.min - dLvl.wins;
           if (progressPercent < 20) {
             infoText = `Frisch befördert! Nächstes Ziel: <b style="color:#fff;">${nextLvl.title}</b> (+${missing})`;
           } else if (progressPercent < 50) {
@@ -1074,7 +1091,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                   </div>
                   </div>
                   <div style="text-align:right;">
-                    <div class="stat-value-badge" style="font-size:14px; padding:4px 10px;">${d.wins} <span style="font-size:8px; opacity:0.6; margin-left:2px;">WINS</span></div>
+                    <div class="stat-value-badge" style="font-size:14px; padding:4px 10px;">${dLvl.wins} <span style="font-size:8px; opacity:0.6; margin-left:2px;">WINS</span></div>
                   </div>
                 </div>
 
@@ -1118,13 +1135,13 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         } else {
             // "Alle" Tab: Aktive Langzeit-Erfolge
             window.famePool.forEach(it => {
-                if (it.cond(d)) {
+                if (it.cond(d)) { // Achievements sollen sich nach den gefilterten Daten richten
                     const isNew = dBefore ? !it.cond(dBefore) : false;
                     currentAchs.push({ ...it, k: "fame", isNew });
                 }
             });
             window.shamePool.forEach(it => {
-                if (it.cond(d)) {
+                if (it.cond(d)) { // Achievements sollen sich nach den gefilterten Daten richten
                     const isNew = dBefore ? !it.cond(dBefore) : false;
                     currentAchs.push({ ...it, k: "shame", isNew });
                 }
@@ -1144,7 +1161,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         }
 
         // Calculate achCountTotal and completedTracks
-        d.achCountTotal = currentAchs.length;
+        dLvl.achCountTotal = currentAchs.length;
         const tracks = {}; // group -> maxTierAchieved
         currentAchs.forEach(ach => {
             if (ach.g && ach.tier) {
@@ -1171,7 +1188,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 completedTracksCount++;
             }
         });
-        d.completedTracks = completedTracksCount;
+        dLvl.completedTracks = completedTracksCount;
 
 
 
@@ -1182,8 +1199,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           const isShame = (item.k === "shame");
           const howIcon  = isShame ? "💀" : "🏆";
           const isMaxTier = item.max === true; // Max tier achievements get special styling
-          const newBadge = item.isNew ? `<span style="background:var(--accent); color:#000; font-size:8px; font-weight:900; padding:2px 5px; border-radius:4px; margin-left:8px; vertical-align:middle; animation: badge-pulse 1.5s infinite ease-in-out;">NEU</span>` : "";
-          const tracker = d.achTracker ? d.achTracker[item.t] : null;
+          const newBadge = item.isNew ? `<span style="background:var(--accent); color:#000; font-size:8px; font-weight:900; padding:2px 5px; border-radius:4px; margin-left:8px; vertical-align:middle; animation: badge-pulse 1.5s infinite ease-in-out;">NEU</span>` : ""; // isNew wird von enrichStatsWithAchievements gesetzt
+          const tracker = d.achTracker ? d.achTracker[item.t] : null; // Tracker soll sich nach den gefilterten Daten richten
           const trackerHtml = tracker ? `<div style="font-size:9px; color:#8e8e93; margin-top:4px; font-weight:600;">Sammelrate: <span style="color:#34c759;">📈 ${tracker.earned}</span> | <span style="color:#ff3b30;">📉 ${tracker.lost}</span></div>` : "";
 
   const borderCol = isShame ? 'var(--error)' : '#34c759';
@@ -1276,14 +1293,13 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     if (sEl) sEl.innerHTML = '';
 
     if (filterToday) {
-        // if (tEl) { tEl.innerHTML = getAchHtml(dataAll, true, dataBeforeToday); tEl.style.display = "block"; } // Dieser Container ist redundant und wird nicht mehr verwendet
         if (aEl) aEl.style.display = "none";
-        if (sEl) { sEl.innerHTML = getAchHtml(dataAll, true, dataBeforeToday); sEl.style.display = "block"; }
+        if (sEl) { sEl.innerHTML = getAchHtml(res, true, dataBeforeToday); sEl.style.display = "block"; }
     } else { // Overall or Achievements tab
         if (tEl) tEl.style.display = "none";
         if (sEl) sEl.style.display = "none";
         if (aEl) { 
-            aEl.innerHTML = getAchHtml(dataAll, false, dataBeforeToday); 
+            aEl.innerHTML = getAchHtml(res, false, dataBeforeToday); 
             aEl.style.display = "block"; 
         }
     }
@@ -1291,9 +1307,6 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     if (onlyAchievements) return;
 
     // --- DASHBOARD KACHELN BEFÜLLEN ---
-    const res = filterToday ? dataToday : dataAll;
-    const currentStats = filterToday ? statsToday : stats;
-    const labels = Object.keys(res.pData);
 
         // --- ZENTRALE FARB-LOGIK FÜR GRAPH & LISTEN ---
         const graphColors = ['#ffcc00', '#4FC3F7', '#34c759', '#ff3b30', '#5856d6'];
@@ -1684,16 +1697,17 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             if (eloCanvas && eloHistoryContainer) {
                 const eloCtx = eloCanvas.getContext('2d');
                 if (eloCanvas.__myEloChart) eloCanvas.__myEloChart.destroy();
-
+                
                 if (topEloPlayers.length > 0) {
                     eloHistoryContainer.style.display = 'block';
                     const WINDOW_SIZE = 10; // Fokus auf die Form (letzte 10 Spiele)
-                    const maxH = Math.max(...topEloPlayers.map(p => res.pData[p].eloHistory.length));
-                    const displayCount = Math.min(WINDOW_SIZE, maxH);
-                    
-                    const chartLabels = Array.from({length: displayCount}, (_, i) => i + 1);
+                    const totalMatchCount = currentStats.length; // Gesamtanzahl der Matches in der Auswahl
+                    const displayCount = Math.min(WINDOW_SIZE, totalMatchCount);
 
-                    const datasets = topEloPlayers.map((p, i) => {
+                    const startLabel = Math.max(1, totalMatchCount - displayCount + 1);
+                    const chartLabels = Array.from({length: displayCount}, (_, i) => startLabel + i);
+
+                    const datasets = topEloPlayers.map((p, i) => { // ELO-Historie jetzt auf Basis der gefilterten Daten
                         const h = res.pData[p].eloHistory || [];
                         const realDataCount = Math.min(h.length, displayCount);
                         const d = h.slice(-displayCount); 
@@ -1971,7 +1985,7 @@ window.processAllStatsChronologically = function(matches, players) {
         const eloCard = byId('eloTrendCard') || document.getElementById('eloTrendCard');
         if (eloCard) eloCard.style.display = (!filterToday) ? 'block' : 'none';
 
-        renderEloRanking(res.pData, !filterToday);
+        renderEloRanking(res.pData, !filterToday); // ELO-Ranking jetzt auf Basis der gefilterten Daten
         renderTrendingPlayers(stats, !filterToday);
     } else {
         // --- Keine Daten: UI sauber zurücksetzen ---
