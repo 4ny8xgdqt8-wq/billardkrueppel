@@ -964,7 +964,6 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     const dataFiltered = isFiltered ? window.calculateStatsLocally(stats, window.spieler) : null; // Nutze calculateStatsLocally für gefilterte ELO
     const res = filterToday ? dataToday : (isFiltered ? dataFiltered : dataAll);
     const currentStats = filterToday ? statsToday : stats;
-    
     // Labels auf aktive Spieler filtern und sortieren
     const labels = Object.keys(res.pData)
         .filter(p => configuredPlayers ? configuredPlayers.has(String(p).trim()) : true)
@@ -1033,6 +1032,26 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             currentLvlIndex = i + 1;
             nextLvl = levelSystem[i + 1] || null;
           }
+        }
+
+        // --- NUTZNIESSER BERECHNUNG ---
+        const nutzVals = labels.map(p => {
+            const d = res.pData[p];
+            const count = filterToday ? (d.todayBlackWinsCount || 0) : (d.blackWinsCount || 0);
+            return { p, count, ga: d.games || 0 };
+        });
+        
+        const maxNutz = nutzVals.length > 0 ? Math.max(...nutzVals.map(x => x.count)) : 0;
+        if (maxNutz > 0) {
+            const topNutz = nutzVals
+                .filter(x => x.count === maxNutz)
+                .sort((a, b) => (b.ga - a.ga) || a.p.localeCompare(b.p, 'de'));
+            
+            if (byId('stat-nutzniesser')) {
+                byId('stat-nutzniesser').innerText = topNutz.map(x => x.p).join(' / ') + ` (${maxNutz}x)`;
+            }
+        } else {
+            if (byId('stat-nutzniesser')) byId('stat-nutzniesser').innerText = "-";
         }
 
         // --- DYNAMISCHE LEVEL-INFOS ---
@@ -1113,6 +1132,13 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         // Today-Unbeaten muss todayWins berücksichtigen (for achievement logic)
         const isUnbeatenToday = d.todayGames > 0 && d.todayWins === d.todayGames;
 
+        const getFixedIndex = (name, arrayLength) => {
+          let hash = 0;
+          for (let i = 0; i < name.length; i++) {
+            hash = name.charCodeAt(i) + ((hash << 5) - hash);
+          }
+          return Math.abs(hash) % (arrayLength || 1); // Avoid division by zero
+        };
         // --- ACHIEVEMENT SAMMLUNG ---
         let currentAchs = [];
 

@@ -139,24 +139,6 @@
         /* HUD-Karten Effekt für technische Statistiken */
         .card-hud {
             position: relative;
-            border-left: 3px solid var(--accent) !important;
-            overflow: hidden;
-            -webkit-backface-visibility: hidden;
-            transform: translateZ(0);
-        }
-        .card-hud::before {
-            content: ""; position: absolute; top: 0; right: 0; 
-            width: 15px; height: 15px; 
-            border-top: 2px solid rgba(255, 204, 0, 0.3); 
-            border-right: 2px solid rgba(255, 204, 0, 0.3);
-            border-radius: 0 4px 0 0;
-        }
-        /* Subtiles Scanline-Muster für technischen Look */
-        .card-hud::after {
-            content: ""; position: absolute; inset: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
-            background-size: 100% 3px, 3px 100%;
-            pointer-events: none; opacity: 0.3;
         }
 
         /* Daten-Badges für Siegquoten */
