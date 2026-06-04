@@ -463,12 +463,12 @@ window.computeEloRatings = function(allMatches) {
  * Achievements enthalten Funktionen (cond), die nicht über den Worker laufen können.
  */
 window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredPlayers, dailyAchivs, isFullHistory = true) {
-    // Wir starten mit leeren/initialen Stats für die Simulation
+    // Wir starten mit leeren/initialen Stats für die Simulation, aber übernehmen matchDeltas und aggregates
     const simPData = {};
     const matchDeltas = JSON.parse(JSON.stringify(baseStats.matchDeltas || {}));
     const aggregates = JSON.parse(JSON.stringify(baseStats.aggregates || {}));
 
-    const allPools = [...window.famePool, ...window.shamePool];
+    const allPools = [...window.famePool, ...window.shamePool, ...(window.generatedKillerAchs || [])];
     
     const nowObj = new Date();
     const todayStr = `${String(nowObj.getDate()).padStart(2, '0')}.${String(nowObj.getMonth() + 1).padStart(2, '0')}.${nowObj.getFullYear()}`; // DD.MM.YYYY
@@ -491,7 +491,7 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
         };
     };
 
-    const getElo = (p) => (simPData[p] ? simPData[p].elo : 1000);
+    const getElo = (p) => (simPData[p] && typeof simPData[p].elo === 'number' ? simPData[p].elo : 1000);
 
     allMatches.forEach(({ g, i: originalIndex }) => {
         if (!g || !g.d) return; // Skip if match data or date is missing
@@ -649,7 +649,7 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
             const isMatchFromToday = g.d && g.d.startsWith(todayStr);
             
             // Zentrale Funktion zum Speichern neuer Erfolge (Daily + Langzeit)
-            const recordNewAch = (ach) => {
+            const recordNewAch = (ach, player) => { // player-Parameter hinzugefügt
                 if (!matchDeltas[originalIndex]) matchDeltas[originalIndex] = { eloDelta: Math.round(20 * Math.abs(eloChangeBase)) };
                 matchDeltas[originalIndex].newAchievements = matchDeltas[originalIndex].newAchievements || {};
                 matchDeltas[originalIndex].newAchievements[p] = matchDeltas[originalIndex].newAchievements[p] || [];
@@ -687,10 +687,12 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
             // 2. Langzeit-Erfolge prüfen
             allPools.forEach(ach => {
                 const hasNow = ach.cond(d);
-                if (!d.achTracker[ach.t]) d.achTracker[ach.t] = { earned: 0, lost: 0, active: false };
-                if (hasNow && !d.achTracker[ach.t].active) { d.achTracker[ach.t].earned++; d.achTracker[ach.t].active = true; }
-                else if (!hasNow && d.achTracker[ach.t].active) { d.achTracker[ach.t].lost++; d.achTracker[ach.t].active = false; }
-                
+                // AchTracker muss den vollen Namen des Achievements verwenden, um Kollisionen zu vermeiden
+                const achKey = ach.g ? `${ach.g}_${ach.tier}` : ach.t; // Eindeutiger Schlüssel für getrackte Achievements
+                if (!d.achTracker[achKey]) d.achTracker[achKey] = { earned: 0, lost: 0, active: false };
+                if (hasNow && !d.achTracker[achKey].active) { d.achTracker[achKey].earned++; d.achTracker[achKey].active = true; }
+                else if (!hasNow && d.achTracker[achKey].active) { d.achTracker[achKey].lost++; d.achTracker[achKey].active = false; }
+
                 if (hasNow && (!dBefore.achTracker[ach.t] || !dBefore.achTracker[ach.t].active)) {
                     recordNewAch(ach);
                 }
@@ -715,7 +717,7 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
         if (typeof d.todayBlackWinsCount === 'undefined') d.todayBlackWinsCount = 0;
 
         // Achievement-Zähler und Track-Abschlüsse berechnen
-        let currentAchs = [];
+        let currentAchs = []; // Achievements, die der Spieler aktuell besitzt
         allPools.forEach(ach => { if (ach.cond(d)) currentAchs.push(ach); });
 
         // Tier-System für Achievements anwenden
@@ -723,12 +725,12 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
         currentAchs.forEach(it => {
             if (!it.g || !it.tier) return;
             const key = it.k + '|' + it.g;
-            if (!tierBest[key] || it.tier > tierBest[key].tier) tierBest[key] = it;
+            if (!tierBest[key] || it.tier > tierBest[key].tier) tierBest[key] = it; // Nur das höchste erreichte Tier pro Gruppe
         });
         // Filter die nicht-Tier-Achievements und füge die besten Tier-Achievements hinzu
         const finalAchs = currentAchs.filter(it => !(it.g && it.tier));
         Object.values(tierBest).forEach(a => finalAchs.push(a));
-
+        
         d.achCountTotal = finalAchs.length;
 
         if (dailyAchivs && dailyAchivs.days) {
@@ -740,7 +742,7 @@ window.enrichStatsWithAchievements = function(baseStats, allMatches, configuredP
 
         // Completed Tracks berechnen
         const tracks = {};
-        finalAchs.forEach(ach => { if (ach.g && ach.tier) tracks[ach.g] = Math.max(tracks[ach.g] || 0, ach.tier); });
+        finalAchs.forEach(ach => { if (ach.g && ach.tier) tracks[ach.g] = Math.max(tracks[ach.g] || 0, ach.tier); }); // Höchstes Tier pro Track
         const allTrackNames = new Set();
         allPools.forEach(ach => { if (ach.g && ach.tier) allTrackNames.add(ach.g); });
         allTrackNames.forEach(tn => {
@@ -2437,3 +2439,116 @@ window.calculateStatsLocally = function(allMatches, players) {
 // UI-Update erzwingen, falls Chart.js nach den Firebase-Snapshots geladen wurde
 if (typeof window.recalculateAndRender === 'function') window.recalculateAndRender();
 else if (typeof window.updateAllViews === 'function') window.updateAllViews();
+
+// --- RETROAKTIVE SYNCHRONISIERUNG DER TAGESERFOLGE ---
+window.openSyncConfirmModal = () => { document.getElementById('syncConfirmModal').style.display = 'flex'; };
+window.closeSyncConfirmModal = () => { document.getElementById('syncConfirmModal').style.display = 'none'; };
+window.doRetroSync = async () => {
+    window.closeSyncConfirmModal();
+    await window.syncDailyAchievementsWithHistory(true);
+};
+
+// Helper function to convert Arabic numerals to Roman numerals
+function toRoman(num) {
+    const romanMap = {
+        1000: 'M', 900: 'CM', 500: 'D', 400: 'CD', 100: 'C', 90: 'XC', 50: 'L', 40: 'XL', 10: 'X', 9: 'IX', 5: 'V', 4: 'IV', 1: 'I'
+    };
+    let roman = '';
+    for (const i of Object.keys(romanMap).sort((a, b) => b - a)) {
+        while (num >= i) {
+            roman += romanMap[i];
+            num -= i;
+        }
+    }
+    return roman;
+}
+
+// --- DYNAMISCHE GENERIERUNG VON NAMENSBEZOGENEN ACHIEVEMENTS ---
+window.generateDynamicAchievements = () => {
+    const generatedKillerAchs = [];
+    // 10 Tiers bis 250 Siege, also Schritte von 25
+    const killerTiers = [25, 50, 75, 100, 125, 150, 175, 200, 225, 250];
+
+    const playerNamesArray = Array.from(window.spieler || []); // Alle konfigurierten Spieler
+
+    // Achievements für jeden möglichen Gegner definieren (einmalig für den globalen Pool)
+    playerNamesArray.forEach(opponentName => {
+        killerTiers.forEach((winsNeeded, tierIdx) => {
+            generatedKillerAchs.push({
+                cond: (d) => d.headToHead[opponentName]?.w >= winsNeeded,
+                i: "🔪", // Messer-Icon für "Killer"
+                t: `${opponentName}-Killer ${toRoman(tierIdx + 1)}`, // Z.B. "Thorsten-Killer I"
+                d: [`Du hast ${opponentName} schon ${winsNeeded} mal besiegt.`, `${opponentName} ist dein Lieblingsgegner.`],
+                h: `Gewinne ${winsNeeded} mal gegen ${opponentName}`,
+                g: `${opponentName}-Killer`, // Gruppierung für das Tier-System
+                tier: tierIdx + 1,
+                max: winsNeeded === 250, // Markiert das höchste Tier
+                k: "fame" // Explizit als "Fame" Achievement kennzeichnen
+            });
+        });
+    });
+    window.generatedKillerAchs = generatedKillerAchs; // Global speichern
+};
+
+window.syncDailyAchievementsWithHistory = async function(bypassConfirm = false) {
+    if (!window.stats || !window.spieler || !window.dailyFamePool || !window.dailyShamePool) {
+        window.openErrorModal("Daten noch nicht geladen. Bitte kurz warten.");
+        return;
+    }
+    
+    if (!bypassConfirm) {
+        if (typeof window.closeAchListModal === 'function') window.closeAchListModal();
+        window.openSyncConfirmModal();
+        return;
+    }
+
+    // 1. Alle Spiele nach Datum gruppieren (DD.MM.YYYY)
+    const matchesByDate = {};
+    window.stats.forEach(g => {
+        if (!g.d) return;
+        const dateStr = g.d.split(',')[0].trim();
+        if (!matchesByDate[dateStr]) matchesByDate[dateStr] = [];
+        matchesByDate[dateStr].push(g);
+    });
+    
+    // 2. Mit leerem Objekt starten
+    const newDailyDays = {}; // Wir starten frisch, damit nur Tage mit echten Matches übernommen werden (entfernt Geister-Daten)
+    
+    // 3. Für jedes Datum die Erfolge neu berechnen
+    for (const dateStr in matchesByDate) {
+        const matches = matchesByDate[dateStr];
+        const parts = dateStr.split('.');
+        if (parts.length < 3) continue;
+
+        // Sicherstellen, dass das Format immer YYYY-MM-DD ist (mit führenden Nullen)
+        const yyyy = parts[2];
+        const mm = parts[1].padStart(2, '0');
+        const dd = parts[0].padStart(2, '0');
+        const isoDate = `${yyyy}-${mm}-${dd}`;
+        
+        const dayProc = window.processData(matches, dateStr);
+        
+        Object.keys(dayProc.pData).forEach(player => {
+            const d = dayProc.pData[player];
+            const earned = [
+                ...window.dailyFamePool.filter(ach => ach.cond(d)),
+                ...window.dailyShamePool.filter(ach => ach.cond(d))
+            ].map(ach => ach.t);
+            
+            if (earned.length > 0) {
+                if (!newDailyDays[isoDate]) newDailyDays[isoDate] = {}; // Nur erstellen, wenn wirklich Erfolge da sind
+                const existing = newDailyDays[isoDate][player] || [];
+                newDailyDays[isoDate][player] = Array.from(new Set([...existing, ...earned]));
+            }
+        });
+    }
+    
+    try {
+        await window.dbFns.setDoc(window.dbFns.doc(window.db, "billard_data", "daily_achivs"), { days: newDailyDays });
+        window.openSuccessModal();
+        if (window.recalculateAndRender) window.recalculateAndRender();
+    } catch (err) {
+        console.error("Sync Error:", err);
+        window.openErrorModal("Fehler bei der Synchronisierung:\n" + err.message);
+    }
+};

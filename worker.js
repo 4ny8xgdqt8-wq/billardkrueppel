@@ -30,7 +30,7 @@ self.onmessage = function(e) {
                 wins: 0, games: 0, rest: 0, maxStreak: 0, currentStreak: 0, lastWin: false,
                 clutchWins: 0, closeWins: 0, closeLosses: 0, dramaWins: 0, killerPoints: 0, blackWinsCount: 0, breakWins: 0,
                 loseStreak: 0, maxLoseStreak: 0, eloHistory: [], maxElo: 1000, 
-                maxWinRate: 0, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0, 
+                maxWinRate: 0, winsVsTopElo: 0, vsNemesisWins: 0, vsWorstOpponentLosses: 0,
                 regularWins: 0, foul8Wins: 0, lostBy8BallError: 0, // New
                 headToHead: {}, // Format: { opponentName: { w: 0, l: 0 } }
                 last30Games: [], last20Losses: [], last20WinsKiller: [], gameResultsHistory: []
