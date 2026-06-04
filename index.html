@@ -697,6 +697,7 @@
         @keyframes rotate-fire { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes pulse-fire { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.3); opacity: 0.8; } }
         @keyframes pulse-frost { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.2); opacity: 1; } }
+        @keyframes streak-pulse { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.15); filter: brightness(1.2); } }
         @keyframes tears-fall {
             0% { transform: translateY(0) scale(0.8); opacity: 0; }
             20% { opacity: 1; transform: translateY(1px) scale(1); }
@@ -961,9 +962,26 @@
                         <div class="card cinematic-entry card-hud" style="animation-delay: 0.5s;"><label>🎲 Spiele gesamt</label><div id="stat-total" style="font-size:24px; font-weight:900; color:var(--accent); text-shadow: 0 0 15px rgba(255,204,0,0.4);">0</div></div>
                         <div class="card cinematic-entry card-hud" style="animation-delay: 0.55s;"><label>⚡ Anstoß-Vorteil</label><div id="stat-break-adv" style="font-size:24px; font-weight:900; color:#34c759; text-shadow: 0 0 15px rgba(52,199,89,0.4);">0%</div></div>
                         <div class="card cinematic-entry card-hud" style="animation-delay: 0.6s;"><label>🐀 Sieg durch Foul</label><div id="stat-black" style="font-size:24px; font-weight:900; color:#ff3b30; text-shadow: 0 0 15px rgba(255,59,48,0.4);">0%</div></div>
-                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.65s;"><label>🫠 Pechvogel</label><div id="stat-pechvogel" style="font-size:14px; font-weight:900; color:#fff; text-shadow: 0 0 8px rgba(255,255,255,0.2);">-</div></div>
-                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.7s;"><label>🥶 Nervenstärke</label><div id="stat-clutch" style="font-size:14px; font-weight:900; color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.3);"> -</div></div>
-                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.75s;"><label>🔪 Killer-Instinkt</label><div id="stat-killer" style="font-size:14px; font-weight:900; color:#ff3b30; text-shadow: 0 0 8px rgba(255,59,48,0.3);"> -</div></div>
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.65s;">
+                            <label>🫠 Pechvogel</label>
+                            <div id="stat-pechvogel" style="font-size:14px; font-weight:900; color:#fff; text-shadow: 0 0 8px rgba(255,255,255,0.2);">-</div>
+                            <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Höchste Ø Restkugeln bei Niederlage</div>
+                        </div>
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.7s;">
+                            <label>🥶 Nervenstärke</label>
+                            <div id="stat-clutch" style="font-size:14px; font-weight:900; color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.3);">-</div>
+                            <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Siege wenn Gegner auf der 8 war</div>
+                        </div>
+                        <div class="card cinematic-entry card-hud" style="animation-delay: 0.75s;">
+                            <label>🔪 Killer-Instinkt</label>
+                            <div id="stat-killer" style="font-size:14px; font-weight:900; color:#ff3b30; text-shadow: 0 0 8px rgba(255,59,48,0.3);">-</div>
+                            <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Höchste Ø Restkugeln beim Gegner</div>
+                        </div>
+                        <div class="card cinematic-entry card-hud" style="grid-column: span 2; animation-delay: 0.78s;">
+                            <label>🪤 Nutznießer</label>
+                            <div id="stat-nutzniesser" style="font-size:16px; font-weight:900; color:var(--accent); text-shadow: 0 0 10px rgba(255,204,0,0.3);">-</div>
+                            <div style="font-size:7px; color:#8e8e93; margin-top:2px; font-weight:800; text-transform:uppercase;">Meiste Siege durch Gegner-Fehler an der 8</div>
+                        </div>
                         <div class="card cinematic-entry card-hud" style="grid-column: span 2; animation-delay: 0.8s;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                 <label style="margin:0;">Kugel-Favoriten</label>
@@ -1007,7 +1025,11 @@
 
                     <div class="section-label" style="animation-delay: 1.2s;">🏆 Meilensteine</div>
                     <div class="card cinematic-entry" style="animation-delay: 1.3s;"><label>Längste Sieg-Serie</label><div id="stat-streak" style="font-weight:900; font-size:20px; color:var(--accent); text-shadow: 0 0 10px rgba(255,204,0,0.3);">0</div></div>
-                    <div class="card cinematic-entry" style="animation-delay: 1.35s;"><label>Die Mauer (Zäher Verlierer)</label><div id="stat-mauer" style="font-weight:900; font-size:14px; color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.3);">-</div></div>
+                    <div class="card cinematic-entry" style="animation-delay: 1.35s;">
+                        <label>Die Mauer</label>
+                        <div id="stat-mauer" style="font-weight:900; font-size:14px; color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.3);">-</div>
+                        <div style="font-size:8px; color:#8e8e93; margin-top:4px; font-weight:800; text-transform:uppercase;">Wenigste Ø Restkugeln bei Niederlage</div>
+                    </div>
                     
                     <div id="today-matches-card" class="card cinematic-entry" style="display:none; animation-delay: 1.4s;">
                         <label>Heutige Matches</label>
@@ -2588,6 +2610,9 @@
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     <div style="display:flex; justify-content:space-between; font-size:13px; padding:12px; background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border-radius:14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
                         <span style="color:#acacb0; font-weight: 600;">Spiele gesamt</span><span style="font-weight:900; color:#fff;">${d.games}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; padding:12px; background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border-radius:14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                        <span style="color:#acacb0; font-weight: 600;">Abstauber-Siege (Foul)</span><span style="font-weight:900; color:#ff3b30; text-shadow: 0 0 8px rgba(255,59,48,0.4);">🪤 ${d.blackWinsCount || 0}x</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; font-size:13px; padding:12px; background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border-radius:14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
                         <span style="color:#acacb0; font-weight: 600;">Höchste Serie</span><span style="font-weight:900; color:var(--accent); text-shadow: 0 0 8px rgba(255,204,0,0.4);">🔥 ${d.maxStreak}</span>

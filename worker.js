@@ -59,7 +59,7 @@ self.onmessage = function(e) {
             const losers = (g.w == 1) ? p2A : p1A;
             const rest = parseInt(g.l || 0);
 
-            if (g.t?.includes("Schwarz") || g.t?.includes("Gegner-Fehler")) blackWins++;
+            if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) blackWins++;
 
             // Global Break Win Check
             const winnerStr = String((g.w == 1) ? g.p1 : g.p2 || '').trim();
@@ -135,7 +135,7 @@ self.onmessage = function(e) {
                 if(isW) {
                     d.wins++; d.killerPoints += rest; d.lastWin = true; d.loseStreak = 0;
                     d.currentStreak++; if(d.currentStreak > d.maxStreak) d.maxStreak = d.currentStreak;
-                    if(g.t?.includes("Schwarz") || g.t?.includes("Gegner-Fehler")) d.blackWinsCount++;
+                    if(g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) d.blackWinsCount++;
                     
                     // Korrekte Break-Win Prüfung für Achievements
                     const currentWinnerStr = String((g.w == 1) ? g.p1 : g.p2 || '').trim();
