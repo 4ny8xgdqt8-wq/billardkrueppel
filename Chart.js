@@ -2075,7 +2075,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 }
                 
                 const img = window._avatarCache[url];
-                const size = 30;
+                // Berechne Avatar-Größe dynamisch: Kleiner bei vielen Spielern
+                const maxPossibleSize = (chart.scales.x.width / labels.length) * 0.8;
+                const size = Math.min(30, Math.max(16, maxPossibleSize));
                 const posY = bar.y - size - 6;
 
                 ctx.save();
@@ -2108,29 +2110,20 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    const p = labels[context.dataIndex];
-                    const d = res.pData[p];
-                    const losses = d.games - d.wins;
-                    return [
-                      ` Siegquote: ${context.raw}%`,
-                      ` 🟢 Siege: ${d.wins}`,
-                      ` 🔴 Niederlagen: ${losses}`,
-                      ` 🔵 Gesamt: ${d.games} Spiele`
-                    ];
-                  }
-                }
-              }
+              legend: { display: false }, // Legende bleibt ausgeblendet
+              tooltip: { enabled: false } // Tooltips komplett deaktivieren
             },
             scales: {
               y: { min: 0, max: 100, ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.05)' } },
               x: { 
                 ticks: { 
                   color: '#fff', 
-                  font: { size: window.innerWidth < 500 ? 9 : 10 },
+                  font: { 
+                    // Schrift wird auf dem Handy bei > 5 Spielern noch etwas kleiner
+                    size: window.innerWidth < 500 
+                      ? (labels.length > 5 ? 8 : 9) 
+                      : 10 
+                  },
                   maxRotation: 0, // Verhindert schräge Texte, die bei Mehrzeiligkeit schlecht aussehen
                   minRotation: 0,
                   autoSkip: false // Stellt sicher, dass jeder Spieler angezeigt wird
