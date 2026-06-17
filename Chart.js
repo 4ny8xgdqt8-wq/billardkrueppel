@@ -2043,6 +2043,10 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
               const d = res.pData[p];
               const losses = d.games - d.wins;
               const rate = d.games > 0 ? Math.round((d.wins / d.games) * 100) : 0;
+              // Für Handys (schmale Screens) teilen wir die Info auf 3 Zeilen auf, um Breite zu sparen
+              if (window.innerWidth < 500) {
+                return [p, `🔵${d.games} 🟢${d.wins} 🔴${losses}`, `${rate}%`];
+              }
               return [p, `🔵${d.games}  🟢${d.wins}  🔴${losses}  📈${rate}%`];
             }),
             datasets: [{
@@ -2123,7 +2127,15 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             },
             scales: {
               y: { min: 0, max: 100, ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-              x: { ticks: { color: '#fff', font: { size: 10 } } }
+              x: { 
+                ticks: { 
+                  color: '#fff', 
+                  font: { size: window.innerWidth < 500 ? 9 : 10 },
+                  maxRotation: 0, // Verhindert schräge Texte, die bei Mehrzeiligkeit schlecht aussehen
+                  minRotation: 0,
+                  autoSkip: false // Stellt sicher, dass jeder Spieler angezeigt wird
+                } 
+              }
             }
           }
         });

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'billard-v10';
+const CACHE_NAME = 'billard-v11';
 const ASSETS = [
   './',
   'index.html',
