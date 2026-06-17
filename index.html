@@ -702,6 +702,18 @@
                 border-color: rgba(255, 204, 0, 0.9) !important; 
             }
         }
+        @keyframes tagessieger-glow {
+            0% { box-shadow: 0 0 15px rgba(79,195,247,0.3); border-color: rgba(79,195,247,0.3); }
+            50% { box-shadow: 0 0 35px rgba(79,195,247,0.5), inset 0 0 10px rgba(79,195,247,0.1); border-color: rgba(79,195,247,0.6); }
+            100% { box-shadow: 0 0 15px rgba(79,195,247,0.3); border-color: rgba(79,195,247,0.3); }
+        }
+        .tagessieger-pulse {
+            animation: ach-card-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, tagessieger-glow 4s infinite alternate ease-in-out 0.6s !important;
+            background: linear-gradient(135deg, rgba(79, 195, 247, 0.25) 0%, rgba(28, 28, 30, 0.9) 100%) !important;
+            border-width: 1.5px !important;
+            z-index: 5;
+            opacity: 0; /* Startzustand für die Entry-Animation */
+        }
         html, body { transition: background-image 0.8s ease-in-out; } /* Smooth transition for gradient colors */
     </style>
 </head>
@@ -928,6 +940,13 @@
                     </div>
                 </div>
                 <div id="stat-content-wrapper">
+                    <div class="card cinematic-entry card-hud tagessieger-pulse" style="animation-delay: 0.05s; text-align: center; cursor: pointer; margin-bottom: 20px;" id="stat-daily-winner-card" onclick="window.showDailyWinnerInfo()">
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 6px;">
+                            <label style="margin-bottom: 0;">🏆 Tagessieger</label>
+                            <span style="font-size: 10px; color: rgba(255,255,255,0.4);">ⓘ</span>
+                        </div>
+                        <div id="stat-daily-winner" style="font-size:14px; font-weight:900; color:var(--accent); text-shadow: 0 0 15px rgba(255,204,0,0.4);"></div>
+                    </div>
                     <div class="section-label" style="animation-delay: 0.1s;">📈 Performance</div>
                     <div class="card cinematic-entry" style="animation-delay: 0.2s;"><label style="color: var(--accent);">Siegquote %</label><div style="height:160px;"><canvas id="winChart"></canvas></div></div>
                     <div class="card cinematic-entry" id="eloTrendCard" style="animation-delay: 0.3s;">
@@ -1462,8 +1481,8 @@
         <div class="modal-backdrop" onclick="window.closeErrorModal()"></div>
         <div class="modal-card" style="max-width: 320px;">
             <div style="padding: 30px 20px; text-align: center;">
-                <div style="font-size: 40px; margin-bottom: 15px;">⚠️</div>
-                <div style="font-weight: 900; color: var(--error); font-size: 16px; text-transform: uppercase; margin-bottom: 10px;">Etwas fehlt!</div>
+                <div id="errorModalIcon" style="font-size: 40px; margin-bottom: 15px;">⚠️</div>
+                <div id="errorModalTitle" style="font-weight: 900; color: var(--error); font-size: 16px; text-transform: uppercase; margin-bottom: 10px;">Etwas fehlt!</div>
                 <div id="errorModalText" style="color: var(--text); font-size: 14px; line-height: 1.6; font-weight: 600; white-space: pre-line; text-align: left; padding: 0 10px;"></div>
             </div>
             <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
@@ -1839,8 +1858,19 @@
 
         window.highlightedElements = []; // Global array to keep track of highlighted elements
 
-        window.openErrorModal = (msg, elementIdsToHighlight = []) => {
+        window.openErrorModal = (msg, elementIdsToHighlight = [], title = "Etwas fehlt!", icon = "⚠️") => {
             const modal = document.getElementById('errorModal');
+            document.getElementById('errorModalIcon').innerText = icon;
+            const titleEl = document.getElementById('errorModalTitle');
+            titleEl.innerText = title;
+            titleEl.style.color = "var(--error)"; // Standardfarbe zurücksetzen
+
+            // Button & Text Styles zurücksetzen (falls vorher Info-Modus aktiv war)
+            const btn = modal.querySelector('.btn-save');
+            btn.style.background = 'var(--error)';
+            btn.style.color = '#fff';
+            document.getElementById('errorModalText').style.fontSize = '14px';
+
             document.getElementById('errorModalText').innerText = msg;
             modal.style.display = 'flex';
             
@@ -1877,6 +1907,32 @@
                     if (pPrev && pPrev.tagName === 'LABEL') pPrev.style.color = 'var(--error)';
                 }
             });
+        };
+
+        window.showDailyWinnerInfo = () => {
+            const msg = `Der Tagessieger (Session-MVP) wird durch Leistungspunkte ermittelt:\n\n` +
+                        `🕹️ Pro Spiel: +3 (Teilnahme)\n` +
+                        `🏆 Pro Sieg: +5\n` +
+                        `📉 Pro Niederlage: -2\n` +
+                        `🎯 Regulärer Sieg: +3\n` +
+                        `⚡ Break-Sieg: +5\n` +
+                        `🥶 Clutch (Gegner Rest 1): +3\n` +
+                        `🕯️ Knappe Niederlage (Du Rest 1): +3\n` +
+                        `🔥 Längste Serie: +2 pro Spiel\n` +
+                        `🕵️ Service-Klau: +2 (Sieg bei Gegner-Anstoß)\n` +
+                        `🪓 Dominanz: +1 pro Ø Restkugel (Sieg)\n` +
+                        `🗡️ Nemesis besiegt: +6\n` +
+                        `🏆 Fame Achievement: +3\n\n` +
+                        `Abzüge:\n` +
+                        `🐀 Sieg durch Foul: -3\n` +
+                        `🤦 8er-Fehler: -3\n` +
+                        `💀 Shame Achievement: -3\n` +
+                        `🧟 Hoher Ø Rest bei Niederlage: -0.5 pro Ø Restkugel`;
+            window.openErrorModal(msg, [], "Punkte-Logik", "🏆");
+            document.getElementById('errorModalTitle').style.color = 'var(--accent)';
+            document.querySelector('#errorModal .btn-save').style.background = 'var(--accent)';
+            document.querySelector('#errorModal .btn-save').style.color = '#000';
+            document.querySelector('#errorModalText').style.fontSize = '12px';
         };
 
         window.removeHighlight = (id) => {
@@ -2584,15 +2640,30 @@
                     console.warn("Erfolge konnten nicht aktualisiert werden, Match wurde aber gespeichert:", achErr);
                 }
                 
-                document.getElementById('leftover').value = "0"; 
+                const winnerName = (window.winnerNum === 1) ? p1 : p2;
+                const prevMode = m;
+
                 window.winnerNum = 0; 
                 window.breakLocked = false;
                 document.querySelectorAll('.win-btn').forEach(b => b.classList.remove('selected'));
                 document.querySelectorAll('.player-sel').forEach(s => s.value = "");
+
+                // Gewinner automatisch als Spieler 1 / Team 1 setzen
+                if (prevMode === '1:1') {
+                    document.getElementById('p1').value = winnerName;
+                } else {
+                    const names = (winnerName || "").split(' & ').map(n => n.trim());
+                    if (names.length === 2) {
+                        document.getElementById('t1p1').value = names[0];
+                        document.getElementById('t1p2').value = names[1];
+                    }
+                }
+
                 document.getElementById('breakPlayer').value = "";
                 document.getElementById('ballType1').value = "";
                 document.getElementById('ballType2').value = "";
                 document.getElementById('winType').value = "";
+                document.getElementById('leftover').value = ""; 
                 
                 if (typeof window.updateUI === 'function') window.updateUI();
                 
