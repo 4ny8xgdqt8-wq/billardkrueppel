@@ -2001,6 +2001,70 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
           if (byId('stat-mauer')) byId('stat-mauer').innerText = "-";
         }
 
+        // --- TAGESSIEG-STATISTIK (MODERNISIERT) ---
+        const dailyWinsEl = byId('stat-daily-wins');
+        if (dailyWinsEl) {
+            const dailyPlacements = {};
+
+            // Hilfsfunktion zum Initialisieren eines Spielers
+            const initPlayer = (name) => {
+                if (!dailyPlacements[name]) {
+                    dailyPlacements[name] = { 1: 0, 2: 0, 3: 0, name: name };
+                }
+            };
+
+            if (window.dailyAchivs && window.dailyAchivs.days) {
+                for (const date in window.dailyAchivs.days) {
+                    const dayData = window.dailyAchivs.days[date];
+                    
+                    // Berechne den MVP-Score für jeden Spieler an diesem Tag und initialisiere sie
+                    const playerScores = Object.keys(dayData).map(player => {
+                        initPlayer(player);
+                        const achievements = dayData[player] || [];
+                        const score = achievements.length;
+                        return { player, score };
+                    }).sort((a, b) => b.score - a.score);
+
+                    // Eindeutige Scores für die Top 3 Plätze ermitteln
+                    const uniqueScores = [...new Set(playerScores.map(p => p.score))].sort((a, b) => b - a);
+                    
+                    // Platz 1
+                    if (uniqueScores.length > 0 && uniqueScores[0] > 0) {
+                        playerScores.filter(p => p.score === uniqueScores[0]).forEach(p => dailyPlacements[p.player][1]++);
+                    }
+                    // Platz 2
+                    if (uniqueScores.length > 1 && uniqueScores[1] > 0) {
+                        playerScores.filter(p => p.score === uniqueScores[1]).forEach(p => dailyPlacements[p.player][2]++);
+                    }
+                    // Platz 3
+                    if (uniqueScores.length > 2 && uniqueScores[2] > 0) {
+                        playerScores.filter(p => p.score === uniqueScores[2]).forEach(p => dailyPlacements[p.player][3]++);
+                    }
+                }
+            }
+
+            // Sortiere Spieler nach: 1. Platz, dann 2. Platz, dann 3. Platz
+            const sortedPlayers = Object.values(dailyPlacements).sort((a, b) => {
+                if (b[1] !== a[1]) return b[1] - a[1];
+                if (b[2] !== a[2]) return b[2] - a[2];
+                return b[3] - a[3];
+            });
+
+            dailyWinsEl.innerHTML = sortedPlayers.length > 0 ? sortedPlayers.map((p, idx) => `
+                <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding: 10px; border-radius:16px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.25 + idx * 0.05}s;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="font-size:14px; font-weight:900; color:var(--accent); min-width:20px; text-align:center;">${idx + 1}.</div>
+                        <img src="${window.getAvatarUrl(p.name)}" style="width:30px; height:30px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size:13px; font-weight:800; color:#fff;">${p.name}</div>
+                    </div>
+                    <div style="display:flex; gap:8px; font-size:11px; font-weight:900;">
+                        <span title="1. Plätze">🥇 ${p[1]}</span>
+                        <span title="2. Plätze" style="opacity:0.7;">🥈 ${p[2]}</span>
+                        <span title="3. Plätze" style="opacity:0.5;">🥉 ${p[3]}</span>
+                    </div>
+                </div>`).join('') : '<div style="font-size:10px; color:#8e8e93; text-align:center; padding:5px;">Noch keine Tagessieger ermittelt.</div>';
+        }
+
         // --- TEAM-AUSWERTUNG ---
         const normTeamKey = (teamStr) => {
           const parts = String(teamStr || "")
@@ -2024,7 +2088,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
               duoEl.innerHTML = duoRanking.length > 0 ? duoRanking.map((t, idx) => { // Added idx for animation-delay
                 const pNames = t.name.split(' & ');
                 return `
-                <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:10px; padding: 12px; border-radius:18px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.2 + idx * 0.05}s;">
+                <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:10px; padding: 12px; border-radius:18px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.1 + idx * 0.05}s;">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <div style="display:flex; flex-direction:column; align-items:center; min-width:18px; margin-right:4px;">
                             <span style="color:var(--accent); font-weight:900; font-size:14px;">${idx+1}</span>
@@ -2063,7 +2127,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
         const spezEl = byId('stat-ball-spez');
         if (spezEl) {
-              spezEl.innerHTML = `<div style="animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: 1.25s;">
+              spezEl.innerHTML = `<div style="animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: 1.15s;">
                 <div style="display:flex; justify-content:space-around; align-items:center; padding: 10px 0; ">
                     <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
                         <div style="font-size:8px; color:#8e8e93; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Voll-Profi</div>
@@ -2107,18 +2171,18 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             .map(m => {
                 const wr1 = Math.round((m.p1_wins / m.games) * 100);
                 const wr2 = Math.round((m.p2_wins / m.games) * 100);
-                const dominance = Math.abs(wr1 - wr2); // Absolute Differenz als Dominanz-Score
+                const dominance = Math.abs(wr1 - wr2);
                 return { ...m, wr1, wr2, dominance };
             })
             .sort((a, b) => b.dominance - a.dominance || b.games - a.games); // Nach Dominanz, dann Spielen sortieren
 
-        const h2hEl = byId('stat-head-to-head');
+        const h2hEl = byId('stat-head-to-head'); // Behalte die ID für die Kachel
         if (h2hEl) {
             h2hEl.innerHTML = dominantMatchups.length > 0 ? dominantMatchups.map((m, idx) => {
                 const c1 = m.wr1 >= m.wr2 ? 'green' : 'blue';
                 const c2 = m.wr2 > m.wr1 ? 'green' : 'blue';
                 return `
-                <div class="card-modern" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px; padding: 12px; border-radius:20px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.35 + idx * 0.05}s;">
+                <div class="card-modern" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px; padding: 12px; border-radius:20px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.3 + idx * 0.05}s;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <!-- Linker Spieler -->
                         <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
@@ -2607,6 +2671,7 @@ window.processAllStatsChronologically = function(matches, players) {
         setText('stat-angst', '-');
         setText('stat-streak', '-');
         setText('stat-mauer', '-');
+        setText('stat-daily-wins', '-');
 
         const dailyWinnerCard = document.getElementById('stat-daily-winner-card');
         const dailyWinnerEl = document.getElementById('stat-daily-winner');
