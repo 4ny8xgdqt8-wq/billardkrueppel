@@ -1431,7 +1431,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
         if (isTodayTab) {
           playerBoxHtml = `
-            <div class="card-modern" style="margin-bottom:15px; border-radius:22px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0;">
+            <div class="card-modern" style="margin-bottom:15px; border-radius:22px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
               <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
                    style="padding:15px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor:pointer; -webkit-tap-highlight-color: transparent; display:flex; align-items:center; gap:12px;">
                 <div class="ach-chevron expanded"></div>
@@ -1444,7 +1444,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
               <div style="padding:12px 12px 6px 12px; display:block;">`;
         } else {
           playerBoxHtml = `
-            <div class="achievement-card-hero" style="border-radius:24px; margin-bottom:15px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0;">
+            <div class="achievement-card-hero" style="border-radius:24px; margin-bottom:15px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
               <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
                    style="padding:18px; cursor:pointer; -webkit-tap-highlight-color: transparent;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -1667,7 +1667,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             };
 
             return `
-            <div onclick="window.openMatchDetails(${i})" class="card-modern" style="padding: 12px; border-radius: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); cursor:pointer; background: rgba(28, 28, 30, 0.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: transform 0.2s; -webkit-tap-highlight-color: transparent;">
+            <div onclick="window.openMatchDetails(${i})" class="card-modern" style="padding: 12px; border-radius: 18px; margin-bottom: 12px; cursor:pointer; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05); transition: transform 0.2s; -webkit-tap-highlight-color: transparent;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <div style="display:flex; align-items:center; gap:8px; flex:1; overflow:hidden;">
                         <div style="display:flex; flex-shrink:0;">${getAv(g.p1)}</div>
@@ -2086,9 +2086,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const duoEl = byId('stat-duo-ranking');
         if (duoEl) {
               duoEl.innerHTML = duoRanking.length > 0 ? duoRanking.map((t, idx) => { // Added idx for animation-delay
-                const pNames = t.name.split(' & ');
+                const pNames = t.name.split(' & '); // This is inside a parent card that needs styling
                 return `
-                <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:10px; padding: 12px; border-radius:18px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.1 + idx * 0.05}s;">
+                <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:10px; padding: 12px; border-radius:18px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.1 + idx * 0.05}s; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <div style="display:flex; flex-direction:column; align-items:center; min-width:18px; margin-right:4px;">
                             <span style="color:var(--accent); font-weight:900; font-size:14px;">${idx+1}</span>
@@ -2180,9 +2180,9 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         if (h2hEl) {
             h2hEl.innerHTML = dominantMatchups.length > 0 ? dominantMatchups.map((m, idx) => {
                 const c1 = m.wr1 >= m.wr2 ? 'green' : 'blue';
-                const c2 = m.wr2 > m.wr1 ? 'green' : 'blue';
+                const c2 = m.wr2 > m.wr1 ? 'green' : 'blue'; // This is inside a parent card that needs styling
                 return `
-                <div class="card-modern" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px; padding: 12px; border-radius:20px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.3 + idx * 0.05}s;">
+                <div class="card-modern" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px; padding: 12px; border-radius:20px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.3 + idx * 0.05}s; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <!-- Linker Spieler -->
                         <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
@@ -2217,6 +2217,20 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
 
             }).join('') : '<div style="font-size:10px; color:#8e8e93; text-align:center; padding:5px;">Noch keine 1:1-Duelle vorhanden</div>';
         }
+
+        // --- Dashboard Kacheln anpassen ---
+        const dashboardCards = [
+            'stat-daily-winner-card', 'stat-duo-card', 'stat-ball-spez-card', 
+            'stat-h2h-card', 'stat-daily-wins-card'
+        ];
+        dashboardCards.forEach(cardId => {
+            const card = byId(cardId);
+            if (card) {
+                card.style.background = 'linear-gradient(145deg, #2c2c2e, #1a1a1c)';
+                card.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+                card.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05)';
+            }
+        });
 
         // Längste Serie – bei Gleichstand mehrere anzeigen
         const maxStreak = Math.max(...labels.map(p => res.pData[p].maxStreak || 0)); // Max streak is calculated in worker
@@ -2456,7 +2470,7 @@ window.processAllStatsChronologically = function(matches, players) {
             const streakClass = r.streak >= 1 ? 'streak-fire' : (r.loseStreak >= 3 ? 'streak-frost' : '');
             const streakEmoji = (r.streak >= 1) ? ` <span style="display:inline-flex; align-items:center; gap:2px; color:var(--accent); text-shadow: 0 0 8px rgba(255,204,0,0.4); animation: streak-pulse 1.5s infinite ease-in-out; vertical-align: middle;"><span style="font-size:14px;">🔥</span><span style="font-size:11px; font-weight:900;">${r.streak}</span></span>` : ''; // Pulsierendes Flammen-Emoji mit Zähler
             html += `
-              <div onclick="window.openPlayerProfile('${r.name}')" class="card-modern ${isFirst ? 'rank-1-card' : ''}" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; padding: 12px; border-radius: 20px; border: 1px solid ${isFirst ? '#ffcc00' : 'rgba(255,255,255,0.08)'}; cursor:pointer; box-shadow: ${isFirst ? '0 0 20px rgba(255,204,0,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; ${isFirst ? '' : 'animation: ach-card-enter 0.4s ease-out forwards; opacity: 0;'} animation-delay: ${0.5 + i * 0.05}s;">
+              <div onclick="window.openPlayerProfile('${r.name}')" class="card-modern ${isFirst ? 'rank-1-card' : ''}" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; padding: 12px; border-radius: 20px; cursor:pointer; ${isFirst ? '' : 'animation: ach-card-enter 0.4s ease-out forwards; opacity: 0;'} animation-delay: ${0.5 + i * 0.05}s; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid ${isFirst ? '#ffcc00' : 'rgba(255, 255, 255, 0.1)'}; box-shadow: ${isFirst ? '0 0 20px rgba(255,204,0,0.2)' : '0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05)'};">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${badge || (i+1 + '.')}</div>
                 <div class="avatar-frame ${streakClass}">
                   <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15);">
@@ -2616,7 +2630,7 @@ window.processAllStatsChronologically = function(matches, players) {
             const isTopForm = i === 0;
             const streakClass = r.streak >= 1 ? 'streak-fire' : (r.loseStreak >= 3 ? 'streak-frost' : '');
             listHtml += `
-              <div onclick="window.openPlayerProfile('${r.name}')" class="card-modern" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; background: ${isTopForm ? 'linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)' : ''}; padding: 12px; border-radius: 20px; border: 1px solid ${isTopForm ? '#34c759' : 'rgba(255,255,255,0.08)'}; box-shadow: ${isTopForm ? '0 0 20px rgba(52,199,89,0.2)' : '0 4px 12px rgba(0,0,0,0.2)'}; cursor:pointer; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${0.5 + i * 0.05}s;">
+              <div onclick="window.openPlayerProfile('${r.name}')" class="card-modern" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; background: ${isTopForm ? 'linear-gradient(135deg, rgba(52, 199, 89, 0.2) 0%, #1a1a1c 100%)' : 'linear-gradient(145deg, #2c2c2e, #1a1a1c)'}; padding: 12px; border-radius: 20px; border: 1px solid ${isTopForm ? '#34c759' : 'rgba(255, 255, 255, 0.1)'}; box-shadow: ${isTopForm ? '0 0 20px rgba(52,199,89,0.2)' : '0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05)'}; cursor:pointer; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${0.5 + i * 0.05}s;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${i === 0 ? '🔥' : (i === 1 ? '✨' : (i === 2 ? '📈' : (i+1 + '.')))}</div>
                 <div class="avatar-frame ${streakClass}">
                   <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15);">
