@@ -830,7 +830,7 @@
                             <button id="btn-breakcalc" class="win-btn" style="flex:1; background: rgba(255,204,0,0.1); color: var(--accent);" onclick="window.calcBreak()">🎲 Würfeln</button>
                             <div style="flex:1.5; display:flex; align-items:center; gap:8px;">
                                 <div id="breakPlayer-avatar-preview" style="flex-shrink:0; display:flex;"></div>
-                                <select id="breakPlayer" style="margin-bottom:0; flex:1; width:auto;" onchange="window.updateUI()"></select>
+                                <select id="breakPlayer" style="margin-bottom:0; flex:1; width:auto;" onchange="window.updateUI()" disabled></select>
                             </div>
                         </div>
                     </div>
@@ -2563,14 +2563,17 @@
             const diceBtn = document.getElementById('btn-breakcalc');
             const breakSel = document.getElementById('breakPlayer');
             if (diceBtn) { diceBtn.disabled = true; diceBtn.style.opacity = "0.3"; }
-            if (breakSel) breakSel.disabled = false; // Sollte nach dem Würfeln wählbar bleiben
+            if (breakSel) {
+                breakSel.disabled = false; // Kurz aktivieren, um den Wert zu setzen
+                breakSel.value = res;
+                breakSel.disabled = true; // Sofort wieder deaktivieren
+            }
             
             document.getElementById('diceResultName').innerText = res;
             const names = res.split(' & ').map(n => n.trim());
-            
             const avatarContainer = document.getElementById('diceResultAvatar');
             if (avatarContainer) {
-                const size = names.length > 1 ? 44 : 64;
+                const size = names.length > 1 ? 44 : 64; // This was causing an error as 'names' was not defined
                 avatarContainer.innerHTML = names.map(n => {
                     const silhouette = `<div style="width:${size}px; height:${size}px; border-radius:15px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:${size*0.5}px; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.2);">👤</div>`;
                     const src = (window.getAvatarUrl && typeof window.getAvatarUrl === 'function') ? window.getAvatarUrl(n) : `avatars/${n}.png`;
@@ -2583,7 +2586,6 @@
             }
 
             if (typeof window.updateAvatarPreviews === 'function') window.updateAvatarPreviews();
-            window.updateUI();
             
             // Cinematic Animation starten
             const animOverlay = document.getElementById('diceAnimationOverlay');
