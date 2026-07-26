@@ -425,6 +425,12 @@
         .prob-bar{height:10px; border-radius:20px; background:rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); position:relative; overflow:visible; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);}
         .prob-bar>div:first-child{height:100%; background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%), linear-gradient(90deg, #34c759, #4FC3F7); border-radius:inherit; transition: width 0.8s cubic-bezier(0.3, 1.5, 0.5, 1); box-shadow: 0 0 15px rgba(52, 199, 89, 0.3); position: relative;}
 
+        /* --- NEUE STYLES FÜR PRE-MATCH-BANTER --- */
+        .prob-banter{display:flex; align-items:flex-start; gap:10px; margin-top:12px; padding:12px; background:rgba(0,0,0,0.2); border-radius:14px; border:1px solid rgba(255,255,255,0.05); font-size:11px; color:#acacb0; line-height:1.5; animation:tip-fade 0.5s ease-out forwards; opacity:0;}
+        .prob-banter b{color:var(--accent); font-style:normal;}
+        .prob-banter .fire{display:inline-block; animation:icon-pulse-subtle 1.5s infinite ease-in-out;}
+        /* --- ENDE NEUE STYLES --- */
+
         @keyframes pulse-error {
             0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5); }
             70% { box-shadow: 0 0 0 12px rgba(255, 59, 48, 0); }
@@ -692,6 +698,30 @@
         .cup-shake { display: inline-block; animation: cup-shake 0.1s infinite; }
         .cup-pour { display: inline-block; animation: cup-pour 0.4s ease-in forwards; }
 
+        /* --- NEUE STYLES FÜR PHASE 3 --- */
+        .ball-type-btn, .win-type-chip { padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8e8e93; font-size: 11px; font-weight: 800; cursor: pointer; transition: all 0.2s ease; text-align: center; }
+        .ball-type-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; height: 46px; }
+        .ball-type-btn.selected, .win-type-chip.selected { background: rgba(255,204,0,0.15); border-color: var(--accent); color: var(--accent); }
+        .win-type-chips { display: flex; flex-direction: column; gap: 6px; }
+
+        .stepper { display: flex; align-items: center; background: rgba(255,255,255,0.05); border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); height: 46px; }
+        .stepper button { background: transparent; border: none; color: var(--accent); font-size: 20px; font-weight: 900; width: 40px; height: 100%; cursor: pointer; }
+        .stepper input { flex: 1; height: 100%; padding: 0; }
+        .stepper:focus-within {
+            border-color: var(--accent); 
+            background: rgba(255, 204, 0, 0.1); 
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.2); 
+        }
+        .result-step { display: none; padding: 25px 20px; text-align: center; animation: ach-card-enter 0.4s ease-out forwards; }
+        .result-step.active { display: block; }
+        .leftover-btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+        .leftover-btn { padding: 14px; font-size: 18px; font-weight: 900; } /* Erbt von .ball-type-btn */
+        #confirmation-summary ul { list-style: none; padding: 0; margin: 0; }
+        #confirmation-summary li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        #confirmation-summary li:last-child { border-bottom: none; }
+        #confirmation-summary li span:first-child { color: #8e8e93; font-weight: 700; }
+        /* --- ENDE NEUE STYLES --- */
+
         @keyframes pulse-gold {
             0% { 
                 box-shadow: 0 0 12px rgba(255, 204, 0, 0.15); 
@@ -741,8 +771,8 @@
                     <div class="title-stack"><div class="main-title">Billardkrüppel</div><div class="sub-title" id="dynamic-greeting">Match erfassen</div></div>
                     <div class="header-side right"><img loading="lazy" src="logo.png" class="logo-img" style="cursor:pointer; opacity: 0.6;" onclick="window.forceUpdate()" title="Update suchen" onerror="this.style.display='none'"></div>
                 </div>
-                <div class="card cinematic-entry" style="animation-delay: 0.1s;">
-                    <div style="display: flex; align-items: flex-end; gap: 10px; margin-bottom: 8px;">
+                <div class="card cinematic-entry" style="animation-delay: 0.1s; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: flex-end; gap: 10px;">
                         <div style="flex: 1;">
                             <label>Spielmodus</label>
                             <select id="mode" onchange="updateUI()" style="margin-bottom: 0;">
@@ -750,95 +780,81 @@
                                 <option value="2:2">2 gegen 2</option>
                             </select>
                         </div>
-                        <button id="btn-random-teams" onclick="window.openTeamModal()" style="height: 46px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: var(--accent); font-size: 11px; font-weight: 800; padding: 0 12px; white-space: nowrap;">🎲 Startteam</button>
+                        <button id="btn-random-teams" onclick="window.openTeamModal()" style="height: 46px; width: 46px; flex-shrink: 0; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: var(--accent); font-size: 20px; padding: 0;">🎲</button>
                     </div>
+                </div>
 
-                    <div id="ui-1-1">
+                <div id="ui-1-1" class="cinematic-entry" style="animation-delay: 0.2s; display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px;">
+                    <div class="card" style="background: rgba(255,255,255,0.08); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 16px; padding: 15px; border: 1px solid rgba(255,255,255,0.15); margin-bottom:0;">
                         <label>Spieler 1</label>
-                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-                            <div id="p1-avatar-preview" style="flex-shrink:0; display:flex; min-width:32px;"></div>
-                            <select class="player-sel" id="p1" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1; width:auto;"></select>
-                        </div>
-                        <label>Spieler 2</label>
-                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-                            <div id="p2-avatar-preview" style="flex-shrink:0; display:flex; min-width:32px;"></div>
-                            <select class="player-sel" id="p2" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1; width:auto;"></select>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div id="p1-avatar-preview" style="flex-shrink:0; display:flex;"></div>
+                            <select class="player-sel" id="p1" onchange="updateMatchProbability()" style="margin-bottom: 0; flex: 1;"></select>
                         </div>
                     </div>
-                    <div id="ui-2-2" style="display:none;">
-                        <label>Team 1</label>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom:8px;">
-                            <div style="display:flex; align-items:center; gap:6px;">
-                                <div id="t1p1-avatar-preview" style="flex-shrink:0; display:flex; min-width:24px;"></div>
-                                <select class="player-sel" id="t1p1" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1; width:auto;"></select>
-                            </div>
-                            <div style="display:flex; align-items:center; gap:6px;">
-                                <div id="t1p2-avatar-preview" style="flex-shrink:0; display:flex; min-width:24px;"></div>
-                                <select class="player-sel" id="t1p2" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1; width:auto;"></select>
-                            </div>
+                    <div class="card" style="background: rgba(255,255,255,0.08); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 16px; padding: 15px; border: 1px solid rgba(255,255,255,0.15); margin-bottom:0;">
+                        <label>Spieler 2</label>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div id="p2-avatar-preview" style="flex-shrink:0; display:flex;"></div>
+                            <select class="player-sel" id="p2" onchange="updateMatchProbability()" style="margin-bottom: 0; flex: 1;"></select>
                         </div>
+                    </div>
+                </div>
+                <div id="ui-2-2" class="cinematic-entry" style="animation-delay: 0.2s; display:none; flex-direction: column; gap: 12px; margin-bottom: 12px;">
+                    <div class="card" style="background: rgba(255,255,255,0.08); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 16px; padding: 15px; border: 1px solid rgba(255,255,255,0.15); margin-bottom:0;">
+                        <label>Team 1</label>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div style="display:flex; align-items:center; gap:10px;"><div id="t1p1-avatar-preview"></div><select class="player-sel" id="t1p1" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1;"></select></div>
+                            <div style="display:flex; align-items:center; gap:10px;"><div id="t1p2-avatar-preview"></div><select class="player-sel" id="t1p2" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1;"></select></div>
+                        </div>
+                    </div>
+                    <div class="card" style="background: rgba(255,255,255,0.08); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 16px; padding: 15px; border: 1px solid rgba(255,255,255,0.15); margin-bottom:0;">
                         <label>Team 2</label>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                            <div style="display:flex; align-items:center; gap:6px;">
-                                <div id="t2p1-avatar-preview" style="flex-shrink:0; display:flex; min-width:24px;"></div>
-                                <select class="player-sel" id="t2p1" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1; width:auto;"></select>
-                            </div>
-                            <div style="display:flex; align-items:center; gap:6px;">
-                                <div id="t2p2-avatar-preview" style="flex-shrink:0; display:flex; min-width:24px;"></div>
-                                <select class="player-sel" id="t2p2" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1; width:auto;"></select>
-                            </div>
-                        </div>
-                    </div>
-                    <label>Anstoß</label>
-                    <div style="display:flex; gap:10px;">
-                        <button id="btn-breakcalc" class="win-btn" style="flex:1; background: rgba(255,204,0,0.1); color: var(--accent);" onclick="window.calcBreak()">🎲 Würfeln</button>
-                        <div style="flex:1.5; display:flex; align-items:center; gap:8px;">
-                            <div id="breakPlayer-avatar-preview" style="flex-shrink:0; display:flex; min-width:32px;"></div>
-                            <select id="breakPlayer" style="margin-bottom:0; flex:1; width:auto;" disabled onchange="window.updateUI()"></select>
+                            <div style="display:flex; align-items:center; gap:10px;"><div id="t2p1-avatar-preview"></div><select class="player-sel" id="t2p1" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1;"></select></div>
+                            <div style="display:flex; align-items:center; gap:10px;"><div id="t2p2-avatar-preview"></div><select class="player-sel" id="t2p2" onchange="updateMatchProbability()" style="margin-bottom:0; flex:1;"></select></div>
                         </div>
                     </div>
                 </div>
-                <div id="match-prob" class="prob-box cinematic-hud" style="margin-top:-5px; border-radius: 20px; padding: 15px; min-height: 83px; ">
+                
+                <!-- Live-Analyse wird hier dynamisch eingefügt -->
+                <div id="match-prob" class="prob-box cinematic-hud" style="display:none;">
                     <div style="color:#8e8e93; font-size:10px; text-align:center; padding:5px; font-weight:800;">Spieler wählen für Prognose</div>
                 </div>
-                <div class="card cinematic-entry" style="animation-delay: 0.2s; margin-top:-5px;">
-                    <label>Gewinner wählen</label>
-                    <div style="display:flex; gap:10px; margin-bottom:10px;">
-                        <div id="btn-win1" class="win-btn" onclick="window.selectWinner(1)">Team 1</div>
-                        <div id="btn-win2" class="win-btn" onclick="window.selectWinner(2)">Team 2</div>
-                    </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                        <div>
-                            <label id="ballLabel1">Kugeln Spieler / Team 1</label>
-                            <select id="ballType1" onchange="window.syncBallTypes(1)" style="margin-bottom:0;">
-                                <option value="" disabled selected>Wählen</option>
-                                <option value="Voll">Voll</option>
-                                <option value="Halb">Halb</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label id="ballLabel2">Kugeln Spieler / Team 2</label>
-                            <select id="ballType2" onchange="window.syncBallTypes(2)" style="margin-bottom:0;">
-                                <option value="" disabled selected>Wählen</option>
-                                <option value="Voll">Voll</option>
-                                <option value="Halb">Halb</option>
-                            </select>
+                
+                <!-- PHASE 2: Spielstart (Anstoß & Gewinner) - Wird per JS eingeblendet -->
+                <div id="phase-2-gamestart" class="card" style="display:none;">
+                    <div style="padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                        <label>Anstoß</label>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;">
+                            <button id="btn-breakcalc" class="win-btn" style="flex:1; background: rgba(255,204,0,0.1); color: var(--accent);" onclick="window.calcBreak()">🎲 Würfeln</button>
+                            <div style="flex:1.5; display:flex; align-items:center; gap:8px;">
+                                <div id="breakPlayer-avatar-preview" style="flex-shrink:0; display:flex;"></div>
+                                <select id="breakPlayer" style="margin-bottom:0; flex:1; width:auto;" onchange="window.updateUI()"></select>
+                            </div>
                         </div>
                     </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                        <div>
-                            <label>Wie gewonnen</label>
-                            <select id="winType" style="margin-bottom:0;" onchange="window.updateUI()">
-                                <option value="" disabled selected>Wählen</option>
-                                <option value="Regulär (8er gelocht)">Regulär (8er gelocht)</option>
-                                <option value="Gegner-Fehler: 8er zu früh">Gegner-Fehler: 8er zu früh</option>
-                                <option value="Gegner-Fehler: 8er falsches Loch">Gegner-Fehler: 8er falsches Loch</option>
-                                <option value="Gegner-Fehler: Foul bei der 8">Gegner-Fehler: Foul bei der 8</option>
-                            </select>
+                    <div style="padding-top: 15px;">
+                        <label>Gewinner wählen</label>
+                        <div style="display:flex; gap:10px;">
+                            <div id="btn-win1" class="win-btn" onclick="window.selectWinner(1)">Team 1</div>
+                            <div id="btn-win2" class="win-btn" onclick="window.selectWinner(2)">Team 2</div>
                         </div>
-                        <div><label>Restkugeln Verlierer</label><input type="number" inputmode="numeric" id="leftover" value="" placeholder="0-7" style="margin-bottom:0;" oninput="window.updateUI()"></div>
                     </div>
-                    <button class="btn-save" onclick="window.doSave()">Speichern</button>
+                </div>
+                <div id="phase-3-result" style="display:none;">
+                    <div id="ball-type-selector" style="display:flex; gap:10px; margin-bottom:12px;">
+                        <!-- Wird per JS befüllt -->
+                    </div>
+                    <!-- Alte Selects für Logik versteckt -->
+                    <select id="ballType1" onchange="window.syncBallTypes(1)" style="display:none;"></select>
+                    <select id="ballType2" onchange="window.syncBallTypes(2)" style="display:none;"></select>
+
+                    <div id="winType-chips"></div>
+                    <select id="winType" style="display:none;"></select>
+
+                    <input type="number" id="leftover" style="display:none;">
+                    <button class="btn-save" onclick="window.doSave()" style="display:none;">Speichern</button>
                 </div>
             </div>
 
@@ -1535,6 +1551,43 @@
         </div>
     </div>
 
+    <!-- NEUES MODAL FÜR ERGEBNIS-EINGABE -->
+    <div id="resultModal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card" style="max-width: 380px;">
+            <div id="result-step-1-balls" class="result-step">
+                <label id="winnerBallTypeLabel">Welche Kugeln hatte der Gewinner?</label>
+                <div id="modal-ball-type-selector" style="display:flex; gap:10px; margin-top:15px;"></div>
+            </div>
+            <div id="result-step-2-wintype" class="result-step">
+                <label>Wie wurde das Spiel gewonnen?</label>
+                <div id="modal-winType-chips" class="win-type-chips" style="margin-top:15px;"></div>
+            </div>
+            <div id="result-step-3-leftover" class="result-step">
+                <label>Restkugeln des Verlierers?</label>
+                <div id="modal-leftover-grid" class="leftover-btn-grid"></div>
+            </div>
+            <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);"><button style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); font-size: 14px; width:100%;" class="btn-save" onclick="window.closeResultModal()">Abbrechen</button></div>
+        </div>
+    </div>
+
+    <!-- NEUES MODAL FÜR BESTÄTIGUNG -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-backdrop" onclick="window.closeConfirmationModal()"></div>
+        <div class="modal-card" style="max-width: 380px;">
+            <div style="padding: 25px 20px 15px 20px; text-align: center;">
+                <div style="font-weight:900;color:var(--accent);font-size:16px;text-transform:uppercase;margin-bottom:15px;">Match-Übersicht</div>
+                <div id="confirmation-summary" style="color: #eee; font-size: 13px; line-height: 1.7; font-weight: 600; text-align: left; padding: 0 10px;">
+                    <!-- Summary wird hier per JS eingefügt -->
+                </div>
+            </div>
+            <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 10px;">
+                <button class="btn-save" style="margin-top:0; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); font-size: 14px; flex: 1;" onclick="window.closeConfirmationModal()">Zurück</button>
+                <button class="btn-save" style="margin-top:0; font-size: 14px; flex: 1;" onclick="window.saveFromConfirmation()">Speichern</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, onSnapshot, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -1589,18 +1642,14 @@
 
                 const val = sel.value;
                 const names = val ? val.split(' & ').map(n => n.trim()) : [null];
-                const size = names.length > 1 ? 24 : 32;
+                const size = id.startsWith('t') ? 36 : 40; // 36px für Teams, 40px für 1v1 & Anstoß
                 
                 preview.innerHTML = names.map((n, idx) => {
                     const silhouette = `<div style="width:${size}px; height:${size}px; min-width:${size}px; border-radius:10px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:${size*0.5}px; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.2);">👤</div>`;
                     if (!n) return silhouette;
 
                     const src = (window.getAvatarUrl && typeof window.getAvatarUrl === 'function') ? window.getAvatarUrl(n) : `avatars/${n}.png`;
-                    return ` 
-                        <div style="position:relative; width:${size}px; height:${size}px; min-width:${size}px; margin-right:${names.length > 1 ? '-8px' : '0px'}; z-index:${names.length > 1 ? '1' : '0'};">
-                            <img loading="lazy" src="${src}" onerror="this.style.display='none'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:10px; object-fit:cover; border:1px solid rgba(255,204,0,0.4); z-index:2; background:transparent;">
-                            ${silhouette}
-                        </div>`;
+                    return `<img loading="lazy" src="${src}" onerror="this.style.display='none'" style="width:${size}px; height:${size}px; border-radius:12px; object-fit:cover;">`;
                 }).join('');
             });
         };
@@ -2122,6 +2171,15 @@
             window.updateErfolgeMask();
         };
 
+        window.selectWinner = (n) => {
+            window.winnerNum = n;
+            document.getElementById('btn-win1').classList.toggle('selected', n===1);
+            document.getElementById('btn-win2').classList.toggle('selected', n===2);
+            window.removeHighlight('btn-win1');
+            window.removeHighlight('btn-win2'); 
+            window.openResultModal();
+        };
+
         // Zentrale Funktion zum Rendern der aktiven Ansicht
         window.updateAllViews = () => {
             // Filter-Labels im Header aktualisieren (Farbe & Leuchten)
@@ -2302,6 +2360,7 @@
                     if (typeof window.updateUI === 'function') window.updateUI(); 
                 };
             });
+            if (typeof window.initResultUI === 'function') window.initResultUI(); // Neue UI initialisieren
             if (typeof window.updateAvatarPreviews === 'function') window.updateAvatarPreviews();
             if (typeof window.updateUI === 'function') window.updateUI(); // updateUI ruft updateMatchProbability auf, das computeEloRatings braucht
         };
@@ -2365,8 +2424,42 @@
         };
 
         window.updateUI = () => {
+            // Reset state when mode changes
+            window.winnerNum = 0;
+            window.breakLocked = false;
+            document.querySelectorAll('.win-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('breakPlayer').value = "";
+            document.getElementById('ballType1').value = "";
+            document.getElementById('ballType2').value = "";
+            document.getElementById('winType').value = "";
+            document.getElementById('leftover').value = "";
+            // Clear player selections for the mode that is being hidden
+            const currentMode = document.getElementById('mode').value;
+
             const m = document.getElementById('mode').value;
             const saveBtn = document.querySelector('.btn-save');
+            const playersReady = (m==='1:1' ? (document.getElementById('p1').value && document.getElementById('p2').value) : (document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value));
+            const winnerSelected = window.winnerNum !== 0;
+
+            // --- Phasensteuerung ---
+            const phase2 = document.getElementById('phase-2-gamestart');
+            const phase3 = document.getElementById('phase-3-result');
+
+            if (phase2) phase2.style.display = playersReady ? 'block' : 'none';
+            if (phase2) phase2.style.animation = playersReady ? 'ach-card-enter 0.5s ease-out forwards' : 'none';
+
+            // ELO-Box nur anzeigen, wenn Spieler bereit sind
+            const probBox = document.getElementById('match-prob');
+            if (probBox) {
+                probBox.style.display = playersReady ? 'block' : 'none';
+            }
+
+            // --- Steuerung der neuen Phase 3 UI ---
+            if (winnerSelected && document.getElementById('resultModal').style.display !== 'flex') {
+                const winnerName = window.winnerNum === 1 ? (document.getElementById('p1').value || getTN(document.getElementById('t1p1').value, document.getElementById('t1p2').value)) : (document.getElementById('p2').value || getTN(document.getElementById('t2p1').value, document.getElementById('t2p2').value));
+                const ballLabel = document.getElementById('winnerBallTypeLabel');
+                if (ballLabel) ballLabel.innerText = `Welche Kugeln hatte ${winnerName}?`;
+            }
 
             // Cinematic Greeting
             const hours = new Date().getHours();
@@ -2390,8 +2483,10 @@
                 randomBtn.style.pointerEvents = hasTodayMatch ? "none" : "auto";
             }
 
-            document.getElementById('ui-1-1').style.display = (m==='1:1'?'block':'none');
-            document.getElementById('ui-2-2').style.display = (m==='2:2'?'block':'none');
+            const ui11 = document.getElementById('ui-1-1');
+            const ui22 = document.getElementById('ui-2-2');
+            if (ui11) ui11.style.display = (m==='1:1'?'flex':'none');
+            if (ui22) ui22.style.display = (m==='2:2'?'flex':'none');
             
             const getTN = (a, b) => (a && b) ? a + " & " + b : (a || b || "");
             const n1 = (m==='1:1') ? document.getElementById('p1').value : getTN(document.getElementById('t1p1').value, document.getElementById('t1p2').value);
@@ -2399,15 +2494,10 @@
             document.getElementById('btn-win1').innerText = n1 || "Spieler 1";
             document.getElementById('btn-win2').innerText = n2 || "Spieler 2";
 
-            const ballLabel1 = document.getElementById('ballLabel1');
-            const ballLabel2 = document.getElementById('ballLabel2');
-            if (ballLabel1) ballLabel1.innerText = n1 ? "Kugeln " + n1 : "Kugeln Spieler / Team 1";
-            if (ballLabel2) ballLabel2.innerText = n2 ? "Kugeln " + n2 : "Kugeln Spieler / Team 2";
-
             if (!window.breakLocked) {
               const b = document.getElementById('breakPlayer');
               b.innerHTML = '<option value="" selected disabled>Wählen</option>';
-              const names = (m==='1:1') ? [document.getElementById('p1').value, document.getElementById('p2').value] : 
+              const names = (m==='1:1') ? [document.getElementById('p1').value, document.getElementById('p2').value] :
                             [document.getElementById('t1p1').value+" & "+document.getElementById('t1p2').value, document.getElementById('t2p1').value+" & "+document.getElementById('t2p2').value];
               names.forEach(n => { if(n && !n.includes('undefined')) b.options.add(new Option(n, n)); });
             }
@@ -2446,24 +2536,13 @@
             const b1 = document.getElementById('ballType1');
             const b2 = document.getElementById('ballType2');
             if (n === 1) {
-                if (b1.value === 'Voll') b2.value = 'Halb';
-                else if (b1.value === 'Halb') b2.value = 'Voll';
+                if (b1.value === 'Voll') b2.value = 'Halb'; else if (b1.value === 'Halb') b2.value = 'Voll';
             } else {
-                if (b2.value === 'Voll') b1.value = 'Halb';
-                else if (b2.value === 'Halb') b1.value = 'Voll';
+                if (b2.value === 'Voll') b1.value = 'Halb'; else if (b2.value === 'Halb') b1.value = 'Voll';
             }
             if (b1.value) window.removeHighlight('ballType1');
             if (b2.value) window.removeHighlight('ballType2');
             if (typeof window.updateUI === 'function') window.updateUI();
-        };
-
-        window.selectWinner = (n) => {
-            window.winnerNum = n;
-            document.getElementById('btn-win1').classList.toggle('selected', n===1);
-            document.getElementById('btn-win2').classList.toggle('selected', n===2);
-            window.removeHighlight('btn-win1');
-            window.removeHighlight('btn-win2'); 
-            window.updateUI();
         };
 
         window.calcBreak = () => {
@@ -2484,7 +2563,7 @@
             const diceBtn = document.getElementById('btn-breakcalc');
             const breakSel = document.getElementById('breakPlayer');
             if (diceBtn) { diceBtn.disabled = true; diceBtn.style.opacity = "0.3"; }
-            if (breakSel) breakSel.disabled = true;
+            if (breakSel) breakSel.disabled = false; // Sollte nach dem Würfeln wählbar bleiben
             
             document.getElementById('diceResultName').innerText = res;
             const names = res.split(' & ').map(n => n.trim());
@@ -2547,39 +2626,30 @@
                 if (el) el.classList.remove('error-highlight');
             });
 
-            if (m === '1:1') {
-                const v1 = document.getElementById('p1').value;
-                const v2 = document.getElementById('p2').value;
-                if (!v1) { missingMessages.push("Spieler 1"); missingElements.push('p1'); }
-                if (!v2) { missingMessages.push("Spieler 2"); missingElements.push('p2'); }
-                p1 = v1; p2 = v2;
-            } else {
-                const v1 = document.getElementById('t1p1').value;
-                const v2 = document.getElementById('t1p2').value;
-                const v3 = document.getElementById('t2p1').value;
-                const v4 = document.getElementById('t2p2').value;
-                if (!v1) { missingMessages.push("Team 1 Spieler 1"); missingElements.push('t1p1'); }
-                if (!v2) { missingMessages.push("Team 1 Spieler 2"); missingElements.push('t1p2'); }
-                if (!v3) { missingMessages.push("Team 2 Spieler 1"); missingElements.push('t2p1'); }
-                if (!v4) { missingMessages.push("Team 2 Spieler 2"); missingElements.push('t2p2'); }
-                p1 = v1 + " & " + v2;
-                p2 = v3 + " & " + v4;
-            }
+            // KORRIGIERTE DATENERFASSUNG
+            const getTN = (a, b) => [a, b].filter(Boolean).join(' & ');
+            p1 = (m === '1:1') ? document.getElementById('p1').value : getTN(document.getElementById('t1p1').value, document.getElementById('t1p2').value);
+            p2 = (m === '1:1') ? document.getElementById('p2').value : getTN(document.getElementById('t2p1').value, document.getElementById('t2p2').value);
+
+            if (!p1) { missingMessages.push(m === '1:1' ? "Spieler 1" : "Team 1"); missingElements.push(m === '1:1' ? 'p1' : 't1p1'); }
+            if (!p2) { missingMessages.push(m === '1:1' ? "Spieler 2" : "Team 2"); missingElements.push(m === '1:1' ? 'p2' : 't2p1'); }
+            if (m === '2:2' && p1.split('&').length < 2) { missingMessages.push("Team 1 unvollständig"); missingElements.push('t1p2'); }
+            if (m === '2:2' && p2.split('&').length < 2) { missingMessages.push("Team 2 unvollständig"); missingElements.push('t2p2'); }
+
             if (!b) { missingMessages.push("Anstoß"); missingElements.push('breakPlayer'); }
             if (!bt1) { missingMessages.push("Kugeln Team 1"); missingElements.push('ballType1'); }
             if (!bt2) { missingMessages.push("Kugeln Team 2"); missingElements.push('ballType2'); }
             const wt = document.getElementById('winType').value;
-            if (!wt) { missingMessages.push("Wie gewonnen"); missingElements.push('winType'); }
+            if (!wt) { missingMessages.push("Sieg-Art"); missingElements.push('winType'); }
             const lo = document.getElementById('leftover').value;
             if (lo === "") { missingMessages.push("Restkugeln Verlierer"); missingElements.push('leftover'); }
             if (!window.winnerNum) { 
                 missingMessages.push("Gewinner"); 
-                // Highlight both winner buttons if winner is not selected
                 missingElements.push('btn-win1', 'btn-win2'); 
             }
 
             if (missingMessages.length > 0) {
-                const formattedMsg = "Folgende Angaben fehlen noch:\n\n" + missingMessages.map(m => "• " + m).join("\n");
+                const formattedMsg = "Folgende Angaben fehlen:\n\n" + missingMessages.map(m => "• " + m).join("\n");
                 window.openErrorModal(formattedMsg, missingElements);
                 return;
             }
@@ -2664,6 +2734,9 @@
                 document.getElementById('ballType1').value = "";
                 document.getElementById('ballType2').value = "";
                 document.getElementById('winType').value = "";
+                document.querySelectorAll('.ball-type-btn').forEach(b => b.classList.remove('selected'));
+                document.querySelectorAll('.win-type-chip').forEach(c => c.classList.remove('selected'));
+
                 document.getElementById('leftover').value = ""; 
                 
                 if (typeof window.updateUI === 'function') window.updateUI();
@@ -2897,7 +2970,7 @@
             const b = document.getElementById('match-prob'); 
             const isReady = (m==='1:1' ? (document.getElementById('p1').value && document.getElementById('p2').value) : (document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value));
             
-            if(!isReady) { 
+            if(!isReady || !b) { 
                 b.innerHTML = `<div style="color:#8e8e93; font-size:10px; text-align:center; padding:5px; font-weight:800;">Spieler wählen für Prognose</div>`; 
                 return; 
             }
@@ -2962,6 +3035,122 @@
             const c1 = prob1 > 50 ? '#34c759' : (prob1 < 50 ? '#ff3b30' : '#ffffff');
             const c2 = prob2 > 50 ? '#34c759' : (prob2 < 50 ? '#ff3b30' : '#ffffff');
 
+            // --- NEU: PRE-MATCH BANTER LOGIK ---
+            let banterHtml = '';
+            const regularFacts = [];
+            const priorityFacts = [];
+            if (window.careerStats && window.careerStats.pData) {
+                const p1Data = window.careerStats.pData[n1];
+                const p2Data = window.careerStats.pData[n2];
+                
+                if (p1Data && p2Data) {
+                    // H2H-Statistik
+                    const h2h = (p1Data.headToHead || {})[n2];
+                    if (h2h && (h2h.w + h2h.l) > 0) {
+                        const total = h2h.w + h2h.l;
+                        const wr = Math.round((h2h.w / total) * 100);
+                        const wr2 = 100 - wr;
+                        regularFacts.push(`Direkter Vergleich: <b>${n1}</b> führt mit <b>${wr}%</b> gegen <b>${n2}</b>.`);
+
+                        // NEU: Angstgegner-Warnung
+                        if (total >= 5) { // Nur bei signifikanter Anzahl an Spielen
+                            if (wr >= 75) regularFacts.push(`Achtung, <b>${n2}</b>: <b>${n1}</b> ist dein Angstgegner!`);
+                            if (wr2 >= 75) regularFacts.push(`Achtung, <b>${n1}</b>: <b>${n2}</b> ist dein Angstgegner!`);
+                        }
+                    }
+
+                    // NEU: ELO-Unterschied
+                    const eloDiff = Math.abs(r1 - r2);
+                    if (eloDiff >= 100) {
+                        const fav = r1 > r2 ? n1 : n2;
+                        regularFacts.push(`<b>${fav}</b> geht mit über <b>100</b> ELO-Punkten Vorsprung als klarer Favorit ins Match.`);
+                    }
+
+                    // NEU: Formkurve (letzte 10 Spiele)
+                    const getForm = (pData) => pData.last30Games.slice(-10);
+                    const form1 = getForm(p1Data);
+                    const form2 = getForm(p2Data);
+                    if (form1.length === 10) {
+                        const formWR = Math.round(form1.reduce((a, b) => a + b, 0) / 10 * 100);
+                        if (formWR >= 70) regularFacts.push(`<b>${n1}</b> ist in Top-Form und gewann <b>${formWR}%</b> der letzten 10 Spiele.`);
+                    }
+                    // NEU: Formkurve für Spieler 2
+                    if (form2.length === 10) {
+                        const formWR2 = Math.round(form2.reduce((a, b) => a + b, 0) / 10 * 100);
+                        if (formWR2 >= 70) regularFacts.push(`<b>${n2}</b> ist in Top-Form und gewann <b>${formWR2}%</b> der letzten 10 Spiele.`);
+                    }
+
+                    // Letztes Duell
+                    const lastDuel = [...window.stats].reverse().find(g => {
+                        const players = new Set([...(g.p1?.split(' & ') || []), ...(g.p2?.split(' & ') || [])]);
+                        return players.has(n1) && players.has(n2);
+                    });
+                    if (lastDuel) {
+                        const winnerName = lastDuel.w == 1 ? lastDuel.p1 : lastDuel.p2;
+                        regularFacts.push(`Im letzten Duell gewann <b>${winnerName}</b> mit <b>${lastDuel.l}</b> Restkugeln.`);
+                    }
+                }
+
+                // Siegesserien
+                if (p1Data && p1Data.currentStreak >= 3) {
+                    priorityFacts.push(`<b>${n1}</b> ist auf einer <b>${p1Data.currentStreak}er</b>-Siegesserie! <span class="fire">🔥</span>`);
+                }
+                if (p2Data && p2Data.currentStreak >= 3) {
+                    priorityFacts.push(`<b>${n2}</b> ist auf einer <b>${p2Data.currentStreak}er</b>-Siegesserie! <span class="fire">🔥</span>`);
+                }
+
+                // NEU: Dominanz-Faktor
+                if (p1Data && p1Data.avgKiller >= 6.5 && p1Data.wins >= 10) {
+                    const killerVal = p1Data.avgKiller.toFixed(1);
+                    regularFacts.push(`<b>${n1}</b> ist ein Abräumer und lässt seinen Gegnern im Schnitt <b>${killerVal}</b> Kugeln auf dem Tisch.`);
+                }
+
+                // NEU: Comeback-Kid / Pechvogel
+                if (p1Data && p1Data.games >= 10) {
+                    const clutchRate = p1Data.clutchWins / p1Data.games;
+                    const closeLossRate = p1Data.closeLosses / p1Data.games;
+                    if (clutchRate >= 0.2) regularFacts.push(`<b>${n1}</b> ist ein Comeback-Kid und gewinnt oft knappe Spiele.`);
+                    if (closeLossRate >= 0.2) regularFacts.push(`<b>${n1}</b> ist ein Pechvogel und verliert oft sehr knapp.`);
+                }
+
+                // NEU: Service-Dieb
+                if (p1Data && p1Data.opponentStartedGames >= 5) {
+                    const stealRate = (p1Data.stolenServiceWins / p1Data.opponentStartedGames) * 100;
+                    if (stealRate >= 50) regularFacts.push(`<b>${n1}</b> ist ein Service-Dieb und gewinnt <b>${Math.round(stealRate)}%</b> der Spiele bei gegnerischem Anstoß.`);
+                }
+                if (p2Data && p2Data.opponentStartedGames >= 5) {
+                    const stealRate2 = (p2Data.stolenServiceWins / p2Data.opponentStartedGames) * 100;
+                    if (stealRate2 >= 50) regularFacts.push(`<b>${n2}</b> ist ein Service-Dieb und gewinnt <b>${Math.round(stealRate2)}%</b> der Spiele bei gegnerischem Anstoß.`);
+                }
+
+                // Kugel-Präferenz
+                const addBallPref = (player, data) => {
+                    if (!data || !window.careerStats.aggregates?.ballSpez?.[player]) return;
+                    const spec = window.careerStats.aggregates.ballSpez[player];
+                    if (spec.Voll.g >= 5) {
+                        const wr = Math.round((spec.Voll.w / spec.Voll.g) * 100);
+                        if (wr > 60) regularFacts.push(`<b>${player}</b> gewinnt <b>${wr}%</b> seiner Spiele mit den <b>Vollen</b>.`);
+                    }
+                    if (spec.Halb.g >= 5) {
+                        const wr = Math.round((spec.Halb.w / spec.Halb.g) * 100);
+                        if (wr > 60) regularFacts.push(`<b>${player}</b> gewinnt <b>${wr}%</b> seiner Spiele mit den <b>Halben</b>.`);
+                    }
+                };
+                if (m === '1:1') {
+                    addBallPref(n1, p1Data);
+                    addBallPref(n2, p2Data);
+                }
+            }
+
+            // Baue das HTML zusammen: Alle Prioritäten + ein zufälliger regulärer Fakt
+            const finalFacts = [...priorityFacts];
+            if (regularFacts.length > 0) {
+                finalFacts.push(regularFacts[Math.floor(Math.random() * regularFacts.length)]);
+            }
+            if (finalFacts.length > 0) {
+                banterHtml = finalFacts.map(fact => `<div class="prob-banter"><span style="font-size:14px; margin-top:1px;">💡</span><div>${fact}</div></div>`).join('');
+            }
+
             b.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <span style="color:var(--accent); font-weight:900; font-size:9px; text-transform:uppercase; letter-spacing:1.5px; display:flex; align-items:center; gap:6px;"><div class="live-dot"></div> LIVE ANALYSE</span>
@@ -2983,7 +3172,8 @@
                         ${pref2 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref2.c}; opacity:0.8; margin-right:6px;">${window.getBallIcon(pref2.t).replace('14','11')}${pref2.t}</span>` : ''}
                         <span style="white-space:nowrap;">${l2}: ${prob2}%</span>
                     </div>
-                </div>`;
+                </div>
+                ${banterHtml}`;
         };
 
         function renderHistory(statsToRender) {
@@ -3176,6 +3366,152 @@
 
         // Init Tab-Indikator
         setTimeout(() => { switchV('aufzeichnen', document.querySelector('.tab-item.active')); }, 300);
+
+        window.openConfirmationModal = () => {
+            const m = document.getElementById('mode').value;
+            let n1, n2;
+
+            if (m === '1:1') {
+                n1 = document.getElementById('p1').value;
+                n2 = document.getElementById('p2').value;
+            } else {
+                const t1p1 = document.getElementById('t1p1').value;
+                const t1p2 = document.getElementById('t1p2').value;
+                const t2p1 = document.getElementById('t2p1').value;
+                const t2p2 = document.getElementById('t2p2').value;
+                n1 = [t1p1, t1p2].filter(Boolean).join(' & ');
+                n2 = [t2p1, t2p2].filter(Boolean).join(' & ');
+            }
+            
+            const winnerName = window.winnerNum === 1 ? n1 : n2;
+            const loserName = window.winnerNum === 1 ? n2 : n1;
+            const breakPlayer = document.getElementById('breakPlayer').value;
+            const winType = document.getElementById('winType').value;
+            const leftover = document.getElementById('leftover').value;
+
+            const summaryEl = document.getElementById('confirmation-summary');
+            summaryEl.innerHTML = `
+                <ul>
+                    <li><span>Gewinner</span> <b style="color:#34c759;">${winnerName}</b></li>
+                    <li><span>Verlierer</span> <b style="color:#ff3b30;">${loserName}</b></li>
+                    <li><span>Anstoß</span> <b style="color:var(--accent);">${breakPlayer}</b></li>
+                    <li><span>Sieg-Art</span> <b>${winType}</b></li>
+                    <li><span>Restkugeln</span> <b>${leftover}</b></li>
+                </ul>
+            `;
+
+            document.getElementById('resultModal').style.display = 'none';
+            document.getElementById('confirmationModal').style.display = 'flex';
+        };
+
+        window.closeConfirmationModal = () => {
+            document.getElementById('confirmationModal').style.display = 'none';
+        };
+
+        window.saveFromConfirmation = () => {
+            window.closeConfirmationModal();
+            window.doSave();
+        };
+
+        // --- NEUE, ROBUSTE LOGIK FÜR ERGEBNIS-MODAL ---
+
+        // Öffnet das Modal und setzt es auf den ersten Schritt zurück
+        window.openResultModal = () => {
+            const winnerName = window.winnerNum === 1 
+                ? (document.getElementById('p1').value || [document.getElementById('t1p1').value, document.getElementById('t1p2').value].filter(Boolean).join(' & '))
+                : (document.getElementById('p2').value || [document.getElementById('t2p1').value, document.getElementById('t2p2').value].filter(Boolean).join(' & '));
+
+            const ballLabel = document.getElementById('winnerBallTypeLabel');
+            if (ballLabel) ballLabel.innerText = `Welche Kugeln hatte ${winnerName}?`;
+
+            document.getElementById('resultModal').style.display = 'flex';
+            window.resultGoToStep(1);
+        };
+
+        // Schließt das Modal und setzt die Gewinnerauswahl zurück, falls abgebrochen wird
+        window.closeResultModal = () => {
+            document.getElementById('resultModal').style.display = 'none';
+            // Nur zurücksetzen, wenn der Prozess wirklich abgebrochen wird
+            window.winnerNum = 0;
+            document.querySelectorAll('.win-btn').forEach(btn => btn.classList.remove('selected'));
+        };
+
+        // Navigiert zwischen den Schritten im Modal
+        window.resultGoToStep = (stepNum) => {
+            document.querySelectorAll('.result-step').forEach(s => s.classList.remove('active'));
+            const targetStep = document.getElementById(`result-step-${stepNum}-balls`) || document.getElementById(`result-step-${stepNum}-wintype`) || document.getElementById(`result-step-${stepNum}-leftover`);
+            if (targetStep) targetStep.classList.add('active');
+        };
+
+        // Schritt 1: Kugelsorte wählen
+        window.selectBallTypeInModal = (type) => {
+            const winnerSelectId = window.winnerNum === 1 ? 'ballType1' : 'ballType2';
+            const loserSelectId = window.winnerNum === 1 ? 'ballType2' : 'ballType1';
+            document.getElementById(winnerSelectId).value = type;
+            document.getElementById(loserSelectId).value = (type === 'Voll' ? 'Halb' : 'Voll');
+            window.resultGoToStep(2);
+        };
+
+        // Schritt 2: Sieg-Art wählen
+        window.selectWinTypeInModal = (winType) => {
+            document.getElementById('winType').value = winType;
+            window.resultGoToStep(3);
+        };
+
+        // Schritt 3: Restkugeln wählen -> Bestätigung anzeigen
+        window.selectLeftoverInModal = (num) => {
+            document.getElementById('leftover').value = num;
+            window.openConfirmationModal();
+        };
+
+        // --- NEUE LOGIK FÜR INTUITIVE ERGEBNIS-ERFASSUNG ---
+        window.initResultUI = () => {
+            // Populate the hidden ball type selects
+            ['ballType1', 'ballType2'].forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    select.innerHTML = '<option value="Voll">Voll</option><option value="Halb">Halb</option>';
+                    select.value = ''; // Reset selection
+                }
+            });
+            const ballSelector = document.getElementById('ball-type-selector');
+            if (ballSelector) {
+                ballSelector.innerHTML = `
+                    <div class="ball-type-btn" onclick="window.selectBallType('Voll')">🟡 Voll</div>
+                    <div class="ball-type-btn" onclick="window.selectBallType('Halb')">🔵 Halb</div>
+                `;
+            }
+            const modalBallSelector = document.getElementById('modal-ball-type-selector');
+            if (modalBallSelector) {
+                modalBallSelector.innerHTML = `
+                    <div class="ball-type-btn" onclick="window.selectBallTypeInModal('Voll')">🟡 Voll</div>
+                    <div class="ball-type-btn" onclick="window.selectBallTypeInModal('Halb')">🔵 Halb</div>
+                `;
+            }
+            const winTypeContainer = document.getElementById('winType-chips');
+            if (winTypeContainer) {
+                const winTypes = ["Regulär (8er gelocht)", "Gegner-Fehler: 8er zu früh", "Gegner-Fehler: 8er falsches Loch", "Gegner-Fehler: Foul bei der 8"];
+                winTypeContainer.innerHTML = winTypes.map(wt => `<div class="win-type-chip" onclick="window.selectWinType(this, '${wt}')">${wt.replace('Gegner-Fehler: ', 'Foul: ')}</div>`).join('');
+                // Populate the hidden select as well
+                const winTypeSelect = document.getElementById('winType');
+                winTypeSelect.innerHTML = ''; // Clear existing options
+                winTypes.forEach(wt => winTypeSelect.options.add(new Option(wt, wt)));
+            }
+            const modalWinTypeContainer = document.getElementById('modal-winType-chips');
+            if (modalWinTypeContainer) {
+                const winTypes = ["Regulär (8er gelocht)", "Gegner-Fehler: 8er zu früh", "Gegner-Fehler: 8er falsches Loch", "Gegner-Fehler: Foul bei der 8"];
+                modalWinTypeContainer.innerHTML = winTypes.map(wt => `<div class="win-type-chip" onclick="window.selectWinTypeInModal('${wt}')">${wt.replace('Gegner-Fehler: ', 'Foul: ')}</div>`).join('');
+            }
+            const leftoverGrid = document.getElementById('modal-leftover-grid');
+            if(leftoverGrid) leftoverGrid.innerHTML = [0,1,2,3,4,5,6,7].map(n => `<button class="ball-type-btn leftover-btn" onclick="window.selectLeftoverInModal(${n})">${n}</button>`).join('');
+        };
+
+        window.updateLeftover = (change) => {
+            const input = document.getElementById('leftover');
+            let newVal = Math.max(0, Math.min(7, (parseInt(input.value) || 0) + change));
+            input.value = newVal;
+            window.updateUI();
+        };
 
         // Filter-Menü schließen bei Klick außerhalb
         document.addEventListener('click', (e) => {
