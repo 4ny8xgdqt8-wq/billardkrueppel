@@ -2179,8 +2179,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
         const h2hEl = byId('stat-head-to-head'); // Behalte die ID für die Kachel
         if (h2hEl) {
             h2hEl.innerHTML = dominantMatchups.length > 0 ? dominantMatchups.map((m, idx) => {
-                const c1 = m.wr1 >= m.wr2 ? 'green' : 'blue';
-                const c2 = m.wr2 > m.wr1 ? 'green' : 'blue'; // This is inside a parent card that needs styling
+                const c1 = m.wr1 >= m.wr2 ? 'green' : 'red';
+                const c2 = m.wr2 > m.wr1 ? 'green' : 'red'; // This is inside a parent card that needs styling
                 return `
                 <div class="card-modern" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px; padding: 12px; border-radius:20px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.3 + idx * 0.05}s; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -2189,7 +2189,8 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                             <img src="${window.getAvatarUrl(m.p1)}" style="width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
                             <div style="overflow:hidden;">
                                 <div style="font-size:11px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p1}</div>
-                                <div class="stat-value-badge ${c1}" style="margin-top:3px; display:inline-block;">${m.wr1}% <span style="font-size: 10px; opacity: 0.8;">S: ${m.p1_wins} / N: ${m.p2_wins}</span></div>
+                                <div class="stat-value-badge ${c1}" style="margin-top:3px; display:inline-block;">${m.wr1}%</div>
+                                <div style="font-size: 10px; opacity: 0.8; color: #8e8e93; margin-top: 4px;"><span style="color:#34c759;">S: ${m.p1_wins}</span> / <span style="color:#ff3b30;">N: ${m.p2_wins}</span></div>
                             </div>
                         </div>
                         
@@ -2203,15 +2204,16 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                         <div style="display:flex; align-items:center; gap:10px; flex:1; justify-content:flex-end; text-align:right; overflow:hidden;">
                             <div style="overflow:hidden;">
                                 <div style="font-size:11px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p2}</div>
-                                <div class="stat-value-badge ${c2}" style="margin-top:3px; display:inline-block;">${m.wr2}% <span style="font-size: 10px; opacity: 0.8;">S: ${m.p2_wins} / N: ${m.p1_wins}</span></div>
+                                <div class="stat-value-badge ${c2}" style="margin-top:3px; display:inline-block;">${m.wr2}%</div>
+                                <div style="font-size: 10px; opacity: 0.8; color: #8e8e93; margin-top: 4px;"><span style="color:#34c759;">S: ${m.p2_wins}</span> / <span style="color:#ff3b30;">N: ${m.p1_wins}</span></div>
                             </div>
                             <img src="${window.getAvatarUrl(m.p2)}" style="width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
                         </div>
                     </div>
                     <!-- Visueller Kräftevergleich -->
                     <div style="height:3px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; display:flex; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);">
-                        <div style="width:${m.wr1}%; background:${m.wr1>=m.wr2?'#34c759':'#4FC3F7'};"></div>
-                        <div style="width:${m.wr2}%; background:${m.wr2>m.wr1?'#34c759':'#4FC3F7'};"></div>
+                        <div style="width:${m.wr1}%; background:${m.wr1>=m.wr2?'#34c759':'#ff3b30'};"></div>
+                        <div style="width:${m.wr2}%; background:${m.wr2>m.wr1?'#34c759':'#ff3b30'};"></div>
                     </div>
                 </div>`;
 
