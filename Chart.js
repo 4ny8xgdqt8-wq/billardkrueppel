@@ -7416,6 +7416,19 @@ window.renderBillardStats = function (
             .join("");
         };
 
+        // Bestimme die anzuzeigende Dauer (verwende durationFormatted, ansonsten durationSeconds, ansonsten duration)
+        const pad = (n) => String(n).padStart(2, "0");
+        let durationDisplay = "00:00";
+        if (g && g.durationFormatted) {
+          durationDisplay = g.durationFormatted;
+        } else if (g && typeof g.durationSeconds === "number") {
+          const m2 = Math.floor(g.durationSeconds / 60);
+          const s2 = g.durationSeconds % 60;
+          durationDisplay = `${pad(m2)}:${pad(s2)}`;
+        } else if (g && typeof g.duration === "number") {
+          durationDisplay = `${pad(g.duration)}:00`;
+        }
+
         return `
             <div onclick="window.openMatchDetails(${i})" class="card-modern" style="padding: 12px; border-radius: 18px; margin-bottom: 12px; cursor:pointer; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05); transition: transform 0.2s; -webkit-tap-highlight-color: transparent;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -7430,7 +7443,15 @@ window.renderBillardStats = function (
                     </div>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);">
-                    <div style="font-size:10px; color:#8e8e93; font-weight:600; display:flex; align-items:center; gap:6px;"><span style="color:var(--accent); font-weight:900;">${time}</span><span style="opacity:0.4;">•</span><span>${g.t || "Match"}</span><span style="opacity:0.4;">•</span><span>Rest: ${g.l}</span></div>
+                    <div style="font-size:10px; color:#8e8e93; font-weight:600; display:flex; align-items:center; gap:6px;">
+                        <span style="color:var(--accent); font-weight:900;">${time}</span>
+                        <span style="opacity:0.4;">•</span>
+                        <span style="color:#7fc9ff; font-weight:800;">${durationDisplay}</span>
+                        <span style="opacity:0.4;">•</span>
+                        <span>${g.t || "Match"}</span>
+                        <span style="opacity:0.4;">•</span>
+                        <span>Rest: ${g.l}</span>
+                    </div>
                     <div class="stat-value-badge ${delta > 0 ? "green" : delta < 0 ? "red" : ""}" style="font-size:9px; padding:2px 6px;">${delta > 0 ? "+" : ""}${delta} ELO</div>
                 </div>
             </div>`;

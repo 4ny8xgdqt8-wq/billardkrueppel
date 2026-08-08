@@ -125,6 +125,16 @@
         padding: 0 16px 120px 16px;
         -webkit-overflow-scrolling: touch;
       }
+
+      /* Match-specific scroll area: make the match panel scroll independently on small screens */
+      #phase-2-gamestart,
+      #phase-3-result {
+        /* Allow the match panels to scroll if their content exceeds available space */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        max-height: calc(100vh - 180px); /* header + paddings + tabbar reserve */
+        box-sizing: border-box;
+      }
       .view {
         display: none;
         flex-direction: column;
@@ -2039,6 +2049,22 @@
                 </div>
               </div>
             </div>
+            <div
+              style="
+                padding-top: 15px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+              "
+            >
+              <div style="position:relative; display:flex; align-items:center; gap:12px;">
+                <label style="margin:0; z-index:2;">Dauer der Partie (Live)</label>
+                <div style="flex:1;">
+                  <div id="matchDurationDisplay" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:24px; font-weight:900; color:var(--accent); padding:5px 0; text-shadow:0 0 10px rgba(255,204,0,0.3);">
+                    00:00
+                  </div>
+                </div>
+              </div>
+            </div>
             <div style="padding-top: 15px">
               <label>Gewinner wählen</label>
               <div style="display: flex; gap: 10px">
@@ -2109,7 +2135,7 @@
                 gap: 6px;
               "
             >
-              <label style="margin-bottom: 0">🏆 Tagessieger</label>
+              <label style="margin-bottom: 0">🏆 Live Tagessiegplatzierung</label>
               <span style="font-size: 10px; color: rgba(255, 255, 255, 0.4)"
                 >ⓘ</span
               >
@@ -4931,7 +4957,13 @@
                 window.getAvatarUrl && typeof window.getAvatarUrl === "function"
                   ? window.getAvatarUrl(n)
                   : `avatars/${n}.png`;
-              return `<img loading="lazy" src="${src}" onerror="this.style.display='none'" style="width:${size}px; height:${size}px; border-radius:12px; object-fit:cover;">`;
+
+              // Zeige animierte Umrandung, wenn Spieler auf einer Siegesserie ist
+              const streakClass = (window.careerStats && window.careerStats.pData && window.careerStats.pData[n] && window.careerStats.pData[n].currentStreak >= 1) ? 'streak-fire' : '';
+
+              return `<div class="avatar-frame ${streakClass}" style="position:relative; width:${size}px; height:${size}px; min-width:${size}px;">
+                        <img loading="lazy" src="${src}" onerror="this.style.display='none'" style="width:${size}px; height:${size}px; border-radius:10px; object-fit:cover;">
+                      </div>`;
             })
             .join("");
         });
@@ -4964,7 +4996,10 @@
       window.breakLocked = false;
       window.careerStats = null;
       window.careerStatsBeforeToday = null;
-
+      window.matchTimerInterval = null;
+      window.matchStartTime = null;
+      window.matchDurationInMinutes = 0;
+      
       let workerFinished = false;
       let firebaseDataReady = false;
       let isCalculating = false;
@@ -5008,6 +5043,33 @@
         const bar = document.getElementById("loader-progress");
         if (el) el.innerText = msg + "...";
         if (bar && percent !== undefined) bar.style.width = percent + "%";
+      };
+
+      window.startMatchTimer = () => {
+        if (window.matchTimerInterval) return; // Timer läuft bereits
+
+        window.matchStartTime = new Date();
+        const display = document.getElementById("matchDurationDisplay");
+
+        window.matchTimerInterval = setInterval(() => {
+          const now = new Date();
+          const elapsed = Math.floor((now - window.matchStartTime) / 1000);
+          const minutes = Math.floor(elapsed / 60);
+          const seconds = elapsed % 60;
+          window.matchDurationInMinutes = minutes + seconds / 60;
+
+          if (display) {
+            display.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+          }
+        }, 1000);
+      };
+
+      window.stopMatchTimer = () => {
+        if (window.matchTimerInterval) {
+          clearInterval(window.matchTimerInterval);
+          window.matchTimerInterval = null;
+        }
+        window.matchStartTime = null;
       };
 
       // Worker Initialisierung
@@ -5609,6 +5671,8 @@
           .classList.toggle("selected", n === 2);
         window.removeHighlight("btn-win1");
         window.removeHighlight("btn-win2");
+        // Timer anhalten, sobald ein Gewinner ausgewählt wurde
+        if (typeof window.stopMatchTimer === "function") window.stopMatchTimer();
         window.openResultModal();
       };
 
@@ -5857,6 +5921,11 @@
             document
               .querySelectorAll(".win-btn")
               .forEach((btn) => btn.classList.remove("selected"));
+            // Timer stoppen und zurücksetzen, wenn ein Spieler geändert wird
+            if (typeof window.stopMatchTimer === "function") window.stopMatchTimer();
+            window.matchDurationInMinutes = 0;
+            const display = document.getElementById("matchDurationDisplay");
+            if (display) display.textContent = "00:00";
             if (typeof window.updateUI === "function") window.updateUI();
           };
         });
@@ -5962,6 +6031,7 @@
           document.getElementById("leftover").value = "";
           window.lastMode = currentMode;
         }
+      if (currentMode !== window.lastMode) window.stopMatchTimer();
 
         const m = document.getElementById("mode").value;
         const saveBtn = document.querySelector(".btn-save");
@@ -6076,6 +6146,11 @@
         if (window.breakLocked && currentBreakPlayer)
           b.value = currentBreakPlayer; // Gesicherten Wert wiederherstellen, falls gelockt
 
+        // Timer starten, wenn Anstoßspieler feststeht
+        if (b.value && !window.matchTimerInterval) {
+          window.startMatchTimer();
+        }
+
         const ready =
           m === "1:1"
             ? document.getElementById("p1").value &&
@@ -6182,6 +6257,7 @@
         }
         document.getElementById("breakPlayer").value = res;
         window.removeHighlight("breakPlayer");
+        window.startMatchTimer();
         window.breakLocked = true;
 
         // Deaktivieren nach dem Würfeln
@@ -6352,6 +6428,11 @@
         const pad = (n) => String(n).padStart(2, "0");
         const dStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
+        // Berechne und speichere Dauer in mehreren Formaten (Minuten gerundet, Sekunden gesamt, und MM:SS)
+        const totalSeconds = Math.round((window.matchDurationInMinutes || 0) * 60);
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+
         const data = {
           m,
           p1,
@@ -6363,6 +6444,11 @@
           d: dStr,
           bt1,
           bt2,
+          // Beibehalten des bisherigen Felds für Abwärtskompatibilität
+          duration: Math.round(window.matchDurationInMinutes),
+          // Neu: gesamte Sekunden und formatiertes MM:SS
+          durationSeconds: totalSeconds,
+          durationFormatted: `${pad(mins)}:${pad(secs)}`,
         };
 
         try {
@@ -6473,6 +6559,10 @@
 
           document.getElementById("leftover").value = "";
 
+          window.stopMatchTimer();
+          document.getElementById('matchDurationDisplay').textContent = '00:00';
+          // Dauer zurücksetzen, damit nach dem Speichern kein Restwert bleibt
+          window.matchDurationInMinutes = 0;
           if (typeof window.updateUI === "function") window.updateUI();
 
           window.openSuccessModal();
@@ -6515,7 +6605,7 @@
         }, 50);
 
         const streakClass =
-          d.currentStreak >= 3
+          d.currentStreak >= 1
             ? "streak-fire"
             : d.loseStreak >= 3
               ? "streak-frost"
@@ -6856,182 +6946,6 @@
         const c1 = prob1 > 50 ? "#34c759" : prob1 < 50 ? "#ff3b30" : "#ffffff";
         const c2 = prob2 > 50 ? "#34c759" : prob2 < 50 ? "#ff3b30" : "#ffffff";
 
-        // --- NEU: PRE-MATCH BANTER LOGIK ---
-        let banterHtml = "";
-        const regularFacts = [];
-        const priorityFacts = [];
-        if (window.careerStats && window.careerStats.pData) {
-          const p1Data = window.careerStats.pData[n1];
-          const p2Data = window.careerStats.pData[n2];
-
-          if (p1Data && p2Data) {
-            // H2H-Statistik
-            const h2h = (p1Data.headToHead || {})[n2];
-            if (h2h && h2h.w + h2h.l > 0) {
-              const total = h2h.w + h2h.l;
-              const wr = Math.round((h2h.w / total) * 100);
-              const wr2 = 100 - wr;
-              regularFacts.push(
-                `Direkter Vergleich: <b>${n1}</b> führt mit <b>${wr}%</b> gegen <b>${n2}</b>.`,
-              );
-
-              // NEU: Angstgegner-Warnung
-              if (total >= 5) {
-                // Nur bei signifikanter Anzahl an Spielen
-                if (wr >= 75)
-                  regularFacts.push(
-                    `Achtung, <b>${n2}</b>: <b>${n1}</b> ist dein Angstgegner!`,
-                  );
-                if (wr2 >= 75)
-                  regularFacts.push(
-                    `Achtung, <b>${n1}</b>: <b>${n2}</b> ist dein Angstgegner!`,
-                  );
-              }
-            }
-
-            // NEU: ELO-Unterschied
-            const eloDiff = Math.abs(r1 - r2);
-            if (eloDiff >= 100) {
-              const fav = r1 > r2 ? n1 : n2;
-              regularFacts.push(
-                `<b>${fav}</b> geht mit über <b>100</b> ELO-Punkten Vorsprung als klarer Favorit ins Match.`,
-              );
-            }
-
-            // NEU: Formkurve (letzte 10 Spiele)
-            const getForm = (pData) => pData.last30Games.slice(-10);
-            const form1 = getForm(p1Data);
-            const form2 = getForm(p2Data);
-            if (form1.length === 10) {
-              const formWR = Math.round(
-                (form1.reduce((a, b) => a + b, 0) / 10) * 100,
-              );
-              if (formWR >= 70)
-                regularFacts.push(
-                  `<b>${n1}</b> ist in Top-Form und gewann <b>${formWR}%</b> der letzten 10 Spiele.`,
-                );
-            }
-            // NEU: Formkurve für Spieler 2
-            if (form2.length === 10) {
-              const formWR2 = Math.round(
-                (form2.reduce((a, b) => a + b, 0) / 10) * 100,
-              );
-              if (formWR2 >= 70)
-                regularFacts.push(
-                  `<b>${n2}</b> ist in Top-Form und gewann <b>${formWR2}%</b> der letzten 10 Spiele.`,
-                );
-            }
-
-            // Letztes Duell
-            const lastDuel = [...window.stats].reverse().find((g) => {
-              const players = new Set([
-                ...(g.p1?.split(" & ") || []),
-                ...(g.p2?.split(" & ") || []),
-              ]);
-              return players.has(n1) && players.has(n2);
-            });
-            if (lastDuel) {
-              const winnerName = lastDuel.w == 1 ? lastDuel.p1 : lastDuel.p2;
-              regularFacts.push(
-                `Im letzten Duell gewann <b>${winnerName}</b> mit <b>${lastDuel.l}</b> Restkugeln.`,
-              );
-            }
-          }
-
-          // Siegesserien
-          if (p1Data && p1Data.currentStreak >= 3) {
-            priorityFacts.push(
-              `<b>${n1}</b> ist auf einer <b>${p1Data.currentStreak}er</b>-Siegesserie! <span class="fire">🔥</span>`,
-            );
-          }
-          if (p2Data && p2Data.currentStreak >= 3) {
-            priorityFacts.push(
-              `<b>${n2}</b> ist auf einer <b>${p2Data.currentStreak}er</b>-Siegesserie! <span class="fire">🔥</span>`,
-            );
-          }
-
-          // NEU: Dominanz-Faktor
-          if (p1Data && p1Data.avgKiller >= 6.5 && p1Data.wins >= 10) {
-            const killerVal = p1Data.avgKiller.toFixed(1);
-            regularFacts.push(
-              `<b>${n1}</b> ist ein Abräumer und lässt seinen Gegnern im Schnitt <b>${killerVal}</b> Kugeln auf dem Tisch.`,
-            );
-          }
-
-          // NEU: Comeback-Kid / Pechvogel
-          if (p1Data && p1Data.games >= 10) {
-            const clutchRate = p1Data.clutchWins / p1Data.games;
-            const closeLossRate = p1Data.closeLosses / p1Data.games;
-            if (clutchRate >= 0.2)
-              regularFacts.push(
-                `<b>${n1}</b> ist ein Comeback-Kid und gewinnt oft knappe Spiele.`,
-              );
-            if (closeLossRate >= 0.2)
-              regularFacts.push(
-                `<b>${n1}</b> ist ein Pechvogel und verliert oft sehr knapp.`,
-              );
-          }
-
-          // NEU: Service-Dieb
-          if (p1Data && p1Data.opponentStartedGames >= 5) {
-            const stealRate =
-              (p1Data.stolenServiceWins / p1Data.opponentStartedGames) * 100;
-            if (stealRate >= 50)
-              regularFacts.push(
-                `<b>${n1}</b> ist ein Service-Dieb und gewinnt <b>${Math.round(stealRate)}%</b> der Spiele bei gegnerischem Anstoß.`,
-              );
-          }
-          if (p2Data && p2Data.opponentStartedGames >= 5) {
-            const stealRate2 =
-              (p2Data.stolenServiceWins / p2Data.opponentStartedGames) * 100;
-            if (stealRate2 >= 50)
-              regularFacts.push(
-                `<b>${n2}</b> ist ein Service-Dieb und gewinnt <b>${Math.round(stealRate2)}%</b> der Spiele bei gegnerischem Anstoß.`,
-              );
-          }
-
-          // Kugel-Präferenz
-          const addBallPref = (player, data) => {
-            if (!data || !window.careerStats.aggregates?.ballSpez?.[player])
-              return;
-            const spec = window.careerStats.aggregates.ballSpez[player];
-            if (spec.Voll.g >= 5) {
-              const wr = Math.round((spec.Voll.w / spec.Voll.g) * 100);
-              if (wr > 60)
-                regularFacts.push(
-                  `<b>${player}</b> gewinnt <b>${wr}%</b> seiner Spiele mit den <b>Vollen</b>.`,
-                );
-            }
-            if (spec.Halb.g >= 5) {
-              const wr = Math.round((spec.Halb.w / spec.Halb.g) * 100);
-              if (wr > 60)
-                regularFacts.push(
-                  `<b>${player}</b> gewinnt <b>${wr}%</b> seiner Spiele mit den <b>Halben</b>.`,
-                );
-            }
-          };
-          if (m === "1:1") {
-            addBallPref(n1, p1Data);
-            addBallPref(n2, p2Data);
-          }
-        }
-
-        // Baue das HTML zusammen: Alle Prioritäten + ein zufälliger regulärer Fakt
-        const finalFacts = [...priorityFacts];
-        if (regularFacts.length > 0) {
-          finalFacts.push(
-            regularFacts[Math.floor(Math.random() * regularFacts.length)],
-          );
-        }
-        if (finalFacts.length > 0) {
-          banterHtml = finalFacts
-            .map(
-              (fact) =>
-                `<div class="prob-banter"><span style="font-size:14px; margin-top:1px;">💡</span><div>${fact}</div></div>`,
-            )
-            .join("");
-        }
-
         b.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <span style="color:var(--accent); font-weight:900; font-size:9px; text-transform:uppercase; letter-spacing:1.5px; display:flex; align-items:center; gap:6px;"><div class="live-dot"></div> LIVE ANALYSE</span>
@@ -7054,7 +6968,7 @@
                         <span style="white-space:nowrap;">${l2}: ${prob2}%</span>
                     </div>
                 </div>
-                ${banterHtml}`;
+                `;
       };
 
       function renderHistory(statsToRender) {
@@ -7114,7 +7028,20 @@
           const isWin2 = g.w == 2;
           const dData = deltas[i] || { eloDelta: 0 };
           const delta = typeof dData === "object" ? dData.eloDelta || 0 : dData;
-
+ 
+          // Dauer-Display berechnen (formatierte Dauer, Sekunden, fallback auf Minuten)
+          const pad = (n) => String(n).padStart(2, "0");
+          let durationDisplay = "00:00";
+          if (g && g.durationFormatted) {
+            durationDisplay = g.durationFormatted;
+          } else if (g && typeof g.durationSeconds === "number") {
+            const m2 = Math.floor(g.durationSeconds / 60);
+            const s2 = g.durationSeconds % 60;
+            durationDisplay = `${pad(m2)}:${pad(s2)}`;
+          } else if (g && typeof g.duration === "number") {
+            durationDisplay = `${pad(g.duration)}:00`;
+          }
+ 
           // Cinematic Card Style
           const winGlow = "0 0 20px rgba(52, 199, 89, 0.15)";
           const borderStyle = isWin1
@@ -7122,7 +7049,7 @@
             : `border-right: 3px solid #34c759;`;
           const hasBreak1 = g.a === g.p1;
           const hasBreak2 = g.a === g.p2;
-
+ 
           html += ` 
                 <div class="card" onclick="window.openMatchDetails(${i})" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; ${borderStyle} animation: history-card-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: ${idx * 0.05}s; opacity: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5); background: var(--card); transition: all 0.3s ease; cursor:pointer;">
                     <div style="padding: 15px 14px 12px 14px; display: flex; align-items: center; justify-content: space-between; position: relative;">
@@ -7164,6 +7091,8 @@
                     <div style="background: rgba(0,0,0,0.2); padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.03);">
                         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1;">
                             <span style="font-size: 9px; color: #8e8e93; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">${time}</span>
+                            <span style="opacity:0.4;">•</span>
+                            <span style="font-size: 9px; color: #7fc9ff; font-weight: 800;">${durationDisplay}</span>
                             <span style="height: 3px; width: 3px; border-radius: 50%; background: #444;"></span>
                             <span style="font-size: 9px; color: var(--accent); font-weight: 800;">MODUS: ${g.m === "1:1" ? "1 VS 1" : "2 VS 2"}</span>
                             <span style="height: 3px; width: 3px; border-radius: 50%; background: #444;"></span>
@@ -7544,7 +7473,8 @@
           const dy = e.touches[0].clientY - touchStartY;
 
           // Horizontalen Swipe erkennen und vertikales Scrollen währenddessen unterbinden
-          if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+          // Only cancel scrolling for clear horizontal swipes larger than swipeThreshold
+          if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > swipeThreshold) {
             if (e.cancelable) e.preventDefault();
           }
         },
