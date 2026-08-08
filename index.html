@@ -856,6 +856,14 @@
                     <input type="number" id="leftover" style="display:none;">
                     <button class="btn-save" onclick="window.doSave()" style="display:none;">Speichern</button>
                 </div>
+
+                <div class="card cinematic-entry card-hud tagessieger-pulse" style="animation-delay: 0.35s; text-align: center; margin-top: 12px; cursor: pointer;" onclick="window.showDailyWinnerInfo()">
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 6px;">
+                        <label style="margin-bottom: 0;">🏆 Tagessieger</label>
+                        <span style="font-size: 10px; color: rgba(255,255,255,0.4);">ⓘ</span>
+                    </div>
+                    <div id="match-daily-winner" style="font-size:14px; font-weight:900; color:var(--accent); text-shadow: 0 0 15px rgba(255,204,0,0.4);">-</div>
+                </div>
             </div>
 
             <div id="view-uebersicht" class="view">
@@ -2237,6 +2245,10 @@
             if ((window.viewId === 'statistik' || window.viewId === 'heute' || window.viewId === 'erfolge') && typeof window.renderBillardStats === 'function') {
                 window.renderBillardStats(statsToUse, isToday, false, document, window.careerStats, window.careerStatsBeforeToday);
             }
+            if (window.viewId === 'aufzeichnen' && window.careerStats && window.careerStatsBeforeToday) {
+                // Versorgt die Tagessieger-Kachel auf der Matchseite mit den Session-Daten.
+                window.renderBillardStats(window.stats, true, false, document, window.careerStats, window.careerStatsBeforeToday);
+            }
         };
 
         // Sicherheits-Timeout: Falls Firebase hängt, Loader nach 5 Sek trotzdem entfernen
@@ -3550,12 +3562,6 @@
             const dx = e.touches[0].clientX - touchStartX;
             const dy = e.touches[0].clientY - touchStartY;
             
-            // Vertikales Scrollen auf der Match-Seite komplett unterbinden
-            if (window.viewId === 'aufzeichnen' && Math.abs(dy) > Math.abs(dx)) {
-                if (e.cancelable) e.preventDefault();
-                return;
-            }
-
             // Horizontalen Swipe erkennen und vertikales Scrollen währenddessen unterbinden
             if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
                 if (e.cancelable) e.preventDefault();

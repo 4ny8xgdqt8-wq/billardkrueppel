@@ -1726,11 +1726,11 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
     if (labels.length > 0) {
         byId('stat-total').innerText = currentStats.length;
 
-        // --- DAILY WINNER CALCULATION (for Session tab only) ---
-        const dailyWinnerCard = byId('stat-daily-winner-card');
-        const dailyWinnerEl = byId('stat-daily-winner');
+        // --- TAGESSIEGER-BERECHNUNG (Session- und Matchseite) ---
+        const dailyWinnerCards = [byId('stat-daily-winner-card'), document.getElementById('match-daily-winner')?.closest('.card')].filter(Boolean);
+        const dailyWinnerEls = [byId('stat-daily-winner'), document.getElementById('match-daily-winner')].filter(Boolean);
         
-        if (filterToday) { // Only show in Session tab
+        if (filterToday) { // Session-Daten für Session- und Matchseite
             const playerScores = [];
 
             // ISO Key für ELO-Gains generieren (YYYY-MM-DD) zur Abfrage der Session-Daten
@@ -1786,7 +1786,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             // Sort players by score (descending)
             playerScores.sort((a, b) => b.score - a.score);
 
-            if (dailyWinnerCard) dailyWinnerCard.style.display = 'block';
+            dailyWinnerCards.forEach(card => { card.style.display = 'block'; });
 
             if (playerScores.length > 0 && playerScores[0].score > 0) {
                 let winnerText = "";
@@ -1813,12 +1813,14 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                     }
                 }
 
-                if (dailyWinnerEl) dailyWinnerEl.innerHTML = winnerText;
+                dailyWinnerEls.forEach(el => { el.innerHTML = winnerText; });
             } else {
-                if (dailyWinnerEl) dailyWinnerEl.innerText = "-";
+                dailyWinnerEls.forEach(el => { el.innerText = "-"; });
             }
         } else {
-            if (dailyWinnerCard) dailyWinnerCard.style.display = 'none'; // Hide in other tabs
+            // Nur die Session-Kachel ausblenden. Die Match-Kachel behält ihren letzten Session-Stand.
+            const statDailyWinnerCard = byId('stat-daily-winner-card');
+            if (statDailyWinnerCard) statDailyWinnerCard.style.display = 'none';
         }
         // --- KUGEL-STATISTIK BERECHNEN ---
         const agg = res.aggregates || { totalBallMatches: 0, vollWins: 0, halbWins: 0, playerBallWins: {} };
@@ -2076,7 +2078,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 return b[3] - a[3];
             });
 
-            dailyWinsEl.innerHTML = sortedPlayers.length > 0 ? sortedPlayers.map((p, idx) => `
+            const dailyWinsHtml = sortedPlayers.length > 0 ? sortedPlayers.map((p, idx) => `
                 <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding: 10px; border-radius:16px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.25 + idx * 0.05}s;">
                     <div style="display:flex; align-items:center; gap:10px;">
                         <div style="font-size:14px; font-weight:900; color:var(--accent); min-width:20px; text-align:center;">${idx + 1}.</div>
@@ -2089,6 +2091,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                         <span title="3. Plätze" style="opacity:0.5;">🥉 ${p[3]}</span>
                     </div>
                 </div>`).join('') : '<div style="font-size:10px; color:#8e8e93; text-align:center; padding:5px;">Noch keine Tagessieger ermittelt.</div>';
+            dailyWinsEl.innerHTML = dailyWinsHtml;
         }
 
         // --- TEAM-AUSWERTUNG ---
@@ -2715,14 +2718,22 @@ window.processAllStatsChronologically = function(matches, players) {
         setText('stat-mauer', '-');
         setText('stat-daily-wins', '-');
 
-        const dailyWinnerCard = document.getElementById('stat-daily-winner-card');
-        const dailyWinnerEl = document.getElementById('stat-daily-winner');
+        const dailyWinnerCards = [
+            document.getElementById('stat-daily-winner-card'),
+            document.getElementById('match-daily-winner')?.closest('.card')
+        ].filter(Boolean);
+        const dailyWinnerEls = [
+            document.getElementById('stat-daily-winner'),
+            document.getElementById('match-daily-winner')
+        ].filter(Boolean);
         if (filterToday) {
-            if (dailyWinnerCard) dailyWinnerCard.style.display = 'block';
-            if (dailyWinnerEl) dailyWinnerEl.innerText = '-';
+            dailyWinnerCards.forEach(card => { card.style.display = 'block'; });
+            dailyWinnerEls.forEach(el => { el.innerText = '-'; });
         } else {
-            if (dailyWinnerCard) dailyWinnerCard.style.display = 'none';
-            if (dailyWinnerEl) dailyWinnerEl.innerText = '';
+            const statDailyWinnerCard = document.getElementById('stat-daily-winner-card');
+            const statDailyWinnerEl = document.getElementById('stat-daily-winner');
+            if (statDailyWinnerCard) statDailyWinnerCard.style.display = 'none';
+            if (statDailyWinnerEl) statDailyWinnerEl.innerText = '';
         }
         setText('stat-head-to-head', '-');
         setText('stat-duo-ranking', '-');
