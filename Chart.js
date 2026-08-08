@@ -1740,44 +1740,36 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             labels.forEach(p => {
                 const d = res.pData[p]; // Heutige Session-Daten
                 const dAll = precalculatedCareerStats?.pData[p] || d;
-                const dBefore = precalculatedCareerStatsBeforeToday?.pData[p] || { headToHead: {} };
+                const dBefore = precalculatedCareerStatsBeforeToday?.pData?.[p] || { headToHead: {} };
                 
                 if (!d || d.todayGames === 0) return;
 
                 // --- PERFORMANCE-INDEX (SESSION MVP) BERECHNUNG ---
-                
-                // 1. Basis: Teilnahme, Siege, Niederlagen (ELO komplett entfernt)
-                let score = (d.todayGames || 0) * 1; // +1 pro Spiel (Teilnahme)
-                score += (d.todayWins || 0) * 2;     // +2 pro Sieg
-                score += ((d.todayGames || 0) - (d.todayWins || 0)) * -1; // -1 pro Niederlage
+                let score = (d.todayGames || 0) * 3; // +3 pro Spiel (Teilnahme)
+                score += (d.todayWins || 0) * 5;     // +5 pro Sieg
+                score += ((d.todayGames || 0) - (d.todayWins || 0)) * -2; // -2 pro Niederlage
 
-                // 2. Qualitätspunkte
-                score += (d.todayRegularWins || 0) * 1; // +1 pro regulärem Sieg
-                score += (d.todayBreakWins || 0) * 2;   // +2 pro Break-Sieg
-                score += (d.todayClutchWins || 0) * 2;  // +2 pro Clutch (Gegner Rest 1)
-                score += (d.todayCloseLosses || 0) * 1; // +1 TROSTPUNKTE (Selbst Rest 1)
+                score += (d.todayRegularWins || 0) * 3;
+                score += (d.todayBreakWins || 0) * 5;
+                score += (d.todayClutchWins || 0) * 3;
+                score += (d.todayCloseLosses || 0) * 3;
 
-                // 3. Momentum & Fleiß
-                score += (d.todayMaxStreak || 0) * 1;   // +1 pro Spiel in der längsten Serie
-                score += (d.todayStolenServiceWins || 0) * 1; // +1 pro Sieg gegen den Anstoß
-                
-                // 4. Dominanz (Ø Restkugeln beim Gegner bei Siegen)
+                score += (d.todayMaxStreak || 0) * 2;
+                score += (d.todayStolenServiceWins || 0) * 2;
+
                 if (d.todayWins > 0) score += Math.round(d.todayKillerPoints / d.todayWins);
 
-                // 5. Nemesis-Skalp (+6 einmalig bei Sieg gegen Angstgegner)
                 let nemesis = null; let maxL = 0;
                 Object.entries(dBefore.headToHead || {}).forEach(([opp, st]) => { if (st.l > maxL) { maxL = st.l; nemesis = opp; } });
-                if (nemesis && d.headToHead && d.headToHead[nemesis] && d.headToHead[nemesis].w > 0) score += 3;
+                if (nemesis && d.headToHead && d.headToHead[nemesis] && d.headToHead[nemesis].w > 0) score += 6;
 
-                // 6. Abzüge
-                score -= (d.todayBlackWinsCount || 0) * 1; // -1 pro Foul-Sieg
-                score -= (d.todayLostBy8BallError || 0) * 1; // -1 pro 8er-Fehler
+                score -= (d.todayBlackWinsCount || 0) * 3;
+                score -= (d.todayLostBy8BallError || 0) * 3;
                 // Abzug für hohe Ø Restkugeln bei Niederlagen
                 if (d.todayAvgRest > 0 && ((d.todayGames || 0) - (d.todayWins || 0)) > 0) {
                     score += Math.round(d.todayAvgRest * -0.5); // Je höher der Ø Rest, desto mehr Abzug
                 }
 
-                // 7. Erfolgs-Bonus (+3 / -3 pro Achievement)
                 let fameCount = 0, shameCount = 0;
                 // Tägliche Pools prüfen
                 window.dailyFamePool.forEach(ach => { if (ach.cond(d)) fameCount++; });
@@ -1785,7 +1777,7 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
                 // Neue Karriere-Meilensteine, die heute geknackt wurden
                 window.famePool.forEach(ach => { if (ach.cond(dAll) && !ach.cond(dBefore)) fameCount++; });
                 window.shamePool.forEach(ach => { if (ach.cond(dAll) && !ach.cond(dBefore)) shameCount++; });
-                score += (fameCount * 1) - (shameCount * 1);
+                score += (fameCount * 3) - (shameCount * 3);
 
                 // Store player score for later sorting
                 playerScores.push({ player: p, score: score });
@@ -2014,30 +2006,64 @@ window.renderBillardStats = function(stats, filterToday = false, onlyAchievement
             };
 
             if (window.dailyAchivs && window.dailyAchivs.days) {
-                for (const date in window.dailyAchivs.days) {
-                    const dayData = window.dailyAchivs.days[date];
+                for (const dateStr in window.dailyAchivs.days) {
+                    const dayData = window.dailyAchivs.days[dateStr];
+                    const dayMatches = (window.stats || []).filter(g => g.d && g.d.startsWith(dateStr.split('-').reverse().join('.')));
+                    if (dayMatches.length === 0) continue;
+
+                    const dayStats = window.calculateStatsLocally(dayMatches, window.spieler, dateStr.split('-').reverse().join('.'));
+                    const dAll = precalculatedCareerStats || { pData: {} };
+                    const dBefore = precalculatedCareerStatsBeforeToday || { pData: {} };
                     
-                    // Berechne den MVP-Score für jeden Spieler an diesem Tag und initialisiere sie
-                    const playerScores = Object.keys(dayData).map(player => {
+                    const playerScores = Object.keys(dayStats.pData).map(player => {
                         initPlayer(player);
-                        const achievements = dayData[player] || [];
-                        const score = achievements.length;
+                        const d = dayStats.pData[player];
+                        if (!d || d.todayGames === 0) return { player, score: 0 };
+
+                        let score = (d.todayGames || 0) * 1 + (d.todayWins || 0) * 2 - ((d.todayGames || 0) - (d.todayWins || 0));
+                        score += (d.todayRegularWins || 0) * 1;
+                        score += (d.todayBreakWins || 0) * 2;
+                        score += (d.todayClutchWins || 0) * 2;
+                        score += (d.todayCloseLosses || 0) * 1;
+                        score += (d.todayMaxStreak || 0) * 1;
+                        score += (d.todayStolenServiceWins || 0) * 1;
+                        if (d.todayWins > 0) score += Math.round(d.todayKillerPoints / d.todayWins);
+
+                        let nemesis = null; let maxL = 0;
+                        const dBeforePlayer = dBefore.pData ? (dBefore.pData[player] || { headToHead: {} }) : { headToHead: {} };
+                        Object.entries(dBeforePlayer.headToHead || {}).forEach(([opp, st]) => { if (st.l > maxL) { maxL = st.l; nemesis = opp; } });
+                        if (nemesis && d.headToHead && d.headToHead[nemesis] && d.headToHead[nemesis].w > 0) score += 3;
+
+                        score -= (d.todayBlackWinsCount || 0) * 1;
+                        score -= (d.todayLostBy8BallError || 0) * 1;
+                        if (d.todayAvgRest > 0 && ((d.todayGames || 0) - (d.todayWins || 0)) > 0) {
+                            score += Math.round(d.todayAvgRest * -0.5);
+                        }
+
+                        let fameCount = 0, shameCount = 0;
+                        const dAllPlayer = dAll.pData ? (dAll.pData[player] || d) : d;
+                        window.dailyFamePool.forEach(ach => { if (ach.cond(d)) fameCount++; });
+                        window.dailyShamePool.forEach(ach => { if (ach.cond(d)) shameCount++; });
+                        window.famePool.forEach(ach => { if (ach.cond(dAllPlayer) && !ach.cond(dBeforePlayer)) fameCount++; });
+                        window.shamePool.forEach(ach => { if (ach.cond(dAllPlayer) && !ach.cond(dBeforePlayer)) shameCount++; });
+                        score += (fameCount * 1) - (shameCount * 1);
+
                         return { player, score };
-                    }).sort((a, b) => b.score - a.score);
+                    }).filter(p => p.score > 0).sort((a, b) => b.score - a.score);
 
                     // Eindeutige Scores für die Top 3 Plätze ermitteln
                     const uniqueScores = [...new Set(playerScores.map(p => p.score))].sort((a, b) => b - a);
                     
                     // Platz 1
-                    if (uniqueScores.length > 0 && uniqueScores[0] > 0) {
+                    if (uniqueScores.length > 0) {
                         playerScores.filter(p => p.score === uniqueScores[0]).forEach(p => dailyPlacements[p.player][1]++);
                     }
                     // Platz 2
-                    if (uniqueScores.length > 1 && uniqueScores[1] > 0) {
+                    if (uniqueScores.length > 1) {
                         playerScores.filter(p => p.score === uniqueScores[1]).forEach(p => dailyPlacements[p.player][2]++);
                     }
                     // Platz 3
-                    if (uniqueScores.length > 2 && uniqueScores[2] > 0) {
+                    if (uniqueScores.length > 2) {
                         playerScores.filter(p => p.score === uniqueScores[2]).forEach(p => dailyPlacements[p.player][3]++);
                     }
                 }
