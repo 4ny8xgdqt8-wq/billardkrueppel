@@ -1673,6 +1673,7 @@
         window.db = db; 
         window.dbFns = { doc, setDoc, getDoc, updateDoc };
         window.stats = []; window.spieler = []; window.dailyAchivs = { days: {} };
+        window.lastMode = '1:1'; // Initial mode
         window.winnerNum = 0; window.viewId = 'aufzeichnen'; window.breakLocked = false;
         window.careerStats = null; window.careerStatsBeforeToday = null;
         
@@ -2424,17 +2425,20 @@
         };
 
         window.updateUI = () => {
-            // Reset state when mode changes
-            window.winnerNum = 0;
-            window.breakLocked = false;
-            document.querySelectorAll('.win-btn').forEach(b => b.classList.remove('selected'));
-            document.getElementById('breakPlayer').value = "";
-            document.getElementById('ballType1').value = "";
-            document.getElementById('ballType2').value = "";
-            document.getElementById('winType').value = "";
-            document.getElementById('leftover').value = "";
-            // Clear player selections for the mode that is being hidden
             const currentMode = document.getElementById('mode').value;
+
+            // Reset state only when mode changes
+            if (window.lastMode !== currentMode) {
+                window.winnerNum = 0;
+                window.breakLocked = false;
+                document.querySelectorAll('.win-btn').forEach(b => b.classList.remove('selected'));
+                document.getElementById('breakPlayer').value = "";
+                document.getElementById('ballType1').value = "";
+                document.getElementById('ballType2').value = "";
+                document.getElementById('winType').value = "";
+                document.getElementById('leftover').value = "";
+                window.lastMode = currentMode;
+            }
 
             const m = document.getElementById('mode').value;
             const saveBtn = document.querySelector('.btn-save');
@@ -2494,13 +2498,13 @@
             document.getElementById('btn-win1').innerText = n1 || "Spieler 1";
             document.getElementById('btn-win2').innerText = n2 || "Spieler 2";
 
-            if (!window.breakLocked) {
-              const b = document.getElementById('breakPlayer');
-              b.innerHTML = '<option value="" selected disabled>Wählen</option>';
-              const names = (m==='1:1') ? [document.getElementById('p1').value, document.getElementById('p2').value] :
-                            [document.getElementById('t1p1').value+" & "+document.getElementById('t1p2').value, document.getElementById('t2p1').value+" & "+document.getElementById('t2p2').value];
-              names.forEach(n => { if(n && !n.includes('undefined')) b.options.add(new Option(n, n)); });
-            }
+            // Dropdown für Anstoßspieler immer neu befüllen, außer wenn der Anstoß bereits "gelockt" ist.
+            const b = document.getElementById('breakPlayer');
+            const currentBreakPlayer = b.value; // Wert vor dem Leeren sichern
+            b.innerHTML = '<option value="" selected disabled>Wählen</option>';
+            const names = (m==='1:1') ? [n1, n2] : [n1, n2];
+            names.forEach(n => { if(n && !n.includes('undefined')) b.options.add(new Option(n, n)); });
+            if (window.breakLocked && currentBreakPlayer) b.value = currentBreakPlayer; // Gesicherten Wert wiederherstellen, falls gelockt
             
             const ready = (m==='1:1' ? (document.getElementById('p1').value && document.getElementById('p2').value) : (document.getElementById('t1p1').value && document.getElementById('t1p2').value && document.getElementById('t2p1').value && document.getElementById('t2p2').value));
             
