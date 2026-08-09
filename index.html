@@ -1092,6 +1092,16 @@
         animation: tip-fade 0.5s ease-out forwards;
         opacity: 0;
       }
+      /* NEU: Container für die Coach-Tipps, um sie zu gruppieren */
+      .coach-container {
+        margin-top: 12px;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.2);
+      }
+      .coach-container > .prob-banter { margin-top: 0; border-radius: 0; border: 0; background: transparent; }
+      .coach-container > .prob-banter:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.05); }
       .prob-banter b {
         color: var(--accent);
         font-style: normal;
@@ -1099,6 +1109,22 @@
       .prob-banter .fire {
         display: inline-block;
         animation: icon-pulse-subtle 1.5s infinite ease-in-out;
+      }
+      .prob-banter.coach-tip {
+        background: rgba(52, 199, 89, 0.1);
+        border-color: rgba(52, 199, 89, 0.2);
+        color: #c5f7d3;
+      }
+      .prob-banter.coach-tip b {
+        color: #34c759;
+      }
+      .prob-banter.x-factor-tip {
+        background: rgba(79, 195, 247, 0.1);
+        border-color: rgba(79, 195, 247, 0.2);
+        color: #d1eefc;
+      }
+      .prob-banter.x-factor-tip b {
+        color: #4fc3f7;
       }
       /* --- ENDE NEUE STYLES --- */
 
@@ -1690,16 +1716,77 @@
       .tagessieger-pulse {
         animation:
           ach-card-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards,
-          tagessieger-glow 4s infinite alternate ease-in-out 0.6s !important;
-        background: linear-gradient(
-          135deg,
-          rgba(79, 195, 247, 0.25) 0%,
-          rgba(28, 28, 30, 0.9) 100%
-        ) !important;
-        border-width: 1.5px !important;
+          /* tagessieger-glow 4s infinite alternate ease-in-out 0.6s !important; */;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
         z-index: 5;
         opacity: 0; /* Startzustand für die Entry-Animation */
       }
+      /* --- NEUE PODIUM-STYLES FÜR TAGESSIEGER --- */
+      .podium-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end; /* Wichtig für die Podium-Höhen */
+        gap: 2px; /* Leichter Abstand zwischen den Blöcken */
+        margin-top: 10px;
+        padding: 0 5px;
+        height: 120px; /* Feste Höhe für den Container - SLIGHTLY INCREASED */
+      }
+      .podium-place {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start; /* Changed from space-between */
+        text-align: center;
+        padding: 8px 5px; /* Reduced padding */
+        border-radius: 12px 12px 0 0; /* Nur obere Ecken abrunden */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: none;
+        transition: all 0.4s ease-in-out;
+        position: relative;
+      }
+      .podium-place.p-1 {
+        order: 2;
+        height: 100%; /* 1. Platz ist am höchsten */
+        background: rgba(255, 204, 0, 0.1);
+        border-color: rgba(255, 204, 0, 0.3);
+        z-index: 2;
+        box-shadow: 0 0 30px rgba(255, 204, 0, 0.2);
+      }
+      .podium-place.p-2 {
+        order: 1;
+        height: 85%; /* 2. Platz */
+        background: rgba(192, 192, 192, 0.05);
+      }
+      .podium-place.p-3 {
+        order: 3;
+        height: 70%; /* 3. Platz */
+        background: rgba(205, 127, 50, 0.05);
+      }
+      .podium-rank { font-size: 20px; font-weight: 900; margin-bottom: 6px; } /* Reduced font-size and added margin */
+      .podium-place.p-1 .podium-rank { color: var(--accent); }
+      .podium-place.p-2 .podium-rank { color: #c0c0c0; }
+      .podium-place.p-3 .podium-rank { color: #cd7f32; }
+      .podium-avatars { display: flex; justify-content: center; }
+      .podium-avatars img { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 4px 8px rgba(0,0,0,0.3); } /* Reduced size */
+      .podium-place.p-1 .podium-avatars img { width: 42px; height: 42px; border-color: var(--accent); } /* Reduced size */
+      .podium-avatars img:not(:first-child) { margin-left: -10px; } /* Adjusted margin */
+      .podium-player-info { display: flex; align-items: baseline; justify-content: center; gap: 3px; margin-top: 4px; flex-wrap: nowrap; min-width: 0; }
+      .podium-name {
+        font-size: 10px;
+        font-weight: 800;
+        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-shrink: 1;
+      }
+      .podium-score { font-size: 10px; font-weight: 600; color: #8e8e93; flex-shrink: 0; white-space: nowrap; }
+      /* --- ENDE PODIUM-STYLES --- */
+
       html,
       body {
         transition: background-image 0.8s ease-in-out;
@@ -1988,25 +2075,6 @@
             </div>
           </div>
 
-          <!-- Live-Analyse wird hier dynamisch eingefügt -->
-          <div
-            id="match-prob"
-            class="prob-box cinematic-hud"
-            style="display: none"
-          >
-            <div
-              style="
-                color: #8e8e93;
-                font-size: 10px;
-                text-align: center;
-                padding: 5px;
-                font-weight: 800;
-              "
-            >
-              Spieler wählen für Prognose
-            </div>
-          </div>
-
           <!-- PHASE 2: Spielstart (Anstoß & Gewinner) - Wird per JS eingeblendet -->
           <div id="phase-2-gamestart" class="card" style="display: none">
             <div
@@ -2084,6 +2152,19 @@
                   Team 2
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Live-Analyse wird hier dynamisch eingefügt -->
+          <div
+            id="match-prob"
+            class="prob-box cinematic-hud"
+            style="display: none"
+          >
+            <div
+              style="color: #8e8e93; font-size: 10px; text-align: center; padding: 5px; font-weight: 800;"
+            >
+              Spieler wählen für Prognose
             </div>
           </div>
           <div id="phase-3-result" style="display: none">
@@ -5427,23 +5508,23 @@
       window.showDailyWinnerInfo = () => {
         const msg =
           `Der Tagessieger (Session-MVP) wird durch Leistungspunkte ermittelt:\n\n` +
-          `🕹️ Pro Spiel: +3 (Teilnahme)\n` +
-          `🏆 Pro Sieg: +5\n` +
-          `📉 Pro Niederlage: -2\n` +
-          `🎯 Regulärer Sieg: +3\n` +
-          `⚡ Break-Sieg: +5\n` +
-          `🥶 Clutch (Gegner Rest 1): +3\n` +
-          `🕯️ Knappe Niederlage (Du Rest 1): +3\n` +
-          `🔥 Längste Serie: +2 pro Spiel\n` +
+          `🕹️ Pro Spiel: +1 (Teilnahme)\n` +
+          `🏆 Pro Sieg: +3\n` +
+          `📉 Pro Niederlage: -1\n` +
+          `🎯 Regulärer Sieg: +1\n` +
+          `⚡ Break-Sieg: +3\n` +
+          `🥶 Clutch (Gegner Rest 1): +2\n` +
+          `🕯️ Knappe Niederlage (Du Rest 1): +1\n` +
+          `🔥 Längste Serie: +1 pro Sieg in Serie\n` +
           `🕵️ Service-Klau: +2 (Sieg bei Gegner-Anstoß)\n` +
-          `🪓 Dominanz: +1 pro Ø Restkugel (Sieg)\n` +
-          `🗡️ Nemesis besiegt: +6\n` +
-          `🏆 Fame Achievement: +3\n\n` +
+          `🪓 Dominanz: +0.5 pro Ø Restkugel (Sieg)\n` +
+          `🗡️ Nemesis besiegt: +4\n` +
+          `🏆 Fame Achievement: +2\n\n` +
           `Abzüge:\n` +
-          `🐀 Sieg durch Foul: -3\n` +
-          `🤦 8er-Fehler: -3\n` +
-          `💀 Shame Achievement: -3\n` +
-          `🧟 Hoher Ø Rest bei Niederlage: -0.5 pro Ø Restkugel`;
+          `🐀 Sieg durch Foul: -1\n` +
+          `🤦 8er-Fehler: -2\n` +
+          `💀 Shame Achievement: -2\n` +
+          `🧟 Hoher Ø Rest bei Niederlage: -0.25 pro Ø Restkugel`;
         window.openErrorModal(msg, [], "Punkte-Logik", "🏆");
         document.getElementById("errorModalTitle").style.color =
           "var(--accent)";
@@ -6960,6 +7041,212 @@
         const c1 = prob1 > 50 ? "#34c759" : prob1 < 50 ? "#ff3b30" : "#ffffff";
         const c2 = prob2 > 50 ? "#34c759" : prob2 < 50 ? "#ff3b30" : "#ffffff";
 
+        // --- ERWEITERTE KI-COACH LOGIK ---
+        function generateAiBanter(d1, d2, n1, n2, r1, r2) {
+          if (!d1 || !d2) return "";
+
+          const rules = [
+            {
+              priority: 10,
+              condition: () => d1.currentStreak >= 4,
+              text: () => `<b>${n1}</b> ist eine Maschine! <span class="fire">🔥</span> Mit <b>${d1.currentStreak} Siegen in Folge</b> ist er der klare Favorit. Kann <b>${n2}</b> die Serie brechen?`
+            },
+            {
+              priority: 10,
+              condition: () => d2.currentStreak >= 4,
+              text: () => `Vorsicht, <b>${n2}</b> ist im Rausch! Eine <b>Siegesserie von ${d2.currentStreak}</b> spricht für sich. <b>${n1}</b> steht vor einer schweren Aufgabe.`
+            },
+            {
+              priority: 9,
+              condition: () => {
+                let nemesis1 = null, maxL1 = 0;
+                Object.entries(d1.headToHead || {}).forEach(([o, s]) => { if (s.l > maxL1) { maxL1 = s.l; nemesis1 = o; } });
+                return nemesis1 === n2 && maxL1 >= 5 && (d1.headToHead[n2].w / (d1.headToHead[n2].l || 1) < 0.3);
+              },
+              text: () => `Kopfsache! <b>${n1}</b> trifft auf seinen absoluten Angstgegner. Die Statistik lügt nicht – <b>${n2}</b> hat hier einen klaren psychologischen Vorteil.`
+            },
+            {
+              priority: 8,
+              condition: () => d1.winRateDelta20 > 15 && d1.games > 40,
+              text: () => `<b>${n1}</b> ist der Aufsteiger der Saison! Seine Siegquote ist zuletzt explodiert. <b>${n2}</b> muss aufpassen, nicht von der Welle überrollt zu werden.`
+            },
+            {
+              priority: 8,
+              condition: () => d1.maxLoseStreak <= 2 && d1.games > 60 && d2.maxLoseStreak > 4,
+              text: () => `Mentales Duell: <b>${n1}</b> ist ein Fels in der Brandung und kippt selten. <b>${n2}</b> hingegen ist anfällig für Negativ-Serien. Wer behält die Oberhand im Kopf?`
+            },
+            {
+              priority: 8,
+              condition: () => d1.avgKiller > 6.0 && d2.avgKiller < 4.5,
+              text: () => `Stil-Kollision: <b>${n1}</b> ist ein 'Abräumer', der den Tisch leerfegt. <b>${n2}</b> spielt eher auf Sicherheit. Wer kann dem Gegner sein Spiel aufzwingen?`
+            },
+            {
+              priority: 8,
+              condition: () => d2.avgKiller > 6.0 && d1.avgKiller < 4.5,
+              text: () => `Hier trifft Dominanz auf Taktik. <b>${n2}</b> will den Tisch schnell leeren, während <b>${n1}</b> auf den richtigen Moment wartet. Eine explosive Mischung.`
+            },
+            {
+              priority: 7,
+              condition: () => d1.clutchWins > d1.games * 0.1 && d2.lostBy8BallError / (d2.games - d2.wins || 1) > 0.05,
+              text: () => `Nervensache: <b>${n1}</b> ist für seine 'Clutch'-Momente bekannt. Das könnte gefährlich für <b>${n2}</b> werden, der tendenziell Fehler auf die 8 macht.`
+            },
+            {
+              priority: 7,
+              condition: () => d2.clutchWins > d2.games * 0.1 && d1.lostBy8BallError / (d1.games - d1.wins || 1) > 0.05,
+              text: () => `Das könnte im Endgame entschieden werden. <b>${n2}</b> hat Nerven aus Stahl, während <b>${n1}</b> aufpassen muss, die 8 nicht zu früh zu verschenken.`
+            },
+            {
+              priority: 6,
+              condition: () => d1.breakWins / (d1.games || 1) > 0.15 && d2.stolenServiceWins / (d2.opponentStartedGames || 1) < 0.1,
+              text: () => `Der Anstoß ist die Achillesferse von <b>${n2}</b>. Wenn <b>${n1}</b> seinen starken Break durchzieht, könnte das Match schnell vorbei sein.`
+            },
+            {
+              priority: 5,
+              condition: () => Math.abs(r1 - r2) > 150,
+              text: () => {
+                const stronger = r1 > r2 ? n1 : n2;
+                const weaker = r1 > r2 ? n2 : n1;
+                return `David gegen Goliath! Laut ELO ist <b>${stronger}</b> der haushohe Favorit. Aber der Druck liegt bei ihm – eine perfekte Chance für <b>${weaker}</b>.`
+              }
+            },
+            {
+              priority: 4,
+              condition: () => d1.winRate > 65 && d2.winRate < 45,
+              text: () => `Die Karriere-Statistik spricht eine klare Sprache für <b>${n1}</b>. Aber am Tisch zählt nur die Tagesform. Kann <b>${n2}</b> heute überraschen?`
+            },
+            { priority: 1, condition: () => true, text: () => `Die Prognose ist eng. Hier wird die <b>Tagesform</b> und mentale Stärke den Unterschied machen.` },
+            { priority: 1, condition: () => true, text: () => `Vergiss die Zahlen. Am Ende gewinnt der, der die <b>entscheidenden Bälle</b> locht und die Nerven behält.`},
+            { priority: 1, condition: () => true, text: () => `Ein klassisches Duell. Beide Spieler kennen sich gut. Es wird auf die Details ankommen.`}
+          ];
+
+          const applicableRules = rules.filter(rule => rule.condition());
+          const maxPriority = Math.max(...applicableRules.map(r => r.priority));
+          const topCandidates = applicableRules.filter(r => r.priority === maxPriority);
+
+          if (topCandidates.length > 0) {
+            const banterIndex = window.getFixedIndex(n1 + n2, topCandidates.length);
+            return topCandidates[banterIndex].text();
+          }
+          return "";
+        }
+
+        function generateAiXFactor(d1, d2, n1, n2) {
+            if (!d1 || !d2) return "";
+            const factors = [];
+
+            const h2h = d1.headToHead[n2];
+            if (h2h && (h2h.w + h2h.l) >= 5) {
+                const total = h2h.w + h2h.l;
+                const wr1 = Math.round((h2h.w / total) * 100);
+                if (wr1 > 65 || wr1 < 35) {
+                    factors.push({
+                        priority: 10,
+                        text: () => `Das <b>Kopf-an-Kopf</b> Duell. In den direkten Begegnungen steht es... <b>${h2h.w} : ${h2h.l} für ${wr1 > 50 ? n1 : n2}</b>`
+                    });
+                }
+            }
+
+            const clutchRate1 = d1.games > 0 ? (d1.clutchWins / d1.games) * 100 : 0;
+            if (clutchRate1 > 15) {
+                factors.push({
+                    priority: 9,
+                    text: () => `Die <b>Nervenstärke</b> von ${n1}. Er gewinnt über 15% seiner Spiele in der Crunchtime. <b>Eiskalt! 🥶</b>`
+                });
+            }
+
+            const breakRate1 = d1.games > 0 ? (d1.breakWins / d1.games) * 100 : 0;
+            if (breakRate1 > 20) {
+                factors.push({
+                    priority: 8,
+                    text: () => `Der <b>Anstoß</b> von ${n1}. Er gewinnt über 20% seiner Spiele direkt nach dem eigenen Break. <b>Blitzstart-Gefahr! ⚡</b>`
+                });
+            }
+
+            if (d1.eloDelta10 > 60) {
+                factors.push({
+                    priority: 9,
+                    text: () => `Die <b>aktuelle Form</b>. ${n1} hat in den letzten 10 Spielen... <b>+${Math.round(d1.eloDelta10)} ELO gewonnen! 🔥</b>`
+                });
+            }
+            if (d2.eloDelta10 < -60) {
+                factors.push({
+                    priority: 8,
+                    text: () => `Die <b>aktuelle Form</b>. ${n2} befindet sich in einem Formtief mit... <b>${Math.round(d2.eloDelta10)} ELO Verlust. 📉</b>`
+                });
+            }
+
+            if (factors.length === 0) {
+                const totalGames = d1.games + d2.games;
+                factors.push({
+                    priority: 1,
+                    text: () => `Die <b>Erfahrung</b>. Zusammen haben beide Spieler... <b>${totalGames} Spiele</b> auf dem Buckel.`
+                });
+            }
+
+            const maxPriority = Math.max(...factors.map(f => f.priority));
+            const topCandidates = factors.filter(f => f.priority === maxPriority);
+
+            if (topCandidates.length > 0) {
+                const factorIndex = window.getFixedIndex(n1 + n2 + "xfactor", topCandidates.length);
+                return topCandidates[factorIndex].text();
+            }
+            return "";
+        }
+
+        function generateAiTip(d1, d2, n1, n2, r1, r2) {
+            if (!d1 || !d2) return "";
+            const tips = [];
+
+            if (d2.lostBy8BallError / (d2.games - d2.wins || 1) > 0.1) {
+                tips.push(`<b>Tipp für ${n1}:</b> Setze <b>${n2}</b> unter Druck, wenn die 8 im Spiel ist. Hier passieren oft Fehler.`);
+            }
+            if (d1.lostBy8BallError / (d1.games - d1.wins || 1) > 0.1) {
+                tips.push(`<b>Tipp für ${n2}:</b> Halte das Spiel kompliziert. <b>${n1}</b> neigt unter Druck auf die 8 zu Fehlern.`);
+            }
+            if (d2.maxLoseStreak > 4 && d2.games > 30) {
+                tips.push(`<b>Tipp für ${n1}:</b> Dein Gegner <b>${n2}</b> ist anfällig für Tilt. Ein früher, dominanter Sieg könnte ihn mental brechen.`);
+            }
+            if (d1.breakWins / (d1.games || 1) > 0.2) {
+                tips.push(`<b>Tipp für ${n1}:</b> Ein starker Anstoß ist die halbe Miete. Kontrolliere das Spiel von Anfang an.`);
+            }
+            if (d2.stolenServiceWins / (d2.opponentStartedGames || 1) > 0.2) {
+                tips.push(`<b>Tipp für ${n1}:</b> <b>${n2}</b> ist ein Meister im "Service-Klau". Sei nach deinem Anstoß extrem wachsam.`);
+            }
+            if (d1.avgKillerLast20 > 6.0) {
+                tips.push(`<b>Tipp für ${n1}:</b> Deine offensive Form ist exzellent. Zögere nicht und mach den Tisch leer, wenn du die Chance siehst.`);
+            }
+            if (d2.avgRestLossLast20 > 4.0) {
+                tips.push(`<b>Tipp für ${n1}:</b> Gegen <b>${n2}</b> könnten Sicherheitsstöße der Schlüssel sein. Er neigt dazu, viele Kugeln auf dem Tisch zu lassen.`);
+            }
+            if (r2 - r1 > 100) {
+                tips.push(`<b>Tipp für ${n1}:</b> Als Underdog solltest du versuchen, das Spiel zu verlangsamen und <b>${n2}</b> zu Fehlern zu zwingen.`);
+            }
+            if (r1 - r2 > 100) {
+                tips.push(`<b>Tipp für ${n2}:</b> Du hast nichts zu verlieren. Aggressives, mutiges Spiel könnte den Favoriten <b>${n1}</b> aus dem Konzept bringen.`);
+            }
+
+            if (tips.length > 0) {
+                const tipIndex = window.getFixedIndex(n1 + n2 + "tip", tips.length);
+                return tips[tipIndex];
+            }
+            return "";
+        }
+
+        // --- NEUE KI-COACH BANTER LOGIK ---
+        let banterText = "";
+        let coachTip = "";
+        let xFactor = "";
+        if (window.careerStats && window.careerStats.pData) {
+          const d1 = window.careerStats.pData[n1];
+          const d2 = window.careerStats.pData[n2];
+
+          if (d1 && d2) {
+            banterText = generateAiBanter(d1, d2, n1, n2, r1, r2);
+            coachTip = generateAiTip(d1, d2, n1, n2, r1, r2);
+            xFactor = generateAiXFactor(d1, d2, n1, n2);
+          }
+        }
+
         b.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <span style="color:var(--accent); font-weight:900; font-size:9px; text-transform:uppercase; letter-spacing:1.5px; display:flex; align-items:center; gap:6px;"><div class="live-dot"></div> LIVE ANALYSE</span>
@@ -6982,6 +7269,13 @@
                         <span style="white-space:nowrap;">${l2}: ${prob2}%</span>
                     </div>
                 </div>
+                ${(banterText || xFactor || coachTip) ? `
+                    <div class="coach-container">
+                        ${banterText ? `<div class="prob-banter">💡 <b>Analyse:</b> ${banterText}</div>` : ""}
+                        ${xFactor ? `<div class="prob-banter x-factor-tip">🔑 <b>Der X-Faktor:</b> ${xFactor}</div>` : ""}
+                        ${coachTip ? `<div class="prob-banter coach-tip">🎯 <b>Taktik-Tipp:</b> ${coachTip}</div>` : ""}
+                    </div>
+                ` : ""}
                 `;
       };
 

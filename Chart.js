@@ -7534,20 +7534,20 @@ window.renderBillardStats = function (
         if (!d || d.todayGames === 0) return;
 
         // --- PERFORMANCE-INDEX (SESSION MVP) BERECHNUNG ---
-        let score = (d.todayGames || 0) * 3; // +3 pro Spiel (Teilnahme)
-        score += (d.todayWins || 0) * 5; // +5 pro Sieg
-        score += ((d.todayGames || 0) - (d.todayWins || 0)) * -2; // -2 pro Niederlage
+        let score = (d.todayGames || 0) * 1; // +1 pro Spiel (Teilnahme)
+        score += (d.todayWins || 0) * 3; // +3 pro Sieg
+        score += ((d.todayGames || 0) - (d.todayWins || 0)) * -1; // -1 pro Niederlage
 
-        score += (d.todayRegularWins || 0) * 3;
-        score += (d.todayBreakWins || 0) * 5;
-        score += (d.todayClutchWins || 0) * 3;
-        score += (d.todayCloseLosses || 0) * 3;
+        score += (d.todayRegularWins || 0) * 1;
+        score += (d.todayBreakWins || 0) * 3;
+        score += (d.todayClutchWins || 0) * 2;
+        score += (d.todayCloseLosses || 0) * 1;
 
-        score += (d.todayMaxStreak || 0) * 2;
+        score += (d.todayMaxStreak || 0) * 1; // +1 pro Sieg in der längsten Serie
         score += (d.todayStolenServiceWins || 0) * 2;
 
         if (d.todayWins > 0)
-          score += Math.round(d.todayKillerPoints / d.todayWins);
+          score += Math.round((d.todayKillerPoints / d.todayWins) * 0.5); // +0.5 pro Ø Restkugel
 
         let nemesis = null;
         let maxL = 0;
@@ -7563,16 +7563,16 @@ window.renderBillardStats = function (
           d.headToHead[nemesis] &&
           d.headToHead[nemesis].w > 0
         )
-          score += 6;
+          score += 4;
 
-        score -= (d.todayBlackWinsCount || 0) * 3;
-        score -= (d.todayLostBy8BallError || 0) * 3;
+        score -= (d.todayBlackWinsCount || 0) * 1;
+        score -= (d.todayLostBy8BallError || 0) * 2;
         // Abzug für hohe Ø Restkugeln bei Niederlagen
         if (
           d.todayAvgRest > 0 &&
           (d.todayGames || 0) - (d.todayWins || 0) > 0
         ) {
-          score += Math.round(d.todayAvgRest * -0.5); // Je höher der Ø Rest, desto mehr Abzug
+          score += Math.round(d.todayAvgRest * -0.25); // -0.25 pro Ø Restkugel
         }
 
         let fameCount = 0,
@@ -7591,7 +7591,7 @@ window.renderBillardStats = function (
         window.shamePool.forEach((ach) => {
           if (ach.cond(dAll) && !ach.cond(dBefore)) shameCount++;
         });
-        score += fameCount * 3 - shameCount * 3;
+        score += fameCount * 2 - shameCount * 2;
 
         // Store player score for later sorting
         playerScores.push({ player: p, score: score });
@@ -7604,43 +7604,82 @@ window.renderBillardStats = function (
         card.style.display = "block";
       });
 
-      if (playerScores.length > 0 && playerScores[0].score > 0) {
-        let winnerText = "";
-        const uniqueScores = [...new Set(playerScores.map((ps) => ps.score))]
-          .filter((score) => score > 0)
-          .slice(0, 3); // Get top 3 unique positive scores
+      const getStyledScore = (score) => {
+        if (score < 0) {
+          return `<span style="color:var(--error);">${score} Pkt.</span>`;
+        } else if (score > 0) {
+          return `<span style="color:#34c759;">+${score} Pkt.</span>`;
+        }
+        return `${score} Pkt.`;
+      };
+
+      if (playerScores.length > 0) {
+        let winnerPodiumHtml = "";
+        const uniqueScores = [...new Set(playerScores.map((ps) => ps.score))].slice(0, 3); // Get top 3 unique scores
+
+        const places = { 1: null, 2: null, 3: null };
 
         if (uniqueScores.length > 0) {
-          // 1st Place
-          const firstPlaceScore = uniqueScores[0];
-          const firstPlacePlayers = playerScores.filter(
-            (ps) => ps.score === firstPlaceScore,
-          );
-          winnerText +=
-            firstPlacePlayers.map((p) => p.player).join(" / ") +
-            ` (${firstPlaceScore} Pkt.)`;
+          const score = uniqueScores[0];
+          const players = playerScores.filter((ps) => ps.score === score).map((p) => p.player);
+          places[1] = { players, score };
+        }
+        if (uniqueScores.length > 1) {
+          const score = uniqueScores[1];
+          const players = playerScores.filter((ps) => ps.score === score).map((p) => p.player);
+          places[2] = { players, score };
+        }
+        if (uniqueScores.length > 2) {
+          const score = uniqueScores[2];
+          const players = playerScores.filter((ps) => ps.score === score).map((p) => p.player);
+          places[3] = { players, score };
+        }
 
-          // 2nd Place
-          if (uniqueScores.length > 1) {
-            const secondPlaceScore = uniqueScores[1];
-            const secondPlacePlayers = playerScores.filter(
-              (ps) => ps.score === secondPlaceScore,
-            );
-            winnerText += `<br><span style="font-size:10px; color:#8e8e93; font-weight:600;">2. Platz: ${secondPlacePlayers.map((p) => p.player).join(" / ")} (${secondPlaceScore} Pkt.)</span>`;
-          }
+        const getAvatarPodiumHtml = (players) => {
+          return players.map((p) => `<img src="${window.getAvatarUrl(p)}" onerror="this.style.display='none';">`).join("");
+        };
 
-          // 3rd Place
-          if (uniqueScores.length > 2) {
-            const thirdPlaceScore = uniqueScores[2];
-            const thirdPlacePlayers = playerScores.filter(
-              (ps) => ps.score === thirdPlaceScore,
-            );
-            winnerText += `<br><span style="font-size:10px; color:#8e8e93; font-weight:600;">3. Platz: ${thirdPlacePlayers.map((p) => p.player).join(" / ")} (${thirdPlaceScore} Pkt.)</span>`;
-          }
+        let podiumPlacesHtml = "";
+        if (places[2]) {
+          podiumPlacesHtml += `
+            <div class="podium-place p-2">
+              <div class="podium-rank">🥈</div>
+              <div class="podium-avatars">${getAvatarPodiumHtml(places[2].players)}</div>
+              <div class="podium-player-info">
+                <span class="podium-name">${places[2].players.join(" / ")}</span>
+                <span class="podium-score">(${getStyledScore(places[2].score)})</span>
+              </div>
+            </div>`;
+        }
+        if (places[1]) {
+          podiumPlacesHtml += `
+            <div class="podium-place p-1">
+              <div class="podium-rank">🥇</div>
+              <div class="podium-avatars">${getAvatarPodiumHtml(places[1].players)}</div>
+              <div class="podium-player-info">
+                <span class="podium-name">${places[1].players.join(" / ")}</span>
+                <span class="podium-score">(${getStyledScore(places[1].score)})</span>
+              </div>
+            </div>`;
+        }
+        if (places[3]) {
+          podiumPlacesHtml += `
+            <div class="podium-place p-3">
+              <div class="podium-rank">🥉</div>
+              <div class="podium-avatars">${getAvatarPodiumHtml(places[3].players)}</div>
+              <div class="podium-player-info">
+                <span class="podium-name">${places[3].players.join(" / ")}</span>
+                <span class="podium-score">(${getStyledScore(places[3].score)})</span>
+              </div>
+            </div>`;
+        }
+
+        if (podiumPlacesHtml) {
+          winnerPodiumHtml = `<div class="podium-container">${podiumPlacesHtml}</div>`;
         }
 
         dailyWinnerEls.forEach((el) => {
-          el.innerHTML = winnerText;
+          el.innerHTML = winnerPodiumHtml || "-";
         });
       } else {
         dailyWinnerEls.forEach((el) => {
@@ -7954,18 +7993,20 @@ window.renderBillardStats = function (
               const d = dayStats.pData[player];
               if (!d || d.todayGames === 0) return { player, score: 0 };
 
-              let score =
-                (d.todayGames || 0) * 1 +
-                (d.todayWins || 0) * 2 -
-                ((d.todayGames || 0) - (d.todayWins || 0));
+              let score = (d.todayGames || 0) * 1; // +1 pro Spiel (Teilnahme)
+              score += (d.todayWins || 0) * 3; // +3 pro Sieg
+              score += ((d.todayGames || 0) - (d.todayWins || 0)) * -1; // -1 pro Niederlage
+
               score += (d.todayRegularWins || 0) * 1;
-              score += (d.todayBreakWins || 0) * 2;
+              score += (d.todayBreakWins || 0) * 3;
               score += (d.todayClutchWins || 0) * 2;
               score += (d.todayCloseLosses || 0) * 1;
-              score += (d.todayMaxStreak || 0) * 1;
-              score += (d.todayStolenServiceWins || 0) * 1;
+
+              score += (d.todayMaxStreak || 0) * 1; // +1 pro Sieg in der längsten Serie
+              score += (d.todayStolenServiceWins || 0) * 2;
+
               if (d.todayWins > 0)
-                score += Math.round(d.todayKillerPoints / d.todayWins);
+                score += Math.round((d.todayKillerPoints / d.todayWins) * 0.5); // +0.5 pro Ø Restkugel
 
               let nemesis = null;
               let maxL = 0;
@@ -7986,15 +8027,15 @@ window.renderBillardStats = function (
                 d.headToHead[nemesis] &&
                 d.headToHead[nemesis].w > 0
               )
-                score += 3;
+                score += 4;
 
               score -= (d.todayBlackWinsCount || 0) * 1;
-              score -= (d.todayLostBy8BallError || 0) * 1;
+              score -= (d.todayLostBy8BallError || 0) * 2;
               if (
                 d.todayAvgRest > 0 &&
                 (d.todayGames || 0) - (d.todayWins || 0) > 0
               ) {
-                score += Math.round(d.todayAvgRest * -0.5);
+                score += Math.round(d.todayAvgRest * -0.25);
               }
 
               let fameCount = 0,
@@ -8014,11 +8055,10 @@ window.renderBillardStats = function (
                 if (ach.cond(dAllPlayer) && !ach.cond(dBeforePlayer))
                   shameCount++;
               });
-              score += fameCount * 1 - shameCount * 1;
+              score += fameCount * 2 - shameCount * 2;
 
               return { player, score };
             })
-            .filter((p) => p.score > 0)
             .sort((a, b) => b.score - a.score);
 
           // Eindeutige Scores für die Top 3 Plätze ermitteln
