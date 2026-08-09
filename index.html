@@ -2058,7 +2058,7 @@
               "
             >
               <div style="position:relative; display:flex; align-items:center; gap:12px;">
-                <label style="margin:0; z-index:2;">Livedauer</label>
+                <!-- <label style="margin:0; z-index:2;">Livedauer</label> -->
                 <div style="flex:1;">
                   <div id="matchDurationDisplay" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:24px; font-weight:900; color:var(--accent); padding:5px 0; text-shadow:0 0 10px rgba(255,204,0,0.3);">
                     00:00
@@ -4775,16 +4775,16 @@
     <div id="resultModal" class="modal">
       <div class="modal-backdrop"></div>
       <div class="modal-card" style="max-width: 380px">
-        <div id="result-step-1-balls" class="result-step">
+        <div id="result-step-1-balls" class="result-step active">
           <label id="winnerBallTypeLabel"
-            >Welche Kugeln hatte der Gewinner?</label
+            >Gewinner-Kugel auswählen</label
           >
           <div
             id="modal-ball-type-selector"
             style="display: flex; gap: 10px; margin-top: 15px"
           ></div>
         </div>
-        <div id="result-step-2-wintype" class="result-step">
+        <div id="result-step-2-wintype" class="result-step active">
           <label>Wie wurde das Spiel gewonnen?</label>
           <div
             id="modal-winType-chips"
@@ -4792,7 +4792,7 @@
             style="margin-top: 15px"
           ></div>
         </div>
-        <div id="result-step-3-leftover" class="result-step">
+        <div id="result-step-3-leftover" class="result-step active">
           <label>Restkugeln des Verlierers?</label>
           <div id="modal-leftover-grid" class="leftover-btn-grid"></div>
         </div>
@@ -4810,6 +4810,20 @@
             onclick="window.closeResultModal()"
           >
             Abbrechen
+          </button>
+          <button
+            style="
+              margin-top: 10px;
+              background: var(--accent);
+              color: #000;
+              border: none;
+              font-size: 14px;
+              width: 100%;
+            "
+            class="btn-save"
+            onclick="window.saveMatchFromModal()"
+          >
+            Speichern
           </button>
         </div>
       </div>
@@ -6080,7 +6094,7 @@
                 );
           const ballLabel = document.getElementById("winnerBallTypeLabel");
           if (ballLabel)
-            ballLabel.innerText = `Welche Kugeln hatte ${winnerName}?`;
+            ballLabel.innerText = `Gewinner-Kugel auswählen für ${winnerName}`;
         }
 
         // Cinematic Greeting
@@ -7259,7 +7273,7 @@
 
       // --- NEUE, ROBUSTE LOGIK FÜR ERGEBNIS-MODAL ---
 
-      // Öffnet das Modal und setzt es auf den ersten Schritt zurück
+      // Öffnet das Ergebnis-Modal mit allen Auswahloptionen auf einmal
       window.openResultModal = () => {
         const winnerName =
           window.winnerNum === 1
@@ -7277,13 +7291,19 @@
               ]
                 .filter(Boolean)
                 .join(" & ");
-
+ 
         const ballLabel = document.getElementById("winnerBallTypeLabel");
         if (ballLabel)
-          ballLabel.innerText = `Welche Kugeln hatte ${winnerName}?`;
-
-        document.getElementById("resultModal").style.display = "flex";
-        window.resultGoToStep(1);
+          ballLabel.innerText = `Gewinner-Kugel auswählen für ${winnerName}`;
+ 
+        const resultModal = document.getElementById("resultModal");
+        if (resultModal) {
+          resultModal.style.display = "flex";
+        }
+        window.clearResultModalSelections();
+        document.querySelectorAll(".result-step").forEach((s) => {
+          s.classList.add("active");
+        });
       };
 
       // Schließt das Modal und setzt die Gewinnerauswahl zurück, falls abgebrochen wird
@@ -7294,6 +7314,7 @@
         document
           .querySelectorAll(".win-btn")
           .forEach((btn) => btn.classList.remove("selected"));
+        window.clearResultModalSelections();
       };
 
       // Navigiert zwischen den Schritten im Modal
@@ -7308,7 +7329,34 @@
         if (targetStep) targetStep.classList.add("active");
       };
 
-      // Schritt 1: Kugelsorte wählen
+      const clearResultModalSelections = () => {
+        document
+          .querySelectorAll("#modal-ball-type-selector .ball-type-btn")
+          .forEach((btn) => btn.classList.remove("selected"));
+        document
+          .querySelectorAll("#modal-winType-chips .win-type-chip")
+          .forEach((chip) => chip.classList.remove("selected"));
+        document
+          .querySelectorAll("#modal-leftover-grid .leftover-btn")
+          .forEach((btn) => btn.classList.remove("selected"));
+      };
+ 
+      window.clearResultModalCategory = (category) => {
+        if (category === "ball") {
+          document
+            .querySelectorAll("#modal-ball-type-selector .ball-type-btn")
+            .forEach((btn) => btn.classList.remove("selected"));
+        } else if (category === "win") {
+          document
+            .querySelectorAll("#modal-winType-chips .win-type-chip")
+            .forEach((chip) => chip.classList.remove("selected"));
+        } else if (category === "leftover") {
+          document
+            .querySelectorAll("#modal-leftover-grid .leftover-btn")
+            .forEach((btn) => btn.classList.remove("selected"));
+        }
+      };
+ 
       window.selectBallTypeInModal = (type) => {
         const winnerSelectId =
           window.winnerNum === 1 ? "ballType1" : "ballType2";
@@ -7317,19 +7365,40 @@
         document.getElementById(winnerSelectId).value = type;
         document.getElementById(loserSelectId).value =
           type === "Voll" ? "Halb" : "Voll";
-        window.resultGoToStep(2);
+        window.clearResultModalCategory("ball");
+        document
+          .querySelectorAll("#modal-ball-type-selector .ball-type-btn")
+          .forEach((btn) => {
+            if (btn.textContent?.trim().includes(type)) btn.classList.add("selected");
+          });
       };
-
-      // Schritt 2: Sieg-Art wählen
+ 
       window.selectWinTypeInModal = (winType) => {
         document.getElementById("winType").value = winType;
-        window.resultGoToStep(3);
+        window.clearResultModalCategory("win");
+        document
+          .querySelectorAll("#modal-winType-chips .win-type-chip")
+          .forEach((chip) => {
+            if (chip.textContent?.trim().includes(winType.replace("Gegner-Fehler: ", "Foul: "))) {
+              chip.classList.add("selected");
+            }
+          });
       };
-
-      // Schritt 3: Restkugeln wählen -> Bestätigung anzeigen
+ 
       window.selectLeftoverInModal = (num) => {
         document.getElementById("leftover").value = num;
-        window.openConfirmationModal();
+        window.clearResultModalCategory("leftover");
+        document
+          .querySelectorAll("#modal-leftover-grid .leftover-btn")
+          .forEach((btn) => {
+            if (btn.textContent?.trim() === String(num)) btn.classList.add("selected");
+          });
+      };
+ 
+      window.saveMatchFromModal = async () => {
+        const resultModal = document.getElementById("resultModal");
+        if (resultModal) resultModal.style.display = "none";
+        await window.doSave();
       };
 
       // --- NEUE LOGIK FÜR INTUITIVE ERGEBNIS-ERFASSUNG ---
