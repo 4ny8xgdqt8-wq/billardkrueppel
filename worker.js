@@ -358,6 +358,7 @@ self.onmessage = function (e) {
       d.elo = Math.round(eloRatings[p]);
       d.eloGames = eloGamesCount[p];
       d.winRate = Math.round((d.wins / d.games) * 100);
+      d.maxWinRate = Math.max(d.maxWinRate || 0, d.winRate);
       d.avgKiller = d.wins > 0 ? d.killerPoints / d.wins : 0;
       d.avgRest = d.games - d.wins > 0 ? d.rest / (d.games - d.wins) : 0;
 

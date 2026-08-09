@@ -6258,6 +6258,7 @@ window.enrichStatsWithAchievements = function (
 
       // Abgeleitete Metriken für Erfolge
       d.winRate = Math.round((d.wins / d.games) * 100);
+      d.maxWinRate = Math.max(d.maxWinRate || 0, d.winRate);
       d.avgKiller = d.wins > 0 ? d.killerPoints / d.wins : 0;
       d.avgRest = d.games - d.wins > 0 ? d.rest / (d.games - d.wins) : 0;
       d.winRateLast30 =
@@ -6436,7 +6437,7 @@ window.enrichStatsWithAchievements = function (
 
         if (
           hasNow &&
-          (!dBefore.achTracker[ach.t] || !dBefore.achTracker[ach.t].active)
+          (!dBefore.achTracker[achKey] || !dBefore.achTracker[achKey].active)
         ) {
           recordNewAch(ach);
         }
@@ -9320,6 +9321,7 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
         : 0;
     d.eloGames = eloGamesCount[p];
     d.winRate = Math.round((d.wins / d.games) * 100);
+    d.maxWinRate = Math.max(d.maxWinRate || 0, d.winRate);
     d.avgKiller = d.wins > 0 ? d.killerPoints / d.wins : 0;
     d.avgRest = d.games - d.wins > 0 ? d.rest / (d.games - d.wins) : 0;
     d.todayCloseLosses = 0; // Init für Fallback
