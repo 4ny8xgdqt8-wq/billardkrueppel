@@ -241,6 +241,28 @@ window.dailyFamePool = [
     d: ["Gegner macht die Arbeit.", "Profitiert von Fehlern."],
     h: "Gewinne heute 2 Matches durch Gegner-Foul an der 8",
   },
+  {
+    k: "fame",
+    cond: (d) => d.todayFastestWin > 0 && d.todayFastestWin <= 480, // 8 Minuten
+    i: "🚀",
+    t: "Blitzschnell",
+    d: [
+      "Ein Sieg in unter 8 Minuten. Nicht schlecht!",
+      "Der Gegner kam nicht mal zum Nachdenken.",
+    ],
+    h: "Gewinne heute ein Spiel in weniger als 8 Minuten",
+  },
+  {
+    k: "fame",
+    cond: (d) => d.todayLongestMatch >= 900, // 15 Minuten
+    i: "⏳",
+    t: "Marathon-Mann (Heute)",
+    d: [
+      "Ausdauer bewiesen in einem epischen Match.",
+      "Dieses Spiel ging in die Verlängerung.",
+    ],
+    h: "Nimm heute an einem Match teil, das über 15 Minuten dauert",
+  },
 ];
 
 window.dailyShamePool = [
@@ -2081,6 +2103,51 @@ window.famePool = [
       "Das war eine weiße Weste.",
     ],
     h: "Spiele mindestens 5 Matches – und gewinne 100% davon",
+  },
+  {
+    cond: (d) => d.fastestWin > 0 && d.fastestWin <= 480, // 8 Minuten
+    i: "🚀",
+    t: "Blitz-König",
+    d: [
+      "Ein Sieg in unter 8 Minuten. Nicht schlecht!",
+      "Der Gegner kam nicht mal zum Nachdenken.",
+    ],
+    h: "Gewinne ein Spiel in weniger als 8 Minuten",
+    k: "fame",
+  },
+  {
+    cond: (d) => d.longestMatch >= 900, // 15 Minuten
+    i: "⏳",
+    t: "Marathon-Legende",
+    d: [
+      "Ausdauer bewiesen in einem epischen Match.",
+      "Dieses Spiel ging in die Verlängerung.",
+    ],
+    h: "Nimm an einem Match teil, das über 15 Minuten dauert",
+    k: "fame",
+  },
+  {
+    cond: (d) => d.avgWinDuration > 0 && d.avgWinDuration <= 600 && d.wins >= 5,
+    i: "⏱️",
+    t: "Effizienz-Meister",
+    d: [
+      "Gewinnt seine Spiele im Schnitt in unter 10 Minuten.",
+      "Keine Zeit zu verschwenden.",
+    ],
+    h: "Gewinne mind. 5 Spiele mit einer Ø Siegesdauer von unter 10 Minuten",
+    k: "fame",
+  },
+  {
+    cond: (d) =>
+      d.avgWinDuration > 0 &&
+      d.avgWinDuration <= 240 &&
+      d.avgKiller >= 6.0 &&
+      d.wins >= 10,
+    i: "🔪",
+    t: "Effizienz-Schlächter",
+    d: ["Gewinnt schnell und lässt nichts übrig.", "Eine tödliche Kombination aus Tempo und Dominanz."],
+    h: "Erreiche eine Ø Siegesdauer von unter 4 Min bei Ø 6+ Restkugeln (mind. 10 Siege)",
+    k: "fame",
   },
   {
     cond: (d) => d.wins >= 8 && d.breakWins >= 1,
@@ -6049,6 +6116,18 @@ window.enrichStatsWithAchievements = function (
         maxLoseStreak: 0,
         eloHistory: [],
         maxElo: 1000,
+        fastestWin: Infinity,
+        longestMatch: 0,
+        totalWinDuration: 0,
+        avgWinDuration: 0,
+        totalMatchDuration: 0,
+        avgMatchDuration: 0,
+        todayFastestWin: Infinity,
+        todayLongestMatch: 0,
+        todayTotalWinDuration: 0,
+        todayAvgWinDuration: 0,
+        todayTotalMatchDuration: 0,
+        todayAvgMatchDuration: 0,
         regularWins: 0,
         foul8Wins: 0,
         lostBy8BallError: 0,
@@ -6135,6 +6214,7 @@ window.enrichStatsWithAchievements = function (
     const losers = g.w == 1 ? p2A : p1A;
     const loserString = g.w == 1 ? String(g.p2 || "") : String(g.p1 || "");
     const rest = parseInt(g.l || 0);
+    const duration = g.durationSeconds ? Number(g.durationSeconds) : 0;
     const winnerString = String(g.w == 1 ? g.p1 : g.p2 || "").trim(); // Trimmed winner string for break check
     const breakerString = String(g.a || "").trim();
     // ELO Berechnung für die Simulation
@@ -6164,6 +6244,9 @@ window.enrichStatsWithAchievements = function (
       }
 
       d.games++;
+      d.longestMatch = Math.max(d.longestMatch, duration);
+      d.totalMatchDuration = (d.totalMatchDuration || 0) + duration;
+
       d.gameResultsHistory.push(isW ? 1 : 0);
       d.last30Games.push(isW ? 1 : 0);
       if (d.last30Games.length > 30) d.last30Games.shift();
@@ -6176,6 +6259,11 @@ window.enrichStatsWithAchievements = function (
         if (d.currentStreak > d.maxStreak) d.maxStreak = d.currentStreak;
         if (g.t?.includes("Schwarz") || g.t?.includes("Gegner-Fehler"))
           d.blackWinsCount++;
+
+        if (duration > 0) {
+          d.fastestWin = Math.min(d.fastestWin, duration);
+        }
+        d.totalWinDuration = (d.totalWinDuration || 0) + duration;
 
         // Break-Win Simulation
         if (g.t === "Regulär (8er gelocht)") {
@@ -6261,6 +6349,10 @@ window.enrichStatsWithAchievements = function (
       d.maxWinRate = Math.max(d.maxWinRate || 0, d.winRate);
       d.avgKiller = d.wins > 0 ? d.killerPoints / d.wins : 0;
       d.avgRest = d.games - d.wins > 0 ? d.rest / (d.games - d.wins) : 0;
+      d.avgWinDuration = d.wins > 0 ? d.totalWinDuration / d.wins : 0;
+      d.avgMatchDuration = d.games > 0 ? d.totalMatchDuration / d.games : 0;
+      if (d.fastestWin === Infinity) d.fastestWin = 0;
+
       d.winRateLast30 =
         d.last30Games.length > 0
           ? Math.round(
@@ -6315,23 +6407,29 @@ window.enrichStatsWithAchievements = function (
     if (g.d && g.d.startsWith(todayStr)) {
       players.forEach((p) => {
         if (!simPData[p]) return;
-        simPData[p].todayGames++;
+        const d = simPData[p];
+        d.todayGames++;
+        d.todayLongestMatch = Math.max(d.todayLongestMatch, duration);
+        d.todayTotalMatchDuration = (d.todayTotalMatchDuration || 0) + duration;
+
         if (winners.includes(p)) {
           // winners is already trimmed
-          simPData[p].todayWins++;
-          simPData[p].todayKillerPoints += rest;
-          simPData[p].todayMaxStreak = Math.max(
-            simPData[p].todayMaxStreak,
-            simPData[p].currentStreak,
-          );
+          d.todayWins++;
+          d.todayKillerPoints += rest;
+          d.todayMaxStreak = Math.max(d.todayMaxStreak, d.currentStreak);
+          if (duration > 0) {
+            d.todayFastestWin = Math.min(d.todayFastestWin, duration);
+          }
+          d.todayTotalWinDuration = (d.todayTotalWinDuration || 0) + duration;
+
           if (g.t?.includes("Schwarz") || g.t?.includes("Gegner-Fehler"))
-            simPData[p].todayBlackWinsCount++;
+            d.todayBlackWinsCount++;
           if (g.t === "Regulär (8er gelocht)") simPData[p].todayRegularWins++; // New
           if (g.t === "Gegner-Fehler: Foul bei der 8")
-            simPData[p].todayFoul8Wins++; // New
+            d.todayFoul8Wins++; // New
 
           if (breakerString && winners.includes(breakerString))
-            simPData[p].todayBreakWins++;
+            d.todayBreakWins++;
           if (rest === 1) simPData[p].todayClutchWins++;
 
           // Today Service thief
@@ -6341,17 +6439,23 @@ window.enrichStatsWithAchievements = function (
             !isMyTeamBreakerToday &&
             (winners.includes(breakerString) || losers.includes(breakerString))
           ) {
-            simPData[p].todayOpponentStartedGames++;
-            simPData[p].todayStolenServiceWins++;
+            d.todayOpponentStartedGames++;
+            d.todayStolenServiceWins++;
           }
         } else {
-          simPData[p].todayRest += rest;
+          d.todayRest += rest;
         }
-        simPData[p].todayAvgRest =
-          simPData[p].todayGames - simPData[p].todayWins > 0
-            ? simPData[p].todayRest /
-              (simPData[p].todayGames - simPData[p].todayWins)
+        d.todayAvgRest =
+          d.todayGames - d.todayWins > 0
+            ? d.todayRest / (d.todayGames - d.todayWins)
             : 0;
+        d.todayAvgWinDuration =
+          d.todayWins > 0 ? d.todayTotalWinDuration / d.todayWins : 0;
+        d.todayAvgMatchDuration =
+          d.todayGames > 0
+            ? d.todayTotalMatchDuration / d.todayGames
+            : 0;
+        if (d.todayFastestWin === Infinity) d.todayFastestWin = 0;
       });
     }
 
@@ -7958,6 +8062,125 @@ window.renderBillardStats = function (
       if (byId("stat-mauer")) byId("stat-mauer").innerText = "-";
     }
 
+    // Schnellster Sieg
+    let fastestWinVal = Infinity;
+    labels.forEach((p) => {
+      const d = res.pData[p];
+      const val = filterToday ? d.todayFastestWin : d.fastestWin;
+      if (val > 0 && val < fastestWinVal) {
+        fastestWinVal = val;
+      }
+    });
+
+    if (byId("stat-fastest-win")) {
+      if (fastestWinVal !== Infinity && fastestWinVal > 0) {
+        const fastestWinPlayers = labels.filter((p) => {
+          const val = filterToday ? res.pData[p].todayFastestWin : res.pData[p].fastestWin;
+          return val === fastestWinVal;
+        });
+        const mins = Math.floor(fastestWinVal / 60);
+        const secs = fastestWinVal % 60;
+        byId("stat-fastest-win").innerText = `${fastestWinPlayers.join(" / ")} (${String(mins).padStart(2, "0")}:${String(secs).padStart(2, '0')})`;
+      } else {
+        byId("stat-fastest-win").innerText = "-";
+      }
+    }
+
+    // Längstes Match
+    let longestMatchVal = 0;
+    labels.forEach((p) => {
+      const d = res.pData[p];
+      const val = filterToday ? d.todayLongestMatch : d.longestMatch;
+      if (val > longestMatchVal) {
+        longestMatchVal = val;
+      }
+    });
+
+    if (byId("stat-longest-match")) {
+      if (longestMatchVal > 0) {
+        const longestMatchPlayers = labels.filter((p) => (filterToday ? res.pData[p].todayLongestMatch : res.pData[p].longestMatch) === longestMatchVal);
+        const mins = Math.floor(longestMatchVal / 60);
+        const secs = longestMatchVal % 60;
+        byId("stat-longest-match").innerText = `${longestMatchPlayers.join(" / ")} (${String(mins).padStart(2, "0")}:${String(secs).padStart(2, '0')})`;
+      } else {
+        byId("stat-longest-match").innerText = "-";
+      }
+    }
+
+    // Ø Siegesdauer (Effizienz)
+    let bestAvgWinDur = Infinity;
+    const minWinsForAvg = filterToday ? 2 : 5;
+
+    labels.forEach((p) => {
+      const d = res.pData[p];
+      const wins = filterToday ? d.todayWins : d.wins;
+      const avgDur = filterToday ? d.todayAvgWinDuration : d.avgWinDuration;
+
+      if (wins >= minWinsForAvg && avgDur > 0 && avgDur < bestAvgWinDur) {
+        bestAvgWinDur = avgDur;
+      }
+    });
+
+    if (byId("stat-avg-win-duration")) {
+      if (bestAvgWinDur !== Infinity && bestAvgWinDur > 0) {
+        const efficientPlayers = labels.filter((p) => {
+          const d = res.pData[p];
+          const wins = filterToday ? d.todayWins : d.wins;
+          const avgDur = filterToday ? d.todayAvgWinDuration : d.avgWinDuration;
+          return wins >= minWinsForAvg && avgDur === bestAvgWinDur;
+        });
+        const mins = Math.floor(bestAvgWinDur / 60);
+        const secs = Math.round(bestAvgWinDur % 60);
+        byId("stat-avg-win-duration").innerText = `${efficientPlayers.join(" / ")} (${String(mins).padStart(2, "0")}:${String(secs).padStart(2, '0')})`;
+        
+        const subLabel = byId("stat-avg-win-duration-subtitle");
+        if (subLabel) {
+            subLabel.innerText = `Effizientester Sieger (min. ${minWinsForAvg} Siege)`;
+        }
+      } else {
+        byId("stat-avg-win-duration").innerText = "-";
+        const subLabel = byId("stat-avg-win-duration-subtitle");
+        if (subLabel) {
+            subLabel.innerText = `Effizientester Sieger (min. ${minWinsForAvg} Siege)`;
+        }
+      }
+    }
+
+    // Längste Ø Spieldauer (Taktiker)
+    let maxAvgMatchDur = 0;
+    const minGamesForAvgMatch = filterToday ? 2 : 5;
+
+    labels.forEach((p) => {
+      const d = res.pData[p];
+      const games = filterToday ? d.todayGames : d.games;
+      const avgDur = filterToday ? d.todayAvgMatchDuration : d.avgMatchDuration;
+
+      if (games >= minGamesForAvgMatch && avgDur > maxAvgMatchDur) {
+        maxAvgMatchDur = avgDur;
+      }
+    });
+
+    if (byId("stat-avg-match-duration")) {
+      if (maxAvgMatchDur > 0) {
+        const slowPlayers = labels.filter((p) => {
+          const d = res.pData[p];
+          const games = filterToday ? d.todayGames : d.games;
+          const avgDur = filterToday ? d.todayAvgMatchDuration : d.avgMatchDuration;
+          return games >= minGamesForAvgMatch && avgDur === maxAvgMatchDur;
+        });
+        const mins = Math.floor(maxAvgMatchDur / 60);
+        const secs = Math.round(maxAvgMatchDur % 60);
+        byId("stat-avg-match-duration").innerText = `${slowPlayers.join(" / ")} (${String(mins).padStart(2, "0")}:${String(secs).padStart(2, '0')})`;
+        
+        const subLabel = byId("stat-avg-match-duration-subtitle");
+        if (subLabel) subLabel.innerText = `Der Taktiker (min. ${minGamesForAvgMatch} Spiele)`;
+      } else {
+        byId("stat-avg-match-duration").innerText = "-";
+        const subLabel = byId("stat-avg-match-duration-subtitle");
+        if (subLabel) subLabel.innerText = `Der Taktiker (min. ${minGamesForAvgMatch} Spiele)`;
+      }
+    }
+
     // --- TAGESSIEG-STATISTIK (MODERNISIERT) ---
     const dailyWinsEl = byId("stat-daily-wins");
     if (dailyWinsEl) {
@@ -8905,6 +9128,9 @@ window.renderBillardStats = function (
     setText("stat-angst", "-");
     setText("stat-streak", "-");
     setText("stat-mauer", "-");
+    setText("stat-longest-match", "-");
+    setText("stat-avg-win-duration", "-");
+    setText("stat-avg-match-duration", "-");
     setText("stat-daily-wins", "-");
 
     const dailyWinnerCards = [
@@ -9055,6 +9281,18 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
         opponentStartedGames: 0,
         todayStolenServiceWins: 0,
         todayOpponentStartedGames: 0,
+        fastestWin: Infinity,
+        longestMatch: 0,
+        totalWinDuration: 0,
+        avgWinDuration: 0,
+        totalMatchDuration: 0,
+        avgMatchDuration: 0,
+        todayFastestWin: Infinity,
+        todayLongestMatch: 0,
+        todayTotalWinDuration: 0,
+        todayAvgWinDuration: 0,
+        todayTotalMatchDuration: 0,
+        todayAvgMatchDuration: 0,
       };
   };
 
@@ -9101,6 +9339,7 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
     const winners = g.w == 1 ? p1A : p2A;
     const losers = g.w == 1 ? p2A : p1A;
     const rest = parseInt(g.l || 0);
+    const duration = g.durationSeconds ? Number(g.durationSeconds) : 0;
 
     if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler")))
       blackWins++;
@@ -9176,12 +9415,22 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
       const isW = winners.includes(p);
       const d = pData[p];
       d.games++;
+      d.longestMatch = Math.max(d.longestMatch, duration);
+      d.totalMatchDuration += duration;
       d.gameResultsHistory.push(isW ? 1 : 0);
 
-      if (isTodayMatch) d.todayGames++;
+      if (isTodayMatch) {
+        d.todayGames++;
+        d.todayLongestMatch = Math.max(d.todayLongestMatch, duration);
+        d.todayTotalMatchDuration += duration;
+      }
 
       if (isW) {
         d.wins++;
+        if (duration > 0) {
+          d.fastestWin = Math.min(d.fastestWin, duration);
+        }
+        d.totalWinDuration += duration;
         d.killerPoints += rest;
         d.currentStreak++;
         d.loseStreak = 0;
@@ -9193,6 +9442,10 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
           d.todayKillerPoints += rest;
           d.todayMaxStreak = Math.max(d.todayMaxStreak, d.currentStreak);
           if (rest === 1) d.todayClutchWins++;
+          if (duration > 0) {
+            d.todayFastestWin = Math.min(d.todayFastestWin, duration);
+          }
+          d.todayTotalWinDuration += duration;
         }
 
         if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))) {
@@ -9359,6 +9612,18 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
       d.todayGames - d.todayWins > 0
         ? d.todayRest / (d.todayGames - d.todayWins)
         : 0;
+    d.avgWinDuration = d.wins > 0 ? d.totalWinDuration / d.wins : 0;
+    d.avgMatchDuration = d.games > 0 ? d.totalMatchDuration / d.games : 0;
+    if (d.fastestWin === Infinity) d.fastestWin = 0;
+
+    d.todayAvgWinDuration =
+      d.todayWins > 0 ? d.todayTotalWinDuration / d.todayWins : 0;
+    d.todayAvgMatchDuration =
+      d.todayGames > 0
+        ? d.todayTotalMatchDuration / d.todayGames
+        : 0;
+    if (d.todayFastestWin === Infinity) d.todayFastestWin = 0;
+
     d.eloGames = eloGamesCount[p];
     d.winRate = Math.round((d.wins / d.games) * 100);
     d.maxWinRate = Math.max(d.maxWinRate || 0, d.winRate);

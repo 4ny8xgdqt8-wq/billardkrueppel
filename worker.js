@@ -68,6 +68,10 @@ self.onmessage = function (e) {
           last20Losses: [],
           last20WinsKiller: [],
           gameResultsHistory: [],
+        fastestWin: Infinity,
+        longestMatch: 0,
+        totalWinDuration: 0,
+        totalMatchDuration: 0,
         };
     };
 
@@ -107,6 +111,7 @@ self.onmessage = function (e) {
       const loserStr = String(g.w == 1 ? g.p2 : g.p1 || "").trim();
       const breakerString = String(g.a || "").trim();
       const rest = parseInt(g.l || 0);
+      const duration = g.durationSeconds ? Number(g.durationSeconds) : 0;
 
       if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler")))
         blackWins++;
@@ -184,6 +189,10 @@ self.onmessage = function (e) {
           pData[p].closeWins++;
           pData[p].dramaWins++;
         }
+        if (duration > 0) {
+          pData[p].fastestWin = Math.min(pData[p].fastestWin, duration);
+        }
+        pData[p].totalWinDuration += duration;
       });
 
       losers.forEach((p) => {
@@ -206,6 +215,8 @@ self.onmessage = function (e) {
         const isW = winners.includes(p);
         const d = pData[p];
         d.games++;
+        d.longestMatch = Math.max(d.longestMatch, duration);
+        d.totalMatchDuration += duration;
 
         // Historie für Trends pflegen
         d.gameResultsHistory.push(isW ? 1 : 0);
@@ -361,6 +372,10 @@ self.onmessage = function (e) {
       d.maxWinRate = Math.max(d.maxWinRate || 0, d.winRate);
       d.avgKiller = d.wins > 0 ? d.killerPoints / d.wins : 0;
       d.avgRest = d.games - d.wins > 0 ? d.rest / (d.games - d.wins) : 0;
+      d.avgWinDuration = d.wins > 0 ? d.totalWinDuration / d.wins : 0;
+      d.avgMatchDuration = d.games > 0 ? d.totalMatchDuration / d.games : 0;
+      // Reset if no wins, to avoid Infinity being passed around
+      if (d.fastestWin === Infinity) d.fastestWin = 0;
 
       // Metriken für Erfolge berechnen
       if (d.eloHistory.length >= 10) {
