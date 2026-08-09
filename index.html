@@ -7058,12 +7058,67 @@
             },
             {
               priority: 9,
+              condition: () => d1.currentLoseStreak >= 3,
+              text: () => `<b>${n1}</b> steckt in einer Krise. Eine Niederlagenserie von <b>${d1.currentLoseStreak}</b> nagt am Selbstvertrauen. Die perfekte Chance für <b>${n2}</b>?`
+            },
+            {
+              priority: 9,
+              condition: () => d2.currentLoseStreak >= 3,
+              text: () => `<b>${n2}</b> ist angeschlagen und kommt mit <b>${d2.currentLoseStreak} Niederlagen in Folge</b>. Kann <b>${n1}</b> den Druck weiter erhöhen?`
+            },
+            {
+              priority: 9,
               condition: () => {
                 let nemesis1 = null, maxL1 = 0;
                 Object.entries(d1.headToHead || {}).forEach(([o, s]) => { if (s.l > maxL1) { maxL1 = s.l; nemesis1 = o; } });
                 return nemesis1 === n2 && maxL1 >= 5 && (d1.headToHead[n2].w / (d1.headToHead[n2].l || 1) < 0.3);
               },
               text: () => `Kopfsache! <b>${n1}</b> trifft auf seinen absoluten Angstgegner. Die Statistik lügt nicht – <b>${n2}</b> hat hier einen klaren psychologischen Vorteil.`
+            },
+            {
+              priority: 8,
+              condition: () => d1.winRate > 60 && d2.headToHead[n1]?.w > d2.headToHead[n1]?.l,
+              text: () => `Interessante Konstellation: <b>${n1}</b> ist auf dem Papier der stärkere Spieler, aber <b>${n2}</b> hat im direkten Duell die Nase vorn. Ein echter Prüfstein.`
+            },
+            {
+              priority: 8,
+              condition: () => d2.winRate > 60 && d1.headToHead[n2]?.w > d1.headToHead[n2]?.l,
+              text: () => `Statistik vs. Realität: <b>${n2}</b> hat die bessere Karriere-Quote, aber <b>${n1}</b> scheint sein Kryptonit zu sein. Wer setzt sich heute durch?`
+            },
+            {
+              priority: 8,
+              condition: () => d1.breakWins / (d1.games || 1) > 0.15 && d2.clutchWins / (d2.games || 1) > 0.1,
+              text: () => `Spezialisten-Duell: <b>${n1}</b> will mit einem starken Break den schnellen Sieg, während <b>${n2}</b> in der Crunchtime aufblüht. Wer kann dem Spiel seinen Stempel aufdrücken?`
+            },
+            {
+              priority: 8,
+              condition: () => d1.winRateDelta20 > 10 && d2.winRateDelta20 < -10,
+              text: () => `Form-Schere! Während <b>${n1}</b> im Aufwind ist, kämpft <b>${n2}</b> mit der Form. Ein klares Momentum-Duell.`
+            },
+            {
+              priority: 8,
+              condition: () => d2.winRateDelta20 > 10 && d1.winRateDelta20 < -10,
+              text: () => `Die Vorzeichen sind klar: <b>${n2}</b> reitet eine Erfolgswelle, während <b>${n1}</b> nach seiner Form sucht. Kann der Underdog überraschen?`
+            },
+            {
+              priority: 8,
+              condition: () => Math.abs(d1.eloDelta10) > 80 && Math.abs(d2.eloDelta10) < 30,
+              text: () => `Hier trifft Volatilität auf Konstanz. <b>${n1}</b> ist eine Wundertüte – an guten Tagen Weltklasse, an schlechten eine Katastrophe. <b>${n2}</b> spielt dagegen sein Spiel solide runter.`
+            },
+            {
+              priority: 8,
+              condition: () => Math.abs(d2.eloDelta10) > 80 && Math.abs(d1.eloDelta10) < 30,
+              text: () => `<b>${n2}</b> ist unberechenbar und für jede Überraschung gut. <b>${n1}</b> muss versuchen, mit seiner konstanten Art das Spiel zu kontrollieren und Fehler zu erzwingen.`
+            },
+            {
+              priority: 8,
+              condition: () => d1.avgRestLossLast20 <= 2.5 && d2.avgKillerLast20 > 6.0 && d1.games > 20 && d2.games > 20,
+              text: () => `Offensive gegen Defensive! <b>${n2}</b> ist ein gefürchteter Abräumer, aber <b>${n1}</b> ist bekannt dafür, den Tisch 'dicht' zu machen. Wer setzt sich durch?`
+            },
+            {
+              priority: 8,
+              condition: () => d2.avgRestLossLast20 <= 2.5 && d1.avgKillerLast20 > 6.0 && d2.games > 20 && d1.games > 20,
+              text: () => `Ein Duell der Stile: <b>${n1}</b> will den schnellen K.O., während <b>${n2}</b> eine defensive Festung ist. Geduld wird hier entscheidend sein.`
             },
             {
               priority: 8,
@@ -7094,6 +7149,16 @@
               priority: 7,
               condition: () => d2.clutchWins > d2.games * 0.1 && d1.lostBy8BallError / (d1.games - d1.wins || 1) > 0.05,
               text: () => `Das könnte im Endgame entschieden werden. <b>${n2}</b> hat Nerven aus Stahl, während <b>${n1}</b> aufpassen muss, die 8 nicht zu früh zu verschenken.`
+            },
+            {
+              priority: 7,
+              condition: () => d1.blackWinsCount / (d1.wins || 1) > 0.3 && d1.wins > 10,
+              text: () => `<b>${n1}</b> ist als 'Abstauber' bekannt und gewinnt oft durch Fehler des Gegners. <b>${n2}</b> muss heute extrem sauber spielen.`
+            },
+            {
+              priority: 7,
+              condition: () => d1.stolenServiceWins / (d1.opponentStartedGames || 1) > 0.25 && d1.games > 20,
+              text: () => `Der Anstoßvorteil ist gegen <b>${n1}</b> relativ. Er ist ein Meister darin, das Spiel zu stehlen, selbst wenn der Gegner breakt.`
             },
             {
               priority: 6,
@@ -7141,16 +7206,48 @@
                 if (wr1 > 65 || wr1 < 35) {
                     factors.push({
                         priority: 10,
-                        text: () => `Das <b>Kopf-an-Kopf</b> Duell. In den direkten Begegnungen steht es... <b>${h2h.w} : ${h2h.l} für ${wr1 > 50 ? n1 : n2}</b>`
+                        text: () => `Das <b>Kopf-an-Kopf-Duell</b>. In direkten Begegnungen steht es... <b>${h2h.w} : ${h2h.l} für ${wr1 > 50 ? n1 : n2}</b>.`
                     });
                 }
+            }
+
+            const uKey = [n1, n2].sort().join("|");
+            const meetingCount = window.careerStats?.aggregates?.meetings?.[uKey] || 0;
+            if (meetingCount > 20) {
+                factors.push({
+                    priority: 10,
+                    text: () => `Die <b>Rivalität</b>. Mit über <b>${meetingCount} direkten Duellen</b> kennen sich beide in- und auswendig. Hier entscheiden Kleinigkeiten. ⚔️`
+                });
+            }
+
+            const errRate1 = d1.games > 0 ? (d1.lostBy8BallError / (d1.games - d1.wins || 1)) * 100 : 0;
+            if (errRate1 > 15) {
+                factors.push({
+                    priority: 9,
+                    text: () => `Der <b>8-Ball-Fluch</b>. Über <b>15% der Niederlagen</b> von ${n1} entstehen durch einen Fehler auf die 8. Ein mentaler Knackpunkt? 😬`
+                });
+            }
+
+            const stolenRate1 = d1.opponentStartedGames > 0 ? (d1.stolenServiceWins / d1.opponentStartedGames) * 100 : 0;
+            if (stolenRate1 > 25) {
+                factors.push({
+                    priority: 9,
+                    text: () => `Der <b>Service-Klau</b>. ${n1} gewinnt <b>${Math.round(stolenRate1)}% der Spiele</b>, wenn der Gegner anstößt. Der Anstoßvorteil ist hier relativ. 🕵️`
+                });
+            }
+
+            if (d1.avgKiller > 6.5) {
+                factors.push({
+                    priority: 8,
+                    text: () => `Die <b>Killer-Mentalität</b>. Mit Ø <b>${d1.avgKiller.toFixed(1)} Restkugeln</b> beendet ${n1} Spiele, bevor sie richtig anfangen. 🪓`
+                });
             }
 
             const clutchRate1 = d1.games > 0 ? (d1.clutchWins / d1.games) * 100 : 0;
             if (clutchRate1 > 15) {
                 factors.push({
                     priority: 9,
-                    text: () => `Die <b>Nervenstärke</b> von ${n1}. Er gewinnt über 15% seiner Spiele in der Crunchtime. <b>Eiskalt! 🥶</b>`
+                    text: () => `Die <b>Nervenstärke</b> von ${n1}. Er gewinnt über 15% seiner Spiele in der Crunchtime. Eiskalt! 🥶`
                 });
             }
 
@@ -7158,7 +7255,7 @@
             if (breakRate1 > 20) {
                 factors.push({
                     priority: 8,
-                    text: () => `Der <b>Anstoß</b> von ${n1}. Er gewinnt über 20% seiner Spiele direkt nach dem eigenen Break. <b>Blitzstart-Gefahr! ⚡</b>`
+                    text: () => `Der <b>Anstoß</b> von ${n1}. Er gewinnt über 20% seiner Spiele direkt nach dem eigenen Break. Blitzstart-Gefahr! ⚡`
                 });
             }
 
@@ -7172,6 +7269,27 @@
                 factors.push({
                     priority: 8,
                     text: () => `Die <b>aktuelle Form</b>. ${n2} befindet sich in einem Formtief mit... <b>${Math.round(d2.eloDelta10)} ELO Verlust. 📉</b>`
+                });
+            }
+
+            if (d1.maxLoseStreak <= 1 && d1.games > 80) {
+                factors.push({
+                    priority: 9,
+                    text: () => `Die <b>mentale Festung</b>. ${n1} hat eine maximale Niederlagenserie von <b>nur ${d1.maxLoseStreak}</b>. Dieser Spieler bricht nicht. 🧘`
+                });
+            }
+
+            if (d1.winRateLast30 > 75 && d1.games > 40) {
+                factors.push({
+                    priority: 9,
+                    text: () => `Die <b>Form der letzten 30 Spiele</b>. ${n1} hat eine Siegquote von über <b>75%</b> in diesem Zeitraum. Absolut im Flow. 🔥`
+                });
+            }
+
+            if (d1.dramaWins / (d1.games || 1) > 0.1 && d1.games > 30) {
+                factors.push({
+                    priority: 8,
+                    text: () => `Die <b>Drama-Quote</b>. ${n1} gewinnt über <b>10% seiner Spiele</b>, wenn beide im Endgame sind. Ein echter Krimi-Spezialist. 🎭`
                 });
             }
 
@@ -7198,31 +7316,63 @@
             const tips = [];
 
             if (d2.lostBy8BallError / (d2.games - d2.wins || 1) > 0.1) {
-                tips.push(`<b>Tipp für ${n1}:</b> Setze <b>${n2}</b> unter Druck, wenn die 8 im Spiel ist. Hier passieren oft Fehler.`);
+                tips.push(`<b>${n1}:</b> Setze <b>${n2}</b> unter Druck, wenn die 8 im Spiel ist. Hier passieren oft Fehler.`);
             }
             if (d1.lostBy8BallError / (d1.games - d1.wins || 1) > 0.1) {
-                tips.push(`<b>Tipp für ${n2}:</b> Halte das Spiel kompliziert. <b>${n1}</b> neigt unter Druck auf die 8 zu Fehlern.`);
+                tips.push(`<b>${n2}:</b> Halte das Spiel kompliziert. <b>${n1}</b> neigt unter Druck auf die 8 zu Fehlern.`);
             }
             if (d2.maxLoseStreak > 4 && d2.games > 30) {
-                tips.push(`<b>Tipp für ${n1}:</b> Dein Gegner <b>${n2}</b> ist anfällig für Tilt. Ein früher, dominanter Sieg könnte ihn mental brechen.`);
+                tips.push(`<b>${n1}:</b> Dein Gegner <b>${n2}</b> ist anfällig für Tilt. Ein früher, dominanter Sieg könnte ihn mental brechen.`);
+            }
+            if (d1.currentLoseStreak >= 3) {
+                tips.push(`<b>${n2}:</b> Dein Gegner ist verunsichert. Ein aggressiver Start und früher Druck könnten ihn komplett aus dem Konzept bringen.`);
+            }
+            if (d1.winRateDelta20 < -15) {
+                tips.push(`<b>${n2}:</b> ${n1} ist in einem Formtief. Spiel geduldig und warte auf die Fehler, die unweigerlich kommen werden.`);
+            }
+            if (d2.currentStreak >= 4) {
+                tips.push(`<b>${n1}:</b> Dein Gegner ist im Rausch. Versuch, seinen Rhythmus mit einem unerwarteten Safety zu brechen und lass ihn nicht ins Spiel kommen.`);
+            }
+            if (d2.avgKiller < 4.5 && d2.games > 20) {
+                tips.push(`<b>${n1}:</b> <b>${n2}</b> lässt oft Chancen liegen. Spiel auf Sicherheit, warte auf deine Chance und bestrafe seine Fehler konsequent.`);
+            }
+            if (d2.avgRestLossLast20 <= 2.0 && d2.games > 30) {
+                tips.push(`<b>${n1}:</b> Du spielst gegen eine defensive Mauer. Du musst aggressive, präzise Stöße wagen, um die Verteidigung zu durchbrechen. Ein reines Sicherheitsspiel wird nicht reichen.`);
+            }
+            if (d2.clutchWins / (d2.games || 1) < 0.05 && d2.games > 20) {
+                tips.push(`<b>${n1}:</b> Halte das Spiel eng! <b>${n2}</b> zeigt in der Crunchtime Nerven und gewinnt selten knappe Spiele.`);
             }
             if (d1.breakWins / (d1.games || 1) > 0.2) {
-                tips.push(`<b>Tipp für ${n1}:</b> Ein starker Anstoß ist die halbe Miete. Kontrolliere das Spiel von Anfang an.`);
+                tips.push(`<b>${n1}:</b> Ein starker Anstoß ist die halbe Miete. Kontrolliere das Spiel von Anfang an.`);
             }
             if (d2.stolenServiceWins / (d2.opponentStartedGames || 1) > 0.2) {
-                tips.push(`<b>Tipp für ${n1}:</b> <b>${n2}</b> ist ein Meister im "Service-Klau". Sei nach deinem Anstoß extrem wachsam.`);
+                tips.push(`<b>${n1}:</b> <b>${n2}</b> ist ein Meister im "Service-Klau". Sei nach deinem Anstoß extrem wachsam.`);
             }
             if (d1.avgKillerLast20 > 6.0) {
-                tips.push(`<b>Tipp für ${n1}:</b> Deine offensive Form ist exzellent. Zögere nicht und mach den Tisch leer, wenn du die Chance siehst.`);
+                tips.push(`<b>${n1}:</b> Deine offensive Form ist exzellent. Zögere nicht und mach den Tisch leer, wenn du die Chance siehst.`);
             }
             if (d2.avgRestLossLast20 > 4.0) {
-                tips.push(`<b>Tipp für ${n1}:</b> Gegen <b>${n2}</b> könnten Sicherheitsstöße der Schlüssel sein. Er neigt dazu, viele Kugeln auf dem Tisch zu lassen.`);
+                tips.push(`<b>${n1}:</b> Gegen <b>${n2}</b> könnten Sicherheitsstöße der Schlüssel sein. Er neigt dazu, viele Kugeln auf dem Tisch zu lassen.`);
+            }
+            let nemesis1 = null, maxL1 = 0;
+            Object.entries(d1.headToHead || {}).forEach(([o, s]) => { if (s.l > maxL1) { maxL1 = s.l; nemesis1 = o; } });
+            if (nemesis1 === n2 && maxL1 >= 5) {
+                tips.push(`<b>${n1}:</b> Du spielst gegen deinen Angstgegner. Vergiss die Statistik! Konzentrier dich auf dein Spiel und nutze jede kleine Chance.`);
+            }
+            if (d2.breakWins / (d2.games || 1) > 0.2) {
+                tips.push(`<b>${n1}:</b> Nach dem Anstoß von <b>${n2}</b> ist höchste Vorsicht geboten. Ein schneller Safety könnte seinen Rhythmus brechen.`);
+            }
+            if (d1.stolenServiceWins / (d1.opponentStartedGames || 1) < 0.05 && d1.games > 20) {
+                tips.push(`<b>${n2}:</b> ${n1} ist schwach, wenn er nicht selbst anstößt. Nutze deinen Anstoß konsequent, um das Spiel zu kontrollieren.`);
+            }
+            if (d1.headToHead[n2]?.w > d1.headToHead[n2]?.l && d1.headToHead[n2]?.w > 3) {
+                tips.push(`<b>${n1}:</b> Du bist der Angstgegner. Spiel selbstbewusst, dominiere den Tisch und zeig <b>${n2}</b>, warum die Statistik so ist, wie sie ist.`);
             }
             if (r2 - r1 > 100) {
-                tips.push(`<b>Tipp für ${n1}:</b> Als Underdog solltest du versuchen, das Spiel zu verlangsamen und <b>${n2}</b> zu Fehlern zu zwingen.`);
+                tips.push(`<b>${n1}:</b> Als Underdog solltest du versuchen, das Spiel zu verlangsamen und <b>${n2}</b> zu Fehlern zu zwingen.`);
             }
             if (r1 - r2 > 100) {
-                tips.push(`<b>Tipp für ${n2}:</b> Du hast nichts zu verlieren. Aggressives, mutiges Spiel könnte den Favoriten <b>${n1}</b> aus dem Konzept bringen.`);
+                tips.push(`<b>${n2}:</b> Du hast nichts zu verlieren. Aggressives, mutiges Spiel könnte den Favoriten <b>${n1}</b> aus dem Konzept bringen.`);
             }
 
             if (tips.length > 0) {
@@ -7273,7 +7423,7 @@
                     <div class="coach-container">
                         ${banterText ? `<div class="prob-banter">💡 <b>Analyse:</b> ${banterText}</div>` : ""}
                         ${xFactor ? `<div class="prob-banter x-factor-tip">🔑 <b>Der X-Faktor:</b> ${xFactor}</div>` : ""}
-                        ${coachTip ? `<div class="prob-banter coach-tip">🎯 <b>Taktik-Tipp:</b> ${coachTip}</div>` : ""}
+                        ${coachTip ? `<div class="prob-banter coach-tip">🎯 <b>Taktik-Tipp für</b>${coachTip}</div>`:""}
                     </div>
                 ` : ""}
                 `;
