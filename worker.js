@@ -72,6 +72,7 @@ self.onmessage = function (e) {
         longestMatch: 0,
         totalWinDuration: 0,
         totalMatchDuration: 0,
+        breakGames: 0,
         };
     };
 
@@ -115,6 +116,19 @@ self.onmessage = function (e) {
 
       if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler")))
         blackWins++;
+
+      // Track break games per player
+      if (breakerString) {
+        if (p1A.includes(breakerString)) {
+          p1A.forEach(p => {
+            if (pData[p]) pData[p].breakGames++;
+          });
+        } else if (p2A.includes(breakerString)) {
+          p2A.forEach(p => {
+            if (pData[p]) pData[p].breakGames++;
+          });
+        }
+      }
 
       // Global Break Win Check
       if (breakerString && winners.includes(breakerString)) {

@@ -6218,6 +6218,27 @@ window.enrichStatsWithAchievements = function (
     const winnerString = String(g.w == 1 ? g.p1 : g.p2 || "").trim(); // Trimmed winner string for break check
     const breakerString = String(g.a || "").trim();
     // ELO Berechnung für die Simulation
+
+    // Track break games
+    if (breakerString) {
+        const isMatchFromToday = g.d && g.d.startsWith(todayStr);
+        if (p1A.includes(breakerString)) {
+            p1A.forEach(p => {
+                if (simPData[p]) {
+                    simPData[p].breakGames = (simPData[p].breakGames || 0) + 1;
+                    if (isMatchFromToday) simPData[p].todayBreakGames = (simPData[p].todayBreakGames || 0) + 1;
+                }
+            });
+        } else if (p2A.includes(breakerString)) {
+            p2A.forEach(p => {
+                if (simPData[p]) {
+                    simPData[p].breakGames = (simPData[p].breakGames || 0) + 1;
+                    if (isMatchFromToday) simPData[p].todayBreakGames = (simPData[p].todayBreakGames || 0) + 1;
+                }
+            });
+        }
+    }
+
     const avg1 = p1A.reduce((s, p) => s + getElo(p), 0) / (p1A.length || 1);
     const avg2 = p2A.reduce((s, p) => s + getElo(p), 0) / (p2A.length || 1);
     const exp1 = 1 / (1 + Math.pow(10, (avg2 - avg1) / 400));
@@ -8320,9 +8341,9 @@ window.renderBillardStats = function (
       const dailyWinsHtml =
         sortedPlayers.length > 0
           ? sortedPlayers
-              .map(
+              .map( // FIX: Animation delay was wrong
                 (p, idx) => `
-                <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding: 10px; border-radius:16px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.25 + idx * 0.05}s;">
+                <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding: 10px; border-radius:16px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.27 + idx * 0.05}s;">
                     <div style="display:flex; align-items:center; gap:10px;">
                         <div style="font-size:14px; font-weight:900; color:var(--accent); min-width:20px; text-align:center;">${idx + 1}.</div>
                         <img src="${window.getAvatarUrl(p.name)}" style="width:30px; height:30px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
@@ -8459,6 +8480,33 @@ window.renderBillardStats = function (
           topMatchups.join(" / ") + ` (${maxWins} Siege)`;
     } else {
       if (byId("stat-angst")) byId("stat-angst").innerText = "-";
+    }
+
+    // --- ANSTOSS-STATISTIK ---
+    const breakCountsEl = byId("stat-break-counts");
+    if (breakCountsEl) {
+        const breakCounts = labels.map(p => {
+            const d = res.pData[p];
+            const count = filterToday ? d.todayBreakGames || 0 : d.breakGames || 0;
+            return { p, count };
+        }).sort((a, b) => b.count - a.count);
+
+        if (breakCounts.some(item => item.count > 0)) {
+            breakCountsEl.innerHTML = breakCounts.map((item, idx) => `
+                <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding: 10px; border-radius:16px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.22 + idx * 0.05}s;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="font-size:14px; font-weight:900; color:var(--accent); min-width:20px; text-align:center;">${idx + 1}.</div>
+                        <img src="${window.getAvatarUrl(item.p)}" style="width:30px; height:30px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size:13px; font-weight:800; color:#fff;">${item.p}</div>
+                    </div>
+                    <div style="font-size:13px; font-weight:900; color: #fff;">
+                        ${item.count}x
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            breakCountsEl.innerHTML = '<div style="text-align:center; color:#8e8e93; font-size:10px; padding-top: 5px;">Keine Anstoß-Daten vorhanden.</div>';
+        }
     }
 
     // --- DIREKTE DUELLE (Dominanz) ---
@@ -9127,6 +9175,7 @@ window.renderBillardStats = function (
     setText("stat-session-record", "-");
     setText("stat-angst", "-");
     setText("stat-streak", "-");
+    if (byId("stat-break-counts")) byId("stat-break-counts").innerHTML = "";
     setText("stat-mauer", "-");
     setText("stat-longest-match", "-");
     setText("stat-avg-win-duration", "-");
@@ -9246,6 +9295,7 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
         killerPoints: 0,
         blackWinsCount: 0,
         breakWins: 0,
+        breakGames: 0,
         loseStreak: 0,
         maxLoseStreak: 0,
         eloHistory: [],
@@ -9270,6 +9320,7 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
         todayMaxStreak: 0,
         todayClutchWins: 0,
         todayBreakWins: 0,
+        todayBreakGames: 0,
         todayBlackWinsCount: 0,
         todayKillerPoints: 0,
         todayRest: 0,
@@ -9335,6 +9386,25 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
     const breakerString = String(g.a || "").trim();
     const playersInMatch = [...p1A, ...p2A];
     playersInMatch.forEach(initP);
+
+    // Track break games
+    if (breakerString) {
+        if (p1A.includes(breakerString)) {
+            p1A.forEach(p => {
+                if (pData[p]) {
+                    pData[p].breakGames = (pData[p].breakGames || 0) + 1;
+                    if (isTodayMatch) pData[p].todayBreakGames = (pData[p].todayBreakGames || 0) + 1;
+                }
+            });
+        } else if (p2A.includes(breakerString)) {
+            p2A.forEach(p => {
+                if (pData[p]) {
+                    pData[p].breakGames = (pData[p].breakGames || 0) + 1;
+                    if (isTodayMatch) pData[p].todayBreakGames = (pData[p].todayBreakGames || 0) + 1;
+                }
+            });
+        }
+    }
 
     const winners = g.w == 1 ? p1A : p2A;
     const losers = g.w == 1 ? p2A : p1A;
