@@ -8577,17 +8577,33 @@ window.renderBillardStats = function (
         dominantMatchups.length > 0
           ? dominantMatchups
               .map((m, idx) => {
-                const c1 = m.wr1 >= m.wr2 ? "green" : "red";
-                const c2 = m.wr2 > m.wr1 ? "green" : "red"; // This is inside a parent card that needs styling
+                const c1_win = m.wr1 >= m.wr2;
+                const c2_win = m.wr2 > m.wr1;
+
+                const c1_style = c1_win 
+                    ? 'color: #34c759; border-color: rgba(52, 199, 89, 0.3); background: rgba(52, 199, 89, 0.1);' 
+                    : 'color: #ff3b30; border-color: rgba(255, 59, 48, 0.3); background: rgba(255, 59, 48, 0.1);';
+                const c2_style = c2_win 
+                    ? 'color: #34c759; border-color: rgba(52, 199, 89, 0.3); background: rgba(52, 199, 89, 0.1);' 
+                    : 'color: #ff3b30; border-color: rgba(255, 59, 48, 0.3); background: rgba(255, 59, 48, 0.1);';
+                
+                const p1_bg = c1_win 
+                    ? `linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%), linear-gradient(90deg, #013b0f, #43e97b)` 
+                    : `linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%), linear-gradient(90deg, #a10800, #d55555)`;
+
+                const p2_bg = c2_win 
+                    ? `linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%), linear-gradient(90deg, #43e97b, #013b0f)` 
+                    : `linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%), linear-gradient(90deg, #d55555, #a10800)`;
+
                 return `
-                <div class="card-modern" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px; padding: 12px; border-radius:20px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.3 + idx * 0.05}s; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="card-modern" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px; padding: 12px; border-radius:20px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.32 + idx * 0.05}s; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; position: relative; z-index: 1;">
                         <!-- Linker Spieler -->
                         <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
                             <img src="${window.getAvatarUrl(m.p1)}" style="width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
                             <div style="overflow:hidden;">
                                 <div style="font-size:11px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p1}</div>
-                                <div class="stat-value-badge ${c1}" style="margin-top:3px; display:inline-block;">${m.wr1}%</div>
+                                <div class="stat-value-badge" style="margin-top:3px; display:inline-block; ${c1_style}">${m.wr1}%</div>
                                 <div style="font-size: 10px; opacity: 0.8; color: #8e8e93; margin-top: 4px;"><span style="color:#34c759;">S: ${m.p1_wins}</span> / <span style="color:#ff3b30;">N: ${m.p2_wins}</span></div>
                             </div>
                         </div>
@@ -8602,16 +8618,16 @@ window.renderBillardStats = function (
                         <div style="display:flex; align-items:center; gap:10px; flex:1; justify-content:flex-end; text-align:right; overflow:hidden;">
                             <div style="overflow:hidden;">
                                 <div style="font-size:11px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p2}</div>
-                                <div class="stat-value-badge ${c2}" style="margin-top:3px; display:inline-block;">${m.wr2}%</div>
+                                <div class="stat-value-badge" style="margin-top:3px; display:inline-block; ${c2_style}">${m.wr2}%</div>
                                 <div style="font-size: 10px; opacity: 0.8; color: #8e8e93; margin-top: 4px;"><span style="color:#34c759;">S: ${m.p2_wins}</span> / <span style="color:#ff3b30;">N: ${m.p1_wins}</span></div>
                             </div>
                             <img src="${window.getAvatarUrl(m.p2)}" style="width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
                         </div>
                     </div>
                     <!-- Visueller Kräftevergleich -->
-                    <div style="height:3px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; display:flex; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);">
-                        <div style="width:${m.wr1}%; background:${m.wr1 >= m.wr2 ? "#34c759" : "#ff3b30"};"></div>
-                        <div style="width:${m.wr2}%; background:${m.wr2 > m.wr1 ? "#34c759" : "#ff3b30"};"></div>
+                    <div style="height:6px; background:rgba(0,0,0,0.4); border-radius:6px; overflow:hidden; display:flex; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);">
+                        <div style="width:${m.wr1}%; background: ${p1_bg}; animation: bar-grow 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: ${1.32 + idx * 0.05}s; transform-origin: left; transform: scaleX(0);"></div>
+                        <div style="width:${m.wr2}%; background: ${p2_bg}; animation: bar-grow 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: ${1.32 + idx * 0.05}s; transform-origin: left; transform: scaleX(0);"></div>
                     </div>
                 </div>`;
               })
