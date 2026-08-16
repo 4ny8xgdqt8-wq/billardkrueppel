@@ -72,6 +72,8 @@ self.onmessage = function (e) {
         longestMatch: 0,
         totalWinDuration: 0,
         totalMatchDuration: 0,
+        gamesWithDuration: 0,
+        winsWithDuration: 0,
         breakGames: 0,
         };
     };
@@ -112,7 +114,7 @@ self.onmessage = function (e) {
       const loserStr = String(g.w == 1 ? g.p2 : g.p1 || "").trim();
       const breakerString = String(g.a || "").trim();
       const rest = parseInt(g.l || 0);
-      const duration = g.durationSeconds ? Number(g.durationSeconds) : 0;
+      const duration = g.durationSeconds ? Number(g.durationSeconds) : (g.duration ? Number(g.duration) * 60 : 0);
 
       if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler")))
         blackWins++;
@@ -206,6 +208,7 @@ self.onmessage = function (e) {
         if (duration > 0) {
           pData[p].fastestWin = Math.min(pData[p].fastestWin, duration);
         }
+        if (duration > 0) pData[p].winsWithDuration = (pData[p].winsWithDuration || 0) + 1;
         pData[p].totalWinDuration += duration;
       });
 
@@ -231,6 +234,7 @@ self.onmessage = function (e) {
         d.games++;
         d.longestMatch = Math.max(d.longestMatch, duration);
         d.totalMatchDuration += duration;
+        if (duration > 0) d.gamesWithDuration = (d.gamesWithDuration || 0) + 1;
 
         // Historie für Trends pflegen
         d.gameResultsHistory.push(isW ? 1 : 0);
@@ -386,8 +390,8 @@ self.onmessage = function (e) {
       d.maxWinRate = Math.max(d.maxWinRate || 0, d.winRate);
       d.avgKiller = d.wins > 0 ? d.killerPoints / d.wins : 0;
       d.avgRest = d.games - d.wins > 0 ? d.rest / (d.games - d.wins) : 0;
-      d.avgWinDuration = d.wins > 0 ? d.totalWinDuration / d.wins : 0;
-      d.avgMatchDuration = d.games > 0 ? d.totalMatchDuration / d.games : 0;
+      d.avgWinDuration = d.winsWithDuration > 0 ? d.totalWinDuration / d.winsWithDuration : 0;
+      d.avgMatchDuration = d.gamesWithDuration > 0 ? d.totalMatchDuration / d.gamesWithDuration : 0;
       // Reset if no wins, to avoid Infinity being passed around
       if (d.fastestWin === Infinity) d.fastestWin = 0;
 
