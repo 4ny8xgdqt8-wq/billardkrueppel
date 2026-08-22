@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="css/modals.css" />
     <link rel="manifest" href="manifest.json" />
 
-    <!-- Globale Avatar-Zuordnung -->
+    <!-- Globale Avatar-Zuordnung & Navigation-Stubs -->
     <script>
       window.playerAvatars = {
         Daniel: "avatars/Daniel.webp",
@@ -33,6 +33,21 @@
       window.getAvatarUrl = (name) => {
         return window.playerAvatars[name] || `avatars/${name}.webp`;
       };
+      function switchV(id, el, forcedDir) {
+        if (typeof window.switchV === "function") window.switchV(id, el, forcedDir);
+      }
+      function updateUI() {
+        if (typeof window.updateUI === "function") window.updateUI();
+      }
+      function updateMatchProbability() {
+        if (typeof window.updateMatchProbability === "function") window.updateMatchProbability();
+      }
+      function openAchListModal() {
+        if (typeof window.openAchListModal === "function") window.openAchListModal();
+      }
+      function closeAchListModal() {
+        if (typeof window.closeAchListModal === "function") window.closeAchListModal();
+      }
     </script>
 
     <!-- Lokale Bibliotheken für 100% Offline-Betrieb & Instant-Start -->
@@ -1638,7 +1653,7 @@
                   justify-content: center;
                   gap: 8px;
                 "
-                onclick="openAchListModal()"
+                onclick="window.openAchListModal()"
               >
                 <span>🏆</span> Trophäenkammer
               </button>
