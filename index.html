@@ -493,12 +493,7 @@
             </div>
             <div
               id="match-daily-winner"
-              style="
-                font-size: 14px;
-                font-weight: 900;
-                color: var(--accent);
-                text-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
-              "
+              style="width: 100%; margin-top: 4px;"
             >
               -
             </div>
@@ -721,12 +716,7 @@
               </div>
               <div
                 id="stat-daily-winner"
-                style="
-                  font-size: 14px;
-                  font-weight: 900;
-                  color: var(--accent);
-                  text-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
-                "
+                style="width: 100%; margin-top: 4px;"
               ></div>
             </div>
             <div class="section-label" style="animation-delay: 0.1s">
@@ -1641,22 +1631,17 @@
                 </div>
               </div>
             </div>
-            <div style="padding: 0 16px 15px 16px">
-              <button
-                class="btn-save"
-                style="
-                  background: rgba(255, 255, 255, 0.1);
-                  border: 1px solid rgba(255, 255, 255, 0.1);
-                  font-size: 11px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  gap: 8px;
-                "
-                onclick="window.openAchListModal()"
-              >
-                <span>🏆</span> Trophäenkammer
-              </button>
+            <div style="padding: 0 16px 8px 16px">
+              <div class="trophy-room-banner" onclick="window.openAchListModal()">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span style="font-size:20px; filter: drop-shadow(0 0 8px rgba(255,204,0,0.5));">🏛️</span>
+                  <div>
+                    <div style="font-size:12px; font-weight:900; color:#fff; letter-spacing:0.3px;">Trophäenkammer</div>
+                    <div style="font-size:9.5px; color:#8e8e93; font-weight:600;">Alle freischaltbaren Erfolge im Spiel ansehen</div>
+                  </div>
+                </div>
+                <span style="color:var(--accent); font-weight:900; font-size:14px;">➔</span>
+              </div>
             </div>
           </div>
           <div
@@ -3318,7 +3303,7 @@
               border-radius: 12px;
               background: rgba(0, 0, 0, 0.2);
               padding: 4px;
-              margin-bottom: 5px;
+              margin-bottom: 8px;
             "
           >
             <div class="filter-pill active" onclick="renderAchList('all')">
@@ -3331,6 +3316,15 @@
             <div class="filter-pill" onclick="renderAchList('daily')">
               Täglich
             </div>
+          </div>
+          <div style="margin-bottom: 8px;">
+            <input
+              type="text"
+              id="ach-search-input"
+              placeholder="🔍 Erfolg suchen..."
+              oninput="window.filterAchListSearch(this.value)"
+              style="width: 100%; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 7px 12px; color: #fff; font-size: 12px; outline: none; box-sizing: border-box;"
+            />
           </div>
         </div>
         <div

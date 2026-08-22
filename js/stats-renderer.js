@@ -18,6 +18,19 @@ const safeGetAvatarUrl = (name) => {
 };
 window.safeGetAvatarUrl = safeGetAvatarUrl;
 
+window.activeAchPlayer = null;
+window.activeAchCategory = "all";
+
+window.setAchPlayerFilter = function (p) {
+  window.activeAchPlayer = p;
+  if (typeof window.updateAllViews === "function") window.updateAllViews();
+};
+
+window.setAchCategoryFilter = function (cat) {
+  window.activeAchCategory = cat;
+  if (typeof window.updateAllViews === "function") window.updateAllViews();
+};
+
 window.renderBillardStats = function (
   stats,
   filterToday = false,
@@ -457,7 +470,6 @@ window.renderBillardStats = function (
         const range = nextLvl.min - currentLvl.min;
         const earned = dLvl.wins - currentLvl.min;
         progressPercent = Math.min(100, Math.round((earned / range) * 100));
-
         const missing = nextLvl.min - dLvl.wins;
         if (progressPercent < 20) {
           infoText = `Frisch befördert! Nächstes Ziel: <b style="color:#fff;">${nextLvl.title}</b> (+${missing})`;
@@ -472,56 +484,12 @@ window.renderBillardStats = function (
         }
       }
 
-      // --- Player-Box (Today ohne LvL, Gesamt mit LvL) ---
-      let playerBoxHtml = "";
+      const activePlayer = !isTodayTab ? (window.activeAchPlayer || (labels[0] || "all")) : null;
+      const activeCat = !isTodayTab ? (window.activeAchCategory || "all") : "all";
 
-      if (isTodayTab) {
-        playerBoxHtml = `
-            <div class="card-modern" style="margin-bottom:15px; border-radius:22px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
-              <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
-                   style="padding:15px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor:pointer; -webkit-tap-highlight-color: transparent; display:flex; align-items:center; gap:12px;">
-                <div class="ach-chevron expanded"></div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:12px; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
-                  <div style="display:none; width:32px; height:32px; border-radius:12px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,0.1);">👤</div>
-                  <div style="color:#ffffff; font-weight:900; font-size:16px; line-height:1; letter-spacing: 0.5px;">${p}</div>
-                </div>
-              </div>
-              <div style="padding:12px 12px 6px 12px; display:block;">`;
-      } else {
-        playerBoxHtml = `
-            <div class="achievement-card-hero" style="border-radius:24px; margin-bottom:15px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
-              <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
-                   style="padding:18px; cursor:pointer; -webkit-tap-highlight-color: transparent;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                  <div style="display:flex; align-items:center; gap:12px;">
-                    <div class="ach-chevron collapsed"></div>
-                    <div style="display:flex; align-items:center; gap:14px;">
-                    <img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:44px; height:44px; border-radius:14px; object-fit:cover; border:2px solid var(--accent); box-shadow: 0 0 15px rgba(255,204,0,0.2);">
-                    <div style="display:none; width:36px; height:36px; border-radius:12px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:20px; border:1px solid rgba(255,255,255,0.1);">👤</div>
-                    <div>
-                      <div style="color:#ffffff; font-weight:900; font-size:20px; line-height:1; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${p}</div>
-                      <div style="color:var(--accent); font-weight:900; font-size:9px; text-transform:uppercase; margin-top:6px; letter-spacing:1px; display:flex; align-items:center; gap:8px;"><span style="font-size:22px; filter: drop-shadow(0 0 10px rgba(255,204,0,0.5)); line-height: 1;">${currentLvl.icon}</span> <span>RANG ${currentLvlIndex} • ${currentLvl.title}</span></div>
-                    </div>
-                  </div>
-                  </div>
-                  <div style="text-align:right;">
-                    <div class="stat-value-badge" style="font-size:14px; padding:4px 10px;">${dLvl.wins} <span style="font-size:8px; opacity:0.6; margin-left:2px;">WINS</span></div>
-                  </div>
-                </div>
-
-                <div class="progress-bar-container" style="margin-bottom:8px;">
-                  <div class="progress-bar-fill" style="width:${progressPercent}%;">
-                  </div>
-                </div>
-
-                <div style="color:#8e8e93; font-size:10px; display:flex; justify-content:space-between; align-items:center;">
-                  <span style="font-weight: 500; letter-spacing: 0.1px;">${infoText}</span>
-                  <span style="font-weight:900; color:#ffcc00; background:rgba(255,204,0,0.15); padding:2px 6px; border-radius:6px; border: 1px solid rgba(255,204,0,0.2);">${progressPercent}%</span>
-                </div>
-              </div>
-
-              <div style="padding:12px 12px 6px 12px; display:none;">`;
+      // Filter: Wenn ein einzelner Spieler aktiv ist, nur diesen rendern
+      if (!isTodayTab && activePlayer !== "all" && p !== activePlayer) {
+        return;
       }
 
       // Today-Unbeaten muss todayWins berücksichtigen (for achievement logic)
@@ -532,8 +500,9 @@ window.renderBillardStats = function (
         for (let i = 0; i < name.length; i++) {
           hash = name.charCodeAt(i) + ((hash << 5) - hash);
         }
-        return Math.abs(hash) % (arrayLength || 1); // Avoid division by zero
+        return Math.abs(hash) % (arrayLength || 1);
       };
+
       // --- ACHIEVEMENT SAMMLUNG ---
       let currentAchs = [];
 
@@ -546,7 +515,6 @@ window.renderBillardStats = function (
           if (it.cond(d)) currentAchs.push({ ...it, k: "shame", isNew: false });
         });
 
-        // Langzeit-Erfolge, die HEUTE neu dazugekommen sind (Vergleich mit dBefore)
         if (dBefore) {
           window.famePool.forEach((it) => {
             if (it.cond(d) && !it.cond(dBefore))
@@ -561,14 +529,12 @@ window.renderBillardStats = function (
         // "Alle" Tab: Aktive Langzeit-Erfolge
         window.famePool.forEach((it) => {
           if (it.cond(d)) {
-            // Achievements sollen sich nach den gefilterten Daten richten
             const isNew = dBefore ? !it.cond(dBefore) : false;
             currentAchs.push({ ...it, k: "fame", isNew });
           }
         });
         window.shamePool.forEach((it) => {
           if (it.cond(d)) {
-            // Achievements sollen sich nach den gefilterten Daten richten
             const isNew = dBefore ? !it.cond(dBefore) : false;
             currentAchs.push({ ...it, k: "shame", isNew });
           }
@@ -592,7 +558,7 @@ window.renderBillardStats = function (
 
       // Calculate achCountTotal and completedTracks
       dLvl.achCountTotal = currentAchs.length;
-      const tracks = {}; // group -> maxTierAchieved
+      const tracks = {};
       currentAchs.forEach((ach) => {
         if (ach.g && ach.tier) {
           if (!tracks[ach.g] || ach.tier > tracks[ach.g]) {
@@ -620,18 +586,36 @@ window.renderBillardStats = function (
       });
       dLvl.completedTracks = completedTracksCount;
 
+      // Filtergruppen für den Spieler
+      const fameAchs = currentAchs.filter((a) => a.k === "fame");
+      const shameAchs = currentAchs.filter((a) => a.k === "shame");
+      const maxDiamondCount = currentAchs.filter(
+        (a) => a.max === true || (a.tier && a.tier >= 10),
+      ).length;
+
+      const dailyCounts = getDailyCountsForPlayer(p);
+      const dailyEntries = Object.entries(dailyCounts).sort((a, b) => {
+        if (b[1] !== a[1]) return b[1] - a[1];
+        return a[0].localeCompare(b[0], "de");
+      });
+      const totalDailySum = dailyEntries.reduce((s, e) => s + e[1], 0);
+      const totalAchCount = currentAchs.length;
+      const totalCombinedCount = currentAchs.length + dailyEntries.length;
+
       // Achievement-HTML bauen
       const createAchRow2 = (item, name, aIdx) => {
         const phraseIndex = getFixedIndex(name + item.t, item.d.length);
         const phrase = item.d[phraseIndex] || "";
         const isShame = item.k === "shame";
         const howIcon = isShame ? "💀" : "🏆";
-        const isMaxTier = item.max === true; // Max tier achievements get special styling
+        const isMaxTier = item.max === true;
         const newBadge = item.isNew
           ? `<span style="background:var(--accent); color:#000; font-size:8px; font-weight:900; padding:2px 5px; border-radius:4px; margin-left:8px; vertical-align:middle; animation: badge-pulse 1.5s infinite ease-in-out;">NEU</span>`
-          : ""; // isNew wird von enrichStatsWithAchievements gesetzt
+          : "";
         const achKey = item.g ? `${item.g}_${item.tier}` : item.t;
-        const tracker = d.achTracker ? (d.achTracker[achKey] || d.achTracker[item.t]) : null;
+        const tracker = d.achTracker
+          ? d.achTracker[achKey] || d.achTracker[item.t]
+          : null;
         const trackerHtml =
           tracker && (tracker.earned > 0 || tracker.lost > 0)
             ? `<div style="font-size:9px; color:#8e8e93; margin-top:3px; font-weight:600;">Sammelrate: <span style="color:#34c759;">📈 ${tracker.earned}</span> | <span style="color:#ff3b30;">📉 ${tracker.lost}</span></div>`
@@ -664,9 +648,7 @@ window.renderBillardStats = function (
           ? "rgba(255, 59, 48, 0.85)"
           : "rgba(52, 199, 89, 0.85)";
 
-        const borderStyle = isShame
-          ? `border-left: 3px solid ${borderCol};`
-          : "";
+        const borderStyle = isShame ? `border-left: 3px solid ${borderCol};` : "";
         return `
     <div class="stat-row-item ${tierClass} ${isMaxTier && !isShame ? "achievement-glow-fame" : ""} ${isShame ? "achievement-glow-shame shame-bg" : ""}" style="${borderStyle}">
       <div class="achievement-icon">${item.i}</div>
@@ -682,66 +664,227 @@ window.renderBillardStats = function (
     </div>`;
       };
 
-      let achHtmlContent =
-        currentAchs.length > 0
-          ? currentAchs.map((it, aIdx) => createAchRow2(it, p, aIdx)).join("")
-          : `<div style="color:#555; font-size:11px; text-align:center; padding:20px; font-style:italic;">Noch ein unbeschriebenes Blatt.</div>`;
+      const renderDailyCard = (title, cnt) => {
+        const ach = [...window.dailyFamePool, ...window.dailyShamePool].find(
+          (x) => x.t === title,
+        );
+        if (!ach) return "";
+        const ic = ach.i || "🏷️";
+        const isShame =
+          ach.k === "shame" || window.dailyShamePool.some((s) => s.t === title);
+        const categoryColor = isShame ? "var(--error)" : "#34c759";
+        const howColor = isShame
+          ? "rgba(255, 69, 58, 0.70)"
+          : "rgba(52, 199, 89, 0.70)";
+        const howIcon = isShame ? "💀" : "🏆";
+        const phraseIndex = getFixedIndex(p + ach.t, ach.d.length);
+        const phrase = ach.d[phraseIndex];
 
-      // Daily-Historie im Gesamt-Tab (sortiert nach Anzahl abfallend)
-      if (!isTodayTab) {
-        const counts = getDailyCountsForPlayer(p);
-        const entries = Object.entries(counts).sort((a, b) => {
-          if (b[1] !== a[1]) return b[1] - a[1];
-          return a[0].localeCompare(b[0], "de");
-        });
-        if (entries.length > 0) {
+        const borderStyle = isShame
+          ? `border-left: 3px solid ${categoryColor};`
+          : "border-left: none;";
+        return `<div class="stat-row-item ${isShame ? "achievement-glow-shame shame-bg" : ""}" style="${borderStyle}">
+          <div class="achievement-icon">${ic}</div>
+          <div style="flex:1; min-width:0;">
+            <div class="achievement-title" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</span>
+              <span class="stat-value-badge" style="color:#ffcc00; background:rgba(255,204,0,0.15); border-color:rgba(255,204,0,0.2); flex-shrink:0;">${cnt}×</span>
+            </div>
+            ${phrase ? `<div class="achievement-phrase">"${phrase}"</div>` : ""}
+            <div class="achievement-how" style="color:${howColor};">${howIcon} ${ach.h || ""}</div>
+          </div>
+        </div>`;
+      };
+
+      // Trophäen-Inhalt nach Kategorie-Filter
+      let achHtmlContent = "";
+      if (activeCat === "fame") {
+        achHtmlContent =
+          fameAchs.length > 0
+            ? fameAchs.map((it, aIdx) => createAchRow2(it, p, aIdx)).join("")
+            : `<div style="color:#555; font-size:11px; text-align:center; padding:20px; font-style:italic;">Keine Ruhmes-Erfolge vorhanden.</div>`;
+      } else if (activeCat === "shame") {
+        achHtmlContent =
+          shameAchs.length > 0
+            ? shameAchs.map((it, aIdx) => createAchRow2(it, p, aIdx)).join("")
+            : `<div style="color:#555; font-size:11px; text-align:center; padding:20px; font-style:italic;">Keine Schand-Erfolge vorhanden (reine Weste!).</div>`;
+      } else if (activeCat === "daily") {
+        achHtmlContent =
+          dailyEntries.length > 0
+            ? dailyEntries.map(([title, cnt]) => renderDailyCard(title, cnt)).join("")
+            : `<div style="color:#555; font-size:11px; text-align:center; padding:20px; font-style:italic;">Noch keine Tageserfolge gesammelt.</div>`;
+      } else {
+        // "all"
+        achHtmlContent =
+          currentAchs.length > 0
+            ? currentAchs.map((it, aIdx) => createAchRow2(it, p, aIdx)).join("")
+            : `<div style="color:#555; font-size:11px; text-align:center; padding:20px; font-style:italic;">Noch ein unbeschriebenes Blatt.</div>`;
+
+        if (!isTodayTab && dailyEntries.length > 0) {
           achHtmlContent +=
             `
-              <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
-                <div style="color:#ffcc00; font-size:11px; font-weight:900; text-transform:uppercase;">Bisherige Tageserfolge</div>
+              <div style="margin-top:14px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
+                <div style="color:#ffcc00; font-size:11px; font-weight:900; text-transform:uppercase; display:flex; align-items:center; gap:6px;">
+                  <span>👑</span> <span>Bisherige Tageserfolge</span>
+                </div>
               </div><div style="margin-top:10px;">` +
-            entries
-              .map(([title, cnt], eIdx) => {
-                const ach = [
-                  ...window.dailyFamePool,
-                  ...window.dailyShamePool,
-                ].find((x) => x.t === title);
-                if (!ach) return "";
-                const ic = ach.i || "🏷️";
-                const isShame =
-                  ach.k === "shame" ||
-                  window.dailyShamePool.some((s) => s.t === title);
-                const categoryColor = isShame ? "var(--error)" : "#34c759";
-                const howColor = isShame
-                  ? "rgba(255, 69, 58, 0.70)"
-                  : "rgba(52, 199, 89, 0.70)";
-                const howIcon = isShame ? "💀" : "🏆";
-                const phraseIndex = getFixedIndex(p + ach.t, ach.d.length);
-                const phrase = ach.d[phraseIndex];
-
-                const borderStyle = isShame
-                  ? `border-left: 3px solid ${categoryColor};`
-                  : "border-left: none;";
-                return `<div class="stat-row-item ${isShame ? "achievement-glow-shame shame-bg" : ""}" style="${borderStyle}">
-                  <div class="achievement-icon">${ic}</div>
-                  <div style="flex:1; min-width:0;">
-                    <div class="achievement-title" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                      <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</span>
-                      <span class="stat-value-badge" style="color:#ffcc00; background:rgba(255,204,0,0.15); border-color:rgba(255,204,0,0.2); flex-shrink:0;">${cnt}×</span>
-                    </div>
-                    ${phrase ? `<div class="achievement-phrase">"${phrase}"</div>` : ""}
-                    <div class="achievement-how" style="color:${howColor};">${howIcon} ${ach.h || ""}</div>
-                  </div>
-                </div>`;
-              })
+            dailyEntries
+              .map(([title, cnt]) => renderDailyCard(title, cnt))
               .join("") +
             `</div>`;
         }
       }
 
-      playerBoxHtml += achHtmlContent + `</div></div>`;
-      achHtml += playerBoxHtml; // Add player's achievement box to the overall HTML
+      // --- Player-Box (Today ohne LvL, Gesamt mit LvL) ---
+      let playerBoxHtml = "";
+
+      if (isTodayTab) {
+        playerBoxHtml = `
+            <div class="card-modern" style="margin-bottom:15px; border-radius:22px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
+              <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
+                   style="padding:15px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor:pointer; -webkit-tap-highlight-color: transparent; display:flex; align-items:center; gap:12px;">
+                <div class="ach-chevron expanded"></div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:12px; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
+                  <div style="display:none; width:32px; height:32px; border-radius:12px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,0.1);">👤</div>
+                  <div style="color:#ffffff; font-weight:900; font-size:16px; line-height:1; letter-spacing: 0.5px;">${p}</div>
+                </div>
+              </div>
+              <div style="padding:12px 12px 6px 12px; display:block;">
+                ${achHtmlContent}
+              </div>
+            </div>`;
+      } else if (activePlayer !== "all") {
+        // Einzelauswahl Showcase
+        playerBoxHtml = `
+            <div class="ach-hero-profile" style="animation: ach-card-enter 0.4s ease-out forwards;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                  <div style="position:relative;">
+                    <img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:52px; height:52px; border-radius:16px; object-fit:cover; border:2px solid var(--accent); box-shadow: 0 0 20px rgba(255,204,0,0.35);">
+                    <div style="display:none; width:52px; height:52px; border-radius:16px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:24px; border:1px solid rgba(255,255,255,0.1);">👤</div>
+                    <span style="position:absolute; bottom:-4px; right:-4px; font-size:18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); line-height:1;">${currentLvl.icon}</span>
+                  </div>
+                  <div>
+                    <div style="color:#ffffff; font-weight:900; font-size:20px; line-height:1.1; letter-spacing: 0.3px;">${p}</div>
+                    <div style="color:var(--accent); font-weight:800; font-size:10px; text-transform:uppercase; margin-top:4px; letter-spacing:1px; display:flex; align-items:center; gap:6px;">
+                      <span>RANG ${currentLvlIndex}</span> • <span>${currentLvl.title}</span>
+                    </div>
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div class="stat-value-badge" style="font-size:13px; padding:4px 10px; border-radius:8px; background:rgba(255,204,0,0.15); border-color:rgba(255,204,0,0.3); color:#ffcc00;">${dLvl.wins} <span style="font-size:8px; opacity:0.7;">WINS</span></div>
+                </div>
+              </div>
+
+              <div class="progress-bar-container" style="margin-bottom:6px; height:8px;">
+                <div class="progress-bar-fill" style="width:${progressPercent}%;"></div>
+              </div>
+
+              <div style="color:#8e8e93; font-size:10px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight: 500;">${infoText}</span>
+                <span style="font-weight:900; color:#ffcc00;">${progressPercent}%</span>
+              </div>
+
+              <div class="ach-summary-pills">
+                <div class="ach-summary-pill">
+                  <div class="ach-summary-pill-val" style="color:#ffcc00;">${totalAchCount}</div>
+                  <div class="ach-summary-pill-lbl">🏆 Erfolge</div>
+                </div>
+                <div class="ach-summary-pill">
+                  <div class="ach-summary-pill-val" style="color:#4FC3F7;">${maxDiamondCount}</div>
+                  <div class="ach-summary-pill-lbl">💎 Meister</div>
+                </div>
+                <div class="ach-summary-pill">
+                  <div class="ach-summary-pill-val" style="color:#34c759;">${totalDailySum}×</div>
+                  <div class="ach-summary-pill-lbl">👑 Daily</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sub-Kategorie Filter -->
+            <div class="ach-category-pills">
+              <div class="ach-category-pill ${activeCat === "all" ? "active" : ""}" onclick="window.setAchCategoryFilter('all')">
+                🏆 Alle (${totalCombinedCount})
+              </div>
+              <div class="ach-category-pill ${activeCat === "fame" ? "active-fame" : ""}" onclick="window.setAchCategoryFilter('fame')">
+                ✨ Ruhm (${fameAchs.length})
+              </div>
+              <div class="ach-category-pill ${activeCat === "shame" ? "active-shame" : ""}" onclick="window.setAchCategoryFilter('shame')">
+                💀 Schande (${shameAchs.length})
+              </div>
+              <div class="ach-category-pill ${activeCat === "daily" ? "active-daily" : ""}" onclick="window.setAchCategoryFilter('daily')">
+                📅 Tageserfolge (${dailyEntries.length})
+              </div>
+            </div>
+
+            <!-- Trophäenliste -->
+            <div style="margin-bottom: 20px;">
+              ${achHtmlContent}
+            </div>`;
+      } else {
+        // "Alle Spieler" Übersicht
+        playerBoxHtml = `
+            <div class="achievement-card-hero" style="border-radius:24px; margin-bottom:15px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.08}s; opacity: 0; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
+              <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
+                   style="padding:18px; cursor:pointer; -webkit-tap-highlight-color: transparent;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="ach-chevron collapsed"></div>
+                    <div style="display:flex; align-items:center; gap:14px;">
+                      <img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:44px; height:44px; border-radius:14px; object-fit:cover; border:2px solid var(--accent); box-shadow: 0 0 15px rgba(255,204,0,0.2);">
+                      <div style="display:none; width:36px; height:36px; border-radius:12px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:20px; border:1px solid rgba(255,255,255,0.1);">👤</div>
+                      <div>
+                        <div style="color:#ffffff; font-weight:900; font-size:20px; line-height:1; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${p}</div>
+                        <div style="color:var(--accent); font-weight:900; font-size:9px; text-transform:uppercase; margin-top:6px; letter-spacing:1px; display:flex; align-items:center; gap:8px;"><span style="font-size:22px; filter: drop-shadow(0 0 10px rgba(255,204,0,0.5)); line-height: 1;">${currentLvl.icon}</span> <span>RANG ${currentLvlIndex} • ${currentLvl.title}</span></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div class="stat-value-badge" style="font-size:14px; padding:4px 10px;">${dLvl.wins} <span style="font-size:8px; opacity:0.6; margin-left:2px;">WINS</span></div>
+                  </div>
+                </div>
+
+                <div class="progress-bar-container" style="margin-bottom:8px;">
+                  <div class="progress-bar-fill" style="width:${progressPercent}%;"></div>
+                </div>
+
+                <div style="color:#8e8e93; font-size:10px; display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-weight: 500; letter-spacing: 0.1px;">${infoText}</span>
+                  <span style="font-weight:900; color:#ffcc00; background:rgba(255,204,0,0.15); padding:2px 6px; border-radius:6px; border: 1px solid rgba(255,204,0,0.2);">${progressPercent}%</span>
+                </div>
+              </div>
+
+              <div style="padding:12px 12px 6px 12px; display:none;">
+                ${achHtmlContent}
+              </div>
+            </div>`;
+      }
+
+      achHtml += playerBoxHtml;
     });
+
+    if (!isTodayTab && labels.length > 0) {
+      const activePlayer = window.activeAchPlayer || (labels[0] || "all");
+      const segmentBarHtml = `
+        <div class="player-segment-bar">
+          <button class="player-segment-btn ${activePlayer === "all" ? "active" : ""}" onclick="window.setAchPlayerFilter('all')">
+            <span style="font-size:14px;">👑</span> <span>Alle Spieler</span>
+          </button>
+          ${labels
+            .map(
+              (p) => `
+            <button class="player-segment-btn ${activePlayer === p ? "active" : ""}" onclick="window.setAchPlayerFilter('${p}')">
+              <img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none';">
+              <span>${p}</span>
+            </button>
+          `,
+            )
+            .join("")}
+        </div>
+      `;
+      achHtml = segmentBarHtml + achHtml;
+    }
 
     return (
       achHtml ||
@@ -975,16 +1118,16 @@ window.renderBillardStats = function (
 
       const getStyledScore = (score) => {
         if (score < 0) {
-          return `<span style="color:var(--error);">${score} Pkt.</span>`;
+          return `<span class="podium-score-pill" style="background:rgba(255,59,48,0.18); color:#ff3b30; border:1px solid rgba(255,59,48,0.35);">${score} Pkt.</span>`;
         } else if (score > 0) {
-          return `<span style="color:#34c759;">+${score} Pkt.</span>`;
+          return `<span class="podium-score-pill" style="background:rgba(52,199,89,0.18); color:#34c759; border:1px solid rgba(52,199,89,0.35);">+${score} Pkt.</span>`;
         }
-        return `${score} Pkt.`;
+        return `<span class="podium-score-pill" style="background:rgba(255,255,255,0.08); color:#8e8e93; border:1px solid rgba(255,255,255,0.15);">${score} Pkt.</span>`;
       };
 
       if (playerScores.length > 0) {
         let winnerPodiumHtml = "";
-        const uniqueScores = [...new Set(playerScores.map((ps) => ps.score))].slice(0, 3); // Get top 3 unique scores
+        const uniqueScores = [...new Set(playerScores.map((ps) => ps.score))].slice(0, 3);
 
         const places = { 1: null, 2: null, 3: null };
 
@@ -1005,40 +1148,55 @@ window.renderBillardStats = function (
         }
 
         const getAvatarPodiumHtml = (players) => {
-          return players.map((p) => `<img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none';">`).join("");
+          return players
+            .map(
+              (p) =>
+                `<img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none';">`,
+            )
+            .join("");
         };
 
         let podiumPlacesHtml = "";
         if (places[2]) {
           podiumPlacesHtml += `
-            <div class="podium-place p-2">
-              <div class="podium-rank">🥈</div>
-              <div class="podium-avatars">${getAvatarPodiumHtml(places[2].players)}</div>
-              <div class="podium-player-info">
-                <span class="podium-name">${places[2].players.join(" / ")}</span>
-                <span class="podium-score">(${getStyledScore(places[2].score)})</span>
+            <div class="podium-column p-2">
+              <div class="podium-actor">
+                <div class="podium-medal-badge">🥈</div>
+                <div class="podium-avatar-wrap">${getAvatarPodiumHtml(places[2].players)}</div>
+                <div class="podium-name">${places[2].players.join(" / ")}</div>
+                ${getStyledScore(places[2].score)}
+              </div>
+              <div class="podium-pedestal pedestal-2">
+                <span class="pedestal-num">2</span>
               </div>
             </div>`;
         }
         if (places[1]) {
           podiumPlacesHtml += `
-            <div class="podium-place p-1">
-              <div class="podium-rank">🥇</div>
-              <div class="podium-avatars">${getAvatarPodiumHtml(places[1].players)}</div>
-              <div class="podium-player-info">
-                <span class="podium-name">${places[1].players.join(" / ")}</span>
-                <span class="podium-score">(${getStyledScore(places[1].score)})</span>
+            <div class="podium-column p-1">
+              <div class="podium-actor">
+                <div class="podium-crown-badge">👑</div>
+                <div class="podium-avatar-wrap">${getAvatarPodiumHtml(places[1].players)}</div>
+                <div class="podium-name">${places[1].players.join(" / ")}</div>
+                ${getStyledScore(places[1].score)}
+              </div>
+              <div class="podium-pedestal pedestal-1">
+                <div class="pedestal-gold-accent"></div>
+                <span class="pedestal-num">1</span>
               </div>
             </div>`;
         }
         if (places[3]) {
           podiumPlacesHtml += `
-            <div class="podium-place p-3">
-              <div class="podium-rank">🥉</div>
-              <div class="podium-avatars">${getAvatarPodiumHtml(places[3].players)}</div>
-              <div class="podium-player-info">
-                <span class="podium-name">${places[3].players.join(" / ")}</span>
-                <span class="podium-score">(${getStyledScore(places[3].score)})</span>
+            <div class="podium-column p-3">
+              <div class="podium-actor">
+                <div class="podium-medal-badge">🥉</div>
+                <div class="podium-avatar-wrap">${getAvatarPodiumHtml(places[3].players)}</div>
+                <div class="podium-name">${places[3].players.join(" / ")}</div>
+                ${getStyledScore(places[3].score)}
+              </div>
+              <div class="podium-pedestal pedestal-3">
+                <span class="pedestal-num">3</span>
               </div>
             </div>`;
         }
@@ -2910,8 +3068,18 @@ window.renderHistory =       function renderHistory(statsToRender) {
 
 
 
+      window.activeAchListFilter = "all";
+      window.achListSearchQuery = "";
+      window.filterAchListSearch = (query) => {
+        window.achListSearchQuery = String(query || "").trim().toLowerCase();
+        window.renderAchList(window.activeAchListFilter || "all");
+      };
+
       window.openAchListModal = () => {
         const container = document.getElementById("achListContainer");
+        const searchInp = document.getElementById("ach-search-input");
+        if (searchInp) searchInp.value = "";
+        window.achListSearchQuery = "";
         if (typeof window.renderAchList === "function") {
           window.renderAchList("all");
         }
@@ -2924,9 +3092,10 @@ window.renderHistory =       function renderHistory(statsToRender) {
         if (modal) modal.style.display = "none";
       };
       window.renderAchList = (filter) => {
+        window.activeAchListFilter = filter;
         const c = document.getElementById("achListContainer");
         if (c) c.scrollTop = 0;
-        const pills = document.querySelectorAll(".filter-pill");
+        const pills = document.querySelectorAll("#achListModal .filter-pill");
         const fNames = ["all", "fame", "shame", "daily"];
         pills.forEach((p, idx) =>
           p.classList.toggle("active", fNames[idx] === filter),
@@ -2967,6 +3136,19 @@ window.renderHistory =       function renderHistory(statsToRender) {
             ...(window.dailyFamePool || []).map((a) => ({ ...a, isDaily: true })),
             ...(window.dailyShamePool || []).map((a) => ({ ...a, isDaily: true })),
           ];
+        }
+
+        // Live-Suche filtern
+        if (window.achListSearchQuery) {
+          const q = window.achListSearchQuery;
+          pool = pool.filter((a) => {
+            const t = (a.t || "").toLowerCase();
+            const h = (a.h || "").toLowerCase();
+            const d = Array.isArray(a.d)
+              ? a.d.join(" ").toLowerCase()
+              : (a.d || "").toLowerCase();
+            return t.includes(q) || h.includes(q) || d.includes(q);
+          });
         }
 
         // 3. Sortierung: Kategorie (Fame vor Shame) -> Dann alphabetisch nach Name
