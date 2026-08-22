@@ -351,6 +351,15 @@ window.renderBillardStats = function (
     : null; // Nutze calculateStatsLocally für gefilterte ELO
   const res = filterToday ? dataToday : isFiltered ? dataFiltered : dataAll;
   const currentStats = filterToday ? statsToday : stats;
+  window.currentStatScope = {
+    filterToday,
+    isFiltered,
+    todayStr,
+    statsToday,
+    safeStats,
+    currentStats,
+    res,
+  };
   // Labels auf aktive Spieler filtern und sortieren
   const labels = Object.keys(res.pData)
     .filter((p) =>
@@ -1289,7 +1298,7 @@ window.renderBillardStats = function (
     );
     if (byId("stat-black")) byId("stat-black").innerText = blackRate + "%";
 
-    // --- TOP-SPIELER BERECHNUNGEN ---
+    // --- TOP-SPIELER BERECHNUNGEN (MIT AVATAR-CHIPS) ---
     const getTopPlayerStr = (valArray, key, suffix = "", minThreshold = 0) => {
       const maxVal =
         valArray.length > 0 ? Math.max(...valArray.map((x) => x.val)) : 0;
@@ -1298,7 +1307,12 @@ window.renderBillardStats = function (
         (x) => x.val === maxVal && x.relevantGames >= minThreshold,
       );
       if (tops.length === 0) return "-";
-      return tops.map((x) => x.p).join(" / ") + ` (${maxVal}${suffix})`;
+      return tops
+        .map(
+          (x) =>
+            `<span style="display:inline-flex; align-items:center; gap:4px; margin:2px 4px 2px 0;"><img src="${safeGetAvatarUrl(x.p)}" style="width:18px; height:18px; border-radius:50%; object-fit:cover; vertical-align:middle; border:1px solid rgba(255,255,255,0.2);" onerror="this.style.display='none'"><b>${x.p}</b></span>`,
+        )
+        .join(" / ") + ` <span style="opacity:0.9; font-weight:800;">(${maxVal}${suffix})</span>`;
     };
 
     // 1. Pechvogel (Ø Restkugeln bei Niederlage)
@@ -1312,7 +1326,7 @@ window.renderBillardStats = function (
       return { p, val, relevantGames: losses };
     });
     if (byId("stat-pechvogel"))
-      byId("stat-pechvogel").innerText = getTopPlayerStr(pechVals, "val");
+      byId("stat-pechvogel").innerHTML = getTopPlayerStr(pechVals, "val");
 
     // 2. Reguläre Siege (Präzisions-Schütze)
     const regWinVals = labels.map((p) => {
@@ -1323,7 +1337,7 @@ window.renderBillardStats = function (
       return { p, val, relevantGames: wins };
     });
     if (byId("stat-regular-wins"))
-      byId("stat-regular-wins").innerText = getTopPlayerStr(
+      byId("stat-regular-wins").innerHTML = getTopPlayerStr(
         regWinVals,
         "val",
         "%",
@@ -1337,7 +1351,7 @@ window.renderBillardStats = function (
       return { p, val, relevantGames: val };
     });
     if (byId("stat-foul8-wins"))
-      byId("stat-foul8-wins").innerText = getTopPlayerStr(
+      byId("stat-foul8-wins").innerHTML = getTopPlayerStr(
         foul8Vals,
         "val",
         "x",
@@ -1354,7 +1368,7 @@ window.renderBillardStats = function (
       return { p, val, relevantGames: games };
     });
     if (byId("stat-lost-by-8error"))
-      byId("stat-lost-by-8error").innerText = getTopPlayerStr(
+      byId("stat-lost-by-8error").innerHTML = getTopPlayerStr(
         lost8Vals,
         "val",
         "%",
@@ -1370,7 +1384,7 @@ window.renderBillardStats = function (
       return { p, val, relevantGames: val };
     });
     if (byId("stat-nutzniesser"))
-      byId("stat-nutzniesser").innerText = getTopPlayerStr(
+      byId("stat-nutzniesser").innerHTML = getTopPlayerStr(
         nutzVals,
         "val",
         "x",
@@ -1384,7 +1398,7 @@ window.renderBillardStats = function (
       return { p, val, relevantGames: val };
     });
     if (byId("stat-clutch"))
-      byId("stat-clutch").innerText = getTopPlayerStr(clutchVals, "val", "x");
+      byId("stat-clutch").innerHTML = getTopPlayerStr(clutchVals, "val", "x");
 
     // 7. Killer-Instinkt
     const killerVals = labels.map((p) => {
@@ -1401,7 +1415,7 @@ window.renderBillardStats = function (
       return { p, val, relevantGames: wins };
     });
     if (byId("stat-killer"))
-      byId("stat-killer").innerText = getTopPlayerStr(killerVals, "val");
+      byId("stat-killer").innerHTML = getTopPlayerStr(killerVals, "val");
 
     // 8. Service-Dieb (Best Winrate after Opponent Break)
     const thiefVals = labels.map((p) => {
@@ -1416,7 +1430,7 @@ window.renderBillardStats = function (
       return { p, val, relevantGames: oppGames };
     });
     if (byId("stat-service-thief"))
-      byId("stat-service-thief").innerText = getTopPlayerStr(
+      byId("stat-service-thief").innerHTML = getTopPlayerStr(
         thiefVals,
         "val",
         "%",
@@ -1431,12 +1445,18 @@ window.renderBillardStats = function (
     );
     if (sortedTransfers.length > 0) {
       const [key, val] = sortedTransfers[0];
-      topVampireStr = `${key} (${val} Pkt.)`;
+      const players = key.split(" -> ");
+      if (players.length === 2) {
+        topVampireStr = `<span style="display:inline-flex; align-items:center; gap:4px;"><img src="${safeGetAvatarUrl(players[0])}" style="width:18px; height:18px; border-radius:50%; object-fit:cover; vertical-align:middle; border:1px solid #ffcc00;" onerror="this.style.display='none'"><b>${players[0]}</b></span> → <b>${players[1]}</b> <span style="color:#34c759; font-weight:900;">(+${val} Pkt.)</span>`;
+      } else {
+        topVampireStr = `${key} (${val} Pkt.)`;
+      }
     }
-    if (byId("stat-vampire")) byId("stat-vampire").innerText = topVampireStr;
+    if (byId("stat-vampire")) byId("stat-vampire").innerHTML = topVampireStr;
 
     // 10. Session-Rekord (Höchster ELO-Gewinn an einem Tag)
-    let sessionRecStr = "-";
+    let sessionRecVal = "-";
+    let sessionRecHolderHtml = '<span class="rec-name">Max Tages-ELO</span>';
     if (filterToday) {
       const dayGains =
         res.aggregates?.sessionEloGains?.[
@@ -1444,7 +1464,10 @@ window.renderBillardStats = function (
         ] || {};
       const topToday = Object.entries(dayGains).sort((a, b) => b[1] - a[1]);
       if (topToday.length > 0 && topToday[0][1] > 0) {
-        sessionRecStr = `${topToday[0][0]} (+${Math.round(topToday[0][1])})`;
+        const p = topToday[0][0];
+        const g = Math.round(topToday[0][1]);
+        sessionRecVal = `+${g} ELO`;
+        sessionRecHolderHtml = `<img src="${safeGetAvatarUrl(p)}" class="rec-avatar" onerror="this.style.display='none'"><span class="rec-name">${p}</span>`;
       }
     } else {
       const allSessionGains = res.aggregates?.sessionEloGains || {};
@@ -1461,11 +1484,26 @@ window.renderBillardStats = function (
       if (recEntry) {
         const dParts = recEntry.d.split("-");
         const formattedDate = `${dParts[2]}.${dParts[1]}.`;
-        sessionRecStr = `${recEntry.p} (+${Math.round(recEntry.v)}) am ${formattedDate}`;
+        sessionRecVal = `+${Math.round(recEntry.v)} ELO`;
+        sessionRecHolderHtml = `<img src="${safeGetAvatarUrl(recEntry.p)}" class="rec-avatar" onerror="this.style.display='none'"><span class="rec-name">${recEntry.p} (${formattedDate})</span>`;
       }
     }
     if (byId("stat-session-record"))
-      byId("stat-session-record").innerText = sessionRecStr;
+      byId("stat-session-record").innerText = sessionRecVal;
+    const recSessionCard = byId("stat-rec-session-gain-card");
+    if (recSessionCard) {
+      const holder = recSessionCard.querySelector(".rec-holder");
+      if (holder) holder.innerHTML = sessionRecHolderHtml;
+    }
+
+    // Sieg-Serie Vitrine Holder
+    const streakHolder = byId("stat-rec-streak-card");
+    if (streakHolder && res.maxStreakHolder) {
+      const holder = streakHolder.querySelector(".rec-holder");
+      if (holder) {
+        holder.innerHTML = `<img src="${safeGetAvatarUrl(res.maxStreakHolder)}" class="rec-avatar" onerror="this.style.display='none'"><span class="rec-name">${res.maxStreakHolder}</span>`;
+      }
+    }
 
     // Die Mauer (Zäher Verlierer: Min Ø Restkugeln bei Niederlage)
     const wallCandidates = pechVals.filter((x) => x.relevantGames > 0);
@@ -1479,15 +1517,13 @@ window.renderBillardStats = function (
         );
 
       if (byId("stat-mauer"))
-        byId("stat-mauer").innerText =
-          topWall.map((x) => x.p).join(" / ") + " (" + minWall.toFixed(1) + ")";
+        byId("stat-mauer").innerHTML =
+          topWall.map((x) => `<span style="display:inline-flex; align-items:center; gap:4px; margin:2px 4px 2px 0;"><img src="${safeGetAvatarUrl(x.p)}" style="width:18px; height:18px; border-radius:50%; object-fit:cover; vertical-align:middle; border:1px solid rgba(255,255,255,0.2);" onerror="this.style.display='none'"><b>${x.p}</b></span>`).join(" / ") + " <span style=\"opacity:0.9; font-weight:800;\">(" + minWall.toFixed(1) + ")</span>";
     } else {
       if (byId("stat-mauer")) byId("stat-mauer").innerText = "-";
     }
 
     // --- ZEITBASIERTE STATISTIKEN ---
-    // Diese Kacheln sollen im "Gesamt"-Tab immer die All-Time-Werte zeigen,
-    // auch wenn ein Zeitfilter aktiv ist. Im "Session"-Tab zeigen sie die Tageswerte.
     const timeStatsPData = filterToday ? res.pData : (precalculatedCareerStats?.pData || {});
     const timeStatsLabels = Object.keys(timeStatsPData);
 
@@ -1510,9 +1546,21 @@ window.renderBillardStats = function (
         });
         const mins = Math.floor(fastestWinVal / 60);
         const secs = fastestWinVal % 60;
-        byId("stat-fastest-win").innerText = `${fastestWinPlayers.join(" / ")} (${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")})`;
+        const timeStr = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")} Min`;
+        byId("stat-fastest-win").innerText = timeStr;
+        const fastHolder = byId("stat-fastest-win-holder");
+        if (fastHolder) {
+          fastHolder.innerHTML = fastestWinPlayers
+            .map(
+              (p) =>
+                `<img src="${safeGetAvatarUrl(p)}" class="rec-avatar" onerror="this.style.display='none'"><span class="rec-name">${p}</span>`,
+            )
+            .join(" ");
+        }
       } else {
         byId("stat-fastest-win").innerText = "-";
+        const fastHolder = byId("stat-fastest-win-holder");
+        if (fastHolder) fastHolder.innerHTML = '<span class="rec-name">Kürzeste Partie</span>';
       }
     }
 
@@ -1529,15 +1577,27 @@ window.renderBillardStats = function (
 
       if (longestMatchVal > 0) {
         const longestMatchPlayers = timeStatsLabels.filter((p) => {
-            const d = timeStatsPData[p];
-            const val = filterToday ? d.todayLongestMatch : d.longestMatch;
-            return val === longestMatchVal;
+          const d = timeStatsPData[p];
+          const val = filterToday ? d.todayLongestMatch : d.longestMatch;
+          return val === longestMatchVal;
         });
         const mins = Math.floor(longestMatchVal / 60);
         const secs = longestMatchVal % 60;
-        byId("stat-longest-match").innerText = `${longestMatchPlayers.join(" / ")} (${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")})`;
+        const timeStr = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")} Min`;
+        byId("stat-longest-match").innerText = timeStr;
+        const longHolder = byId("stat-longest-match-holder");
+        if (longHolder) {
+          longHolder.innerHTML = longestMatchPlayers
+            .map(
+              (p) =>
+                `<img src="${safeGetAvatarUrl(p)}" class="rec-avatar" onerror="this.style.display='none'"><span class="rec-name">${p}</span>`,
+            )
+            .join(" ");
+        }
       } else {
         byId("stat-longest-match").innerText = "-";
+        const longHolder = byId("stat-longest-match-holder");
+        if (longHolder) longHolder.innerHTML = '<span class="rec-name">Längste Schlacht</span>';
       }
     }
 
@@ -1940,63 +2000,44 @@ window.renderBillardStats = function (
       })
       .sort((a, b) => b.dominance - a.dominance || b.games - a.games); // Nach Dominanz, dann Spielen sortieren
 
-    const h2hEl = byId("stat-head-to-head"); // Behalte die ID für die Kachel
+    const h2hEl = byId("stat-head-to-head");
     if (h2hEl) {
       h2hEl.innerHTML =
         dominantMatchups.length > 0
           ? dominantMatchups
               .map((m, idx) => {
-                const c1_win = m.wr1 >= m.wr2;
-                const c2_win = m.wr2 > m.wr1;
-
-                const c1_style = c1_win 
-                    ? 'color: #34c759; border-color: rgba(52, 199, 89, 0.3); background: rgba(52, 199, 89, 0.1);' 
-                    : 'color: #ff3b30; border-color: rgba(255, 59, 48, 0.3); background: rgba(255, 59, 48, 0.1);';
-                const c2_style = c2_win 
-                    ? 'color: #34c759; border-color: rgba(52, 199, 89, 0.3); background: rgba(52, 199, 89, 0.1);' 
-                    : 'color: #ff3b30; border-color: rgba(255, 59, 48, 0.3); background: rgba(255, 59, 48, 0.1);';
-                
-                const p1_bg = c1_win 
-                    ? `linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%), linear-gradient(90deg, #013b0f, #43e97b)` 
-                    : `linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%), linear-gradient(90deg, #a10800, #d55555)`;
-
-                const p2_bg = c2_win 
-                    ? `linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%), linear-gradient(90deg, #43e97b, #013b0f)` 
-                    : `linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%), linear-gradient(90deg, #d55555, #a10800)`;
-
                 return `
-                <div class="card-modern" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px; padding: 12px; border-radius:20px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.32 + idx * 0.05}s; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
+                <div class="card-modern" style="display:flex; flex-direction:column; gap:12px; margin-bottom:12px; padding: 14px; border-radius:20px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.32 + idx * 0.05}s; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
                     <div style="display:flex; justify-content:space-between; align-items:center; position: relative; z-index: 1;">
-                        <!-- Linker Spieler -->
+                        <!-- Linker Spieler (Gold / Orange) -->
                         <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                            <img src="${safeGetAvatarUrl(m.p1)}" style="width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
+                            <img src="${safeGetAvatarUrl(m.p1)}" style="width:38px; height:38px; border-radius:12px; border:2px solid #ffcc00; object-fit:cover; box-shadow: 0 0 12px rgba(255,204,0,0.3);" onerror="this.style.display='none'">
                             <div style="overflow:hidden;">
-                                <div style="font-size:11px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p1}</div>
-                                <div class="stat-value-badge" style="margin-top:3px; display:inline-block; ${c1_style}">${m.wr1}%</div>
-                                <div style="font-size: 10px; opacity: 0.8; color: #8e8e93; margin-top: 4px;"><span style="color:#34c759;">S: ${m.p1_wins}</span> / <span style="color:#ff3b30;">N: ${m.p2_wins}</span></div>
+                                <div style="font-size:12px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p1}</div>
+                                <div class="stat-value-badge" style="margin-top:3px; display:inline-block; color:#ffcc00; border: 1px solid rgba(255,204,0,0.3); background: rgba(255,204,0,0.12); font-weight:900;">${m.wr1}%</div>
+                                <div style="font-size: 10px; opacity: 0.85; color: #8e8e93; margin-top: 3px;"><span style="color:#34c759; font-weight:800;">S: ${m.p1_wins}</span> / <span style="color:#ff3b30; font-weight:800;">N: ${m.p2_wins}</span></div>
                             </div>
                         </div>
                         
                         <!-- Trenner -->
-                        <div style="text-align:center; min-width:45px; padding: 0 5px;">
-                            <div style="font-size:10px; font-weight:900; color:var(--accent); opacity:0.7; letter-spacing:1px;">VS</div>
-                            <div style="font-size:8px; color:#8e8e93; font-weight:800; margin-top:2px;">${m.games} Partien</div>
+                        <div style="text-align:center; min-width:50px; padding: 0 5px;">
+                            <span style="font-weight:900; font-size:10px; color:var(--accent); background:rgba(255,204,0,0.15); border:1px solid rgba(255,204,0,0.3); padding:3px 7px; border-radius:6px; letter-spacing:1px;">VS</span>
+                            <div style="font-size:8px; color:#8e8e93; font-weight:800; margin-top:4px;">${m.games} Partien</div>
                         </div>
 
-                        <!-- Rechter Spieler -->
+                        <!-- Rechter Spieler (Cyan / Blau) -->
                         <div style="display:flex; align-items:center; gap:10px; flex:1; justify-content:flex-end; text-align:right; overflow:hidden;">
                             <div style="overflow:hidden;">
-                                <div style="font-size:11px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p2}</div>
-                                <div class="stat-value-badge" style="margin-top:3px; display:inline-block; ${c2_style}">${m.wr2}%</div>
-                                <div style="font-size: 10px; opacity: 0.8; color: #8e8e93; margin-top: 4px;"><span style="color:#34c759;">S: ${m.p2_wins}</span> / <span style="color:#ff3b30;">N: ${m.p1_wins}</span></div>
+                                <div style="font-size:12px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p2}</div>
+                                <div class="stat-value-badge" style="margin-top:3px; display:inline-block; color:#4fc3f7; border: 1px solid rgba(79,195,247,0.3); background: rgba(79,195,247,0.12); font-weight:900;">${m.wr2}%</div>
+                                <div style="font-size: 10px; opacity: 0.85; color: #8e8e93; margin-top: 3px;"><span style="color:#34c759; font-weight:800;">S: ${m.p2_wins}</span> / <span style="color:#ff3b30; font-weight:800;">N: ${m.p1_wins}</span></div>
                             </div>
-                            <img src="${safeGetAvatarUrl(m.p2)}" style="width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
+                            <img src="${safeGetAvatarUrl(m.p2)}" style="width:38px; height:38px; border-radius:12px; border:2px solid #4fc3f7; object-fit:cover; box-shadow: 0 0 12px rgba(79,195,247,0.3);" onerror="this.style.display='none'">
                         </div>
                     </div>
-                    <!-- Visueller Kräftevergleich -->
-                    <div style="height:6px; background:rgba(0,0,0,0.4); border-radius:6px; overflow:hidden; display:flex; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);">
-                        <div style="width:${m.wr1}%; background: ${p1_bg}; animation: bar-grow 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: ${1.32 + idx * 0.05}s; transform-origin: left; transform: scaleX(0);"></div>
-                        <div style="width:${m.wr2}%; background: ${p2_bg}; animation: bar-grow 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: ${1.32 + idx * 0.05}s; transform-origin: left; transform: scaleX(0);"></div>
+                    <!-- Moderner H2H Farbbalken (Gold-zu-Cyan) -->
+                    <div style="position: relative; height: 9px; background: linear-gradient(90deg, #0288d1 0%, #4fc3f7 100%); border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), 0 0 8px rgba(79,195,247,0.25); border: 1px solid rgba(255,255,255,0.08);">
+                        <div style="height: 100%; width: ${m.wr1}%; background: linear-gradient(90deg, #ffcc00 0%, #ff9500 100%); border-radius: 6px 0 0 6px; box-shadow: 0 0 10px rgba(255,204,0,0.4); animation: bar-grow 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; transform-origin: left; transform: scaleX(0); animation-delay: ${1.32 + idx * 0.05}s;"></div>
                     </div>
                 </div>`;
               })
@@ -2025,7 +2066,7 @@ window.renderBillardStats = function (
     // Längste Serie – bei Gleichstand mehrere anzeigen
     const maxStreak = Math.max(
       ...labels.map((p) => res.pData[p].maxStreak || 0),
-    ); // Max streak is calculated in worker
+    );
 
     if (maxStreak > 0) {
       const topStreak = labels
@@ -2037,10 +2078,25 @@ window.renderBillardStats = function (
         );
 
       if (byId("stat-streak"))
-        byId("stat-streak").innerText =
-          topStreak.join(" / ") + ` (${maxStreak})`;
+        byId("stat-streak").innerText = `${maxStreak}x`;
+      const streakCard = byId("stat-rec-streak-card");
+      if (streakCard) {
+        const holder = streakCard.querySelector(".rec-holder");
+        if (holder) {
+          holder.innerHTML = topStreak
+            .map(
+              (p) =>
+                `<img src="${safeGetAvatarUrl(p)}" class="rec-avatar" onerror="this.style.display='none'"><span class="rec-name">${p}</span>`,
+            )
+            .join(" ");
+        }
+      }
     } else {
       if (byId("stat-streak")) byId("stat-streak").innerText = "-";
+    }
+
+    if (typeof window.updateInteractiveH2H === "function") {
+      window.updateInteractiveH2H();
     }
 
     // Chart.js Diagramm
@@ -2255,8 +2311,8 @@ window.renderBillardStats = function (
       };
     };
 
-    // --- ELO Rangliste + Erklärung (nur Gesamt) ---
-    function renderEloRanking(pData, show) {
+    // --- ELO Rangliste + Erklärung (Gesamt & Session) ---
+    function renderEloRanking(pData, show = true, isToday = false) {
       const el = byId("eloRanking") || document.getElementById("eloRanking");
       if (!el) return;
       if (!show) {
@@ -2267,22 +2323,74 @@ window.renderBillardStats = function (
       const rows = Object.keys(pData || {})
         .map((name) => {
           const d = pData[name] || {};
+          const careerD =
+            (window.careerStats &&
+              window.careerStats.pData &&
+              window.careerStats.pData[name]) ||
+            {};
+          const eloVal =
+            typeof d.elo === "number"
+              ? d.elo
+              : typeof careerD.elo === "number"
+                ? careerD.elo
+                : 1000;
+          const totalGames =
+            typeof d.eloGames === "number"
+              ? d.eloGames
+              : typeof d.games === "number"
+                ? d.games
+                : careerD.games || 0;
+          const sessionGames =
+            typeof d.todayGames === "number" ? d.todayGames : 0;
+          const sessionDelta =
+            typeof d.sessionEloGain === "number"
+              ? d.sessionEloGain
+              : (window.careerStats &&
+                  window.careerStats.aggregates &&
+                  window.careerStats.aggregates.sessionEloGains &&
+                  window.careerStats.aggregates.sessionEloGains[name]) ||
+                0;
+
           return {
             name,
-            elo: typeof d.elo === "number" ? d.elo : 1000,
-            games: typeof d.eloGames === "number" ? d.eloGames : 0,
-            streak: d.currentStreak || 0,
-            loseStreak: d.loseStreak || 0,
+            elo: eloVal,
+            games: isToday ? sessionGames : totalGames,
+            totalGames,
+            sessionGames,
+            sessionDelta,
+            streak: d.currentStreak || careerD.currentStreak || 0,
+            loseStreak: d.loseStreak || careerD.loseStreak || 0,
           };
         })
-        .filter((r) => r.games > 0);
+        .filter((r) => (isToday ? r.sessionGames > 0 : r.games > 0));
 
-      // nur Spieler aus spieler.json anzeigen (und nur wenn Spiele vorhanden sind)
+      // nur Spieler aus spieler.json anzeigen
       if (configuredPlayers && configuredPlayers.size > 0) {
         for (let i = rows.length - 1; i >= 0; i--) {
           if (!configuredPlayers.has(String(rows[i].name || "").trim()))
             rows.splice(i, 1);
         }
+      }
+
+      // Wenn in der Session noch keine Spiele sind, zeige alle konfigurierten Spieler mit aktuellem ELO
+      if (rows.length === 0 && isToday) {
+        (window.spieler || ["Daniel", "Thorsten", "Peter"]).forEach((name) => {
+          const careerD =
+            (window.careerStats &&
+              window.careerStats.pData &&
+              window.careerStats.pData[name]) ||
+            {};
+          rows.push({
+            name,
+            elo: typeof careerD.elo === "number" ? careerD.elo : 1000,
+            games: 0,
+            totalGames: careerD.games || 0,
+            sessionGames: 0,
+            sessionDelta: 0,
+            streak: careerD.currentStreak || 0,
+            loseStreak: careerD.loseStreak || 0,
+          });
+        });
       }
 
       if (rows.length === 0) {
@@ -2294,10 +2402,15 @@ window.renderBillardStats = function (
       const medal = (i) =>
         i === 0 ? "👑" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
 
+      const titleText = isToday ? "Session ELO-Klassement" : "ELO-Rangliste";
+      const subtitleText = isToday
+        ? "Aktuelle ELO-Werte und Punktebilanz dieser Session."
+        : 'Start bei <b style="color:#fff;">1000</b>. Sieg gegen starke Gegner bringt <b style="color:#34c759;">mehr</b> Punkte, Niederlagen kosten Punkte.';
+
       let html = `
             <div style="margin-top:2px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: 0.4s;">
-              <div style="color:#ffcc00; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:1px;">ELO-Rangliste</div>
-              <div style="margin-top:6px; font-size:10px; line-height:1.4; color:#8e8e93;">Start bei <b style=\"color:#fff;\">1000</b>. Sieg gegen starke Gegner bringt <b style=\"color:#34c759;\">mehr</b> Punkte, Niederlagen kosten Punkte. Neue Spieler bewegen sich anfangs <b style=\"color:#4FC3F7;\">schneller</b>.</div>
+              <div style="color:#ffcc00; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:1px;">${titleText}</div>
+              <div style="margin-top:6px; font-size:10px; line-height:1.4; color:#8e8e93;">${subtitleText}</div>
               <div style="height:2px; width:24px; background:#ffcc00; margin-top:6px; border-radius:2px;"></div>
             </div>
             <div style="margin-top:10px;">
@@ -2315,7 +2428,29 @@ window.renderBillardStats = function (
         const streakEmoji =
           r.streak >= 1
             ? ` <span style="display:inline-flex; align-items:center; gap:2px; color:var(--accent); text-shadow: 0 0 8px rgba(255,204,0,0.4); animation: streak-pulse 1.5s infinite ease-in-out; vertical-align: middle;"><span style="font-size:14px;">🔥</span><span style="font-size:11px; font-weight:900;">${r.streak}</span></span>`
-            : ""; // Pulsierendes Flammen-Emoji mit Zähler
+            : "";
+
+        const matchesSubtitle = isToday
+          ? `Heute: ${r.sessionGames} Spiele`
+          : `Matches: ${r.games}`;
+
+        let deltaHtml = "";
+        if (isToday && r.sessionGames > 0) {
+          const deltaSign =
+            r.sessionDelta > 0
+              ? `+${Math.round(r.sessionDelta)}`
+              : r.sessionDelta < 0
+                ? `${Math.round(r.sessionDelta)}`
+                : "±0";
+          const deltaColor =
+            r.sessionDelta > 0
+              ? "#34c759"
+              : r.sessionDelta < 0
+                ? "#ff3b30"
+                : "#8e8e93";
+          deltaHtml = `<div style="font-size:10px; font-weight:800; color:${deltaColor}; margin-top:1px;">${deltaSign} heute</div>`;
+        }
+
         html += `
               <div onclick="window.openPlayerProfile('${r.name}')" class="card-modern ${isFirst ? "rank-1-card" : ""}" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; padding: 12px; border-radius: 20px; cursor:pointer; ${isFirst ? "" : "animation: ach-card-enter 0.4s ease-out forwards; opacity: 0;"} animation-delay: ${0.5 + i * 0.05}s; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid ${isFirst ? "#ffcc00" : "rgba(255, 255, 255, 0.1)"}; box-shadow: ${isFirst ? "0 0 20px rgba(255,204,0,0.2)" : "0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05)"};">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${badge || i + 1 + "."}</div>
@@ -2325,11 +2460,12 @@ window.renderBillardStats = function (
                 <div style="display:none; width:30px; height:30px; border-radius:10px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1; overflow:hidden;">
                   <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.name} ${streakEmoji}</div>
-                  <div style="font-size:10px; color:#acacb0; margin-top:2px;">Matches: ${r.games}</div>
+                  <div style="font-size:10px; color:#acacb0; margin-top:2px;">${matchesSubtitle}</div>
                 </div>
                 <div style="text-align:right;">
-                  <div id="rank-elo-${i}" style="font-size:16px; font-weight:900; color:#34c759; text-shadow: 0 0 10px rgba(52,199,89,0.3);">0</div>
+                  <div id="rank-elo-${i}" style="font-size:16px; font-weight:900; color:#34c759; text-shadow: 0 0 10px rgba(52,199,89,0.3);">${Math.round(r.elo)}</div>
                   <div style="font-size:9px; color:#8e8e93; text-transform:uppercase; font-weight:800; margin-top:2px;">ELO</div>
+                  ${deltaHtml}
                 </div>
               </div>
             `;
@@ -2579,9 +2715,13 @@ window.renderBillardStats = function (
 
     const eloCard =
       byId("eloTrendCard") || document.getElementById("eloTrendCard");
-    if (eloCard) eloCard.style.display = !filterToday ? "block" : "none";
+    if (eloCard) eloCard.style.display = "block";
 
-    renderEloRanking(res.pData, !filterToday); // ELO-Ranking jetzt auf Basis der gefilterten Daten
+    if (eloHistoryContainer) {
+      eloHistoryContainer.style.display = !filterToday ? "block" : "none";
+    }
+
+    renderEloRanking(res.pData, true, filterToday);
     renderTrendingPlayers(stats, !filterToday);
   } else {
     // --- Keine Daten: UI sauber zurücksetzen ---
@@ -3212,3 +3352,408 @@ window.renderHistory =       function renderHistory(statsToRender) {
           })
           .join("");
       };
+
+/* ==========================================================================
+   Dashboard Sub-Tabs & Interactive H2H Logic
+   ========================================================================== */
+window.currentStatSubTab = "ranking";
+
+window.setStatSubTab = function (tabName, btnEl) {
+  window.currentStatSubTab = tabName;
+  document.querySelectorAll(".stat-subtab-btn").forEach((btn) => {
+    if (btn.getAttribute("data-tab") === tabName) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+
+  const contentIds = {
+    ranking: "stat-subtab-ranking",
+    duelle: "stat-subtab-duelle",
+    records: "stat-subtab-records",
+    balls: "stat-subtab-balls",
+  };
+
+  for (const key in contentIds) {
+    const el = document.getElementById(contentIds[key]);
+    if (el) {
+      if (key === tabName) {
+        el.classList.add("active");
+      } else {
+        el.classList.remove("active");
+      }
+    }
+  }
+
+  if (tabName === "duelle" && typeof window.updateInteractiveH2H === "function") {
+    window.updateInteractiveH2H();
+  }
+};
+
+window.updateInteractiveH2H = function () {
+  const p1Sel = document.getElementById("h2h-player-1-select");
+  const p2Sel = document.getElementById("h2h-player-2-select");
+  const outputEl = document.getElementById("h2h-interactive-output");
+  if (!p1Sel || !p2Sel || !outputEl) return;
+
+  const spieler = (window.spieler && window.spieler.length >= 2)
+    ? window.spieler
+    : ["Daniel", "Thorsten", "Peter"];
+
+  if (p1Sel.options.length < spieler.length) {
+    const prev1 = p1Sel.value;
+    p1Sel.innerHTML = spieler
+      .map((p) => `<option value="${p}">${p}</option>`)
+      .join("");
+    p1Sel.value = prev1 && spieler.includes(prev1) ? prev1 : spieler[0];
+  }
+  if (p2Sel.options.length < spieler.length) {
+    const prev2 = p2Sel.value;
+    p2Sel.innerHTML = spieler
+      .map((p) => `<option value="${p}">${p}</option>`)
+      .join("");
+    p2Sel.value =
+      prev2 && spieler.includes(prev2) && prev2 !== p1Sel.value
+        ? prev2
+        : spieler.find((s) => s !== p1Sel.value) || spieler[1] || spieler[0];
+  }
+
+  let p1 = p1Sel.value;
+  let p2 = p2Sel.value;
+  if (p1 === p2) {
+    const other = spieler.find((s) => s !== p1);
+    if (other) {
+      p2 = other;
+      p2Sel.value = other;
+    }
+  }
+
+  const scope = window.currentStatScope || {};
+  const isSession = scope.filterToday || window.viewId === "heute";
+
+  // Scope-bezogene Spieleliste ermitteln
+  let matches = [];
+  if (isSession) {
+    matches = scope.statsToday || (typeof window.getTodayStats === "function" ? window.getTodayStats() : []);
+  } else if (scope.isFiltered) {
+    matches = scope.currentStats || (typeof window.getFilteredStats === "function" ? window.getFilteredStats() : window.stats || []);
+  } else {
+    matches = scope.currentStats || window.stats || [];
+  }
+
+  const totalMatchesInScope = matches.length;
+
+  const safeAvatar = (name) =>
+    typeof window.safeGetAvatarUrl === "function"
+      ? window.safeGetAvatarUrl(name)
+      : `avatars/${name}.webp`;
+
+  const getE = (p) =>
+    (window.careerStats &&
+      window.careerStats.pData &&
+      window.careerStats.pData[p] &&
+      window.careerStats.pData[p].elo) ||
+    (scope.res && scope.res.pData && scope.res.pData[p] && scope.res.pData[p].elo) ||
+    1200;
+  const elo1 = getE(p1);
+  const elo2 = getE(p2);
+
+  // Fall 1: In der Session oder im Filter gibt es überhaupt noch keine Spiele
+  if (totalMatchesInScope === 0) {
+    outputEl.innerHTML = `
+      <div style="text-align:center; padding: 25px 12px; color: #8e8e93;">
+        <div style="font-size: 28px; margin-bottom: 6px;">🎱</div>
+        <div style="font-size: 13px; font-weight: 800; color: #fff;">${isSession ? "Noch keine Spiele in dieser Session" : "Keine Spiele im gewählten Zeitraum"}</div>
+        <div style="font-size: 10px; margin-top: 4px; opacity: 0.7;">Sobald 1:1-Matches vorliegen, erscheint hier der direkte Vergleich.</div>
+      </div>
+    `;
+    return;
+  }
+
+  // Direkte 1:1 Duelle zwischen p1 und p2 im aktuellen Scope filtern
+  const duels = matches.filter(
+    (g) =>
+      g &&
+      g.m === "1:1" &&
+      ((g.p1 === p1 && g.p2 === p2) || (g.p1 === p2 && g.p2 === p1)) &&
+      g.w,
+  );
+
+  const duelLabel = isSession
+    ? "Duelle (Heute)"
+    : scope.isFiltered
+    ? "Duelle (Filter)"
+    : "Duelle (Gesamt)";
+
+  const eloLabel = isSession ? "Session-Delta" : "ELO-Fluss";
+
+  // Fall 2: Spiele sind da, aber p1 und p2 haben in diesem Scope noch nicht gegeneinander gespielt
+  if (duels.length === 0) {
+    outputEl.innerHTML = `
+      <div class="h2h-battle-row">
+        <div class="h2h-fighter fighter-1">
+          <img src="${safeAvatar(p1)}" class="h2h-fighter-avatar" onerror="this.style.display='none'">
+          <div class="h2h-fighter-name">${p1}</div>
+          <div class="h2h-fighter-elo">${Math.round(elo1)} ELO</div>
+        </div>
+        <div class="h2h-center-score">
+          <div class="h2h-score-text">0 : 0</div>
+          <div class="h2h-score-lead">${isSession ? "Heute noch kein direktes Duell" : "Kein direktes Duell im Zeitraum"}</div>
+        </div>
+        <div class="h2h-fighter fighter-2">
+          <img src="${safeAvatar(p2)}" class="h2h-fighter-avatar" onerror="this.style.display='none'">
+          <div class="h2h-fighter-name">${p2}</div>
+          <div class="h2h-fighter-elo">${Math.round(elo2)} ELO</div>
+        </div>
+      </div>
+      <div class="h2h-prog-bar">
+        <div class="h2h-prog-fill" style="width: 50%;"></div>
+      </div>
+      <div class="h2h-stat-matrix">
+        <div class="h2h-matrix-item">
+          <div class="h2h-matrix-val">0</div>
+          <div class="h2h-matrix-label">${duelLabel}</div>
+        </div>
+        <div class="h2h-matrix-item">
+          <div class="h2h-matrix-val">-</div>
+          <div class="h2h-matrix-label">Siegquote</div>
+        </div>
+        <div class="h2h-matrix-item">
+          <div class="h2h-matrix-val">-</div>
+          <div class="h2h-matrix-label">${eloLabel}</div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Fall 3: Duelle sind im aktuellen Scope vorhanden
+  let p1Wins = 0;
+  let p2Wins = 0;
+  let p1VollWins = 0, p1HalbWins = 0;
+  let p2VollWins = 0, p2HalbWins = 0;
+  let p1BreakGames = 0, p1BreakWins = 0;
+  let p2BreakGames = 0, p2BreakWins = 0;
+  let regWinsCount = 0;
+  let p1LossesRest = [], p2LossesRest = [];
+  let durations = [];
+
+  duels.forEach((g) => {
+    const isP1Winner = (g.w === 1 && g.p1 === p1) || (g.w === 2 && g.p2 === p1);
+    const isP2Winner = (g.w === 1 && g.p1 === p2) || (g.w === 2 && g.p2 === p2);
+    const winBall = g.w === 1 ? g.bt1 : g.bt2;
+
+    if (isP1Winner) {
+      p1Wins++;
+      if (winBall === "Voll") p1VollWins++;
+      if (winBall === "Halb") p1HalbWins++;
+      p2LossesRest.push(typeof g.l === "number" ? g.l : 0);
+    } else if (isP2Winner) {
+      p2Wins++;
+      if (winBall === "Voll") p2VollWins++;
+      if (winBall === "Halb") p2HalbWins++;
+      p1LossesRest.push(typeof g.l === "number" ? g.l : 0);
+    }
+
+    if (g.a === p1) {
+      p1BreakGames++;
+      if (isP1Winner) p1BreakWins++;
+    } else if (g.a === p2) {
+      p2BreakGames++;
+      if (isP2Winner) p2BreakWins++;
+    }
+
+    if (g.t && (g.t.includes("Regulär") || g.t.includes("gelocht"))) {
+      regWinsCount++;
+    }
+
+    if (typeof g.dur === "number" && g.dur > 0) {
+      durations.push(g.dur);
+    }
+  });
+
+  const total = p1Wins + p2Wins;
+  const p1Rate = total > 0 ? Math.round((p1Wins / total) * 100) : 50;
+  const p2Rate = total > 0 ? 100 - p1Rate : 50;
+
+  // ELO Transfer
+  const trans =
+    (scope.res &&
+      scope.res.aggregates &&
+      scope.res.aggregates.eloTransfers) ||
+    (window.careerStats &&
+      window.careerStats.aggregates &&
+      window.careerStats.aggregates.eloTransfers) ||
+    {};
+  const t1 = trans[`${p1} -> ${p2}`] || 0;
+  const t2 = trans[`${p2} -> ${p1}`] || 0;
+  let eloTransferText = "Ausgeglichen";
+  if (t1 > t2) {
+    eloTransferText = `+${Math.round(t1 - t2)} für ${p1}`;
+  } else if (t2 > t1) {
+    eloTransferText = `+${Math.round(t2 - t1)} für ${p2}`;
+  }
+
+  let leadText = "Unentschieden";
+  if (p1Wins > p2Wins) {
+    leadText = `+${p1Wins - p2Wins} Siege für ${p1}`;
+  } else if (p2Wins > p1Wins) {
+    leadText = `+${p2Wins - p1Wins} Siege für ${p2}`;
+  }
+
+  // Formkurve der letzten Duelle (bis zu 5)
+  const lastDuels = duels.slice(-5);
+  const formDotsHtml = lastDuels
+    .map((g) => {
+      const isP1 = (g.w === 1 && g.p1 === p1) || (g.w === 2 && g.p2 === p1);
+      const winnerName = isP1 ? p1 : p2;
+      return `<div class="h2h-form-dot ${isP1 ? "dot-p1" : "dot-p2"}" title="${winnerName} (${g.d || ""})">${isP1 ? p1[0] : p2[0]}</div>`;
+    })
+    .join("");
+
+  // Streak Callout
+  let currentStreakWinner = null;
+  let streakCount = 0;
+  for (let i = duels.length - 1; i >= 0; i--) {
+    const g = duels[i];
+    const isP1 = (g.w === 1 && g.p1 === p1) || (g.w === 2 && g.p2 === p1);
+    const w = isP1 ? p1 : p2;
+    if (!currentStreakWinner) {
+      currentStreakWinner = w;
+      streakCount = 1;
+    } else if (w === currentStreakWinner) {
+      streakCount++;
+    } else {
+      break;
+    }
+  }
+  let streakLabel = "Ausgeglichen";
+  if (streakCount >= 2 && currentStreakWinner) {
+    streakLabel = `🔥 ${currentStreakWinner} (${streakCount} Siege in Folge)`;
+  } else if (lastDuels.length > 0) {
+    streakLabel = `Letzter Sieg: ${currentStreakWinner}`;
+  }
+
+  // Break Effizienz
+  const p1BreakRate = p1BreakGames > 0 ? Math.round((p1BreakWins / p1BreakGames) * 100) + "%" : "-";
+  const p2BreakRate = p2BreakGames > 0 ? Math.round((p2BreakWins / p2BreakGames) * 100) + "%" : "-";
+
+  // Match Finish %
+  const regPct = total > 0 ? Math.round((regWinsCount / total) * 100) : 0;
+  const errPct = 100 - regPct;
+
+  // Match Dauer
+  let fastestStr = "-";
+  let avgDurStr = "-";
+  if (durations.length > 0) {
+    const minDur = Math.min(...durations);
+    const avgDur = Math.round(durations.reduce((s, v) => s + v, 0) / durations.length);
+    const minM = Math.floor(minDur / 60);
+    const minS = minDur % 60;
+    fastestStr = `${String(minM).padStart(2, "0")}:${String(minS).padStart(2, "0")} Min`;
+    const avgM = Math.floor(avgDur / 60);
+    const avgS = avgDur % 60;
+    avgDurStr = `${String(avgM).padStart(2, "0")}:${String(avgS).padStart(2, "0")} Min`;
+  }
+
+  // Zähigkeit (Ø Restkugeln bei Niederlage)
+  const p1AvgRest = p1LossesRest.length > 0 ? (p1LossesRest.reduce((s, v) => s + v, 0) / p1LossesRest.length).toFixed(1) : "-";
+  const p2AvgRest = p2LossesRest.length > 0 ? (p2LossesRest.reduce((s, v) => s + v, 0) / p2LossesRest.length).toFixed(1) : "-";
+
+  outputEl.innerHTML = `
+    <div class="h2h-battle-row">
+      <div class="h2h-fighter fighter-1">
+        <img src="${safeAvatar(p1)}" class="h2h-fighter-avatar" onerror="this.style.display='none'">
+        <div class="h2h-fighter-name">${p1}</div>
+        <div class="h2h-fighter-elo">${Math.round(elo1)} ELO</div>
+      </div>
+      <div class="h2h-center-score">
+        <div class="h2h-score-text">${p1Wins} : ${p2Wins}</div>
+        <div class="h2h-score-lead">${leadText}</div>
+      </div>
+      <div class="h2h-fighter fighter-2">
+        <img src="${safeAvatar(p2)}" class="h2h-fighter-avatar" onerror="this.style.display='none'">
+        <div class="h2h-fighter-name">${p2}</div>
+        <div class="h2h-fighter-elo">${Math.round(elo2)} ELO</div>
+      </div>
+    </div>
+
+    <!-- Dual-Tone Progress Bar -->
+    <div style="position: relative; height: 10px; background: linear-gradient(90deg, #0288d1 0%, #4fc3f7 100%); border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), 0 0 8px rgba(79,195,247,0.25); border: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px;">
+      <div style="height: 100%; width: ${p1Rate}%; background: linear-gradient(90deg, #ffcc00 0%, #ff9500 100%); border-radius: 6px 0 0 6px; box-shadow: 0 0 10px rgba(255,204,0,0.4); transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);"></div>
+    </div>
+
+    <!-- Formkurve der letzten Duelle -->
+    <div class="h2h-form-container">
+      <span class="h2h-form-label">🔥 Formkurve (${streakLabel})</span>
+      <div class="h2h-form-dots">
+        ${formDotsHtml}
+      </div>
+    </div>
+
+    <!-- Haupt-Statistik Matrix -->
+    <div class="h2h-stat-matrix">
+      <div class="h2h-matrix-item">
+        <div class="h2h-matrix-val">${total}</div>
+        <div class="h2h-matrix-label">${duelLabel}</div>
+      </div>
+      <div class="h2h-matrix-item">
+        <div class="h2h-matrix-val" style="color:${p1Rate >= 50 ? "#ffcc00" : "#4fc3f7"};">${p1Rate}% : ${p2Rate}%</div>
+        <div class="h2h-matrix-label">Siegquote</div>
+      </div>
+      <div class="h2h-matrix-item">
+        <div class="h2h-matrix-val" style="font-size:11px; color:#34c759;">${eloTransferText}</div>
+        <div class="h2h-matrix-label">${eloLabel}</div>
+      </div>
+    </div>
+
+    <!-- Erweiterte Head-to-Head Bento-Analyse -->
+    <div class="h2h-details-grid">
+      <!-- 1. Break-Effizienz -->
+      <div class="h2h-detail-tile">
+        <div class="h2h-tile-title">⚡ Anstoß-Vorteil</div>
+        <div class="h2h-tile-val">
+          <span style="color:#ffcc00;">${p1BreakRate}</span> : <span style="color:#4fc3f7;">${p2BreakRate}</span>
+        </div>
+        <div class="h2h-tile-sub">Siegquote bei eigenem Break</div>
+      </div>
+
+      <!-- 2. Kugel-Waffen (Voll vs. Halb) -->
+      <div class="h2h-detail-tile">
+        <div class="h2h-tile-title">🎱 Kugel-Siege (🟡 / 🔵)</div>
+        <div class="h2h-tile-val">
+          <span style="color:#ffcc00;">${p1VollWins} / ${p1HalbWins}</span> | <span style="color:#4fc3f7;">${p2VollWins} / ${p2HalbWins}</span>
+        </div>
+        <div class="h2h-tile-sub">Siege nach Kugeltyp</div>
+      </div>
+
+      <!-- 3. Match-Finish & Siegart -->
+      <div class="h2h-detail-tile">
+        <div class="h2h-tile-title">🎯 Match-Finish</div>
+        <div class="h2h-tile-val">
+          <span style="color:#34c759;">${regPct}%</span> / <span style="color:#ff3b30;">${errPct}%</span>
+        </div>
+        <div class="h2h-tile-sub">Regulär vs. Gegner-Fehler</div>
+      </div>
+
+      <!-- 4. Spielzeiten -->
+      <div class="h2h-detail-tile">
+        <div class="h2h-tile-title">⏱️ Duell-Speed</div>
+        <div class="h2h-tile-val" style="color:var(--accent);">
+          ${fastestStr}
+        </div>
+        <div class="h2h-tile-sub">Kürzeste / Ø ${avgDurStr}</div>
+      </div>
+
+      <!-- 5. Zähigkeit (Ø Restkugeln bei Niederlage) -->
+      <div class="h2h-detail-tile" style="grid-column: span 2;">
+        <div class="h2h-tile-title">🛡️ Tisch-Widerstand (Ø Restkugeln bei Niederlage)</div>
+        <div class="h2h-tile-val">
+          <span style="color:#ffcc00;">${p1}: ${p1AvgRest}</span> &nbsp;—&nbsp; <span style="color:#4fc3f7;">${p2}: ${p2AvgRest}</span>
+        </div>
+        <div class="h2h-tile-sub">Wenigere Restkugeln = zäherer Kampf bis zur 8</div>
+      </div>
+    </div>
+  `;
+};

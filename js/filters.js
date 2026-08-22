@@ -154,6 +154,16 @@ window.getFilteredStats = () => {
   });
 };
 
+window.handleQuickFilter = (val, btnEl) => {
+  if (typeof window.handleFilterChange === "function") {
+    window.handleFilterChange(val);
+  }
+  document.querySelectorAll(".quick-filter-pill").forEach((p) => {
+    p.classList.remove("active");
+  });
+  if (btnEl) btnEl.classList.add("active");
+};
+
 window.handleFilterChange = (val) => {
   window.timeFilter = val;
   document
@@ -163,6 +173,14 @@ window.handleFilterChange = (val) => {
   document
     .querySelectorAll(".extra-filter-select")
     .forEach((s) => (s.value = "all"));
+
+  document.querySelectorAll(".quick-filter-pill").forEach((p) => {
+    if (p.getAttribute("data-filter") === val) {
+      p.classList.add("active");
+    } else if (p.getAttribute("data-filter")) {
+      p.classList.remove("active");
+    }
+  });
 
   if (val !== "custom") {
     document
