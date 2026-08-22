@@ -896,6 +896,10 @@ window.enrichStatsWithAchievements = function (
           d.achTracker[achKey].active = false;
         }
 
+        if (ach.t && ach.t !== achKey) {
+          d.achTracker[ach.t] = d.achTracker[achKey];
+        }
+
         if (
           hasNow &&
           (!dBefore.achTracker[achKey] || !dBefore.achTracker[achKey].active)
@@ -968,10 +972,23 @@ window.enrichStatsWithAchievements = function (
     d.achCountTotal = finalAchs.length;
 
     if (dailyAchivs && dailyAchivs.days) {
+      const dailyCounts = {};
       for (const dayKey in dailyAchivs.days) {
         const dayRec = dailyAchivs.days[dayKey] || {};
-        if (Array.isArray(dayRec[p]) && dayRec[p].length > 0)
+        const pList = dayRec[p];
+        if (Array.isArray(pList) && pList.length > 0) {
           d.dailyDaysWithAch++;
+          pList.forEach((achTitle) => {
+            dailyCounts[achTitle] = (dailyCounts[achTitle] || 0) + 1;
+          });
+        }
+      }
+      for (const achTitle in dailyCounts) {
+        d.achTracker[achTitle] = {
+          earned: dailyCounts[achTitle],
+          lost: 0,
+          active: true,
+        };
       }
     }
 

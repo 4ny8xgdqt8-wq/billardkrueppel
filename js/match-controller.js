@@ -212,10 +212,10 @@ window.matchToDeleteIndex = -1;
 
 
 
-      window.getBallIcon = (type) => {
+      window.getBallIcon = (type, size = 15) => {
         if (type === "Voll")
-          return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="#ffcc00"/><circle cx="12" cy="12" r="11" fill="url(#gradV)"/><defs><radialGradient id="gradV" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.3"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
-        return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="white"/><path d="M1.5 8.5 A 11 11 0 0 0 1.5 15.5 L 22.5 15.5 A 11 11 0 0 0 22.5 8.5 Z" fill="#4FC3F7"/><circle cx="12" cy="12" r="11" fill="url(#gradH)"/><defs><radialGradient id="gradH" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.2"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
+          return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="margin-right:4px; display:inline-block; vertical-align:middle; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5)); flex-shrink:0;"><defs><radialGradient id="gradVoll3D" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#fffbe6"/><stop offset="20%" stop-color="#ffd700"/><stop offset="70%" stop-color="#d49200"/><stop offset="100%" stop-color="#543800"/></radialGradient></defs><circle cx="12" cy="12" r="11" fill="url(#gradVoll3D)"/><ellipse cx="8.5" cy="7" rx="3" ry="2" fill="#ffffff" opacity="0.6" transform="rotate(-20 8.5 7)"/></svg>`;
+        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="margin-right:4px; display:inline-block; vertical-align:middle; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5)); flex-shrink:0;"><defs><radialGradient id="gradHalbBase3D" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#ffffff"/><stop offset="60%" stop-color="#e2e8f0"/><stop offset="100%" stop-color="#64748b"/></radialGradient><radialGradient id="gradHalbStripe3D" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#7fe3ff"/><stop offset="35%" stop-color="#00a6ff"/><stop offset="85%" stop-color="#005db3"/><stop offset="100%" stop-color="#002b54"/></radialGradient><clipPath id="clipHalb3D"><circle cx="12" cy="12" r="11"/></clipPath></defs><circle cx="12" cy="12" r="11" fill="url(#gradHalbBase3D)"/><path d="M 1 7.5 Q 12 12 23 7.5 L 23 16.5 Q 12 21 1 16.5 Z" fill="url(#gradHalbStripe3D)" clip-path="url(#clipHalb3D)"/><ellipse cx="8.5" cy="7" rx="3" ry="2" fill="#ffffff" opacity="0.6" transform="rotate(-20 8.5 7)"/></svg>`;
       };
 
 
@@ -1119,10 +1119,33 @@ window.matchToDeleteIndex = -1;
           }
         }
 
+        const av1 = window.getAvatarUrl ? window.getAvatarUrl(n1) : `avatars/${n1}.webp`;
+        const av2 = window.getAvatarUrl ? window.getAvatarUrl(n2) : `avatars/${n2}.webp`;
+        const is1v1 = m === "1:1";
+
+        b.className = "card vs-arena-card";
         b.innerHTML = `
+                ${is1v1 ? `
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.08);">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img loading="lazy" src="${av1}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid #ffcc00; box-shadow:0 0 10px rgba(255,204,0,0.4);" onerror="this.style.display='none'">
+                        <div>
+                            <div style="font-weight:900; font-size:12px; color:#fff;">${n1}</div>
+                            <div style="font-size:9px; font-weight:800; color:#ffcc00;">${Math.round(r1)} ELO</div>
+                        </div>
+                    </div>
+                    <div class="vs-badge-glow">VS</div>
+                    <div style="display:flex; align-items:center; gap:10px; flex-direction:row-reverse; text-align:right;">
+                        <img loading="lazy" src="${av2}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid #4fc3f7; box-shadow:0 0 10px rgba(79,195,247,0.4);" onerror="this.style.display='none'">
+                        <div>
+                            <div style="font-weight:900; font-size:12px; color:#fff;">${n2}</div>
+                            <div style="font-size:9px; font-weight:800; color:#4fc3f7;">${Math.round(r2)} ELO</div>
+                        </div>
+                    </div>
+                </div>` : ""}
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <span style="color:var(--accent); font-weight:900; font-size:9px; text-transform:uppercase; letter-spacing:1.5px; display:flex; align-items:center; gap:6px;"><div class="live-dot"></div> LIVE ANALYSE</span>
-                    <span style="font-size:10px; color:#fff; font-weight:900; opacity: 0.6;">${Math.round(r1)} <span style="color:var(--accent); opacity:1;">VS</span> ${Math.round(r2)} <span style="font-size:7px; color:#8e8e93;">ELO</span></span>
+                    <span style="font-size:10px; color:#fff; font-weight:900; opacity: 0.7;">${prob1}% <span style="color:var(--accent); opacity:1;">:</span> ${prob2}%</span>
                 </div>
                 <div class="prob-bar" style="margin-bottom:6px;">
                     <div style="width:${prob1}%">
@@ -1134,10 +1157,10 @@ window.matchToDeleteIndex = -1;
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="font-size:12px; font-weight:900; color:${c1}; flex:1; display:flex; align-items:center;">
                         <span style="white-space:nowrap;">${l1}: ${prob1}%</span>
-                        ${pref1 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref1.c}; opacity:0.8; margin-left:6px;">${window.getBallIcon(pref1.t).replace("14", "11")}${pref1.t}</span>` : ""}
+                        ${pref1 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref1.c}; opacity:0.8; margin-left:6px;">${window.getBallIcon(pref1.t, 12)}${pref1.t}</span>` : ""}
                     </div>
                     <div style="font-size:12px; font-weight:900; color:${c2}; flex:1; display:flex; align-items:center; justify-content:flex-end; gap:6px;">
-                        ${pref2 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref2.c}; opacity:0.8; margin-right:6px;">${window.getBallIcon(pref2.t).replace("14", "11")}${pref2.t}</span>` : ""}
+                        ${pref2 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref2.c}; opacity:0.8; margin-right:6px;">${window.getBallIcon(pref2.t, 12)}${pref2.t}</span>` : ""}
                         <span style="white-space:nowrap;">${l2}: ${prob2}%</span>
                     </div>
                 </div>
@@ -1300,7 +1323,6 @@ window.matchToDeleteIndex = -1;
             if (btn.textContent?.trim().includes(type)) btn.classList.add("selected");
           });
       };
- 
       window.selectWinTypeInModal = (winType) => {
         document.getElementById("winType").value = winType;
         window.clearResultModalCategory("win");
@@ -1317,10 +1339,43 @@ window.matchToDeleteIndex = -1;
         document.getElementById("leftover").value = num;
         window.clearResultModalCategory("leftover");
         document
-          .querySelectorAll("#modal-leftover-grid .leftover-btn")
-          .forEach((btn) => {
-            if (btn.textContent?.trim() === String(num)) btn.classList.add("selected");
+          .querySelectorAll("#modal-leftover-grid .rack-ball")
+          .forEach((btn, idx) => {
+            btn.classList.toggle("selected", idx === num);
           });
+      };
+
+      window.renderBilliardRack = (container, onSelectFnName) => {
+        if (!container) return;
+        const ballColors = {
+          0: { bg: "rgba(255,255,255,0.08)", text: "#8e8e93" },
+          1: { bg: "#ffd700", text: "#000" },
+          2: { bg: "#0066cc", text: "#fff" },
+          3: { bg: "#e60000", text: "#fff" },
+          4: { bg: "#800080", text: "#fff" },
+          5: { bg: "#ff6600", text: "#fff" },
+          6: { bg: "#008000", text: "#fff" },
+          7: { bg: "#8b4513", text: "#fff" },
+        };
+
+        container.className = "billiard-rack";
+        container.innerHTML = [0, 1, 2, 3, 4, 5, 6, 7]
+          .map((n) => {
+            const b = ballColors[n];
+            if (n === 0) {
+              return `<button type="button" class="rack-ball" onclick="${onSelectFnName}(0)">
+                <div style="font-size:16px;">🧹</div>
+                <div style="font-size:9px; font-weight:800; color:#8e8e93; margin-top:2px;">0 Rest</div>
+              </button>`;
+            }
+            return `<button type="button" class="rack-ball" onclick="${onSelectFnName}(${n})">
+              <div class="rack-ball-sphere" style="background: radial-gradient(circle at 35% 30%, #ffffff 0%, ${b.bg} 40%, rgba(0,0,0,0.7) 100%); color: ${b.text};">
+                ${n}
+              </div>
+              <div style="font-size:8px; font-weight:800; color:#8e8e93; margin-top:3px;">${n} Kugel${n > 1 ? "n" : ""}</div>
+            </button>`;
+          })
+          .join("");
       };
  
       window.saveMatchFromModal = async () => {
@@ -1356,6 +1411,19 @@ window.matchToDeleteIndex = -1;
                     <div class="ball-type-btn" onclick="window.selectBallTypeInModal('Halb')">🔵 Halb</div>
                 `;
         }
+        const winTypeSelect = document.getElementById("winType");
+        if (winTypeSelect) {
+          const winTypes = [
+            "Regulär (8er gelocht)",
+            "Gegner-Fehler: 8er zu früh",
+            "Gegner-Fehler: 8er falsches Loch",
+            "Gegner-Fehler: Foul bei der 8",
+          ];
+          winTypeSelect.innerHTML = ""; // Clear existing options
+          winTypes.forEach((wt) =>
+            winTypeSelect.options.add(new Option(wt, wt)),
+          );
+        }
         const winTypeContainer = document.getElementById("winType-chips");
         if (winTypeContainer) {
           const winTypes = [
@@ -1370,12 +1438,6 @@ window.matchToDeleteIndex = -1;
                 `<div class="win-type-chip" onclick="window.selectWinType(this, '${wt}')">${wt.replace("Gegner-Fehler: ", "Foul: ")}</div>`,
             )
             .join("");
-          // Populate the hidden select as well
-          const winTypeSelect = document.getElementById("winType");
-          winTypeSelect.innerHTML = ""; // Clear existing options
-          winTypes.forEach((wt) =>
-            winTypeSelect.options.add(new Option(wt, wt)),
-          );
         }
         const modalWinTypeContainer = document.getElementById(
           "modal-winType-chips",
@@ -1395,13 +1457,9 @@ window.matchToDeleteIndex = -1;
             .join("");
         }
         const leftoverGrid = document.getElementById("modal-leftover-grid");
-        if (leftoverGrid)
-          leftoverGrid.innerHTML = [0, 1, 2, 3, 4, 5, 6, 7]
-            .map(
-              (n) =>
-                `<button class="ball-type-btn leftover-btn" onclick="window.selectLeftoverInModal(${n})">${n}</button>`,
-            )
-            .join("");
+        if (leftoverGrid) {
+          window.renderBilliardRack(leftoverGrid, "window.selectLeftoverInModal");
+        }
       };
 
       window.updateLeftover = (change) => {
@@ -1488,12 +1546,7 @@ window.matchToDeleteIndex = -1;
         // Leftover Grid initialisieren
         const leftoverGrid = document.getElementById("edit-leftover-grid");
         if (leftoverGrid) {
-          leftoverGrid.innerHTML = [0, 1, 2, 3, 4, 5, 6, 7]
-            .map(
-              (n) =>
-                `<button type="button" class="ball-type-btn leftover-btn" onclick="window.selectEditLeftover(${n})">${n}</button>`,
-            )
-            .join("");
+          window.renderBilliardRack(leftoverGrid, "window.selectEditLeftover");
         }
 
         // Gewinner setzen

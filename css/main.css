@@ -27,6 +27,13 @@
 html,
 body {
   background:
+    /* Overhead Table Spotlight Beam */
+    radial-gradient(
+      ellipse 80% 50% at 50% -10%,
+      rgba(255, 204, 0, 0.09) 0%,
+      rgba(52, 199, 89, 0.04) 40%,
+      transparent 75%
+    ) fixed,
     linear-gradient(
         to bottom,
         var(--ambient-main-start) var(--ambient-gradient-start),
@@ -44,6 +51,7 @@ body {
       transparent 1px
     );
   background-size:
+    100% 100%,
     100% 100%,
     60px 60px,
     80px 80px;
@@ -1231,4 +1239,200 @@ select option {
     margin-bottom: 0;
   }
 }
+
+/* ==========================================================================
+   Design Upgrade: Holographic Trophies, Versus Arena & 3D Billiard Rack
+   ========================================================================== */
+
+/* --- 1. Compact & Elegant Achievement Styling --- */
+.achievement-icon {
+  font-size: 19px;
+  min-width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.achievement-title {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.achievement-phrase {
+  font-size: 9.5px;
+  color: #acacb0;
+  font-style: italic;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.achievement-how {
+  font-size: 9px;
+  font-weight: 600;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.ach-card-tier {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+/* Bronze Tier (1-3) */
+.ach-tier-bronze {
+  border-color: rgba(205, 127, 50, 0.3) !important;
+}
+
+/* Silber Tier (4-6) */
+.ach-tier-silver {
+  border-color: rgba(220, 225, 235, 0.35) !important;
+}
+
+/* Gold Tier (7-9) */
+.ach-tier-gold {
+  border-color: rgba(255, 204, 0, 0.4) !important;
+  box-shadow: 0 0 10px rgba(255, 204, 0, 0.08);
+}
+
+/* Diamant / Max Tier (10+) */
+.ach-tier-diamond {
+  border-color: rgba(79, 195, 247, 0.5) !important;
+  box-shadow: 0 0 12px rgba(79, 195, 247, 0.15) !important;
+}
+
+.tier-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.tier-pill-bronze {
+  background: rgba(205, 127, 50, 0.15);
+  color: #cd7f32;
+  border: 1px solid rgba(205, 127, 50, 0.3);
+}
+
+.tier-pill-silver {
+  background: rgba(220, 225, 235, 0.15);
+  color: #dce1eb;
+  border: 1px solid rgba(220, 225, 235, 0.3);
+}
+
+.tier-pill-gold {
+  background: rgba(255, 215, 0, 0.15);
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.tier-pill-diamond {
+  background: rgba(79, 195, 247, 0.15);
+  color: #4fc3f7;
+  border: 1px solid rgba(79, 195, 247, 0.35);
+  text-shadow: 0 0 6px rgba(79, 195, 247, 0.5);
+}
+
+/* --- 2. 3D Billiard Ball Rack (Restkugeln-Auswahl) --- */
+.billiard-rack {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 12px;
+  background: radial-gradient(circle at 50% 30%, rgba(15, 40, 25, 0.7) 0%, rgba(5, 15, 10, 0.9) 100%);
+  border: 1px solid rgba(52, 199, 89, 0.25);
+  border-radius: 18px;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6), 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.rack-ball {
+  position: relative;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-user-select: none;
+}
+
+.rack-ball:active {
+  transform: scale(0.92);
+}
+
+.rack-ball.selected {
+  background: linear-gradient(135deg, rgba(255, 204, 0, 0.25) 0%, rgba(255, 149, 0, 0.15) 100%);
+  border: 1.5px solid var(--accent);
+  box-shadow: 0 0 16px rgba(255, 204, 0, 0.35), inset 0 0 8px rgba(255, 204, 0, 0.2);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.rack-ball-sphere {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset -2px -2px 5px rgba(0, 0, 0, 0.5), inset 2px 2px 5px rgba(255, 255, 255, 0.6);
+  transition: transform 0.25s ease;
+}
+
+.rack-ball.selected .rack-ball-sphere {
+  transform: scale(1.15);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6), inset -2px -2px 4px rgba(0, 0, 0, 0.4), inset 2px 2px 6px rgba(255, 255, 255, 0.9);
+}
+
+/* --- 3. Versus Arena Face-Off Card --- */
+.vs-arena-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 204, 0, 0.08) 0%, rgba(20, 20, 24, 0.85) 50%, rgba(79, 195, 247, 0.08) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.vs-arena-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #ffcc00 0%, transparent 50%, #4fc3f7 100%);
+}
+
+.vs-badge-glow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffcc00 0%, #ff9500 100%);
+  color: #000;
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 20px rgba(255, 204, 0, 0.5), 0 0 6px rgba(255, 255, 255, 0.8);
+  animation: pulse-gold 2.5s infinite alternate ease-in-out;
+}
+
 

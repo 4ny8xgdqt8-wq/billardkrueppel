@@ -2,6 +2,21 @@
    Billardkrüppel Statistics & UI Rendering Engine
    ========================================================================== */
 
+window.playerAvatars = window.playerAvatars || {
+  Daniel: "avatars/Daniel.webp",
+  Thorsten: "avatars/Thorsten.webp",
+  Peter: "avatars/Peter.webp",
+};
+window.getAvatarUrl = window.getAvatarUrl || ((name) => {
+  return (window.playerAvatars && window.playerAvatars[name]) || `avatars/${name}.webp`;
+});
+
+const safeGetAvatarUrl = (name) => {
+  if (typeof window.getAvatarUrl === "function") return window.getAvatarUrl(name);
+  if (window.playerAvatars && window.playerAvatars[name]) return window.playerAvatars[name];
+  return `avatars/${name}.webp`;
+};
+window.safeGetAvatarUrl = safeGetAvatarUrl;
 
 window.renderBillardStats = function (
   stats,
@@ -27,6 +42,12 @@ window.renderBillardStats = function (
   const allSafeStats = (window.stats || []).filter((m) => m && m.d);
   const isFiltered =
     !filterToday && stats && stats.length !== allSafeStats.length;
+
+  const safeGetAvatarUrl = (name) => {
+    if (typeof window.getAvatarUrl === "function") return window.getAvatarUrl(name);
+    if (window.playerAvatars && window.playerAvatars[name]) return window.playerAvatars[name];
+    return `avatars/${name}.webp`;
+  };
 
   // --- Spieler aus spieler.json (kommt aus BillardPro.js: const spieler = [...]) ---
   const configuredPlayers = (() => {
@@ -461,7 +482,7 @@ window.renderBillardStats = function (
                    style="padding:15px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor:pointer; -webkit-tap-highlight-color: transparent; display:flex; align-items:center; gap:12px;">
                 <div class="ach-chevron expanded"></div>
                 <div style="display:flex; align-items:center; gap:10px;">
-                  <img src="${window.getAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:12px; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
+                  <img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:12px; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
                   <div style="display:none; width:32px; height:32px; border-radius:12px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                   <div style="color:#ffffff; font-weight:900; font-size:16px; line-height:1; letter-spacing: 0.5px;">${p}</div>
                 </div>
@@ -476,7 +497,7 @@ window.renderBillardStats = function (
                   <div style="display:flex; align-items:center; gap:12px;">
                     <div class="ach-chevron collapsed"></div>
                     <div style="display:flex; align-items:center; gap:14px;">
-                    <img src="${window.getAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:44px; height:44px; border-radius:14px; object-fit:cover; border:2px solid var(--accent); box-shadow: 0 0 15px rgba(255,204,0,0.2);">
+                    <img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:44px; height:44px; border-radius:14px; object-fit:cover; border:2px solid var(--accent); box-shadow: 0 0 15px rgba(255,204,0,0.2);">
                     <div style="display:none; width:36px; height:36px; border-radius:12px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:20px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                     <div>
                       <div style="color:#ffffff; font-weight:900; font-size:20px; line-height:1; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${p}</div>
@@ -609,10 +630,34 @@ window.renderBillardStats = function (
         const newBadge = item.isNew
           ? `<span style="background:var(--accent); color:#000; font-size:8px; font-weight:900; padding:2px 5px; border-radius:4px; margin-left:8px; vertical-align:middle; animation: badge-pulse 1.5s infinite ease-in-out;">NEU</span>`
           : ""; // isNew wird von enrichStatsWithAchievements gesetzt
-        const tracker = d.achTracker ? d.achTracker[item.t] : null; // Tracker soll sich nach den gefilterten Daten richten
-        const trackerHtml = tracker
-          ? `<div style="font-size:9px; color:#8e8e93; margin-top:4px; font-weight:600;">Sammelrate: <span style="color:#34c759;">📈 ${tracker.earned}</span> | <span style="color:#ff3b30;">📉 ${tracker.lost}</span></div>`
-          : "";
+        const achKey = item.g ? `${item.g}_${item.tier}` : item.t;
+        const tracker = d.achTracker ? (d.achTracker[achKey] || d.achTracker[item.t]) : null;
+        const trackerHtml =
+          tracker && (tracker.earned > 0 || tracker.lost > 0)
+            ? `<div style="font-size:9px; color:#8e8e93; margin-top:3px; font-weight:600;">Sammelrate: <span style="color:#34c759;">📈 ${tracker.earned}</span> | <span style="color:#ff3b30;">📉 ${tracker.lost}</span></div>`
+            : "";
+
+        // Holographische Trophäen-Stufen (kompakt)
+        let tierClass = "";
+        let tierBadge = "";
+        if (item.tier) {
+          if (item.tier <= 3) {
+            tierClass = "ach-tier-bronze";
+            tierBadge = `<span class="tier-badge-pill tier-pill-bronze">Tier ${item.tier}</span>`;
+          } else if (item.tier <= 6) {
+            tierClass = "ach-tier-silver";
+            tierBadge = `<span class="tier-badge-pill tier-pill-silver">Tier ${item.tier}</span>`;
+          } else if (item.tier <= 9) {
+            tierClass = "ach-tier-gold";
+            tierBadge = `<span class="tier-badge-pill tier-pill-gold">Tier ${item.tier}</span>`;
+          } else {
+            tierClass = "ach-tier-diamond";
+            tierBadge = `<span class="tier-badge-pill tier-pill-diamond">💎 Max</span>`;
+          }
+        } else if (isMaxTier && !isShame) {
+          tierClass = "ach-tier-diamond";
+          tierBadge = `<span class="tier-badge-pill tier-pill-diamond">💎 Max</span>`;
+        }
 
         const borderCol = isShame ? "var(--error)" : "#34c759";
         const textCol = isShame
@@ -620,20 +665,21 @@ window.renderBillardStats = function (
           : "rgba(52, 199, 89, 0.85)";
 
         const borderStyle = isShame
-          ? `border-left: 4px solid ${borderCol};`
-          : "border-left: none;";
+          ? `border-left: 3px solid ${borderCol};`
+          : "";
         return `
-    <div class="stat-row-item ${isMaxTier && !isShame ? "achievement-glow-fame" : ""} ${isShame ? "achievement-glow-shame shame-bg" : ""}" style="${borderStyle}">
+    <div class="stat-row-item ${tierClass} ${isMaxTier && !isShame ? "achievement-glow-fame" : ""} ${isShame ? "achievement-glow-shame shame-bg" : ""}" style="${borderStyle}">
       <div class="achievement-icon">${item.i}</div>
-              <div style="flex:1;">
-        <div class="achievement-title">
-                  <span style="${isMaxTier ? "color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.4);" : ""}">${item.t}${isMaxTier ? " ⭐" : ""} ${newBadge}</span>
-                </div>
-        <div class="achievement-phrase">"${phrase}"</div>
+      <div style="flex:1; min-width:0;">
+        <div class="achievement-title" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+          <span style="${isMaxTier ? "color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.4);" : ""}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.t}${isMaxTier ? " ⭐" : ""} ${newBadge}</span>
+          ${tierBadge}
+        </div>
+        ${phrase ? `<div class="achievement-phrase">"${phrase}"</div>` : ""}
         <div class="achievement-how" style="color:${textCol};">${howIcon} ${item.h || ""}</div>
-                ${trackerHtml}
-              </div>
-            </div>`;
+        ${trackerHtml}
+      </div>
+    </div>`;
       };
 
       let achHtmlContent =
@@ -641,12 +687,13 @@ window.renderBillardStats = function (
           ? currentAchs.map((it, aIdx) => createAchRow2(it, p, aIdx)).join("")
           : `<div style="color:#555; font-size:11px; text-align:center; padding:20px; font-style:italic;">Noch ein unbeschriebenes Blatt.</div>`;
 
-      // Daily-Historie im Gesamt-Tab
+      // Daily-Historie im Gesamt-Tab (sortiert nach Anzahl abfallend)
       if (!isTodayTab) {
         const counts = getDailyCountsForPlayer(p);
-        const entries = Object.entries(counts).sort((a, b) =>
-          a[0].localeCompare(b[0], "de"),
-        );
+        const entries = Object.entries(counts).sort((a, b) => {
+          if (b[1] !== a[1]) return b[1] - a[1];
+          return a[0].localeCompare(b[0], "de");
+        });
         if (entries.length > 0) {
           achHtmlContent +=
             `
@@ -663,7 +710,7 @@ window.renderBillardStats = function (
                 const ic = ach.i || "🏷️";
                 const isShame =
                   ach.k === "shame" ||
-                  window.dailyShamePool.some((s) => s.t === title); // Check if it's a shame achievement
+                  window.dailyShamePool.some((s) => s.t === title);
                 const categoryColor = isShame ? "var(--error)" : "#34c759";
                 const howColor = isShame
                   ? "rgba(255, 69, 58, 0.70)"
@@ -673,16 +720,17 @@ window.renderBillardStats = function (
                 const phrase = ach.d[phraseIndex];
 
                 const borderStyle = isShame
-                  ? `border-left: 4px solid ${categoryColor};`
+                  ? `border-left: 3px solid ${categoryColor};`
                   : "border-left: none;";
                 return `<div class="stat-row-item ${isShame ? "achievement-glow-shame shame-bg" : ""}" style="${borderStyle}">
-                  <div style="font-size:22px; min-width:35px; text-align:center;">${ic}</div>
-                  <div style="flex:1;">
-                    <div style="font-size:12px; font-weight:900; color:#fff; display:flex; justify-content:space-between; align-items:center;">
-                      <span>${title}</span><span class="stat-value-badge" style="color:#ffcc00; background:rgba(255,204,0,0.15); border-color:rgba(255,204,0,0.2);">${cnt}×</span>
+                  <div class="achievement-icon">${ic}</div>
+                  <div style="flex:1; min-width:0;">
+                    <div class="achievement-title" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                      <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</span>
+                      <span class="stat-value-badge" style="color:#ffcc00; background:rgba(255,204,0,0.15); border-color:rgba(255,204,0,0.2); flex-shrink:0;">${cnt}×</span>
                     </div>
-                    <div style="font-size:10px; color:#acacb0; font-style:italic; margin-top:2px;">"${phrase}"</div>
-                    <div style="font-size:10px; margin-top:3px; color:${howColor};">${howIcon} ${ach.h || ""}</div>
+                    ${phrase ? `<div class="achievement-phrase">"${phrase}"</div>` : ""}
+                    <div class="achievement-how" style="color:${howColor};">${howIcon} ${ach.h || ""}</div>
                   </div>
                 </div>`;
               })
@@ -730,7 +778,7 @@ window.renderBillardStats = function (
           const names = pName.split(" & ").map((s) => s.trim());
           return names
             .map((n, pIdx) => {
-              const src = window.getAvatarUrl(n);
+              const src = safeGetAvatarUrl(n);
               const margin = pIdx === names.length - 1 ? "0" : "-8px";
               return `<img src="${src}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; border-radius:8px; object-fit:cover; border:1.5px solid rgba(255,255,255,0.2); margin-right:${margin}; position:relative; z-index:${names.length - pIdx};">
                             <div style="display:none; width:${size}px; height:${size}px; border-radius:8px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:${size * 0.6}px; border:1px solid rgba(255,255,255,0.1); margin-right:${margin}; position:relative; z-index:${names.length - pIdx};">👤</div>`;
@@ -957,7 +1005,7 @@ window.renderBillardStats = function (
         }
 
         const getAvatarPodiumHtml = (players) => {
-          return players.map((p) => `<img src="${window.getAvatarUrl(p)}" onerror="this.style.display='none';">`).join("");
+          return players.map((p) => `<img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none';">`).join("");
         };
 
         let podiumPlacesHtml = "";
@@ -1559,7 +1607,7 @@ window.renderBillardStats = function (
                 <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding: 10px; border-radius:16px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.27 + idx * 0.05}s;">
                     <div style="display:flex; align-items:center; gap:10px;">
                         <div style="font-size:14px; font-weight:900; color:var(--accent); min-width:20px; text-align:center;">${idx + 1}.</div>
-                        <img src="${window.getAvatarUrl(p.name)}" style="width:30px; height:30px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
+                        <img src="${safeGetAvatarUrl(p.name)}" style="width:30px; height:30px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
                         <div style="font-size:13px; font-weight:800; color:#fff;">${p.name}</div>
                     </div>
                     <div style="display:flex; gap:8px; font-size:11px; font-weight:900;">
@@ -1612,7 +1660,7 @@ window.renderBillardStats = function (
                             <span style="color:var(--accent); font-weight:900; font-size:14px;">${idx + 1}</span>
                         </div>
                         <div style="display:flex; align-items:center; position:relative; width:45px; height:30px;">
-                            ${pNames.map((p, pIdx) => `<img src="${window.getAvatarUrl(p)}" style="position:absolute; left:${pIdx * 15}px; width:28px; height:30px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.2); z-index:${2 - pIdx}; transform: rotate(${pIdx === 0 ? "-5deg" : "5deg"}); box-shadow: 4px 0 10px rgba(0,0,0,0.3);">`).join("")}
+                            ${pNames.map((p, pIdx) => `<img src="${safeGetAvatarUrl(p)}" style="position:absolute; left:${pIdx * 15}px; width:28px; height:30px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.2); z-index:${2 - pIdx}; transform: rotate(${pIdx === 0 ? "-5deg" : "5deg"}); box-shadow: 4px 0 10px rgba(0,0,0,0.3);">`).join("")}
                         </div>
                         <div style="margin-left:12px;">
                             <div style="color:#fff; font-weight:900; font-size:13px; letter-spacing:0.3px;">${t.name}</div>
@@ -1653,14 +1701,14 @@ window.renderBillardStats = function (
                 <div style="display:flex; justify-content:space-around; align-items:center; padding: 10px 0; ">
                     <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
                         <div style="font-size:8px; color:#8e8e93; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Voll-Profi</div>
-                        <img src="${window.getAvatarUrl(topVollarbeiter.n)}" style="width:36px; height:36px; border-radius:12px; border:3px solid #ffcc00; box-shadow: 0 0 15px rgba(255,204,0,0.3);">
+                        <img src="${safeGetAvatarUrl(topVollarbeiter.n)}" style="width:36px; height:36px; border-radius:12px; border:3px solid #ffcc00; box-shadow: 0 0 15px rgba(255,204,0,0.3);">
                         <div style="font-size:14px; font-weight:900; color:#fff; text-shadow: 0 0 8px rgba(255,255,255,0.2);">${topVollarbeiter.n}</div>
                         <div style="font-size:11px; color:#34c759; font-weight:900; text-shadow: 0 0 8px rgba(52,199,89,0.3);">${topVollarbeiter.wr > 0 ? Math.round(topVollarbeiter.wr) + "%" : "-"}</div>
                     </div>
                     <div style="height:40px; width:1px; background:rgba(255,255,255,0.1);"></div>
                     <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
                         <div style="font-size:8px; color:#8e8e93; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Halbe-As</div>
-                        <img src="${window.getAvatarUrl(topHalbeExperte.n)}" style="width:36px; height:36px; border-radius:12px; border:3px solid #4FC3F7; box-shadow: 0 0 15px rgba(79,195,247,0.3);">
+                        <img src="${safeGetAvatarUrl(topHalbeExperte.n)}" style="width:36px; height:36px; border-radius:12px; border:3px solid #4FC3F7; box-shadow: 0 0 15px rgba(79,195,247,0.3);">
                         <div style="font-size:14px; font-weight:900; color:#fff; text-shadow: 0 0 8px rgba(255,255,255,0.2);">${topHalbeExperte.n}</div>
                         <div style="font-size:11px; color:#34c759; font-weight:900; text-shadow: 0 0 8px rgba(52,199,89,0.3);">${topHalbeExperte.wr > 0 ? Math.round(topHalbeExperte.wr) + "%" : "-"}</div>
                     </div>
@@ -1709,7 +1757,7 @@ window.renderBillardStats = function (
                 <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding: 10px; border-radius:16px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.22 + idx * 0.05}s;">
                     <div style="display:flex; align-items:center; gap:10px;">
                         <div style="font-size:14px; font-weight:900; color:var(--accent); min-width:20px; text-align:center;">${idx + 1}.</div>
-                        <img src="${window.getAvatarUrl(item.p)}" style="width:30px; height:30px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
+                        <img src="${safeGetAvatarUrl(item.p)}" style="width:30px; height:30px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
                         <div style="font-size:13px; font-weight:800; color:#fff;">${item.p}</div>
                     </div>
                     <div style="font-size:13px; font-weight:900; color: #fff;">
@@ -1763,7 +1811,7 @@ window.renderBillardStats = function (
                     <div style="display:flex; justify-content:space-between; align-items:center; position: relative; z-index: 1;">
                         <!-- Linker Spieler -->
                         <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                            <img src="${window.getAvatarUrl(m.p1)}" style="width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
+                            <img src="${safeGetAvatarUrl(m.p1)}" style="width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
                             <div style="overflow:hidden;">
                                 <div style="font-size:11px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p1}</div>
                                 <div class="stat-value-badge" style="margin-top:3px; display:inline-block; ${c1_style}">${m.wr1}%</div>
@@ -1784,7 +1832,7 @@ window.renderBillardStats = function (
                                 <div class="stat-value-badge" style="margin-top:3px; display:inline-block; ${c2_style}">${m.wr2}%</div>
                                 <div style="font-size: 10px; opacity: 0.8; color: #8e8e93; margin-top: 4px;"><span style="color:#34c759;">S: ${m.p2_wins}</span> / <span style="color:#ff3b30;">N: ${m.p1_wins}</span></div>
                             </div>
-                            <img src="${window.getAvatarUrl(m.p2)}" style="width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
+                            <img src="${safeGetAvatarUrl(m.p2)}" style="width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
                         </div>
                     </div>
                     <!-- Visueller Kräftevergleich -->
@@ -1839,7 +1887,7 @@ window.renderBillardStats = function (
 
     // Chart.js Diagramm
     const canvas = byId("winChart");
-    if (canvas) {
+    if (canvas && typeof Chart !== "undefined") {
       const canvasEl = document.getElementById("winChart");
       if (canvasEl) canvasEl.style.display = "block";
       const ctx = canvas.getContext("2d");
@@ -1878,7 +1926,7 @@ window.renderBillardStats = function (
                 const playerName = labels[index];
                 if (!playerName) return;
 
-                const url = window.getAvatarUrl(playerName);
+                const url = safeGetAvatarUrl(playerName);
                 if (!window._avatarCache) window._avatarCache = {};
 
                 if (!window._avatarCache[url]) {
@@ -1970,7 +2018,7 @@ window.renderBillardStats = function (
       if (eloTrendCard) eloTrendCard.style.display = "block";
 
       // Diagramm nur zeichnen, wenn wir nicht im Heute-Tab sind
-      if (eloCanvas && eloHistoryContainer) {
+      if (eloCanvas && eloHistoryContainer && typeof Chart !== "undefined") {
         const eloCtx = eloCanvas.getContext("2d");
         if (eloCanvas.__myEloChart) eloCanvas.__myEloChart.destroy();
 
@@ -2114,7 +2162,7 @@ window.renderBillardStats = function (
               <div onclick="window.openPlayerProfile('${r.name}')" class="card-modern ${isFirst ? "rank-1-card" : ""}" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; padding: 12px; border-radius: 20px; cursor:pointer; ${isFirst ? "" : "animation: ach-card-enter 0.4s ease-out forwards; opacity: 0;"} animation-delay: ${0.5 + i * 0.05}s; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid ${isFirst ? "#ffcc00" : "rgba(255, 255, 255, 0.1)"}; box-shadow: ${isFirst ? "0 0 20px rgba(255,204,0,0.2)" : "0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05)"};">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${badge || i + 1 + "."}</div>
                 <div class="avatar-frame ${streakClass}">
-                  <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15);">
+                  <img src="${safeGetAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15);">
                 </div>
                 <div style="display:none; width:30px; height:30px; border-radius:10px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1; overflow:hidden;">
@@ -2352,7 +2400,7 @@ window.renderBillardStats = function (
               <div onclick="window.openPlayerProfile('${r.name}')" class="card-modern" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; background: ${isTopForm ? "linear-gradient(135deg, rgba(52, 199, 89, 0.2) 0%, #1a1a1c 100%)" : "linear-gradient(145deg, #2c2c2e, #1a1a1c)"}; padding: 12px; border-radius: 20px; border: 1px solid ${isTopForm ? "#34c759" : "rgba(255, 255, 255, 0.1)"}; box-shadow: ${isTopForm ? "0 0 20px rgba(52,199,89,0.2)" : "0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05)"}; cursor:pointer; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${0.5 + i * 0.05}s;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${i === 0 ? "🔥" : i === 1 ? "✨" : i === 2 ? "📈" : i + 1 + "."}</div>
                 <div class="avatar-frame ${streakClass}">
-                  <img src="${window.getAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15);">
+                  <img src="${safeGetAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15);">
                 </div>
                 <div style="display:none; width:30px; height:30px; border-radius:10px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1; overflow:hidden;">
@@ -2500,7 +2548,7 @@ window.renderBillardStats = function (
               : "";
         header.innerHTML = `
                 <div class="avatar-frame ${streakClass}" style="margin-bottom:15px;">
-                    <img loading="lazy" src="${window.getAvatarUrl(name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" style="width:90px; height:90px; border-radius:22px; border:4px solid var(--accent); object-fit:cover; box-shadow: 0 0 20px rgba(255,204,0,0.5);">
+                    <img loading="lazy" src="${safeGetAvatarUrl(name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" style="width:90px; height:90px; border-radius:22px; border:4px solid var(--accent); object-fit:cover; box-shadow: 0 0 20px rgba(255,204,0,0.5);">
                 </div>
                 <div style="font-size:28px; font-weight:900; color:#fff; text-shadow: 0 0 15px rgba(255,204,0,0.4);">${name}</div>
                 <div style="font-size:10px; color:#8e8e93; font-weight:800; text-transform:uppercase; margin-top:8px; letter-spacing:1.5px;">Spieler-Steckbrief</div>
@@ -2612,7 +2660,7 @@ window.renderBillardStats = function (
             .map(
               (n) => `
                     <div class="avatar-frame ${effectClass}" style="position:relative; width:${size}px; height:${size}px; min-width:${size}px;">
-                        <img loading="lazy" src="${window.getAvatarUrl(n)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:12px; object-fit:cover; border:2px solid rgba(255,255,255,0.2); z-index:2; background:transparent; ${effectClass === "match-shame" ? "filter: grayscale(0.1); opacity: 0.9;" : ""}">
+                        <img loading="lazy" src="${safeGetAvatarUrl(n)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:12px; object-fit:cover; border:2px solid rgba(255,255,255,0.2); z-index:2; background:transparent; ${effectClass === "match-shame" ? "filter: grayscale(0.1); opacity: 0.9;" : ""}">
                         <div style="display:none; width:${size}px; height:${size}px; border-radius:12px; background:rgba(255,255,255,0.05); align-items:center; justify-content:center; font-size:${size * 0.5}px; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.2);">👤</div>
                     </div>
                 `,
@@ -2666,7 +2714,7 @@ window.renderBillardStats = function (
                             ([playerName, achs], pIdx) => `
                             <div class="card" style="margin-bottom:0; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 20px; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${pIdx * 0.1}s; opacity: 0;">
                                 <div style="font-weight:900; font-size:14px; color:var(--accent); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-                                    <img loading="lazy" src="${window.getAvatarUrl(playerName)}" style="width:20px; height:20px; border-radius:50%; border:1px solid var(--accent); object-fit:cover;">
+                                    <img loading="lazy" src="${safeGetAvatarUrl(playerName)}" style="width:20px; height:20px; border-radius:50%; border:1px solid var(--accent); object-fit:cover;">
                                     ${playerName} hat erreicht:
                                 </div>
                                 ${achs
@@ -2736,8 +2784,8 @@ window.renderHistory =       function renderHistory(statsToRender) {
           const players = playerName.split(" & ").map((p) => p.trim());
           return players
             .map((p, idx) => {
-              const avatarSrc = window.getAvatarUrl
-                ? window.getAvatarUrl(p)
+              const avatarSrc = safeGetAvatarUrl
+                ? safeGetAvatarUrl(p)
                 : `avatars/${p}.png`;
               const isLast = idx === players.length - 1;
               const margin = isLast ? "0" : "-6px";
@@ -2864,12 +2912,16 @@ window.renderHistory =       function renderHistory(statsToRender) {
 
       window.openAchListModal = () => {
         const container = document.getElementById("achListContainer");
-        renderAchList("all");
-        document.getElementById("achListModal").style.display = "flex";
+        if (typeof window.renderAchList === "function") {
+          window.renderAchList("all");
+        }
+        const modal = document.getElementById("achListModal");
+        if (modal) modal.style.display = "flex";
         if (container) container.scrollTop = 0;
       };
       window.closeAchListModal = () => {
-        document.getElementById("achListModal").style.display = "none";
+        const modal = document.getElementById("achListModal");
+        if (modal) modal.style.display = "none";
       };
       window.renderAchList = (filter) => {
         const c = document.getElementById("achListContainer");
@@ -2882,8 +2934,8 @@ window.renderHistory =       function renderHistory(statsToRender) {
 
         // 1. Alle verfügbaren Karriere-Achievements sammeln (Fame + Shame + Killer)
         let pool = [
-          ...window.famePool.map((a) => ({ ...a, k: "fame" })),
-          ...window.shamePool.map((a) => ({ ...a, k: "shame" })),
+          ...(window.famePool || []).map((a) => ({ ...a, k: "fame" })),
+          ...(window.shamePool || []).map((a) => ({ ...a, k: "shame" })),
           ...(window.generatedKillerAchs || []).map((a) => ({
             ...a,
             k: "fame",
@@ -2893,13 +2945,13 @@ window.renderHistory =       function renderHistory(statsToRender) {
         // 2. Pool basierend auf Filter bestimmen
         if (filter === "all") {
           pool = [
-            ...pool, // Alle Karriere-Achievements (inkl. aller Tiers)
-            ...window.dailyFamePool.map((a) => ({
+            ...pool,
+            ...(window.dailyFamePool || []).map((a) => ({
               ...a,
               k: "fame",
               isDaily: true,
             })),
-            ...window.dailyShamePool.map((a) => ({
+            ...(window.dailyShamePool || []).map((a) => ({
               ...a,
               k: "shame",
               isDaily: true,
@@ -2912,20 +2964,19 @@ window.renderHistory =       function renderHistory(statsToRender) {
         } else {
           // 'daily' filter
           pool = [
-            ...window.dailyFamePool.map((a) => ({ ...a, isDaily: true })),
-            ...window.dailyShamePool.map((a) => ({ ...a, isDaily: true })),
+            ...(window.dailyFamePool || []).map((a) => ({ ...a, isDaily: true })),
+            ...(window.dailyShamePool || []).map((a) => ({ ...a, isDaily: true })),
           ];
         }
 
-        // 4. Sortierung: Kategorie (Fame vor Shame) -> Dann alphabetisch nach Name
+        // 3. Sortierung: Kategorie (Fame vor Shame) -> Dann alphabetisch nach Name
         pool.sort((a, b) => {
-          // Fame (k="fame") kommt vor Shame (k="shame")
           if (a.k !== b.k) return a.k === "fame" ? -1 : 1;
-          // Innerhalb der Kategorie nach dem Titel sortieren
-          return a.t.localeCompare(b.t, "de");
+          return (a.t || "").localeCompare(b.t || "", "de");
         });
 
-        // 5. HTML generieren
+        // 4. HTML generieren
+        if (!c) return;
         c.innerHTML = pool
           .map((a, idx) => {
             const isShame = a.k === "shame";
@@ -2935,23 +2986,45 @@ window.renderHistory =       function renderHistory(statsToRender) {
               : "rgba(52, 199, 89, 0.85)";
             const howIcon = isShame ? "💀" : "🏆";
             const isMaxTier = a.max === true;
-            const phrase =
-              a.d && a.d.length > 0
-                ? `"${a.d[window.getFixedIndex(a.t, a.d.length)]}"`
-                : "";
+            const phrase = Array.isArray(a.d) ? a.d[0] || "" : a.d || "";
+
+            let tierClass = "";
+            let tierBadge = "";
+            if (a.tier) {
+              if (a.tier <= 3) {
+                tierClass = "ach-tier-bronze";
+                tierBadge = `<span class="tier-badge-pill tier-pill-bronze">Tier ${a.tier}</span>`;
+              } else if (a.tier <= 6) {
+                tierClass = "ach-tier-silver";
+                tierBadge = `<span class="tier-badge-pill tier-pill-silver">Tier ${a.tier}</span>`;
+              } else if (a.tier <= 9) {
+                tierClass = "ach-tier-gold";
+                tierBadge = `<span class="tier-badge-pill tier-pill-gold">Tier ${a.tier}</span>`;
+              } else {
+                tierClass = "ach-tier-diamond";
+                tierBadge = `<span class="tier-badge-pill tier-pill-diamond">💎 Max</span>`;
+              }
+            } else if (isMaxTier && !isShame) {
+              tierClass = "ach-tier-diamond";
+              tierBadge = `<span class="tier-badge-pill tier-pill-diamond">💎 Max</span>`;
+            }
+
             const borderStyle = isShame
-              ? `border-left: 4px solid ${categoryColor};`
-              : "border-left: none;";
+              ? `border-left: 3px solid ${categoryColor};`
+              : "";
             return `
-                <div class="stat-row-item ${isMaxTier && !isShame ? "achievement-glow-fame" : ""} ${isShame ? "achievement-glow-shame shame-bg" : ""}" style="${borderStyle} animation: ach-card-enter 0.4s ease-out forwards; animation-delay: ${idx * 0.02}s; opacity: 0;">
-                  <div style="font-size:22px; min-width:35px; text-align:center;">${a.i}</div>
-                  <div style="flex:1;">
-                    <div style="font-size:12px; font-weight:900; color:#fff;">
-                        <span style="${isMaxTier ? "color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.4);" : ""}">${a.t}${isMaxTier ? " ⭐" : ""}</span>
-                        ${a.isDaily ? '<span style="font-size:7px; color:var(--accent); margin-left:5px; border:1px solid rgba(255,204,0,0.3); padding:1px 3px; border-radius:3px; vertical-align:middle; opacity:0.8;">DAILY</span>' : ""}
+                <div class="stat-row-item ${tierClass} ${isMaxTier && !isShame ? "achievement-glow-fame" : ""} ${isShame ? "achievement-glow-shame shame-bg" : ""}" style="${borderStyle} animation: ach-card-enter 0.3s ease-out forwards; animation-delay: ${Math.min(idx * 0.015, 0.5)}s; opacity: 0;">
+                  <div class="achievement-icon">${a.i}</div>
+                  <div style="flex:1; min-width:0;">
+                    <div class="achievement-title" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                        <span style="${isMaxTier ? "color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.4);" : ""}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.t}${isMaxTier ? " ⭐" : ""}</span>
+                        <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
+                          ${tierBadge}
+                          ${a.isDaily ? '<span style="font-size:7px; color:var(--accent); border:1px solid rgba(255,204,0,0.3); padding:1px 3px; border-radius:3px; vertical-align:middle; opacity:0.8;">DAILY</span>' : ""}
+                        </div>
                     </div>
-                    ${phrase ? `<div style="font-size:10px; color:#acacb0; font-style:italic; margin-top:2px;">${phrase}</div>` : ""}
-                    <div style="font-size:10px; margin-top:3px; color:${howColor}; font-weight: 600;">${howIcon} ${a.h || ""}</div>
+                    ${phrase ? `<div class="achievement-phrase">${phrase}</div>` : ""}
+                    <div class="achievement-how" style="color:${howColor};">${howIcon} ${a.h || ""}</div>
                   </div>
                 </div>`;
           })

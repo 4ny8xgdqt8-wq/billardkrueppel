@@ -4,7 +4,7 @@
 
 import { initFirebaseService } from "./firebase-service.js";
 
-// -- Globale Zustandsvariablen --
+// -- 1. Globale Zustandsvariablen --
 window.stats = [];
 window.spieler = [];
 window.dailyAchivs = { days: {} };
@@ -18,7 +18,203 @@ let firebaseDataReady = false;
 let isCalculating = false;
 let isHiding = false;
 
-// 1. Service Worker & Update-Management
+// -- 2. Zentraler View-Updater (Sofort verfügbar) --
+window.updateAllViews = function () {
+  const extraSelect = document.querySelector(".extra-filter-select");
+  const isDayFilterActive = extraSelect && extraSelect.value !== "all";
+
+  const startInput = document.querySelector(".custom-date-start");
+  const endInput = document.querySelector(".custom-date-end");
+  const isCustomDateActive = (startInput && startInput.value) || (endInput && endInput.value);
+
+  const isFilterActive =
+    (window.timeFilter !== "all" && window.timeFilter !== "custom") ||
+    isCustomDateActive ||
+    isDayFilterActive;
+
+  document.querySelectorAll(".filter-toggle-bar").forEach((bar) => {
+    bar.classList.toggle("active", isFilterActive);
+  });
+
+  if (window.viewId === "aufzeichnen" && typeof window.updateUI === "function") {
+    window.updateUI();
+  }
+
+  if (typeof window.renderBillardStats !== "function") return;
+
+  const isToday = window.viewId === "heute";
+
+  const statHeader = document.querySelector("#view-statistik .header-container");
+  if (statHeader) {
+    const toggleBar = statHeader.querySelector(".filter-toggle-bar");
+    const titleStack = statHeader.querySelector(".title-stack");
+    const mainTitle = statHeader.querySelector(".main-title");
+    if (isToday) {
+      if (mainTitle) mainTitle.innerText = "Session";
+      if (toggleBar) toggleBar.style.display = "none";
+      if (titleStack) titleStack.style.pointerEvents = "none";
+      statHeader.classList.remove("filter-active");
+    } else {
+      if (mainTitle) mainTitle.innerText = "Statistik";
+      if (toggleBar) toggleBar.style.display = "flex";
+      if (titleStack) titleStack.style.pointerEvents = "auto";
+    }
+  }
+
+  const statsToUse = isToday
+    ? window.stats
+    : typeof window.getFilteredStats === "function"
+      ? window.getFilteredStats()
+      : window.stats;
+
+  if (!window.careerStats || !window.careerStatsBeforeToday) {
+    if (typeof window.recalculateAndRender === "function") window.recalculateAndRender();
+    if (window.viewId !== "aufzeichnen" && window.viewId !== "uebersicht") return;
+  }
+
+  if (window.viewId === "uebersicht" && typeof window.renderHistory === "function") {
+    window.renderHistory(statsToUse);
+  }
+
+  if (
+    (window.viewId === "statistik" || window.viewId === "heute" || window.viewId === "erfolge") &&
+    typeof window.renderBillardStats === "function"
+  ) {
+    window.renderBillardStats(
+      statsToUse,
+      isToday,
+      false,
+      document,
+      window.careerStats,
+      window.careerStatsBeforeToday,
+    );
+  }
+
+  if (
+    window.viewId === "aufzeichnen" &&
+    window.careerStats &&
+    window.careerStatsBeforeToday &&
+    typeof window.renderBillardStats === "function"
+  ) {
+    window.renderBillardStats(
+      window.stats,
+      true,
+      false,
+      document,
+      window.careerStats,
+      window.careerStatsBeforeToday,
+    );
+  }
+};
+
+// -- 3. Tab Navigation & Ambient Moods (Sofort verfügbar) --
+window.switchV = function (id, el, forcedDir) {
+  const tabOrder = ["aufzeichnen", "heute", "statistik", "erfolge", "uebersicht", "regeln"];
+  const oldIdx = tabOrder.indexOf(window.viewId);
+  const newIdx = tabOrder.indexOf(id);
+
+  let dir = forcedDir;
+  if (!dir && oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
+    dir = newIdx > oldIdx ? "next" : "prev";
+  }
+
+  window.viewId = id;
+  const oldActive = document.querySelector(".view.active");
+  document.querySelectorAll(".tab-item").forEach((t) => t.classList.remove("active"));
+
+  const targetViewId = id === "heute" || id === "statistik" ? "view-statistik" : "view-" + id;
+  const targetView = document.getElementById(targetViewId);
+
+  if (targetView) {
+    let mainStartColor = "#000000";
+    let mainEndColor = "#1a2a2a";
+    let gradientStart = "5%";
+    let particleColor = "rgba(255,204,0,0.03)";
+
+    if (id === "uebersicht") {
+      mainEndColor = "#0a1a2e";
+      particleColor = "rgba(79,195,247,0.04)";
+    } else if (id === "statistik" || id === "heute" || id === "aufzeichnen") {
+      mainEndColor = "#1a2a2a";
+      particleColor = "rgba(52,199,89,0.03)";
+    } else if (id === "regeln") {
+      mainEndColor = "#2a1515";
+      particleColor = "rgba(255,59,48,0.04)";
+    } else if (id === "erfolge") {
+      mainEndColor = "#3a2a1a";
+      particleColor = "rgba(255,149,0,0.03)";
+    }
+
+    document.documentElement.style.setProperty("--ambient-main-start", mainStartColor);
+    document.documentElement.style.setProperty("--ambient-main-end", mainEndColor);
+    document.documentElement.style.setProperty("--ambient-gradient-start", gradientStart);
+    document.documentElement.style.setProperty("--ambient-particle-color", particleColor);
+
+    const scrollArea = document.getElementById("scroll-area");
+    if (scrollArea) scrollArea.style.overflowY = "auto";
+
+    if (oldActive && oldActive !== targetView) {
+      const exitDir = dir === "next" ? "exit-left" : "exit-right";
+      oldActive.classList.add(exitDir);
+      oldActive.style.position = "absolute";
+      oldActive.style.width = "100%";
+      oldActive.style.height = "100%";
+      oldActive.style.top = "0";
+      oldActive.style.left = "0";
+
+      setTimeout(() => {
+        oldActive.classList.remove(exitDir);
+        oldActive.classList.remove("active");
+        oldActive.style.cssText = "";
+      }, 400);
+    } else if (oldActive === targetView) {
+      oldActive.classList.remove("slide-right", "slide-left", "exit-right", "exit-left");
+      oldActive.style.cssText = "";
+    }
+
+    document.querySelectorAll(".view").forEach((v) => {
+      if (v !== targetView && v !== oldActive) {
+        v.classList.remove("active", "slide-right", "slide-left", "exit-right", "exit-left");
+        v.style.cssText = "";
+      }
+    });
+
+    targetView.classList.add("active");
+    targetView.classList.remove("slide-right", "slide-left", "exit-right", "exit-left");
+    targetView.style.cssText = "";
+
+    targetView
+      .querySelectorAll(".cinematic-entry, .cinematic-hud, .card-hud, .section-label")
+      .forEach((element) => {
+        element.style.animation = "none";
+        element.offsetHeight;
+        element.style.animation = "";
+      });
+
+    if (dir === "next") targetView.classList.add("slide-right");
+    if (dir === "prev") targetView.classList.add("slide-left");
+  }
+
+  // Aktiven Tab in Tabbar markieren
+  const activeTabEl = el || document.querySelector(`.tab-item[onclick*="${id}"]`);
+  if (activeTabEl) {
+    activeTabEl.classList.add("active");
+    const ind = document.getElementById("tab-indicator");
+    if (ind) {
+      ind.style.width = activeTabEl.offsetWidth + "px";
+      ind.style.left = activeTabEl.offsetLeft + "px";
+    }
+  }
+
+  requestAnimationFrame(() => {
+    window.updateAllViews();
+  });
+
+  const scrollArea = document.getElementById("scroll-area");
+  if (scrollArea) scrollArea.scrollTop = 0;
+};
+
+// -- 4. Service Worker & Update-Management --
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(() => {});
@@ -32,7 +228,7 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-// 2. Versionsanzeige synchronisieren
+// Versionsanzeige synchronisieren
 const updateVersionUI = (v) => {
   window.BILLARD_APP_VERSION = v;
   const verEl = document.getElementById("loader-version");
@@ -47,13 +243,13 @@ fetch("sw.js?t=" + Date.now())
   .then((text) => {
     const match = text.match(/CACHE_NAME\s*=\s*['"][^'"]*?v?(\d+(?:\.\d+)*)['"]/);
     if (match && match[1]) updateVersionUI(match[1]);
-    else updateVersionUI("Entwicklung");
+    else updateVersionUI("v16.2");
   })
   .catch(() => {
-    updateVersionUI("Entwicklung");
+    updateVersionUI("v16.2");
   });
 
-// 3. Schneller Loader ohne künstliche 4s-Wartezeit
+// -- 5. Loader Controls --
 window.hideLoader = () => {
   const l = document.getElementById("loading-overlay");
   const content = document.getElementById("loader-content");
@@ -83,7 +279,7 @@ window.updateLoaderStatus = (msg, percent) => {
   if (bar && percent !== undefined) bar.style.width = percent + "%";
 };
 
-// Loader Fallback Timeout
+// Fallback Timeout für Loader
 setTimeout(() => {
   if (!firebaseDataReady || !workerFinished) {
     firebaseDataReady = true;
@@ -155,7 +351,7 @@ if (loaderAvatars) {
     .join("");
 }
 
-// 4. Web Worker Initialisierung & Berechnung
+// -- 6. Web Worker & Berechnung --
 let statsWorker;
 try {
   statsWorker = new Worker("worker.js");
@@ -246,201 +442,7 @@ window.recalculateAndRender = () => {
   }
 };
 
-// 5. Tab Navigation & Ambient Moods
-window.switchV = (id, el, forcedDir) => {
-  const tabOrder = ["aufzeichnen", "heute", "statistik", "erfolge", "uebersicht", "regeln"];
-  const oldIdx = tabOrder.indexOf(window.viewId);
-  const newIdx = tabOrder.indexOf(id);
-
-  let dir = forcedDir;
-  if (!dir && oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
-    dir = newIdx > oldIdx ? "next" : "prev";
-  }
-
-  window.viewId = id;
-  const oldActive = document.querySelector(".view.active");
-  document.querySelectorAll(".tab-item").forEach((t) => t.classList.remove("active"));
-
-  const targetViewId = id === "heute" || id === "statistik" ? "view-statistik" : "view-" + id;
-  const targetView = document.getElementById(targetViewId);
-
-  if (targetView) {
-    let mainStartColor = "#000000";
-    let mainEndColor = "#1a2a2a";
-    let gradientStart = "5%";
-    let particleColor = "rgba(255,204,0,0.03)";
-
-    if (id === "uebersicht") {
-      mainEndColor = "#0a1a2e";
-      particleColor = "rgba(79,195,247,0.04)";
-    } else if (id === "statistik" || id === "heute" || id === "aufzeichnen") {
-      mainEndColor = "#1a2a2a";
-      particleColor = "rgba(52,199,89,0.03)";
-    } else if (id === "regeln") {
-      mainEndColor = "#2a1515";
-      particleColor = "rgba(255,59,48,0.04)";
-    } else if (id === "erfolge") {
-      mainEndColor = "#3a2a1a";
-      particleColor = "rgba(255,149,0,0.03)";
-    }
-
-    document.documentElement.style.setProperty("--ambient-main-start", mainStartColor);
-    document.documentElement.style.setProperty("--ambient-main-end", mainEndColor);
-    document.documentElement.style.setProperty("--ambient-gradient-start", gradientStart);
-    document.documentElement.style.setProperty("--ambient-particle-color", particleColor);
-
-    const scrollArea = document.getElementById("scroll-area");
-    if (scrollArea) scrollArea.style.overflowY = "auto";
-
-    if (oldActive && oldActive !== targetView) {
-      const exitDir = dir === "next" ? "exit-left" : "exit-right";
-      oldActive.classList.add(exitDir);
-      oldActive.style.position = "absolute";
-      oldActive.style.width = "100%";
-      oldActive.style.height = "100%";
-      oldActive.style.top = "0";
-      oldActive.style.left = "0";
-
-      setTimeout(() => {
-        oldActive.classList.remove(exitDir);
-        oldActive.classList.remove("active");
-        oldActive.style.cssText = "";
-      }, 400);
-    } else if (oldActive === targetView) {
-      oldActive.classList.remove("slide-right", "slide-left", "exit-right", "exit-left");
-      oldActive.style.cssText = "";
-    }
-
-    document.querySelectorAll(".view").forEach((v) => {
-      if (v !== targetView && v !== oldActive) {
-        v.classList.remove("active", "slide-right", "slide-left", "exit-right", "exit-left");
-        v.style.cssText = "";
-      }
-    });
-
-    targetView.classList.add("active");
-    targetView.classList.remove("slide-right", "slide-left", "exit-right", "exit-left");
-    targetView.style.cssText = "";
-
-    targetView
-      .querySelectorAll(".cinematic-entry, .cinematic-hud, .card-hud, .section-label")
-      .forEach((element) => {
-        element.style.animation = "none";
-        element.offsetHeight;
-        element.style.animation = "";
-      });
-
-    if (dir === "next") targetView.classList.add("slide-right");
-    if (dir === "prev") targetView.classList.add("slide-left");
-  }
-
-  if (el) el.classList.add("active");
-  if (el) {
-    const ind = document.getElementById("tab-indicator");
-    if (ind) {
-      ind.style.width = el.offsetWidth + "px";
-      ind.style.left = el.offsetLeft + "px";
-    }
-  }
-
-  requestAnimationFrame(() => {
-    window.updateAllViews();
-  });
-
-  const scrollArea = document.getElementById("scroll-area");
-  if (scrollArea) scrollArea.scrollTop = 0;
-};
-
-// 6. Zentraler View-Updater
-window.updateAllViews = () => {
-  const extraSelect = document.querySelector(".extra-filter-select");
-  const isDayFilterActive = extraSelect && extraSelect.value !== "all";
-
-  const startInput = document.querySelector(".custom-date-start");
-  const endInput = document.querySelector(".custom-date-end");
-  const isCustomDateActive = (startInput && startInput.value) || (endInput && endInput.value);
-
-  const isFilterActive =
-    (window.timeFilter !== "all" && window.timeFilter !== "custom") ||
-    isCustomDateActive ||
-    isDayFilterActive;
-
-  document.querySelectorAll(".filter-toggle-bar").forEach((bar) => {
-    bar.classList.toggle("active", isFilterActive);
-  });
-
-  if (window.viewId === "aufzeichnen" && typeof window.updateUI === "function") {
-    window.updateUI();
-  }
-
-  if (typeof window.renderBillardStats !== "function") return;
-
-  const isToday = window.viewId === "heute";
-
-  const statHeader = document.querySelector("#view-statistik .header-container");
-  if (statHeader) {
-    const toggleBar = statHeader.querySelector(".filter-toggle-bar");
-    const titleStack = statHeader.querySelector(".title-stack");
-    const mainTitle = statHeader.querySelector(".main-title");
-    if (isToday) {
-      if (mainTitle) mainTitle.innerText = "Session";
-      if (toggleBar) toggleBar.style.display = "none";
-      if (titleStack) titleStack.style.pointerEvents = "none";
-      statHeader.classList.remove("filter-active");
-    } else {
-      if (mainTitle) mainTitle.innerText = "Statistik";
-      if (toggleBar) toggleBar.style.display = "flex";
-      if (titleStack) titleStack.style.pointerEvents = "auto";
-    }
-  }
-
-  const statsToUse = isToday
-    ? window.stats
-    : typeof window.getFilteredStats === "function"
-      ? window.getFilteredStats()
-      : window.stats;
-
-  if (!window.careerStats || !window.careerStatsBeforeToday) {
-    window.recalculateAndRender();
-    if (window.viewId !== "aufzeichnen" && window.viewId !== "uebersicht") return;
-  }
-
-  if (window.viewId === "uebersicht" && typeof window.renderHistory === "function") {
-    window.renderHistory(statsToUse);
-  }
-
-  if (
-    (window.viewId === "statistik" || window.viewId === "heute" || window.viewId === "erfolge") &&
-    typeof window.renderBillardStats === "function"
-  ) {
-    window.renderBillardStats(
-      statsToUse,
-      isToday,
-      false,
-      document,
-      window.careerStats,
-      window.careerStatsBeforeToday,
-    );
-  }
-
-  if (
-    window.viewId === "aufzeichnen" &&
-    window.careerStats &&
-    window.careerStatsBeforeToday &&
-    typeof window.renderBillardStats === "function"
-  ) {
-    window.renderBillardStats(
-      window.stats,
-      true,
-      false,
-      document,
-      window.careerStats,
-      window.careerStatsBeforeToday,
-    );
-  }
-};
-
-// 7. Touch Swipe Navigation
+// -- 7. Touch Swipe Navigation --
 const mainContent = document.getElementById("scroll-area");
 if (mainContent) {
   let touchStartX = 0;
@@ -532,11 +534,10 @@ document.getElementById("scroll-area")?.addEventListener(
   { passive: true },
 );
 
-// 8. Initialisierung starten
+// -- 8. Firebase Service initialisieren --
 initFirebaseService();
 
-// Init Tab-Indikator
+// Init Tab-Indikator & Default Tab
 setTimeout(() => {
   window.switchV("aufzeichnen", document.querySelector(".tab-item.active"));
-}, 100);
-
+}, 50);
