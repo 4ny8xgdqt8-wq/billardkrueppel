@@ -1,0 +1,375 @@
+/* ==========================================================================
+   Billardkrüppel Animations & Effects
+   ========================================================================== */
+
+@keyframes particle-drift {
+  0% {
+    background-position: 0% 0%, 0% 0%, 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%, 200% 200%, -200% -200%;
+  }
+}
+
+@keyframes logo-pulse {
+  0% {
+    transform: scale(1) rotate(-1deg);
+    filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.2));
+  }
+  100% {
+    transform: scale(1.12) rotate(1deg);
+    filter: drop-shadow(0 0 45px rgba(255, 204, 0, 0.7));
+  }
+}
+
+@keyframes avatar-pop {
+  0% {
+    transform: scale(0) translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes tip-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 0.7;
+    transform: translateY(0);
+  }
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: none;
+  }
+}
+
+@keyframes modal-shake {
+  0%, 100% {
+    transform: scale(1);
+  }
+  20%, 60% {
+    transform: translateX(-5px);
+  }
+  40%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes view-enter-right {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+    filter: blur(5px);
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+    filter: none;
+  }
+}
+
+@keyframes view-enter-left {
+  from {
+    transform: translateX(-40px) scale(0.96);
+    opacity: 0;
+    filter: blur(8px);
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    filter: none;
+  }
+}
+
+@keyframes view-exit-right {
+  from {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    filter: none;
+  }
+  to {
+    transform: translateX(40px) scale(0.96);
+    opacity: 0;
+    filter: blur(8px);
+  }
+}
+
+@keyframes view-exit-left {
+  from {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    filter: none;
+  }
+  to {
+    transform: translateX(-40px) scale(0.96);
+    opacity: 0;
+    filter: blur(8px);
+  }
+}
+
+@keyframes ach-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: none;
+  }
+}
+
+@keyframes history-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.97);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: none;
+  }
+}
+
+@keyframes badge-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 12px var(--accent);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes status-pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes hud-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+    filter: blur(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: none;
+  }
+}
+
+@keyframes btn-ready-glow {
+  0% {
+    box-shadow: 0 0 15px rgba(52, 199, 89, 0.3);
+    filter: brightness(1);
+  }
+  100% {
+    box-shadow: 0 0 35px rgba(52, 199, 89, 0.8);
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes progress-shimmer {
+  0% {
+    transform: translateX(-110%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+@keyframes tip-pulse {
+  0% {
+    opacity: 0.3;
+    transform: scale(1);
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(2.5);
+    filter: blur(6px);
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes bar-glow {
+  0% {
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 25px rgba(255, 204, 0, 0.6);
+  }
+}
+
+@keyframes pulse-error {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(255, 59, 48, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
+  }
+}
+
+@keyframes icon-pulse-subtle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes pulse-gold {
+  0% {
+    box-shadow: 0 0 12px rgba(255, 204, 0, 0.15);
+    border-color: rgba(255, 204, 0, 0.3) !important;
+  }
+  100% {
+    box-shadow: 0 0 28px rgba(255, 204, 0, 0.4);
+    border-color: rgba(255, 204, 0, 0.9) !important;
+  }
+}
+
+@keyframes tagessieger-glow {
+  0% {
+    box-shadow: 0 0 15px rgba(79, 195, 247, 0.3);
+    border-color: rgba(79, 195, 247, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 35px rgba(79, 195, 247, 0.5),
+      inset 0 0 10px rgba(79, 195, 247, 0.1);
+    border-color: rgba(79, 195, 247, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(79, 195, 247, 0.3);
+    border-color: rgba(79, 195, 247, 0.3);
+  }
+}
+
+@keyframes rotate-fire {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-fire {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.8;
+  }
+}
+
+@keyframes pulse-frost {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes streak-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.15);
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes tears-fall {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(1px) scale(1);
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(42px) scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes cup-shake {
+  0%, 100% {
+    transform: rotate(0) translateX(0);
+  }
+  25% {
+    transform: rotate(-15deg) translateX(-5px);
+  }
+  75% {
+    transform: rotate(15deg) translateX(5px);
+  }
+}
+
+@keyframes cup-pour {
+  0% {
+    transform: rotate(0) translateY(0);
+  }
+  100% {
+    transform: rotate(150deg) translateY(20px) translateX(40px);
+  }
+}
+
+.cup-shake {
+  display: inline-block;
+  animation: cup-shake 0.1s infinite;
+}
+
+.cup-pour {
+  display: inline-block;
+  animation: cup-pour 0.4s ease-in forwards;
+}
+

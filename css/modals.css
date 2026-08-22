@@ -1,0 +1,287 @@
+/* ==========================================================================
+   Billardkrüppel Modals & Dialogs
+   ========================================================================== */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+}
+
+.modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  background: rgba(28, 28, 30, 0.85);
+  backdrop-filter: blur(25px) saturate(150%);
+  -webkit-backdrop-filter: blur(25px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: modal-enter 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.modal-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-close:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Phase 3 & Result Modal */
+.ball-type-btn,
+.win-type-chip {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8e8e93;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.ball-type-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 46px;
+}
+
+.ball-type-btn.selected,
+.win-type-chip.selected {
+  background: rgba(255, 204, 0, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.win-type-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: 46px;
+}
+
+.stepper button {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: 900;
+  width: 40px;
+  height: 100%;
+  cursor: pointer;
+}
+
+.stepper input {
+  flex: 1;
+  height: 100%;
+  padding: 0;
+}
+
+.stepper:focus-within {
+  border-color: var(--accent);
+  background: rgba(255, 204, 0, 0.1);
+  box-shadow: 0 0 15px rgba(255, 204, 0, 0.2);
+}
+
+.result-step {
+  display: none;
+  padding: 25px 20px;
+  text-align: center;
+  animation: ach-card-enter 0.4s ease-out forwards;
+}
+
+.result-step.active {
+  display: block;
+}
+
+.leftover-btn-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.leftover-btn {
+  padding: 14px;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+#confirmation-summary ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#confirmation-summary li {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#confirmation-summary li:last-child {
+  border-bottom: none;
+}
+
+#confirmation-summary li span:first-child {
+  color: #8e8e93;
+  font-weight: 700;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, #1c1c1e 0%, #000000 100%);
+  overflow: hidden;
+  perspective: 1000px;
+  z-index: 30000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition:
+    opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.8s ease-out;
+  padding: 20px;
+}
+
+.loader-grid {
+  position: absolute;
+  inset: -100%;
+  background-image:
+    linear-gradient(rgba(255, 204, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 204, 0, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  transform: rotateX(60deg);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.loader-logo {
+  height: 70px;
+  width: auto;
+  margin-bottom: 15px;
+  filter: drop-shadow(0 0 20px rgba(255, 204, 0, 0.4));
+  animation: logo-pulse 2s infinite alternate ease-in-out;
+}
+
+.loader-title {
+  font-weight: 900;
+  font-size: 20px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 25px;
+  text-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
+  letter-spacing: 1.5px;
+}
+
+.loader-progress-container {
+  width: 200px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  margin-top: 15px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.loader-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: var(--accent);
+  box-shadow: 0 0 20px var(--accent);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.loader-progress-bar::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6)
+  );
+  filter: blur(2px);
+}
+
+.loader-avatar-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 300px;
+}
+
+.loader-avatar-container {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  opacity: 0;
+  animation: avatar-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.loader-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+}
+

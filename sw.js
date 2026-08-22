@@ -1,12 +1,23 @@
-const CACHE_NAME = "billard-v16";
+const CACHE_NAME = "billard-v16.1";
 const ASSETS = [
   "./",
   "index.html",
-  "Chart.js",
-  "worker.js",
+  "manifest.json",
   "logo.png",
   "logo_html.png",
-  "manifest.json",
+  "css/main.css",
+  "css/animations.css",
+  "css/modals.css",
+  "lib/chart.umd.min.js",
+  "lib/confetti.min.js",
+  "js/achievements-data.js",
+  "js/elo-calc.js",
+  "js/filters.js",
+  "js/stats-renderer.js",
+  "js/match-controller.js",
+  "js/firebase-service.js",
+  "js/app.js",
+  "worker.js",
   "avatars/Daniel.webp",
   "avatars/Thorsten.webp",
   "avatars/Peter.webp",
@@ -41,16 +52,27 @@ self.addEventListener("activate", (event) => {
 // Fetch: Stale-While-Revalidate Strategie
 // Liefert sofort aus dem Cache für Speed, aktualisiert aber im Hintergrund.
 self.addEventListener("fetch", (event) => {
-  // Firebase-Anfragen ignorieren (die brauchen Echtzeit-Daten)
-  if (event.request.url.includes("firestore.googleapis.com")) return;
+  // Firebase- und Google-Auth-Anfragen ignorieren (die brauchen Echtzeit-Daten)
+  if (
+    event.request.url.includes("firestore.googleapis.com") ||
+    event.request.url.includes("identitytoolkit.googleapis.com") ||
+    event.request.url.includes("securetoken.googleapis.com")
+  ) {
+    return;
+  }
 
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.match(event.request).then((cachedResponse) => {
-        const fetchPromise = fetch(event.request).then((networkResponse) => {
-          cache.put(event.request, networkResponse.clone());
-          return networkResponse;
-        });
+        const fetchPromise = fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              cache.put(event.request, networkResponse.clone());
+            }
+            return networkResponse;
+          })
+          .catch(() => cachedResponse);
+
         // Gib die Cache-Antwort zurück, falls vorhanden, sonst warte auf das Netzwerk
         return cachedResponse || fetchPromise;
       });
