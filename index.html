@@ -690,6 +690,32 @@
             </div>
           </div>
 
+          <!-- Tagessieger Podium (im Session-Tab dauerhaft über den Sub-Tabs sichtbar) -->
+          <div
+            class="card cinematic-entry card-hud tagessieger-pulse"
+            style="
+              text-align: center;
+              cursor: pointer;
+              margin-bottom: 12px;
+              display: none;
+            "
+            id="stat-daily-winner-card"
+            onclick="window.showDailyWinnerInfo()"
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 6px;
+              "
+            >
+              <label style="margin-bottom: 0">🏆 Tagessieger</label>
+              <span style="font-size: 10px; color: rgba(255, 255, 255, 0.4)">ⓘ</span>
+            </div>
+            <div id="stat-daily-winner" style="width: 100%; margin-top: 4px;"></div>
+          </div>
+
           <div class="stat-subtab-bar">
             <button
               class="stat-subtab-btn active"
@@ -729,39 +755,9 @@
             <!-- SUBTAB 1: 🏆 RANGLISTE & ELO -->
             <div id="stat-subtab-ranking" class="stat-subtab-content active">
               <div
-                class="card cinematic-entry card-hud tagessieger-pulse"
-                style="
-                  animation-delay: 0.05s;
-                  text-align: center;
-                  cursor: pointer;
-                  margin-bottom: 16px;
-                "
-                id="stat-daily-winner-card"
-                onclick="window.showDailyWinnerInfo()"
-              >
-                <div
-                  style="
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    gap: 6px;
-                  "
-                >
-                  <label style="margin-bottom: 0">🏆 Tagessieger</label>
-                  <span style="font-size: 10px; color: rgba(255, 255, 255, 0.4)"
-                    >ⓘ</span
-                  >
-                </div>
-                <div
-                  id="stat-daily-winner"
-                  style="width: 100%; margin-top: 4px;"
-                ></div>
-              </div>
-
-              <div
                 class="card cinematic-entry"
                 id="eloTrendCard"
-                style="animation-delay: 0.15s; margin-bottom: 16px;"
+                style="animation-delay: 0.1s; margin-bottom: 16px;"
               >
                 <div id="eloRanking"></div>
                 <div id="trendHeader"></div>

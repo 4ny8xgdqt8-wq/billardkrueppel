@@ -1291,7 +1291,6 @@ select option {
   box-shadow: none !important;
   padding: 4px 0 10px 0 !important;
   z-index: 5;
-  opacity: 0;
 }
 
 .podium-container {

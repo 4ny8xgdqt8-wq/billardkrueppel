@@ -2225,17 +2225,146 @@ window.renderBillardStats = function (
     const eloCanvas = document.getElementById("eloHistoryChart");
     const eloTrendCard = document.getElementById("eloTrendCard");
 
-    // Karten im Heute-Tab IMMER ausblenden
-    if (filterToday) {
-      if (eloTrendCard) eloTrendCard.style.display = "none";
-    } else {
-      if (eloTrendCard) eloTrendCard.style.display = "block";
+    if (eloTrendCard) eloTrendCard.style.display = "block";
 
-      // Diagramm nur zeichnen, wenn wir nicht im Heute-Tab sind
-      if (eloCanvas && eloHistoryContainer && typeof Chart !== "undefined") {
-        const eloCtx = eloCanvas.getContext("2d");
-        if (eloCanvas.__myEloChart) eloCanvas.__myEloChart.destroy();
+    // Diagramm zeichnen (Session-Trending oder Gesamt-Trending)
+    if (eloCanvas && eloHistoryContainer && typeof Chart !== "undefined") {
+      const eloCtx = eloCanvas.getContext("2d");
+      if (eloCanvas.__myEloChart) eloCanvas.__myEloChart.destroy();
 
+      if (filterToday) {
+        // --- SESSION ELO TRENDING ---
+        const sessionMatches = currentStats || [];
+        const sessionPlayers = labels.filter(
+          (p) => (res.pData[p]?.todayGames || res.pData[p]?.games || 0) > 0,
+        );
+
+        if (sessionMatches.length > 0 && sessionPlayers.length > 0) {
+          eloHistoryContainer.style.display = "block";
+
+          const chartLabels = [
+            "Start",
+            ...sessionMatches.map((_, i) => `${i + 1}`),
+          ];
+
+          // Startwerte vor heute ermitteln
+          const currentRatings = {};
+          const eloGamesCount = {};
+          sessionPlayers.forEach((p) => {
+            const beforeElo =
+              precalculatedCareerStatsBeforeToday?.pData?.[p]?.elo;
+            currentRatings[p] =
+              typeof beforeElo === "number" ? beforeElo : 1000;
+            eloGamesCount[p] =
+              precalculatedCareerStatsBeforeToday?.pData?.[p]?.eloGames || 0;
+          });
+
+          // Kurvenverlauf initialisieren
+          const playerCurves = {};
+          sessionPlayers.forEach((p) => {
+            playerCurves[p] = [Math.round(currentRatings[p])];
+          });
+
+          // Jedes Match der heutigen Session simulieren
+          sessionMatches.forEach((g) => {
+            if (!g) return;
+            const isTeam = g.m === "2:2";
+            const t1 = isTeam
+              ? g.p1
+                ? String(g.p1).split(" & ")
+                : []
+              : [g.p1];
+            const t2 = isTeam
+              ? g.p2
+                ? String(g.p2).split(" & ")
+                : []
+              : [g.p2];
+            const team1 = t1.map((s) => String(s || "").trim()).filter(Boolean);
+            const team2 = t2.map((s) => String(s || "").trim()).filter(Boolean);
+            if (!team1.length || !team2.length) return;
+
+            const getR = (p) =>
+              typeof currentRatings[p] === "number"
+                ? currentRatings[p]
+                : 1000;
+            const getK = (p) =>
+              (eloGamesCount[p] || 0) < 20 ? 40 : 20;
+
+            const avg = (arr) =>
+              arr.reduce((sum, p) => sum + getR(p), 0) / arr.length;
+            const r1 = avg(team1);
+            const r2 = avg(team2);
+            const e1 = 1 / (1 + Math.pow(10, (r2 - r1) / 400));
+            const s1 = g.w == 1 ? 1 : 0;
+            const dScore = s1 - e1;
+
+            team1.forEach((p) => {
+              currentRatings[p] = getR(p) + getK(p) * dScore;
+              eloGamesCount[p] = (eloGamesCount[p] || 0) + 1;
+            });
+            team2.forEach((p) => {
+              currentRatings[p] = getR(p) - getK(p) * dScore;
+              eloGamesCount[p] = (eloGamesCount[p] || 0) + 1;
+            });
+
+            sessionPlayers.forEach((p) => {
+              playerCurves[p].push(Math.round(currentRatings[p]));
+            });
+          });
+
+          const datasets = sessionPlayers.map((p, i) => {
+            const col =
+              getPlayerColor(p) || graphColors[i % graphColors.length];
+            return {
+              label: p,
+              data: playerCurves[p],
+              borderColor: col,
+              backgroundColor: col + "22",
+              tension: 0.3,
+              pointRadius: sessionMatches.length <= 15 ? 3 : 0,
+              pointHoverRadius: 5,
+              borderWidth: 2.5,
+              fill: false,
+            };
+          });
+
+          eloCanvas.__myEloChart = new Chart(eloCtx, {
+            type: "line",
+            data: { labels: chartLabels, datasets },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: true,
+                  labels: {
+                    color: "#acacb0",
+                    font: { size: 10 },
+                    boxWidth: 12,
+                  },
+                },
+                tooltip: {
+                  mode: "index",
+                  intersect: false,
+                },
+              },
+              scales: {
+                y: {
+                  ticks: { color: "#8e8e93", font: { size: 10 } },
+                  grid: { color: "rgba(255,255,255,0.05)" },
+                },
+                x: {
+                  ticks: { color: "#8e8e93", font: { size: 9 } },
+                  grid: { display: false },
+                },
+              },
+            },
+          });
+        } else {
+          eloHistoryContainer.style.display = "none";
+        }
+      } else {
+        // --- GESAMT ELO TRENDING (LETZTE 10 SPIELE) ---
         if (topEloPlayers.length > 0) {
           eloHistoryContainer.style.display = "block";
           const WINDOW_SIZE = 10; // Fokus auf die Form (letzte 10 Spiele)
@@ -2249,13 +2378,8 @@ window.renderBillardStats = function (
           );
 
           const datasets = topEloPlayers.map((p, i) => {
-            // ELO-Historie jetzt auf Basis der gefilterten Daten
             const h = res.pData[p].eloHistory || [];
-            const realDataCount = Math.min(h.length, displayCount);
             const d = h.slice(-displayCount);
-
-            // Falls ein Spieler weniger Spiele hat, wird die Linie bis zum rechten Rand
-            // mit seinem aktuellsten Wert verlängert.
             const lastVal = d.length > 0 ? d[d.length - 1] : 1000;
             while (d.length < displayCount) d.push(lastVal);
 
@@ -2482,8 +2606,8 @@ window.renderBillardStats = function (
       });
     }
 
-    // --- 🔥 Formanzeige / Trending Player (letzte 10 Spiele) ---
-    function renderTrendingPlayers(allStats, show) {
+    // --- 🔥 Formanzeige / Trending Player (Session & Gesamt) ---
+    function renderTrendingPlayers(allStats, show = true, isToday = false) {
       const el =
         byId("trendPlayers") || document.getElementById("trendPlayers");
       const headEl =
@@ -2495,7 +2619,8 @@ window.renderBillardStats = function (
         return;
       }
 
-      const N = 10;
+      // In Session: alle Spiele der Session; in Gesamt: letzte 10 Spiele
+      const N = isToday ? Math.max(1, (allStats || []).length) : 10;
 
       // sortiere Matches stabil nach Datum/Zeit
       const parseSortTime = (gd) => {
@@ -2524,6 +2649,7 @@ window.renderBillardStats = function (
 
       if (!ordered || ordered.length === 0) {
         el.innerHTML = "";
+        if (headEl) headEl.innerHTML = "";
         return;
       }
 
@@ -2622,8 +2748,20 @@ window.renderBillardStats = function (
       });
 
       Object.keys(rec).forEach((p) => {
-        rec[p].eloDelta =
-          (rec[p].eloAfter || 1000) - (rec[p].eloBefore || 1000);
+        if (
+          isToday &&
+          window.careerStats &&
+          window.careerStats.aggregates &&
+          window.careerStats.aggregates.sessionEloGains &&
+          typeof window.careerStats.aggregates.sessionEloGains[p] === "number"
+        ) {
+          rec[p].eloDelta = Math.round(
+            window.careerStats.aggregates.sessionEloGains[p],
+          );
+        } else {
+          rec[p].eloDelta =
+            (rec[p].eloAfter || 1000) - (rec[p].eloBefore || 1000);
+        }
       });
 
       const rows = Object.keys(rec)
@@ -2660,6 +2798,7 @@ window.renderBillardStats = function (
 
       if (!rows.length) {
         el.innerHTML = "";
+        if (headEl) headEl.innerHTML = "";
         return;
       }
 
@@ -2671,11 +2810,16 @@ window.renderBillardStats = function (
             : "color:#8e8e93;";
       const deltaSign = (d) => (d > 0 ? `+${d}` : `${d}`);
 
+      const headerTitle = isToday ? "🔥 Session-Form" : "🔥 Formanzeige";
+      const headerSubtitle = isToday
+        ? `Formkurve & Performance der heutigen Session (${ordered.length} Spiele): ELO-Änderung + aktuelle Serie.`
+        : `Trending aus den letzten ${Math.min(N, ordered.length)} Spielen: ELO-Änderung + aktuelle Siegserie.`;
+
       if (headEl) {
         headEl.innerHTML = `
             <div style="margin-top:14px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
-              <div style="color:#ffcc00; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:1px;">🔥 Formanzeige</div>
-              <div style="margin-top:6px; font-size:10px; line-height:1.4; color:#8e8e93;">Trending aus den letzten ${N} Spielen: ELO-Änderung + aktuelle Siegserie.</div>
+              <div style="color:#ffcc00; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:1px;">${headerTitle}</div>
+              <div style="margin-top:6px; font-size:10px; line-height:1.4; color:#8e8e93;">${headerSubtitle}</div>
               <div style="height:2px; width:24px; background:#ffcc00; margin-top:6px; border-radius:2px;"></div>
             </div>`;
       }
@@ -2690,6 +2834,9 @@ window.renderBillardStats = function (
             : r.loseStreak >= 3
               ? "streak-frost"
               : "";
+        const labelGames = isToday
+          ? `Session: ${r.w}-${r.l} (${r.wr}%)`
+          : `Letzte ${r.g}: ${r.w}-${r.l} (${r.wr}%)`;
         listHtml += `
               <div onclick="window.openPlayerProfile('${r.name}')" class="card-modern" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; background: ${isTopForm ? "linear-gradient(135deg, rgba(52, 199, 89, 0.2) 0%, #1a1a1c 100%)" : "linear-gradient(145deg, #2c2c2e, #1a1a1c)"}; padding: 12px; border-radius: 20px; border: 1px solid ${isTopForm ? "#34c759" : "rgba(255, 255, 255, 0.1)"}; box-shadow: ${isTopForm ? "0 0 20px rgba(52,199,89,0.2)" : "0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05)"}; cursor:pointer; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${0.5 + i * 0.05}s;">
                 <div style="min-width:28px; text-align:center; font-size:16px;">${i === 0 ? "🔥" : i === 1 ? "✨" : i === 2 ? "📈" : i + 1 + "."}</div>
@@ -2699,7 +2846,7 @@ window.renderBillardStats = function (
                 <div style="display:none; width:30px; height:30px; border-radius:10px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                 <div style="flex:1; overflow:hidden;">
                   <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.name}</div>
-                  <div style="font-size:10px; color:#acacb0; margin-top:2px;">Letzte ${r.g}: ${r.w}-${r.l} (${r.wr}%)${r.streak >= 1 ? ` • S: ${r.streak}` : ""}</div>
+                  <div style="font-size:10px; color:#acacb0; margin-top:2px;">${labelGames}${r.streak >= 1 ? ` • S: ${r.streak}` : ""}</div>
                 </div>
                 <div style="text-align:right;">
                   <div style="font-size:16px; font-weight:900; ${deltaStyle(r.eloDelta)} text-shadow: 0 0 10px ${r.eloDelta > 0 ? "rgba(52,199,89,0.3)" : r.eloDelta < 0 ? "rgba(255,59,48,0.3)" : "rgba(255,255,255,0.1)"};">${deltaSign(r.eloDelta)}</div>
@@ -2717,12 +2864,8 @@ window.renderBillardStats = function (
       byId("eloTrendCard") || document.getElementById("eloTrendCard");
     if (eloCard) eloCard.style.display = "block";
 
-    if (eloHistoryContainer) {
-      eloHistoryContainer.style.display = !filterToday ? "block" : "none";
-    }
-
     renderEloRanking(res.pData, true, filterToday);
-    renderTrendingPlayers(stats, !filterToday);
+    renderTrendingPlayers(currentStats, true, filterToday);
   } else {
     // --- Keine Daten: UI sauber zurücksetzen ---
     const setText = (id, txt) => {
