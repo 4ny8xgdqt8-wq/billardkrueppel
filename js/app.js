@@ -442,75 +442,7 @@ window.recalculateAndRender = () => {
   }
 };
 
-// -- 7. Touch Swipe Navigation --
-const mainContent = document.getElementById("scroll-area");
-if (mainContent) {
-  let touchStartX = 0;
-  let touchStartY = 0;
-  const swipeThreshold = 50;
-  const tabOrder = ["aufzeichnen", "heute", "statistik", "erfolge", "uebersicht", "regeln"];
-
-  mainContent.addEventListener(
-    "touchstart",
-    (e) => {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-    },
-    { passive: true },
-  );
-
-  mainContent.addEventListener(
-    "touchmove",
-    (e) => {
-      const dx = e.touches[0].clientX - touchStartX;
-      const dy = e.touches[0].clientY - touchStartY;
-      const isClearHorizontalSwipe =
-        Math.abs(dx) > swipeThreshold && Math.abs(dx) > Math.abs(dy) + 16;
-      if (isClearHorizontalSwipe && e.cancelable) {
-        e.preventDefault();
-      }
-    },
-    { passive: false },
-  );
-
-  mainContent.addEventListener(
-    "touchend",
-    (e) => {
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
-      const deltaX = touchEndX - touchStartX;
-      const deltaY = touchEndY - touchStartY;
-
-      if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
-        const currentViewId = window.viewId;
-        const currentIndex = tabOrder.indexOf(currentViewId);
-
-        if (deltaX < 0) {
-          const nextIndex = currentIndex + 1;
-          if (nextIndex < tabOrder.length) {
-            const nextTabId = tabOrder[nextIndex];
-            window.switchV(
-              nextTabId,
-              document.querySelector(`.tab-item[onclick*="${nextTabId}"]`),
-              "next",
-            );
-          }
-        } else {
-          const prevIndex = currentIndex - 1;
-          if (prevIndex >= 0) {
-            const prevTabId = tabOrder[prevIndex];
-            window.switchV(
-              prevTabId,
-              document.querySelector(`.tab-item[onclick*="${prevTabId}"]`),
-              "prev",
-            );
-          }
-        }
-      }
-    },
-    { passive: true },
-  );
-}
+// -- 7. Touch Swipe Navigation deaktiviert auf Wunsch --
 
 // Klick außerhalb schließt Filter
 document.addEventListener("click", (e) => {

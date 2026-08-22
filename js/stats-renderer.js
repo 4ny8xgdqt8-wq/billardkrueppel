@@ -2816,9 +2816,12 @@ window.renderBillardStats = function (
         h = canvas.height;
       canvas.width = 1;
       canvas.height = 1;
-      canvas.width = w;
       canvas.height = h;
     }
+  }
+
+  if (typeof window.setStatSubTab === "function") {
+    window.setStatSubTab(window.currentStatSubTab || "ranking");
   }
 };
 
@@ -3380,6 +3383,12 @@ window.setStatSubTab = function (tabName, btnEl) {
     if (el) {
       if (key === tabName) {
         el.classList.add("active");
+        // Sicherstellen, dass alle Karten und Elemente sichtbar sind (verhindert hängende opacity: 0)
+        el.querySelectorAll(".cinematic-entry, .card-modern, .card, [style*='opacity']").forEach((child) => {
+          child.style.opacity = "1";
+          child.style.transform = "none";
+          child.style.visibility = "visible";
+        });
       } else {
         el.classList.remove("active");
       }
@@ -3388,6 +3397,17 @@ window.setStatSubTab = function (tabName, btnEl) {
 
   if (tabName === "duelle" && typeof window.updateInteractiveH2H === "function") {
     window.updateInteractiveH2H();
+  }
+
+  if (tabName === "ranking") {
+    const winCanvas = document.getElementById("winChart");
+    if (winCanvas && winCanvas.__myWinChart && typeof winCanvas.__myWinChart.resize === "function") {
+      winCanvas.__myWinChart.resize();
+    }
+    const eloCanvas = document.getElementById("eloHistoryChart");
+    if (eloCanvas && eloCanvas.__myEloChart && typeof eloCanvas.__myEloChart.resize === "function") {
+      eloCanvas.__myEloChart.resize();
+    }
   }
 };
 
