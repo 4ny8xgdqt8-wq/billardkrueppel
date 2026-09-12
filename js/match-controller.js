@@ -11,292 +11,286 @@ window.matchDurationInMinutes = 0;
 window.highlightedElements = [];
 window.matchToDeleteIndex = -1;
 
+window.updateAvatarPreviews = () => {
+  const ids = ["p1", "p2", "t1p1", "t1p2", "t2p1", "t2p2", "breakPlayer"];
+  ids.forEach((id) => {
+    const sel = document.getElementById(id);
+    const preview = document.getElementById(id + "-avatar-preview");
+    if (!sel || !preview) return;
 
-      window.updateAvatarPreviews = () => {
-        const ids = ["p1", "p2", "t1p1", "t1p2", "t2p1", "t2p2", "breakPlayer"];
-        ids.forEach((id) => {
-          const sel = document.getElementById(id);
-          const preview = document.getElementById(id + "-avatar-preview");
-          if (!sel || !preview) return;
+    const val = sel.value;
+    const names = val ? val.split(" & ").map((n) => n.trim()) : [null];
+    const size = id.startsWith("t") ? 36 : 40; // 36px für Teams, 40px für 1v1 & Anstoß
 
-          const val = sel.value;
-          const names = val ? val.split(" & ").map((n) => n.trim()) : [null];
-          const size = id.startsWith("t") ? 36 : 40; // 36px für Teams, 40px für 1v1 & Anstoß
+    preview.innerHTML = names
+      .map((n, idx) => {
+        const silhouette = `<div style="width:${size}px; height:${size}px; min-width:${size}px; border-radius:10px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:${size * 0.5}px; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.2);">👤</div>`;
+        if (!n) return silhouette;
 
-          preview.innerHTML = names
-            .map((n, idx) => {
-              const silhouette = `<div style="width:${size}px; height:${size}px; min-width:${size}px; border-radius:10px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:${size * 0.5}px; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.2);">👤</div>`;
-              if (!n) return silhouette;
+        const src =
+          window.getAvatarUrl && typeof window.getAvatarUrl === "function"
+            ? window.getAvatarUrl(n)
+            : `avatars/${n}.png`;
 
-              const src =
-                window.getAvatarUrl && typeof window.getAvatarUrl === "function"
-                  ? window.getAvatarUrl(n)
-                  : `avatars/${n}.png`;
+        // Zeige animierte Umrandung, wenn Spieler auf einer Siegesserie ist
+        const streakClass =
+          window.careerStats &&
+          window.careerStats.pData &&
+          window.careerStats.pData[n] &&
+          window.careerStats.pData[n].currentStreak >= 1
+            ? "streak-fire"
+            : "";
 
-              // Zeige animierte Umrandung, wenn Spieler auf einer Siegesserie ist
-              const streakClass = (window.careerStats && window.careerStats.pData && window.careerStats.pData[n] && window.careerStats.pData[n].currentStreak >= 1) ? 'streak-fire' : '';
-
-              return `<div class="avatar-frame ${streakClass}" style="position:relative; width:${size}px; height:${size}px; min-width:${size}px;">
+        return `<div class="avatar-frame ${streakClass}" style="position:relative; width:${size}px; height:${size}px; min-width:${size}px;">
                         <img loading="lazy" src="${src}" onerror="this.style.display='none'" style="width:${size}px; height:${size}px; border-radius:10px; object-fit:cover;">
                       </div>`;
-            })
-            .join("");
-        });
-      };
+      })
+      .join("");
+  });
+};
 
+window.startMatchTimer = () => {
+  if (window.matchTimerInterval) return; // Timer läuft bereits
 
+  window.matchStartTime = new Date();
+  const display = document.getElementById("matchDurationDisplay");
 
-      window.startMatchTimer = () => {
-        if (window.matchTimerInterval) return; // Timer läuft bereits
+  window.matchTimerInterval = setInterval(() => {
+    const now = new Date();
+    const elapsed = Math.floor((now - window.matchStartTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    window.matchDurationInMinutes = minutes + seconds / 60;
 
-        window.matchStartTime = new Date();
-        const display = document.getElementById("matchDurationDisplay");
+    if (display) {
+      display.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+  }, 1000);
+};
 
-        window.matchTimerInterval = setInterval(() => {
-          const now = new Date();
-          const elapsed = Math.floor((now - window.matchStartTime) / 1000);
-          const minutes = Math.floor(elapsed / 60);
-          const seconds = elapsed % 60;
-          window.matchDurationInMinutes = minutes + seconds / 60;
+window.stopMatchTimer = () => {
+  if (window.matchTimerInterval) {
+    clearInterval(window.matchTimerInterval);
+    window.matchTimerInterval = null;
+  }
+  window.matchStartTime = null;
+};
 
-          if (display) {
-            display.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-          }
-        }, 1000);
-      };
+window.openSuccessModal = () => {
+  document.getElementById("successModal").style.display = "flex";
+};
 
-      window.stopMatchTimer = () => {
-        if (window.matchTimerInterval) {
-          clearInterval(window.matchTimerInterval);
-          window.matchTimerInterval = null;
-        }
-        window.matchStartTime = null;
-      };
+window.closeSuccessModal = () => {
+  document.getElementById("successModal").style.display = "none";
+};
 
+window.closePlayerProfileModal = () => {
+  document.getElementById("playerProfileModal").style.display = "none";
+};
 
+window.closeDiceModal = () => {
+  document.getElementById("diceModal").style.display = "none";
+};
 
-      window.openSuccessModal = () => {
-        document.getElementById("successModal").style.display = "flex";
-      };
+window.highlightedElements = []; // Global array to keep track of highlighted elements
 
-      window.closeSuccessModal = () => {
-        document.getElementById("successModal").style.display = "none";
-      };
+window.openErrorModal = (
+  msg,
+  elementIdsToHighlight = [],
+  title = "Etwas fehlt!",
+  icon = "⚠️",
+) => {
+  const modal = document.getElementById("errorModal");
+  document.getElementById("errorModalIcon").innerText = icon;
+  const titleEl = document.getElementById("errorModalTitle");
+  titleEl.innerText = title;
+  titleEl.style.color = "var(--error)"; // Standardfarbe zurücksetzen
 
-      window.closePlayerProfileModal = () => {
-        document.getElementById("playerProfileModal").style.display = "none";
-      };
+  // Button & Text Styles zurücksetzen (falls vorher Info-Modus aktiv war)
+  const btn = modal.querySelector(".btn-save");
+  btn.style.background = "var(--error)";
+  btn.style.color = "#fff";
+  document.getElementById("errorModalText").style.fontSize = "14px";
 
-      window.closeDiceModal = () => {
-        document.getElementById("diceModal").style.display = "none";
-      };
+  document.getElementById("errorModalText").innerText = msg;
+  modal.style.display = "flex";
 
-      window.highlightedElements = []; // Global array to keep track of highlighted elements
+  // Shake Animation triggern
+  const card = modal.querySelector(".modal-card");
+  card.style.animation = "none";
+  card.offsetHeight; // Reflow
+  card.style.animation = "modal-shake 0.4s ease-in-out";
 
-      window.openErrorModal = (
-        msg,
-        elementIdsToHighlight = [],
-        title = "Etwas fehlt!",
-        icon = "⚠️",
-      ) => {
-        const modal = document.getElementById("errorModal");
-        document.getElementById("errorModalIcon").innerText = icon;
-        const titleEl = document.getElementById("errorModalTitle");
-        titleEl.innerText = title;
-        titleEl.style.color = "var(--error)"; // Standardfarbe zurücksetzen
+  // Clear previous highlights
+  window.highlightedElements.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.remove("error-highlight");
+      let prev = el.previousElementSibling;
+      if (prev && prev.tagName === "LABEL") prev.style.color = "";
+      let pPrev = el.parentElement.previousElementSibling;
+      if (pPrev && pPrev.tagName === "LABEL") pPrev.style.color = "";
+    }
+  });
+  window.highlightedElements = [];
 
-        // Button & Text Styles zurücksetzen (falls vorher Info-Modus aktiv war)
-        const btn = modal.querySelector(".btn-save");
-        btn.style.background = "var(--error)";
-        btn.style.color = "#fff";
-        document.getElementById("errorModalText").style.fontSize = "14px";
+  // Apply new highlights
+  elementIdsToHighlight.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add("error-highlight");
+      window.highlightedElements.push(id);
 
-        document.getElementById("errorModalText").innerText = msg;
-        modal.style.display = "flex";
+      // Das zugehörige Label ebenfalls rot einfärben
+      let prev = el.previousElementSibling;
+      if (prev && prev.tagName === "LABEL") prev.style.color = "var(--error)";
+      let pPrev = el.parentElement.previousElementSibling;
+      if (pPrev && pPrev.tagName === "LABEL")
+        pPrev.style.color = "var(--error)";
+    }
+  });
+};
 
-        // Shake Animation triggern
-        const card = modal.querySelector(".modal-card");
-        card.style.animation = "none";
-        card.offsetHeight; // Reflow
-        card.style.animation = "modal-shake 0.4s ease-in-out";
+window.showDailyWinnerInfo = () => {
+  const msg =
+    `Der Tagessieger (Session-MVP) wird durch Leistungspunkte ermittelt:\n\n` +
+    `🕹️ Pro Spiel: +1 (Teilnahme)\n` +
+    `🏆 Pro Sieg: +3\n` +
+    `📉 Pro Niederlage: -1\n` +
+    `🎯 Regulärer Sieg: +1\n` +
+    `⚡ Break-Sieg: +3\n` +
+    `🥶 Clutch (Gegner Rest 1): +2\n` +
+    `🕯️ Knappe Niederlage (Du Rest 1): +1\n` +
+    `🔥 Längste Serie: +1 pro Sieg in Serie\n` +
+    `🕵️ Service-Klau: +2 (Sieg bei Gegner-Anstoß)\n` +
+    `🪓 Dominanz: +0.5 pro Ø Restkugel (Sieg)\n` +
+    `🗡️ Nemesis besiegt: +4\n` +
+    `🏆 Fame Achievement: +2\n\n` +
+    `Abzüge:\n` +
+    `🐀 Sieg durch Foul: -1\n` +
+    `🤦 8er-Fehler: -2\n` +
+    `💀 Shame Achievement: -2\n` +
+    `🧟 Hoher Ø Rest bei Niederlage: -0.25 pro Ø Restkugel`;
+  window.openErrorModal(msg, [], "Punkte-Logik", "🏆");
+  document.getElementById("errorModalTitle").style.color = "var(--accent)";
+  document.querySelector("#errorModal .btn-save").style.background =
+    "var(--accent)";
+  document.querySelector("#errorModal .btn-save").style.color = "#000";
+  document.querySelector("#errorModalText").style.fontSize = "12px";
+};
 
-        // Clear previous highlights
-        window.highlightedElements.forEach((id) => {
-          const el = document.getElementById(id);
-          if (el) {
-            el.classList.remove("error-highlight");
-            let prev = el.previousElementSibling;
-            if (prev && prev.tagName === "LABEL") prev.style.color = "";
-            let pPrev = el.parentElement.previousElementSibling;
-            if (pPrev && pPrev.tagName === "LABEL") pPrev.style.color = "";
-          }
-        });
-        window.highlightedElements = [];
+window.removeHighlight = (id) => {
+  const el = document.getElementById(id);
+  if (el && el.classList.contains("error-highlight")) {
+    el.classList.remove("error-highlight");
+    let prev = el.previousElementSibling;
+    if (prev && prev.tagName === "LABEL") prev.style.color = "";
+    let pPrev = el.parentElement.previousElementSibling;
+    if (pPrev && pPrev.tagName === "LABEL") pPrev.style.color = "";
+    window.highlightedElements = window.highlightedElements.filter(
+      (hid) => hid !== id,
+    );
+  }
+};
 
-        // Apply new highlights
-        elementIdsToHighlight.forEach((id) => {
-          const el = document.getElementById(id);
-          if (el) {
-            el.classList.add("error-highlight");
-            window.highlightedElements.push(id);
+window.closeErrorModal = () => {
+  document.getElementById("errorModal").style.display = "none";
+};
 
-            // Das zugehörige Label ebenfalls rot einfärben
-            let prev = el.previousElementSibling;
-            if (prev && prev.tagName === "LABEL")
-              prev.style.color = "var(--error)";
-            let pPrev = el.parentElement.previousElementSibling;
-            if (pPrev && pPrev.tagName === "LABEL")
-              pPrev.style.color = "var(--error)";
-          }
-        });
-      };
+window.openDeleteConfirmModal = (index) => {
+  window.matchToDeleteIndex = index;
+  document.getElementById("deleteConfirmModal").style.display = "flex";
+};
 
-      window.showDailyWinnerInfo = () => {
-        const msg =
-          `Der Tagessieger (Session-MVP) wird durch Leistungspunkte ermittelt:\n\n` +
-          `🕹️ Pro Spiel: +1 (Teilnahme)\n` +
-          `🏆 Pro Sieg: +3\n` +
-          `📉 Pro Niederlage: -1\n` +
-          `🎯 Regulärer Sieg: +1\n` +
-          `⚡ Break-Sieg: +3\n` +
-          `🥶 Clutch (Gegner Rest 1): +2\n` +
-          `🕯️ Knappe Niederlage (Du Rest 1): +1\n` +
-          `🔥 Längste Serie: +1 pro Sieg in Serie\n` +
-          `🕵️ Service-Klau: +2 (Sieg bei Gegner-Anstoß)\n` +
-          `🪓 Dominanz: +0.5 pro Ø Restkugel (Sieg)\n` +
-          `🗡️ Nemesis besiegt: +4\n` +
-          `🏆 Fame Achievement: +2\n\n` +
-          `Abzüge:\n` +
-          `🐀 Sieg durch Foul: -1\n` +
-          `🤦 8er-Fehler: -2\n` +
-          `💀 Shame Achievement: -2\n` +
-          `🧟 Hoher Ø Rest bei Niederlage: -0.25 pro Ø Restkugel`;
-        window.openErrorModal(msg, [], "Punkte-Logik", "🏆");
-        document.getElementById("errorModalTitle").style.color =
-          "var(--accent)";
-        document.querySelector("#errorModal .btn-save").style.background =
-          "var(--accent)";
-        document.querySelector("#errorModal .btn-save").style.color = "#000";
-        document.querySelector("#errorModalText").style.fontSize = "12px";
-      };
+window.closeDeleteConfirmModal = () => {
+  window.matchToDeleteIndex = -1;
+  document.getElementById("deleteConfirmModal").style.display = "none";
+};
 
-      window.removeHighlight = (id) => {
-        const el = document.getElementById(id);
-        if (el && el.classList.contains("error-highlight")) {
-          el.classList.remove("error-highlight");
-          let prev = el.previousElementSibling;
-          if (prev && prev.tagName === "LABEL") prev.style.color = "";
-          let pPrev = el.parentElement.previousElementSibling;
-          if (pPrev && pPrev.tagName === "LABEL") pPrev.style.color = "";
-          window.highlightedElements = window.highlightedElements.filter(
-            (hid) => hid !== id,
-          );
-        }
-      };
+window.getBallIcon = (type, size = 15) => {
+  if (type === "Voll")
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="margin-right:4px; display:inline-block; vertical-align:middle; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5)); flex-shrink:0;"><defs><radialGradient id="gradVoll3D" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#fffbe6"/><stop offset="20%" stop-color="#ffd700"/><stop offset="70%" stop-color="#d49200"/><stop offset="100%" stop-color="#543800"/></radialGradient></defs><circle cx="12" cy="12" r="11" fill="url(#gradVoll3D)"/><ellipse cx="8.5" cy="7" rx="3" ry="2" fill="#ffffff" opacity="0.6" transform="rotate(-20 8.5 7)"/></svg>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="margin-right:4px; display:inline-block; vertical-align:middle; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5)); flex-shrink:0;"><defs><radialGradient id="gradHalbBase3D" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#ffffff"/><stop offset="60%" stop-color="#e2e8f0"/><stop offset="100%" stop-color="#64748b"/></radialGradient><radialGradient id="gradHalbStripe3D" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#7fe3ff"/><stop offset="35%" stop-color="#00a6ff"/><stop offset="85%" stop-color="#005db3"/><stop offset="100%" stop-color="#002b54"/></radialGradient><clipPath id="clipHalb3D"><circle cx="12" cy="12" r="11"/></clipPath></defs><circle cx="12" cy="12" r="11" fill="url(#gradHalbBase3D)"/><path d="M 1 7.5 Q 12 12 23 7.5 L 23 16.5 Q 12 21 1 16.5 Z" fill="url(#gradHalbStripe3D)" clip-path="url(#clipHalb3D)"/><ellipse cx="8.5" cy="7" rx="3" ry="2" fill="#ffffff" opacity="0.6" transform="rotate(-20 8.5 7)"/></svg>`;
+};
 
-      window.closeErrorModal = () => {
-        document.getElementById("errorModal").style.display = "none";
-      };
+window.selectWinner = (n) => {
+  window.winnerNum = n;
+  document.getElementById("btn-win1").classList.toggle("selected", n === 1);
+  document.getElementById("btn-win2").classList.toggle("selected", n === 2);
+  window.removeHighlight("btn-win1");
+  window.removeHighlight("btn-win2");
+  // Timer anhalten, sobald ein Gewinner ausgewählt wurde
+  if (typeof window.stopMatchTimer === "function") window.stopMatchTimer();
+  window.openResultModal();
+};
 
+window.initDropdowns = () => {
+  document.querySelectorAll(".player-sel").forEach((s) => {
+    s.innerHTML = '<option disabled selected value="">Wählen</option>';
+    window.spieler.forEach((p) => s.options.add(new Option(p, p)));
+    s.onchange = () => {
+      window.breakLocked = false;
+      window.winnerNum = 0;
+      document
+        .querySelectorAll(".win-btn")
+        .forEach((btn) => btn.classList.remove("selected"));
+      // Timer stoppen und zurücksetzen, wenn ein Spieler geändert wird
+      if (typeof window.stopMatchTimer === "function") window.stopMatchTimer();
+      window.matchDurationInMinutes = 0;
+      const display = document.getElementById("matchDurationDisplay");
+      if (display) display.textContent = "00:00";
+      if (typeof window.updateUI === "function") window.updateUI();
+    };
+  });
 
+  // Im DT-Modus: Daniel & Thorsten automatisch vorselektieren falls noch unbesetzt
+  if (window.currentAppMode === "dt" && Array.isArray(window.spieler)) {
+    const p1El = document.getElementById("p1");
+    const p2El = document.getElementById("p2");
+    const pNames = window.spieler;
+    if (pNames.includes("Daniel") && pNames.includes("Thorsten")) {
+      if (p1El && (!p1El.value || !pNames.includes(p1El.value)))
+        p1El.value = "Daniel";
+      if (p2El && (!p2El.value || !pNames.includes(p2El.value)))
+        p2El.value = "Thorsten";
+    } else if (pNames.length >= 2) {
+      if (p1El && (!p1El.value || !pNames.includes(p1El.value)))
+        p1El.value = pNames[0];
+      if (p2El && (!p2El.value || !pNames.includes(p2El.value)))
+        p2El.value = pNames[1];
+    }
+  }
 
-      window.openDeleteConfirmModal = (index) => {
-        window.matchToDeleteIndex = index;
-        document.getElementById("deleteConfirmModal").style.display = "flex";
-      };
+  if (typeof window.updateModeVisuals === "function")
+    window.updateModeVisuals();
+  if (typeof window.initResultUI === "function") window.initResultUI(); // Neue UI initialisieren
+  if (typeof window.updateAvatarPreviews === "function")
+    window.updateAvatarPreviews();
+  if (typeof window.updateUI === "function") window.updateUI(); // updateUI ruft updateMatchProbability auf, das computeEloRatings braucht
+};
 
-      window.closeDeleteConfirmModal = () => {
-        window.matchToDeleteIndex = -1;
-        document.getElementById("deleteConfirmModal").style.display = "none";
-      };
+window.openTeamModal = () => {
+  const mode = document.getElementById("mode").value;
+  let currentlySelectedPlayers = [];
+  if (mode === "1:1") {
+    currentlySelectedPlayers.push(document.getElementById("p1").value.trim());
+    currentlySelectedPlayers.push(document.getElementById("p2").value.trim());
+  } else {
+    // 2:2
+    currentlySelectedPlayers.push(document.getElementById("t1p1").value.trim());
+    currentlySelectedPlayers.push(document.getElementById("t1p2").value.trim());
+    currentlySelectedPlayers.push(document.getElementById("t2p1").value.trim());
+    currentlySelectedPlayers.push(document.getElementById("t2p2").value.trim());
+  }
+  currentlySelectedPlayers = currentlySelectedPlayers.filter(Boolean); // Filtert leere Strings heraus
 
-
-
-      window.getBallIcon = (type, size = 15) => {
-        if (type === "Voll")
-          return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="margin-right:4px; display:inline-block; vertical-align:middle; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5)); flex-shrink:0;"><defs><radialGradient id="gradVoll3D" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#fffbe6"/><stop offset="20%" stop-color="#ffd700"/><stop offset="70%" stop-color="#d49200"/><stop offset="100%" stop-color="#543800"/></radialGradient></defs><circle cx="12" cy="12" r="11" fill="url(#gradVoll3D)"/><ellipse cx="8.5" cy="7" rx="3" ry="2" fill="#ffffff" opacity="0.6" transform="rotate(-20 8.5 7)"/></svg>`;
-        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="margin-right:4px; display:inline-block; vertical-align:middle; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5)); flex-shrink:0;"><defs><radialGradient id="gradHalbBase3D" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#ffffff"/><stop offset="60%" stop-color="#e2e8f0"/><stop offset="100%" stop-color="#64748b"/></radialGradient><radialGradient id="gradHalbStripe3D" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#7fe3ff"/><stop offset="35%" stop-color="#00a6ff"/><stop offset="85%" stop-color="#005db3"/><stop offset="100%" stop-color="#002b54"/></radialGradient><clipPath id="clipHalb3D"><circle cx="12" cy="12" r="11"/></clipPath></defs><circle cx="12" cy="12" r="11" fill="url(#gradHalbBase3D)"/><path d="M 1 7.5 Q 12 12 23 7.5 L 23 16.5 Q 12 21 1 16.5 Z" fill="url(#gradHalbStripe3D)" clip-path="url(#clipHalb3D)"/><ellipse cx="8.5" cy="7" rx="3" ry="2" fill="#ffffff" opacity="0.6" transform="rotate(-20 8.5 7)"/></svg>`;
-      };
-
-
-
-      window.selectWinner = (n) => {
-        window.winnerNum = n;
-        document
-          .getElementById("btn-win1")
-          .classList.toggle("selected", n === 1);
-        document
-          .getElementById("btn-win2")
-          .classList.toggle("selected", n === 2);
-        window.removeHighlight("btn-win1");
-        window.removeHighlight("btn-win2");
-        // Timer anhalten, sobald ein Gewinner ausgewählt wurde
-        if (typeof window.stopMatchTimer === "function") window.stopMatchTimer();
-        window.openResultModal();
-      };
-
-
-
-      window.initDropdowns = () => {
-        document.querySelectorAll(".player-sel").forEach((s) => {
-          s.innerHTML = '<option disabled selected value="">Wählen</option>';
-          window.spieler.forEach((p) => s.options.add(new Option(p, p)));
-          s.onchange = () => {
-            window.breakLocked = false;
-            window.winnerNum = 0;
-            document
-              .querySelectorAll(".win-btn")
-              .forEach((btn) => btn.classList.remove("selected"));
-            // Timer stoppen und zurücksetzen, wenn ein Spieler geändert wird
-            if (typeof window.stopMatchTimer === "function") window.stopMatchTimer();
-            window.matchDurationInMinutes = 0;
-            const display = document.getElementById("matchDurationDisplay");
-            if (display) display.textContent = "00:00";
-            if (typeof window.updateUI === "function") window.updateUI();
-          };
-        });
-        if (typeof window.initResultUI === "function") window.initResultUI(); // Neue UI initialisieren
-        if (typeof window.updateAvatarPreviews === "function")
-          window.updateAvatarPreviews();
-        if (typeof window.updateUI === "function") window.updateUI(); // updateUI ruft updateMatchProbability auf, das computeEloRatings braucht
-      };
-
-      window.openTeamModal = () => {
-        const mode = document.getElementById("mode").value;
-        let currentlySelectedPlayers = [];
-        if (mode === "1:1") {
-          currentlySelectedPlayers.push(
-            document.getElementById("p1").value.trim(),
-          );
-          currentlySelectedPlayers.push(
-            document.getElementById("p2").value.trim(),
-          );
-        } else {
-          // 2:2
-          currentlySelectedPlayers.push(
-            document.getElementById("t1p1").value.trim(),
-          );
-          currentlySelectedPlayers.push(
-            document.getElementById("t1p2").value.trim(),
-          );
-          currentlySelectedPlayers.push(
-            document.getElementById("t2p1").value.trim(),
-          );
-          currentlySelectedPlayers.push(
-            document.getElementById("t2p2").value.trim(),
-          );
-        }
-        currentlySelectedPlayers = currentlySelectedPlayers.filter(Boolean); // Filtert leere Strings heraus
-
-        const container = document.getElementById("teamPlayerList");
-        container.innerHTML = window.spieler
-          .map((p) => {
-            const isSelected = currentlySelectedPlayers.includes(
-              String(p).trim(),
-            );
-            return `
+  const container = document.getElementById("teamPlayerList");
+  container.innerHTML = window.spieler
+    .map((p) => {
+      const isSelected = currentlySelectedPlayers.includes(String(p).trim());
+      return `
                     <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding:16px; background:${isSelected ? "rgba(52,199,89,0.12)" : "rgba(255,255,255,0.03)"}; border-radius:18px; cursor: pointer; border: 1px solid ${isSelected ? "#34c759" : "rgba(255,255,255,0.1)"}; transition: all 0.2s ease;">
-                        <input type="checkbox" value="${p}" class="team-p-check" style="display:none;" onchange="this.parentElement.style.background=this.checked?'rgba(52,199,89,0.12)':'rgba(255,255,255,0.03)'; this.parentElement.style.borderColor=this.checked?'#34c759':'rgba(255,255,255,0.1)'; this.parentElement.querySelector('.check-mark').style.opacity=this.checked?'1':'0.1';" ${isSelected ? "checked" : ""}> 
+                        <input type="checkbox" value="${p}" class="team-p-check" style="display:none;" onchange="this.parentElement.style.background=this.checked?'rgba(52,199,89,0.12)':'rgba(255,255,255,0.03)'; this.parentElement.style.borderColor=this.checked?'#34c759':'rgba(255,255,255,0.1)'; this.parentElement.querySelector('.check-mark').style.opacity=this.checked?'1':'0.1';" ${isSelected ? "checked" : ""}>
                         <div style="display:flex; align-items:center; gap:12px;">
                             <img loading="lazy" src="${window.getAvatarUrl ? window.getAvatarUrl(p) : `avatars/${p}.png`}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
                             <div style="display:none; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,0.1);">👤</div>
@@ -305,471 +299,456 @@ window.matchToDeleteIndex = -1;
                         <span class="check-mark" style="font-size:20px; color:#34c759; opacity:${isSelected ? "1" : "0.1"}; transition: opacity 0.2s;">✓</span>
                     </label>
                 `;
-          })
-          .join("");
-        document.getElementById("teamModal").style.display = "flex";
-      };
+    })
+    .join("");
+  document.getElementById("teamModal").style.display = "flex";
+};
 
-      window.closeTeamModal = () => {
-        document.getElementById("teamModal").style.display = "none";
-      };
+window.closeTeamModal = () => {
+  document.getElementById("teamModal").style.display = "none";
+};
 
-      window.generateRandomMatch = () => {
-        const checks = document.querySelectorAll(".team-p-check:checked");
-        const selected = Array.from(checks).map((c) => c.value);
-        const mode = document.getElementById("mode").value;
+window.generateRandomMatch = () => {
+  const checks = document.querySelectorAll(".team-p-check:checked");
+  const selected = Array.from(checks).map((c) => c.value);
+  const mode = document.getElementById("mode").value;
 
-        if (mode === "1:1" && selected.length < 2)
-          return alert("Bitte mindestens 2 Spieler wählen!");
-        if (mode === "2:2" && selected.length < 4)
-          return alert("Bitte mindestens 4 Spieler wählen!");
+  if (mode === "1:1" && selected.length < 2)
+    return alert("Bitte mindestens 2 Spieler wählen!");
+  if (mode === "2:2" && selected.length < 4)
+    return alert("Bitte mindestens 4 Spieler wählen!");
 
-        // Shuffle selected players
-        const shuffled = selected.sort(() => 0.5 - Math.random());
+  // Shuffle selected players
+  const shuffled = selected.sort(() => 0.5 - Math.random());
 
-        if (mode === "1:1") {
-          document.getElementById("p1").value = shuffled[0];
-          document.getElementById("p2").value = shuffled[1];
-        } else {
-          document.getElementById("t1p1").value = shuffled[0];
-          document.getElementById("t1p2").value = shuffled[1];
-          document.getElementById("t2p1").value = shuffled[2];
-          document.getElementById("t2p2").value = shuffled[3];
-        }
-        if (typeof window.updateUI === "function") window.updateUI();
-        window.closeTeamModal();
-      };
+  if (mode === "1:1") {
+    document.getElementById("p1").value = shuffled[0];
+    document.getElementById("p2").value = shuffled[1];
+  } else {
+    document.getElementById("t1p1").value = shuffled[0];
+    document.getElementById("t1p2").value = shuffled[1];
+    document.getElementById("t2p1").value = shuffled[2];
+    document.getElementById("t2p2").value = shuffled[3];
+  }
+  if (typeof window.updateUI === "function") window.updateUI();
+  window.closeTeamModal();
+};
 
-      window.updateUI = () => {
-        const currentMode = document.getElementById("mode").value;
+window.updateUI = () => {
+  const currentMode = document.getElementById("mode").value;
 
-        // Reset state only when mode changes
-        if (window.lastMode !== currentMode) {
-          window.winnerNum = 0;
-          window.breakLocked = false;
-          document
-            .querySelectorAll(".win-btn")
-            .forEach((b) => b.classList.remove("selected"));
-          document.getElementById("breakPlayer").value = "";
-          document.getElementById("ballType1").value = "";
-          document.getElementById("ballType2").value = "";
-          document.getElementById("winType").value = "";
-          document.getElementById("leftover").value = "";
-          window.lastMode = currentMode;
-        }
-      if (currentMode !== window.lastMode) window.stopMatchTimer();
+  // Reset state only when mode changes
+  if (window.lastMode !== currentMode) {
+    window.winnerNum = 0;
+    window.breakLocked = false;
+    document
+      .querySelectorAll(".win-btn")
+      .forEach((b) => b.classList.remove("selected"));
+    document.getElementById("breakPlayer").value = "";
+    document.getElementById("ballType1").value = "";
+    document.getElementById("ballType2").value = "";
+    document.getElementById("winType").value = "";
+    document.getElementById("leftover").value = "";
+    window.lastMode = currentMode;
+  }
+  if (currentMode !== window.lastMode) window.stopMatchTimer();
 
-        const m = document.getElementById("mode").value;
-        const saveBtn = document.querySelector(".btn-save");
-        const playersReady =
-          m === "1:1"
-            ? document.getElementById("p1").value &&
-              document.getElementById("p2").value
-            : document.getElementById("t1p1").value &&
-              document.getElementById("t1p2").value &&
-              document.getElementById("t2p1").value &&
-              document.getElementById("t2p2").value;
-        const winnerSelected = window.winnerNum !== 0;
+  const m = document.getElementById("mode").value;
+  const saveBtn = document.querySelector(".btn-save");
+  const playersReady =
+    m === "1:1"
+      ? document.getElementById("p1").value &&
+        document.getElementById("p2").value
+      : document.getElementById("t1p1").value &&
+        document.getElementById("t1p2").value &&
+        document.getElementById("t2p1").value &&
+        document.getElementById("t2p2").value;
+  const winnerSelected = window.winnerNum !== 0;
 
-        // --- Phasensteuerung ---
-        const phase2 = document.getElementById("phase-2-gamestart");
-        const phase3 = document.getElementById("phase-3-result");
+  // --- Phasensteuerung ---
+  const phase2 = document.getElementById("phase-2-gamestart");
+  const phase3 = document.getElementById("phase-3-result");
 
-        if (phase2) phase2.style.display = playersReady ? "block" : "none";
-        if (phase2)
-          phase2.style.animation = playersReady
-            ? "ach-card-enter 0.5s ease-out forwards"
-            : "none";
+  if (phase2) phase2.style.display = playersReady ? "block" : "none";
+  if (phase2)
+    phase2.style.animation = playersReady
+      ? "ach-card-enter 0.5s ease-out forwards"
+      : "none";
 
-        // ELO-Box nur anzeigen, wenn Spieler bereit sind
-        const probBox = document.getElementById("match-prob");
-        if (probBox) {
-          probBox.style.display = playersReady ? "block" : "none";
-        }
+  // ELO-Box nur anzeigen, wenn Spieler bereit sind
+  const probBox = document.getElementById("match-prob");
+  if (probBox) {
+    probBox.style.display = playersReady ? "block" : "none";
+  }
 
-        // --- Steuerung der neuen Phase 3 UI ---
-        if (
-          winnerSelected &&
-          document.getElementById("resultModal").style.display !== "flex"
-        ) {
-          const winnerName =
-            window.winnerNum === 1
-              ? document.getElementById("p1").value ||
-                getTN(
-                  document.getElementById("t1p1").value,
-                  document.getElementById("t1p2").value,
-                )
-              : document.getElementById("p2").value ||
-                getTN(
-                  document.getElementById("t2p1").value,
-                  document.getElementById("t2p2").value,
-                );
-          const ballLabel = document.getElementById("winnerBallTypeLabel");
-          if (ballLabel)
-            ballLabel.innerText = `Gewinner-Kugel auswählen für ${winnerName}`;
-        }
-
-        // Cinematic Greeting
-        const hours = new Date().getHours();
-        const greeting =
-          hours < 11
-            ? "Guten Morgen"
-            : hours < 18
-              ? "Guten Tag"
-              : "Guten Abend";
-        const greetEl = document.getElementById("dynamic-greeting");
-        if (greetEl) greetEl.innerText = greeting + ", Zeit für ein Match?";
-
-        const diceBtn = document.getElementById("btn-breakcalc");
-        // Fehler-Markierung beim Anstoß entfernen, wenn Spieler neu gewählt werden
-        window.removeHighlight("breakPlayer");
-
-        // Deaktiviere den Button für Zufallsteams, wenn heute bereits ein Match in der Historie steht
-        const now = new Date();
-        const pad = (n) => String(n).padStart(2, "0");
-        const todayStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
-        const hasTodayMatch = (window.stats || []).some(
-          (g) => g && g.d && g.d.startsWith(todayStr),
-        );
-        const randomBtn = document.getElementById("btn-random-teams");
-        if (randomBtn) {
-          randomBtn.disabled = hasTodayMatch;
-          randomBtn.style.opacity = hasTodayMatch ? "0.2" : "1";
-          randomBtn.style.pointerEvents = hasTodayMatch ? "none" : "auto";
-        }
-
-        const ui11 = document.getElementById("ui-1-1");
-        const ui22 = document.getElementById("ui-2-2");
-        if (ui11) ui11.style.display = m === "1:1" ? "flex" : "none";
-        if (ui22) ui22.style.display = m === "2:2" ? "flex" : "none";
-
-        const getTN = (a, b) => (a && b ? a + " & " + b : a || b || "");
-        const n1 =
-          m === "1:1"
-            ? document.getElementById("p1").value
-            : getTN(
-                document.getElementById("t1p1").value,
-                document.getElementById("t1p2").value,
-              );
-        const n2 =
-          m === "1:1"
-            ? document.getElementById("p2").value
-            : getTN(
-                document.getElementById("t2p1").value,
-                document.getElementById("t2p2").value,
-              );
-        document.getElementById("btn-win1").innerText = n1 || "Spieler 1";
-        document.getElementById("btn-win2").innerText = n2 || "Spieler 2";
-
-        // Dropdown für Anstoßspieler immer neu befüllen, außer wenn der Anstoß bereits "gelockt" ist.
-        const b = document.getElementById("breakPlayer");
-        const currentBreakPlayer = b.value; // Wert vor dem Leeren sichern
-        b.innerHTML = '<option value="" selected disabled>Wählen</option>';
-        const names = m === "1:1" ? [n1, n2] : [n1, n2];
-        names.forEach((n) => {
-          if (n && !n.includes("undefined")) b.options.add(new Option(n, n));
-        });
-        if (window.breakLocked && currentBreakPlayer)
-          b.value = currentBreakPlayer; // Gesicherten Wert wiederherstellen, falls gelockt
-
-        // Timer starten, wenn Anstoßspieler feststeht
-        if (b.value && !window.matchTimerInterval) {
-          window.startMatchTimer();
-        }
-
-        const ready =
-          m === "1:1"
-            ? document.getElementById("p1").value &&
-              document.getElementById("p2").value
-            : document.getElementById("t1p1").value &&
-              document.getElementById("t1p2").value &&
-              document.getElementById("t2p1").value &&
-              document.getElementById("t2p2").value;
-
-        if (diceBtn) {
-          diceBtn.disabled = window.breakLocked || !ready;
-          diceBtn.style.opacity = window.breakLocked || !ready ? "0.3" : "1";
-        }
-
-        // Highlights entfernen, wenn Spieler gewählt wurden
-        [
-          "p1",
-          "p2",
-          "t1p1",
-          "t1p2",
-          "t2p1",
-          "t2p2",
-          "winType",
-          "leftover",
-        ].forEach((id) => {
-          const el = document.getElementById(id);
-          if (el && el.value) window.removeHighlight(id);
-        });
-
-        if (typeof window.updateMatchProbability === "function")
-          window.updateMatchProbability();
-        if (window.updateAvatarPreviews) window.updateAvatarPreviews();
-
-        // Check if form is fully ready for "Speichern" cinematic glow
-        const isFormComplete =
-          (m === "1:1"
-            ? document.getElementById("p1").value &&
-              document.getElementById("p2").value
-            : document.getElementById("t1p1").value &&
-              document.getElementById("t1p2").value &&
-              document.getElementById("t2p1").value &&
-              document.getElementById("t2p2").value) &&
-          document.getElementById("breakPlayer").value &&
-          document.getElementById("winType").value &&
-          document.getElementById("leftover").value !== "" &&
-          document.getElementById("ballType1").value &&
-          window.winnerNum !== 0;
-
-        if (saveBtn) {
-          if (isFormComplete) saveBtn.classList.add("btn-ready");
-          else saveBtn.classList.remove("btn-ready");
-        }
-      };
-
-      window.syncBallTypes = (n) => {
-        const b1 = document.getElementById("ballType1");
-        const b2 = document.getElementById("ballType2");
-        if (n === 1) {
-          if (b1.value === "Voll") b2.value = "Halb";
-          else if (b1.value === "Halb") b2.value = "Voll";
-        } else {
-          if (b2.value === "Voll") b1.value = "Halb";
-          else if (b2.value === "Halb") b1.value = "Voll";
-        }
-        if (b1.value) window.removeHighlight("ballType1");
-        if (b2.value) window.removeHighlight("ballType2");
-        if (typeof window.updateUI === "function") window.updateUI();
-      };
-
-      window.calcBreak = () => {
-        const m = document.getElementById("mode").value;
-        const c =
-          m === "1:1"
-            ? [
-                document.getElementById("p1").value,
-                document.getElementById("p2").value,
-              ]
-            : [
-                document.getElementById("t1p1").value,
-                document.getElementById("t1p2").value,
-                document.getElementById("t2p1").value,
-                document.getElementById("t2p2").value,
-              ];
-        const picked =
-          c.filter(Boolean)[
-            Math.floor(Math.random() * c.filter(Boolean).length)
-          ];
-        if (!picked) return;
-        let res = picked;
-        if (m === "2:2") {
-          if (
-            picked === document.getElementById("t1p1").value ||
-            picked === document.getElementById("t1p2").value
+  // --- Steuerung der neuen Phase 3 UI ---
+  if (
+    winnerSelected &&
+    document.getElementById("resultModal").style.display !== "flex"
+  ) {
+    const winnerName =
+      window.winnerNum === 1
+        ? document.getElementById("p1").value ||
+          getTN(
+            document.getElementById("t1p1").value,
+            document.getElementById("t1p2").value,
           )
-            res =
-              document.getElementById("t1p1").value +
-              " & " +
-              document.getElementById("t1p2").value;
-          else
-            res =
-              document.getElementById("t2p1").value +
-              " & " +
-              document.getElementById("t2p2").value;
-        }
-        document.getElementById("breakPlayer").value = res;
-        window.removeHighlight("breakPlayer");
-        window.startMatchTimer();
-        window.breakLocked = true;
+        : document.getElementById("p2").value ||
+          getTN(
+            document.getElementById("t2p1").value,
+            document.getElementById("t2p2").value,
+          );
+    const ballLabel = document.getElementById("winnerBallTypeLabel");
+    if (ballLabel)
+      ballLabel.innerText = `Gewinner-Kugel auswählen für ${winnerName}`;
+  }
 
-        // Deaktivieren nach dem Würfeln
-        const diceBtn = document.getElementById("btn-breakcalc");
-        const breakSel = document.getElementById("breakPlayer");
-        if (diceBtn) {
-          diceBtn.disabled = true;
-          diceBtn.style.opacity = "0.3";
-        }
-        if (breakSel) {
-          breakSel.disabled = false; // Kurz aktivieren, um den Wert zu setzen
-          breakSel.value = res;
-          breakSel.disabled = true; // Sofort wieder deaktivieren
-        }
+  // Cinematic Greeting
+  const hours = new Date().getHours();
+  const greeting =
+    hours < 11 ? "Guten Morgen" : hours < 18 ? "Guten Tag" : "Guten Abend";
+  const greetEl = document.getElementById("dynamic-greeting");
+  if (greetEl) greetEl.innerText = greeting + ", Zeit für ein Match?";
 
-        document.getElementById("diceResultName").innerText = res;
-        const names = res.split(" & ").map((n) => n.trim());
-        const avatarContainer = document.getElementById("diceResultAvatar");
-        if (avatarContainer) {
-          const size = names.length > 1 ? 44 : 64; // This was causing an error as 'names' was not defined
-          avatarContainer.innerHTML = names
-            .map((n) => {
-              const silhouette = `<div style="width:${size}px; height:${size}px; border-radius:15px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:${size * 0.5}px; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.2);">👤</div>`;
-              const src =
-                window.getAvatarUrl && typeof window.getAvatarUrl === "function"
-                  ? window.getAvatarUrl(n)
-                  : `avatars/${n}.png`;
-              return `
+  const diceBtn = document.getElementById("btn-breakcalc");
+  // Fehler-Markierung beim Anstoß entfernen, wenn Spieler neu gewählt werden
+  window.removeHighlight("breakPlayer");
+
+  // Deaktiviere den Button für Zufallsteams, wenn heute bereits ein Match in der Historie steht
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  const todayStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
+  const hasTodayMatch = (window.stats || []).some(
+    (g) => g && g.d && g.d.startsWith(todayStr),
+  );
+  const randomBtn = document.getElementById("btn-random-teams");
+  if (randomBtn) {
+    randomBtn.disabled = hasTodayMatch;
+    randomBtn.style.opacity = hasTodayMatch ? "0.2" : "1";
+    randomBtn.style.pointerEvents = hasTodayMatch ? "none" : "auto";
+  }
+
+  const ui11 = document.getElementById("ui-1-1");
+  const ui22 = document.getElementById("ui-2-2");
+  if (ui11) ui11.style.display = m === "1:1" ? "flex" : "none";
+  if (ui22) ui22.style.display = m === "2:2" ? "flex" : "none";
+
+  const getTN = (a, b) => (a && b ? a + " & " + b : a || b || "");
+  const n1 =
+    m === "1:1"
+      ? document.getElementById("p1").value
+      : getTN(
+          document.getElementById("t1p1").value,
+          document.getElementById("t1p2").value,
+        );
+  const n2 =
+    m === "1:1"
+      ? document.getElementById("p2").value
+      : getTN(
+          document.getElementById("t2p1").value,
+          document.getElementById("t2p2").value,
+        );
+  document.getElementById("btn-win1").innerText = n1 || "Spieler 1";
+  document.getElementById("btn-win2").innerText = n2 || "Spieler 2";
+
+  // Dropdown für Anstoßspieler immer neu befüllen, außer wenn der Anstoß bereits "gelockt" ist.
+  const b = document.getElementById("breakPlayer");
+  const currentBreakPlayer = b.value; // Wert vor dem Leeren sichern
+  b.innerHTML = '<option value="" selected disabled>Wählen</option>';
+  const names = m === "1:1" ? [n1, n2] : [n1, n2];
+  names.forEach((n) => {
+    if (n && !n.includes("undefined")) b.options.add(new Option(n, n));
+  });
+  if (window.breakLocked && currentBreakPlayer) b.value = currentBreakPlayer; // Gesicherten Wert wiederherstellen, falls gelockt
+
+  // Timer starten, wenn Anstoßspieler feststeht
+  if (b.value && !window.matchTimerInterval) {
+    window.startMatchTimer();
+  }
+
+  const ready =
+    m === "1:1"
+      ? document.getElementById("p1").value &&
+        document.getElementById("p2").value
+      : document.getElementById("t1p1").value &&
+        document.getElementById("t1p2").value &&
+        document.getElementById("t2p1").value &&
+        document.getElementById("t2p2").value;
+
+  if (diceBtn) {
+    diceBtn.disabled = window.breakLocked || !ready;
+    diceBtn.style.opacity = window.breakLocked || !ready ? "0.3" : "1";
+  }
+
+  // Highlights entfernen, wenn Spieler gewählt wurden
+  ["p1", "p2", "t1p1", "t1p2", "t2p1", "t2p2", "winType", "leftover"].forEach(
+    (id) => {
+      const el = document.getElementById(id);
+      if (el && el.value) window.removeHighlight(id);
+    },
+  );
+
+  if (typeof window.updateMatchProbability === "function")
+    window.updateMatchProbability();
+  if (window.updateAvatarPreviews) window.updateAvatarPreviews();
+
+  // Check if form is fully ready for "Speichern" cinematic glow
+  const isFormComplete =
+    (m === "1:1"
+      ? document.getElementById("p1").value &&
+        document.getElementById("p2").value
+      : document.getElementById("t1p1").value &&
+        document.getElementById("t1p2").value &&
+        document.getElementById("t2p1").value &&
+        document.getElementById("t2p2").value) &&
+    document.getElementById("breakPlayer").value &&
+    document.getElementById("winType").value &&
+    document.getElementById("leftover").value !== "" &&
+    document.getElementById("ballType1").value &&
+    window.winnerNum !== 0;
+
+  if (saveBtn) {
+    if (isFormComplete) saveBtn.classList.add("btn-ready");
+    else saveBtn.classList.remove("btn-ready");
+  }
+};
+
+window.syncBallTypes = (n) => {
+  const b1 = document.getElementById("ballType1");
+  const b2 = document.getElementById("ballType2");
+  if (n === 1) {
+    if (b1.value === "Voll") b2.value = "Halb";
+    else if (b1.value === "Halb") b2.value = "Voll";
+  } else {
+    if (b2.value === "Voll") b1.value = "Halb";
+    else if (b2.value === "Halb") b1.value = "Voll";
+  }
+  if (b1.value) window.removeHighlight("ballType1");
+  if (b2.value) window.removeHighlight("ballType2");
+  if (typeof window.updateUI === "function") window.updateUI();
+};
+
+window.calcBreak = () => {
+  const m = document.getElementById("mode").value;
+  const c =
+    m === "1:1"
+      ? [
+          document.getElementById("p1").value,
+          document.getElementById("p2").value,
+        ]
+      : [
+          document.getElementById("t1p1").value,
+          document.getElementById("t1p2").value,
+          document.getElementById("t2p1").value,
+          document.getElementById("t2p2").value,
+        ];
+  const picked =
+    c.filter(Boolean)[Math.floor(Math.random() * c.filter(Boolean).length)];
+  if (!picked) return;
+  let res = picked;
+  if (m === "2:2") {
+    if (
+      picked === document.getElementById("t1p1").value ||
+      picked === document.getElementById("t1p2").value
+    )
+      res =
+        document.getElementById("t1p1").value +
+        " & " +
+        document.getElementById("t1p2").value;
+    else
+      res =
+        document.getElementById("t2p1").value +
+        " & " +
+        document.getElementById("t2p2").value;
+  }
+  document.getElementById("breakPlayer").value = res;
+  window.removeHighlight("breakPlayer");
+  window.startMatchTimer();
+  window.breakLocked = true;
+
+  // Deaktivieren nach dem Würfeln
+  const diceBtn = document.getElementById("btn-breakcalc");
+  const breakSel = document.getElementById("breakPlayer");
+  if (diceBtn) {
+    diceBtn.disabled = true;
+    diceBtn.style.opacity = "0.3";
+  }
+  if (breakSel) {
+    breakSel.disabled = false; // Kurz aktivieren, um den Wert zu setzen
+    breakSel.value = res;
+    breakSel.disabled = true; // Sofort wieder deaktivieren
+  }
+
+  document.getElementById("diceResultName").innerText = res;
+  const names = res.split(" & ").map((n) => n.trim());
+  const avatarContainer = document.getElementById("diceResultAvatar");
+  if (avatarContainer) {
+    const size = names.length > 1 ? 44 : 64; // This was causing an error as 'names' was not defined
+    avatarContainer.innerHTML = names
+      .map((n) => {
+        const silhouette = `<div style="width:${size}px; height:${size}px; border-radius:15px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:${size * 0.5}px; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.2);">👤</div>`;
+        const src =
+          window.getAvatarUrl && typeof window.getAvatarUrl === "function"
+            ? window.getAvatarUrl(n)
+            : `avatars/${n}.png`;
+        return `
                         <div style="position:relative; width:${size}px; height:${size}px;">
                             <img loading="lazy" src="${src}" onerror="this.style.display='none'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:15px; object-fit:cover; border:2px solid var(--accent); z-index:2; background:transparent;">
                             ${silhouette}
                         </div>`;
-            })
-            .join("");
+      })
+      .join("");
+  }
+
+  if (typeof window.updateAvatarPreviews === "function")
+    window.updateAvatarPreviews();
+
+  // Cinematic Animation starten
+  const animOverlay = document.getElementById("diceAnimationOverlay");
+  const animCup = document.getElementById("animCup");
+  const animText = document.getElementById("animText");
+
+  animCup.className = "cup-shake";
+  if (animText) animText.innerText = "Mische Würfel...";
+  animOverlay.style.display = "flex";
+
+  setTimeout(() => {
+    animCup.className = "cup-pour";
+    if (animText) animText.innerText = "Auswertung...";
+
+    setTimeout(() => {
+      animOverlay.style.display = "none";
+      animCup.className = "";
+      // Jetzt erst das echte Ergebnis-Fenster anzeigen
+      document.getElementById("diceModal").style.display = "flex";
+    }, 1000);
+  }, 1000);
+};
+
+window.requestDelete = (i) => {
+  window.openDeleteConfirmModal(i);
+};
+window.updateMatchProbability = () => {
+  const m = document.getElementById("mode").value;
+  const b = document.getElementById("match-prob");
+  const isReady =
+    m === "1:1"
+      ? document.getElementById("p1").value &&
+        document.getElementById("p2").value
+      : document.getElementById("t1p1").value &&
+        document.getElementById("t1p2").value &&
+        document.getElementById("t2p1").value &&
+        document.getElementById("t2p2").value;
+
+  if (!isReady || !b) {
+    b.innerHTML = `<div style="color:#8e8e93; font-size:10px; text-align:center; padding:5px; font-weight:800;">Spieler wählen für Prognose</div>`;
+    return;
+  }
+
+  const pIds = m === "1:1" ? ["p1", "p2"] : ["t1p1", "t1p2", "t2p1", "t2p2"];
+  const pVals = pIds
+    .map((id) => document.getElementById(id).value)
+    .filter(Boolean);
+  if (new Set(pVals).size !== pVals.length) {
+    b.innerHTML = `<div style="color:var(--error); font-size:10px; text-align:center; padding:10px; font-weight:800;">⚠️ Doppelte Spieler gewählt!</div>`;
+    return;
+  }
+
+  const elo =
+    typeof window.computeEloRatings === "function"
+      ? window.computeEloRatings(window.stats)
+      : {};
+  const getE = (p) => (elo[p] ? elo[p].elo : 1000);
+
+  let r1, r2, n1, n2;
+  if (m === "1:1") {
+    n1 = document.getElementById("p1").value;
+    n2 = document.getElementById("p2").value;
+    r1 = getE(n1);
+    r2 = getE(n2);
+  } else {
+    n1 =
+      document.getElementById("t1p1").value +
+      " & " +
+      document.getElementById("t1p2").value;
+    n2 =
+      document.getElementById("t2p1").value +
+      " & " +
+      document.getElementById("t2p2").value;
+    r1 =
+      (getE(document.getElementById("t1p1").value) +
+        getE(document.getElementById("t1p2").value)) /
+      2;
+    r2 =
+      (getE(document.getElementById("t2p1").value) +
+        getE(document.getElementById("t2p2").value)) /
+      2;
+  }
+
+  const getBP = (searchStr) => {
+    if (!searchStr) return null;
+    const searchPlayers = searchStr
+      .split(" & ")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    let vW = 0,
+      hW = 0;
+    window.stats.forEach((g) => {
+      if (!g || !g.bt1 || !g.bt2 || !g.w) return;
+      const p1A = (g.p1 || "")
+        .split(" & ")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const p2A = (g.p2 || "")
+        .split(" & ")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      // Zähle Siege für JEDEN Spieler in der Auswahl einzeln (aggregiert)
+      searchPlayers.forEach((p) => {
+        if (p1A.includes(p) && g.w == 1) {
+          if (g.bt1 === "Voll") vW++;
+          else if (g.bt1 === "Halb") hW++;
+        } else if (p2A.includes(p) && g.w == 2) {
+          if (g.bt2 === "Voll") vW++;
+          else if (g.bt2 === "Halb") hW++;
         }
+      });
+    });
+    if (vW === hW || vW + hW < 1) return null;
+    return vW > hW ? { t: "Voll", c: "#ffcc00" } : { t: "Halb", c: "#4FC3F7" };
+  };
 
-        if (typeof window.updateAvatarPreviews === "function")
-          window.updateAvatarPreviews();
+  const pref1 = getBP(n1),
+    pref2 = getBP(n2);
+  const prob1 = Math.round((1 / (1 + Math.pow(10, (r2 - r1) / 400))) * 100);
+  const prob2 = 100 - prob1;
 
-        // Cinematic Animation starten
-        const animOverlay = document.getElementById("diceAnimationOverlay");
-        const animCup = document.getElementById("animCup");
-        const animText = document.getElementById("animText");
+  const l1 = m === "1:1" ? n1 : "Team 1";
+  const l2 = m === "1:1" ? n2 : "Team 2";
 
-        animCup.className = "cup-shake";
-        if (animText) animText.innerText = "Mische Würfel...";
-        animOverlay.style.display = "flex";
+  const getBallIcon = (type) => {
+    if (type === "Voll")
+      return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="#ffcc00"/><circle cx="12" cy="12" r="11" fill="url(#gradV)"/><defs><radialGradient id="gradV" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.3"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
+    return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="white"/><path d="M1.5 8.5 A 11 11 0 0 0 1.5 15.5 L 22.5 15.5 A 11 11 0 0 0 22.5 8.5 Z" fill="#4FC3F7"/><circle cx="12" cy="12" r="11" fill="url(#gradH)"/><defs><radialGradient id="gradH" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.2"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
+  };
 
-        setTimeout(() => {
-          animCup.className = "cup-pour";
-          if (animText) animText.innerText = "Auswertung...";
+  const c1 = prob1 > 50 ? "#34c759" : prob1 < 50 ? "#ff3b30" : "#ffffff";
+  const c2 = prob2 > 50 ? "#34c759" : prob2 < 50 ? "#ff3b30" : "#ffffff";
 
-          setTimeout(() => {
-            animOverlay.style.display = "none";
-            animCup.className = "";
-            // Jetzt erst das echte Ergebnis-Fenster anzeigen
-            document.getElementById("diceModal").style.display = "flex";
-          }, 1000);
-        }, 1000);
-      };
+  const av1 = window.getAvatarUrl
+    ? window.getAvatarUrl(n1)
+    : `avatars/${n1}.webp`;
+  const av2 = window.getAvatarUrl
+    ? window.getAvatarUrl(n2)
+    : `avatars/${n2}.webp`;
+  const is1v1 = m === "1:1";
 
-
-
-      window.requestDelete = (i) => {
-        window.openDeleteConfirmModal(i);
-      };
-      window.updateMatchProbability = () => {
-        const m = document.getElementById("mode").value;
-        const b = document.getElementById("match-prob");
-        const isReady =
-          m === "1:1"
-            ? document.getElementById("p1").value &&
-              document.getElementById("p2").value
-            : document.getElementById("t1p1").value &&
-              document.getElementById("t1p2").value &&
-              document.getElementById("t2p1").value &&
-              document.getElementById("t2p2").value;
-
-        if (!isReady || !b) {
-          b.innerHTML = `<div style="color:#8e8e93; font-size:10px; text-align:center; padding:5px; font-weight:800;">Spieler wählen für Prognose</div>`;
-          return;
-        }
-
-        const pIds =
-          m === "1:1" ? ["p1", "p2"] : ["t1p1", "t1p2", "t2p1", "t2p2"];
-        const pVals = pIds
-          .map((id) => document.getElementById(id).value)
-          .filter(Boolean);
-        if (new Set(pVals).size !== pVals.length) {
-          b.innerHTML = `<div style="color:var(--error); font-size:10px; text-align:center; padding:10px; font-weight:800;">⚠️ Doppelte Spieler gewählt!</div>`;
-          return;
-        }
-
-        const elo =
-          typeof window.computeEloRatings === "function"
-            ? window.computeEloRatings(window.stats)
-            : {};
-        const getE = (p) => (elo[p] ? elo[p].elo : 1000);
-
-        let r1, r2, n1, n2;
-        if (m === "1:1") {
-          n1 = document.getElementById("p1").value;
-          n2 = document.getElementById("p2").value;
-          r1 = getE(n1);
-          r2 = getE(n2);
-        } else {
-          n1 =
-            document.getElementById("t1p1").value +
-            " & " +
-            document.getElementById("t1p2").value;
-          n2 =
-            document.getElementById("t2p1").value +
-            " & " +
-            document.getElementById("t2p2").value;
-          r1 =
-            (getE(document.getElementById("t1p1").value) +
-              getE(document.getElementById("t1p2").value)) /
-            2;
-          r2 =
-            (getE(document.getElementById("t2p1").value) +
-              getE(document.getElementById("t2p2").value)) /
-            2;
-        }
-
-        const getBP = (searchStr) => {
-          if (!searchStr) return null;
-          const searchPlayers = searchStr
-            .split(" & ")
-            .map((s) => s.trim())
-            .filter(Boolean);
-          let vW = 0,
-            hW = 0;
-          window.stats.forEach((g) => {
-            if (!g || !g.bt1 || !g.bt2 || !g.w) return;
-            const p1A = (g.p1 || "")
-              .split(" & ")
-              .map((s) => s.trim())
-              .filter(Boolean);
-            const p2A = (g.p2 || "")
-              .split(" & ")
-              .map((s) => s.trim())
-              .filter(Boolean);
-
-            // Zähle Siege für JEDEN Spieler in der Auswahl einzeln (aggregiert)
-            searchPlayers.forEach((p) => {
-              if (p1A.includes(p) && g.w == 1) {
-                if (g.bt1 === "Voll") vW++;
-                else if (g.bt1 === "Halb") hW++;
-              } else if (p2A.includes(p) && g.w == 2) {
-                if (g.bt2 === "Voll") vW++;
-                else if (g.bt2 === "Halb") hW++;
-              }
-            });
-          });
-          if (vW === hW || vW + hW < 1) return null;
-          return vW > hW
-            ? { t: "Voll", c: "#ffcc00" }
-            : { t: "Halb", c: "#4FC3F7" };
-        };
-
-        const pref1 = getBP(n1),
-          pref2 = getBP(n2);
-        const prob1 = Math.round(
-          (1 / (1 + Math.pow(10, (r2 - r1) / 400))) * 100,
-        );
-        const prob2 = 100 - prob1;
-
-        const l1 = m === "1:1" ? n1 : "Team 1";
-        const l2 = m === "1:1" ? n2 : "Team 2";
-
-        const getBallIcon = (type) => {
-          if (type === "Voll")
-            return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="#ffcc00"/><circle cx="12" cy="12" r="11" fill="url(#gradV)"/><defs><radialGradient id="gradV" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.3"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
-          return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="white"/><path d="M1.5 8.5 A 11 11 0 0 0 1.5 15.5 L 22.5 15.5 A 11 11 0 0 0 22.5 8.5 Z" fill="#4FC3F7"/><circle cx="12" cy="12" r="11" fill="url(#gradH)"/><defs><radialGradient id="gradH" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.2"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
-        };
-
-        const c1 = prob1 > 50 ? "#34c759" : prob1 < 50 ? "#ff3b30" : "#ffffff";
-        const c2 = prob2 > 50 ? "#34c759" : prob2 < 50 ? "#ff3b30" : "#ffffff";
-
-        const av1 = window.getAvatarUrl ? window.getAvatarUrl(n1) : `avatars/${n1}.webp`;
-        const av2 = window.getAvatarUrl ? window.getAvatarUrl(n2) : `avatars/${n2}.webp`;
-        const is1v1 = m === "1:1";
-
-        b.className = "card vs-arena-card";
-        b.innerHTML = `
-                ${is1v1 ? `
+  b.className = "card vs-arena-card";
+  b.innerHTML = `
+                ${
+                  is1v1
+                    ? `
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.08);">
                     <div style="display:flex; align-items:center; gap:10px;">
                         <img loading="lazy" src="${av1}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid #ffcc00; box-shadow:0 0 10px rgba(255,204,0,0.4);" onerror="this.style.display='none'">
@@ -786,7 +765,9 @@ window.matchToDeleteIndex = -1;
                             <div style="font-size:9px; font-weight:800; color:#4fc3f7;">${Math.round(r2)} ELO</div>
                         </div>
                     </div>
-                </div>` : ""}
+                </div>`
+                    : ""
+                }
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <span style="color:var(--accent); font-weight:900; font-size:9px; text-transform:uppercase; letter-spacing:1.5px; display:flex; align-items:center; gap:6px;"><div class="live-dot"></div> LIVE ANALYSE</span>
                     <span style="font-size:10px; color:#fff; font-weight:900; opacity: 0.7;">${prob1}% <span style="color:var(--accent); opacity:1;">:</span> ${prob2}%</span>
@@ -809,34 +790,32 @@ window.matchToDeleteIndex = -1;
                     </div>
                 </div>
                 `;
-      };
+};
 
+window.openConfirmationModal = () => {
+  const m = document.getElementById("mode").value;
+  let n1, n2;
 
+  if (m === "1:1") {
+    n1 = document.getElementById("p1").value;
+    n2 = document.getElementById("p2").value;
+  } else {
+    const t1p1 = document.getElementById("t1p1").value;
+    const t1p2 = document.getElementById("t1p2").value;
+    const t2p1 = document.getElementById("t2p1").value;
+    const t2p2 = document.getElementById("t2p2").value;
+    n1 = [t1p1, t1p2].filter(Boolean).join(" & ");
+    n2 = [t2p1, t2p2].filter(Boolean).join(" & ");
+  }
 
-      window.openConfirmationModal = () => {
-        const m = document.getElementById("mode").value;
-        let n1, n2;
+  const winnerName = window.winnerNum === 1 ? n1 : n2;
+  const loserName = window.winnerNum === 1 ? n2 : n1;
+  const breakPlayer = document.getElementById("breakPlayer").value;
+  const winType = document.getElementById("winType").value;
+  const leftover = document.getElementById("leftover").value;
 
-        if (m === "1:1") {
-          n1 = document.getElementById("p1").value;
-          n2 = document.getElementById("p2").value;
-        } else {
-          const t1p1 = document.getElementById("t1p1").value;
-          const t1p2 = document.getElementById("t1p2").value;
-          const t2p1 = document.getElementById("t2p1").value;
-          const t2p2 = document.getElementById("t2p2").value;
-          n1 = [t1p1, t1p2].filter(Boolean).join(" & ");
-          n2 = [t2p1, t2p2].filter(Boolean).join(" & ");
-        }
-
-        const winnerName = window.winnerNum === 1 ? n1 : n2;
-        const loserName = window.winnerNum === 1 ? n2 : n1;
-        const breakPlayer = document.getElementById("breakPlayer").value;
-        const winType = document.getElementById("winType").value;
-        const leftover = document.getElementById("leftover").value;
-
-        const summaryEl = document.getElementById("confirmation-summary");
-        summaryEl.innerHTML = `
+  const summaryEl = document.getElementById("confirmation-summary");
+  summaryEl.innerHTML = `
                 <ul>
                     <li><span>Gewinner</span> <b style="color:#34c759;">${winnerName}</b></li>
                     <li><span>Verlierer</span> <b style="color:#ff3b30;">${loserName}</b></li>
@@ -846,534 +825,563 @@ window.matchToDeleteIndex = -1;
                 </ul>
             `;
 
-        document.getElementById("resultModal").style.display = "none";
-        document.getElementById("confirmationModal").style.display = "flex";
-      };
+  document.getElementById("resultModal").style.display = "none";
+  document.getElementById("confirmationModal").style.display = "flex";
+};
 
-      window.closeConfirmationModal = () => {
-        document.getElementById("confirmationModal").style.display = "none";
-      };
+window.closeConfirmationModal = () => {
+  document.getElementById("confirmationModal").style.display = "none";
+};
 
-      window.saveFromConfirmation = () => {
-        window.closeConfirmationModal();
-        window.doSave();
-      };
+window.saveFromConfirmation = () => {
+  window.closeConfirmationModal();
+  window.doSave();
+};
 
-      // --- NEUE, ROBUSTE LOGIK FÜR ERGEBNIS-MODAL ---
+// --- NEUE, ROBUSTE LOGIK FÜR ERGEBNIS-MODAL ---
 
-      // Öffnet das Ergebnis-Modal mit allen Auswahloptionen auf einmal
-      window.openResultModal = () => {
-        const winnerName =
-          window.winnerNum === 1
-            ? document.getElementById("p1").value ||
-              [
-                document.getElementById("t1p1").value,
-                document.getElementById("t1p2").value,
-              ]
-                .filter(Boolean)
-                .join(" & ")
-            : document.getElementById("p2").value ||
-              [
-                document.getElementById("t2p1").value,
-                document.getElementById("t2p2").value,
-              ]
-                .filter(Boolean)
-                .join(" & ");
- 
-        const ballLabel = document.getElementById("winnerBallTypeLabel");
-        if (ballLabel)
-          ballLabel.innerText = `Gewinner-Kugel auswählen für ${winnerName}`;
- 
-        const resultModal = document.getElementById("resultModal");
-        if (resultModal) {
-          resultModal.style.display = "flex";
-        }
-        window.clearResultModalSelections();
-        document.querySelectorAll(".result-step").forEach((s) => {
-          s.classList.add("active");
-        });
-      };
+// Öffnet das Ergebnis-Modal mit allen Auswahloptionen auf einmal
+window.openResultModal = () => {
+  const winnerName =
+    window.winnerNum === 1
+      ? document.getElementById("p1").value ||
+        [
+          document.getElementById("t1p1").value,
+          document.getElementById("t1p2").value,
+        ]
+          .filter(Boolean)
+          .join(" & ")
+      : document.getElementById("p2").value ||
+        [
+          document.getElementById("t2p1").value,
+          document.getElementById("t2p2").value,
+        ]
+          .filter(Boolean)
+          .join(" & ");
 
-      // Schließt das Modal und setzt die Gewinnerauswahl zurück, falls abgebrochen wird
-      window.closeResultModal = () => {
-        document.getElementById("resultModal").style.display = "none";
-        // Nur zurücksetzen, wenn der Prozess wirklich abgebrochen wird
-        window.winnerNum = 0;
-        document
-          .querySelectorAll(".win-btn")
-          .forEach((btn) => btn.classList.remove("selected"));
-        window.clearResultModalSelections();
-      };
+  const ballLabel = document.getElementById("winnerBallTypeLabel");
+  if (ballLabel)
+    ballLabel.innerText = `Gewinner-Kugel auswählen für ${winnerName}`;
 
-      // Navigiert zwischen den Schritten im Modal
-      window.resultGoToStep = (stepNum) => {
-        document
-          .querySelectorAll(".result-step")
-          .forEach((s) => s.classList.remove("active"));
-        const targetStep =
-          document.getElementById(`result-step-${stepNum}-balls`) ||
-          document.getElementById(`result-step-${stepNum}-wintype`) ||
-          document.getElementById(`result-step-${stepNum}-leftover`);
-        if (targetStep) targetStep.classList.add("active");
-      };
+  const resultModal = document.getElementById("resultModal");
+  if (resultModal) {
+    resultModal.style.display = "flex";
+  }
+  window.clearResultModalSelections();
+  document.querySelectorAll(".result-step").forEach((s) => {
+    s.classList.add("active");
+  });
+};
 
-      const clearResultModalSelections = () => {
-        document
-          .querySelectorAll("#modal-ball-type-selector .ball-type-btn")
-          .forEach((btn) => btn.classList.remove("selected"));
-        document
-          .querySelectorAll("#modal-winType-chips .win-type-chip")
-          .forEach((chip) => chip.classList.remove("selected"));
-        document
-          .querySelectorAll("#modal-leftover-grid .leftover-btn")
-          .forEach((btn) => btn.classList.remove("selected"));
-      };
- 
-      window.clearResultModalCategory = (category) => {
-        if (category === "ball") {
-          document
-            .querySelectorAll("#modal-ball-type-selector .ball-type-btn")
-            .forEach((btn) => btn.classList.remove("selected"));
-        } else if (category === "win") {
-          document
-            .querySelectorAll("#modal-winType-chips .win-type-chip")
-            .forEach((chip) => chip.classList.remove("selected"));
-        } else if (category === "leftover") {
-          document
-            .querySelectorAll("#modal-leftover-grid .leftover-btn")
-            .forEach((btn) => btn.classList.remove("selected"));
-        }
-      };
- 
-      window.selectBallTypeInModal = (type) => {
-        const winnerSelectId =
-          window.winnerNum === 1 ? "ballType1" : "ballType2";
-        const loserSelectId =
-          window.winnerNum === 1 ? "ballType2" : "ballType1";
-        document.getElementById(winnerSelectId).value = type;
-        document.getElementById(loserSelectId).value =
-          type === "Voll" ? "Halb" : "Voll";
-        window.clearResultModalCategory("ball");
-        document
-          .querySelectorAll("#modal-ball-type-selector .ball-type-btn")
-          .forEach((btn) => {
-            if (btn.textContent?.trim().includes(type)) btn.classList.add("selected");
-          });
-      };
-      window.selectWinTypeInModal = (winType) => {
-        document.getElementById("winType").value = winType;
-        window.clearResultModalCategory("win");
-        document
-          .querySelectorAll("#modal-winType-chips .win-type-chip")
-          .forEach((chip) => {
-            if (chip.textContent?.trim().includes(winType.replace("Gegner-Fehler: ", "Foul: "))) {
-              chip.classList.add("selected");
-            }
-          });
-      };
- 
-      window.selectLeftoverInModal = (num) => {
-        document.getElementById("leftover").value = num;
-        window.clearResultModalCategory("leftover");
-        document
-          .querySelectorAll("#modal-leftover-grid .rack-ball")
-          .forEach((btn, idx) => {
-            btn.classList.toggle("selected", idx === num);
-          });
-      };
+// Schließt das Modal und setzt die Gewinnerauswahl zurück, falls abgebrochen wird
+window.closeResultModal = () => {
+  document.getElementById("resultModal").style.display = "none";
+  // Nur zurücksetzen, wenn der Prozess wirklich abgebrochen wird
+  window.winnerNum = 0;
+  document
+    .querySelectorAll(".win-btn")
+    .forEach((btn) => btn.classList.remove("selected"));
+  window.clearResultModalSelections();
+};
 
-      window.renderBilliardRack = (container, onSelectFnName) => {
-        if (!container) return;
-        const ballColors = {
-          0: { bg: "rgba(255,255,255,0.08)", text: "#8e8e93" },
-          1: { bg: "#ffd700", text: "#000" },
-          2: { bg: "#0066cc", text: "#fff" },
-          3: { bg: "#e60000", text: "#fff" },
-          4: { bg: "#800080", text: "#fff" },
-          5: { bg: "#ff6600", text: "#fff" },
-          6: { bg: "#008000", text: "#fff" },
-          7: { bg: "#8b4513", text: "#fff" },
-        };
+// Navigiert zwischen den Schritten im Modal
+window.resultGoToStep = (stepNum) => {
+  document
+    .querySelectorAll(".result-step")
+    .forEach((s) => s.classList.remove("active"));
+  const targetStep =
+    document.getElementById(`result-step-${stepNum}-balls`) ||
+    document.getElementById(`result-step-${stepNum}-wintype`) ||
+    document.getElementById(`result-step-${stepNum}-leftover`);
+  if (targetStep) targetStep.classList.add("active");
+};
 
-        container.className = "billiard-rack";
-        container.innerHTML = [0, 1, 2, 3, 4, 5, 6, 7]
-          .map((n) => {
-            const b = ballColors[n];
-            if (n === 0) {
-              return `<button type="button" class="rack-ball" onclick="${onSelectFnName}(0)">
+const clearResultModalSelections = () => {
+  document
+    .querySelectorAll("#modal-ball-type-selector .ball-type-btn")
+    .forEach((btn) => btn.classList.remove("selected"));
+  document
+    .querySelectorAll("#modal-winType-chips .win-type-chip")
+    .forEach((chip) => chip.classList.remove("selected"));
+  document
+    .querySelectorAll("#modal-leftover-grid .leftover-btn")
+    .forEach((btn) => btn.classList.remove("selected"));
+};
+
+window.clearResultModalCategory = (category) => {
+  if (category === "ball") {
+    document
+      .querySelectorAll("#modal-ball-type-selector .ball-type-btn")
+      .forEach((btn) => btn.classList.remove("selected"));
+  } else if (category === "win") {
+    document
+      .querySelectorAll("#modal-winType-chips .win-type-chip")
+      .forEach((chip) => chip.classList.remove("selected"));
+  } else if (category === "leftover") {
+    document
+      .querySelectorAll("#modal-leftover-grid .leftover-btn")
+      .forEach((btn) => btn.classList.remove("selected"));
+  }
+};
+
+window.selectBallTypeInModal = (type) => {
+  const winnerSelectId = window.winnerNum === 1 ? "ballType1" : "ballType2";
+  const loserSelectId = window.winnerNum === 1 ? "ballType2" : "ballType1";
+  document.getElementById(winnerSelectId).value = type;
+  document.getElementById(loserSelectId).value =
+    type === "Voll" ? "Halb" : "Voll";
+  window.clearResultModalCategory("ball");
+  document
+    .querySelectorAll("#modal-ball-type-selector .ball-type-btn")
+    .forEach((btn) => {
+      if (btn.textContent?.trim().includes(type)) btn.classList.add("selected");
+    });
+};
+window.selectWinTypeInModal = (winType) => {
+  document.getElementById("winType").value = winType;
+  window.clearResultModalCategory("win");
+  document
+    .querySelectorAll("#modal-winType-chips .win-type-chip")
+    .forEach((chip) => {
+      if (
+        chip.textContent
+          ?.trim()
+          .includes(winType.replace("Gegner-Fehler: ", "Foul: "))
+      ) {
+        chip.classList.add("selected");
+      }
+    });
+};
+
+window.selectLeftoverInModal = (num) => {
+  document.getElementById("leftover").value = num;
+  window.clearResultModalCategory("leftover");
+  document
+    .querySelectorAll("#modal-leftover-grid .rack-ball")
+    .forEach((btn, idx) => {
+      btn.classList.toggle("selected", idx === num);
+    });
+};
+
+window.renderBilliardRack = (container, onSelectFnName) => {
+  if (!container) return;
+  const ballColors = {
+    0: { bg: "rgba(255,255,255,0.08)", text: "#8e8e93" },
+    1: { bg: "#ffd700", text: "#000" },
+    2: { bg: "#0066cc", text: "#fff" },
+    3: { bg: "#e60000", text: "#fff" },
+    4: { bg: "#800080", text: "#fff" },
+    5: { bg: "#ff6600", text: "#fff" },
+    6: { bg: "#008000", text: "#fff" },
+    7: { bg: "#8b4513", text: "#fff" },
+  };
+
+  container.className = "billiard-rack";
+  container.innerHTML = [0, 1, 2, 3, 4, 5, 6, 7]
+    .map((n) => {
+      const b = ballColors[n];
+      if (n === 0) {
+        return `<button type="button" class="rack-ball" onclick="${onSelectFnName}(0)">
                 <div style="font-size:16px;">🧹</div>
                 <div style="font-size:9px; font-weight:800; color:#8e8e93; margin-top:2px;">0 Rest</div>
               </button>`;
-            }
-            return `<button type="button" class="rack-ball" onclick="${onSelectFnName}(${n})">
+      }
+      return `<button type="button" class="rack-ball" onclick="${onSelectFnName}(${n})">
               <div class="rack-ball-sphere" style="background: radial-gradient(circle at 35% 30%, #ffffff 0%, ${b.bg} 40%, rgba(0,0,0,0.7) 100%); color: ${b.text};">
                 ${n}
               </div>
               <div style="font-size:8px; font-weight:800; color:#8e8e93; margin-top:3px;">${n} Kugel${n > 1 ? "n" : ""}</div>
             </button>`;
-          })
-          .join("");
-      };
- 
-      window.saveMatchFromModal = async () => {
-        const resultModal = document.getElementById("resultModal");
-        if (resultModal) resultModal.style.display = "none";
-        await window.doSave();
-      };
+    })
+    .join("");
+};
 
-      // --- NEUE LOGIK FÜR INTUITIVE ERGEBNIS-ERFASSUNG ---
-      window.initResultUI = () => {
-        // Populate the hidden ball type selects
-        ["ballType1", "ballType2"].forEach((id) => {
-          const select = document.getElementById(id);
-          if (select) {
-            select.innerHTML =
-              '<option value="Voll">Voll</option><option value="Halb">Halb</option>';
-            select.value = ""; // Reset selection
-          }
-        });
-        const ballSelector = document.getElementById("ball-type-selector");
-        if (ballSelector) {
-          ballSelector.innerHTML = `
+window.saveMatchFromModal = async () => {
+  const resultModal = document.getElementById("resultModal");
+  if (resultModal) resultModal.style.display = "none";
+  await window.doSave();
+};
+
+// --- NEUE LOGIK FÜR INTUITIVE ERGEBNIS-ERFASSUNG ---
+window.initResultUI = () => {
+  // Populate the hidden ball type selects
+  ["ballType1", "ballType2"].forEach((id) => {
+    const select = document.getElementById(id);
+    if (select) {
+      select.innerHTML =
+        '<option value="Voll">Voll</option><option value="Halb">Halb</option>';
+      select.value = ""; // Reset selection
+    }
+  });
+  const ballSelector = document.getElementById("ball-type-selector");
+  if (ballSelector) {
+    ballSelector.innerHTML = `
                     <div class="ball-type-btn" onclick="window.selectBallType('Voll')">🟡 Voll</div>
                     <div class="ball-type-btn" onclick="window.selectBallType('Halb')">🔵 Halb</div>
                 `;
-        }
-        const modalBallSelector = document.getElementById(
-          "modal-ball-type-selector",
-        );
-        if (modalBallSelector) {
-          modalBallSelector.innerHTML = `
+  }
+  const modalBallSelector = document.getElementById("modal-ball-type-selector");
+  if (modalBallSelector) {
+    modalBallSelector.innerHTML = `
                     <div class="ball-type-btn" onclick="window.selectBallTypeInModal('Voll')">🟡 Voll</div>
                     <div class="ball-type-btn" onclick="window.selectBallTypeInModal('Halb')">🔵 Halb</div>
                 `;
-        }
-        const winTypeSelect = document.getElementById("winType");
-        if (winTypeSelect) {
-          const winTypes = [
-            "Regulär (8er gelocht)",
-            "Gegner-Fehler: 8er zu früh",
-            "Gegner-Fehler: 8er falsches Loch",
-            "Gegner-Fehler: Foul bei der 8",
-          ];
-          winTypeSelect.innerHTML = ""; // Clear existing options
-          winTypes.forEach((wt) =>
-            winTypeSelect.options.add(new Option(wt, wt)),
-          );
-        }
-        const winTypeContainer = document.getElementById("winType-chips");
-        if (winTypeContainer) {
-          const winTypes = [
-            "Regulär (8er gelocht)",
-            "Gegner-Fehler: 8er zu früh",
-            "Gegner-Fehler: 8er falsches Loch",
-            "Gegner-Fehler: Foul bei der 8",
-          ];
-          winTypeContainer.innerHTML = winTypes
-            .map(
-              (wt) =>
-                `<div class="win-type-chip" onclick="window.selectWinType(this, '${wt}')">${wt.replace("Gegner-Fehler: ", "Foul: ")}</div>`,
-            )
-            .join("");
-        }
-        const modalWinTypeContainer = document.getElementById(
-          "modal-winType-chips",
-        );
-        if (modalWinTypeContainer) {
-          const winTypes = [
-            "Regulär (8er gelocht)",
-            "Gegner-Fehler: 8er zu früh",
-            "Gegner-Fehler: 8er falsches Loch",
-            "Gegner-Fehler: Foul bei der 8",
-          ];
-          modalWinTypeContainer.innerHTML = winTypes
-            .map(
-              (wt) =>
-                `<div class="win-type-chip" onclick="window.selectWinTypeInModal('${wt}')">${wt.replace("Gegner-Fehler: ", "Foul: ")}</div>`,
-            )
-            .join("");
-        }
-        const leftoverGrid = document.getElementById("modal-leftover-grid");
-        if (leftoverGrid) {
-          window.renderBilliardRack(leftoverGrid, "window.selectLeftoverInModal");
-        }
-      };
+  }
+  const winTypeSelect = document.getElementById("winType");
+  if (winTypeSelect) {
+    const winTypes = [
+      "Regulär (8er gelocht)",
+      "Gegner-Fehler: 8er zu früh",
+      "Gegner-Fehler: 8er falsches Loch",
+      "Gegner-Fehler: Foul bei der 8",
+    ];
+    winTypeSelect.innerHTML = ""; // Clear existing options
+    winTypes.forEach((wt) => winTypeSelect.options.add(new Option(wt, wt)));
+  }
+  const winTypeContainer = document.getElementById("winType-chips");
+  if (winTypeContainer) {
+    const winTypes = [
+      "Regulär (8er gelocht)",
+      "Gegner-Fehler: 8er zu früh",
+      "Gegner-Fehler: 8er falsches Loch",
+      "Gegner-Fehler: Foul bei der 8",
+    ];
+    winTypeContainer.innerHTML = winTypes
+      .map(
+        (wt) =>
+          `<div class="win-type-chip" onclick="window.selectWinType(this, '${wt}')">${wt.replace("Gegner-Fehler: ", "Foul: ")}</div>`,
+      )
+      .join("");
+  }
+  const modalWinTypeContainer = document.getElementById("modal-winType-chips");
+  if (modalWinTypeContainer) {
+    const winTypes = [
+      "Regulär (8er gelocht)",
+      "Gegner-Fehler: 8er zu früh",
+      "Gegner-Fehler: 8er falsches Loch",
+      "Gegner-Fehler: Foul bei der 8",
+    ];
+    modalWinTypeContainer.innerHTML = winTypes
+      .map(
+        (wt) =>
+          `<div class="win-type-chip" onclick="window.selectWinTypeInModal('${wt}')">${wt.replace("Gegner-Fehler: ", "Foul: ")}</div>`,
+      )
+      .join("");
+  }
+  const leftoverGrid = document.getElementById("modal-leftover-grid");
+  if (leftoverGrid) {
+    window.renderBilliardRack(leftoverGrid, "window.selectLeftoverInModal");
+  }
+};
 
-      window.updateLeftover = (change) => {
-        const input = document.getElementById("leftover");
-        let newVal = Math.max(
-          0,
-          Math.min(7, (parseInt(input.value) || 0) + change),
-        );
-        input.value = newVal;
-        window.updateUI();
-      };
+window.updateLeftover = (change) => {
+  const input = document.getElementById("leftover");
+  let newVal = Math.max(0, Math.min(7, (parseInt(input.value) || 0) + change));
+  input.value = newVal;
+  window.updateUI();
+};
 
-      // --- MATCH BEARBEITEN (EDIT) CONTROLLER LOGIK ---
-      window.editingMatchIndex = -1;
-      window.editWinnerNum = 0;
+// --- MATCH BEARBEITEN (EDIT) CONTROLLER LOGIK ---
+window.editingMatchIndex = -1;
+window.editWinnerNum = 0;
 
-      window.openEditCurrentMatch = () => {
-        if (typeof window.currentViewingMatchIndex === "number" && window.currentViewingMatchIndex >= 0) {
-          window.closeMatchDetailsModal();
-          window.openEditMatchModal(window.currentViewingMatchIndex);
-        }
-      };
+window.openEditCurrentMatch = () => {
+  if (
+    typeof window.currentViewingMatchIndex === "number" &&
+    window.currentViewingMatchIndex >= 0
+  ) {
+    window.closeMatchDetailsModal();
+    window.openEditMatchModal(window.currentViewingMatchIndex);
+  }
+};
 
-      window.closeEditMatchModal = () => {
-        const modal = document.getElementById("editMatchModal");
-        if (modal) modal.style.display = "none";
-        window.editingMatchIndex = -1;
-        window.editWinnerNum = 0;
-      };
+window.closeEditMatchModal = () => {
+  const modal = document.getElementById("editMatchModal");
+  if (modal) modal.style.display = "none";
+  window.editingMatchIndex = -1;
+  window.editWinnerNum = 0;
+};
 
-      window.openEditMatchModal = (index) => {
-        window.editingMatchIndex = index;
-        const g = window.stats && window.stats[index];
-        if (!g) return;
+window.openEditMatchModal = (index) => {
+  window.editingMatchIndex = index;
+  const g = window.stats && window.stats[index];
+  if (!g) return;
 
-        const dateInfoEl = document.getElementById("edit-match-date-info");
-        if (dateInfoEl) dateInfoEl.innerText = g.d || "";
+  const dateInfoEl = document.getElementById("edit-match-date-info");
+  if (dateInfoEl) dateInfoEl.innerText = g.d || "";
 
-        // Dropdowns befüllen
-        document.querySelectorAll(".edit-player-sel").forEach((s) => {
-          s.innerHTML = '<option disabled value="">Wählen</option>';
-          (window.spieler || []).forEach((p) => s.options.add(new Option(p, p)));
-        });
+  // Dropdowns befüllen
+  document.querySelectorAll(".edit-player-sel").forEach((s) => {
+    s.innerHTML = '<option disabled value="">Wählen</option>';
+    (window.spieler || []).forEach((p) => s.options.add(new Option(p, p)));
+  });
 
-        const mode = g.m || "1:1";
-        const modeSelect = document.getElementById("edit-mode");
-        if (modeSelect) modeSelect.value = mode;
+  const mode = g.m || "1:1";
+  const modeSelect = document.getElementById("edit-mode");
+  if (modeSelect) modeSelect.value = mode;
 
-        if (mode === "1:1") {
-          const p1El = document.getElementById("edit-p1");
-          const p2El = document.getElementById("edit-p2");
-          if (p1El) p1El.value = g.p1 || "";
-          if (p2El) p2El.value = g.p2 || "";
-        } else {
-          const t1 = (g.p1 || "").split(" & ").map((s) => s.trim());
-          const t2 = (g.p2 || "").split(" & ").map((s) => s.trim());
-          const t1p1 = document.getElementById("edit-t1p1");
-          const t1p2 = document.getElementById("edit-t1p2");
-          const t2p1 = document.getElementById("edit-t2p1");
-          const t2p2 = document.getElementById("edit-t2p2");
-          if (t1p1) t1p1.value = t1[0] || "";
-          if (t1p2) t1p2.value = t1[1] || "";
-          if (t2p1) t2p1.value = t2[0] || "";
-          if (t2p2) t2p2.value = t2[1] || "";
-        }
+  if (mode === "1:1") {
+    const p1El = document.getElementById("edit-p1");
+    const p2El = document.getElementById("edit-p2");
+    if (p1El) p1El.value = g.p1 || "";
+    if (p2El) p2El.value = g.p2 || "";
+  } else {
+    const t1 = (g.p1 || "").split(" & ").map((s) => s.trim());
+    const t2 = (g.p2 || "").split(" & ").map((s) => s.trim());
+    const t1p1 = document.getElementById("edit-t1p1");
+    const t1p2 = document.getElementById("edit-t1p2");
+    const t2p1 = document.getElementById("edit-t2p1");
+    const t2p2 = document.getElementById("edit-t2p2");
+    if (t1p1) t1p1.value = t1[0] || "";
+    if (t1p2) t1p2.value = t1[1] || "";
+    if (t2p1) t2p1.value = t2[0] || "";
+    if (t2p2) t2p2.value = t2[1] || "";
+  }
 
-        // Win-Types initialisieren
-        const winTypes = [
-          "Regulär (8er gelocht)",
-          "Gegner-Fehler: 8er zu früh",
-          "Gegner-Fehler: 8er falsches Loch",
-          "Gegner-Fehler: Foul bei der 8",
-        ];
-        const winTypeCont = document.getElementById("edit-winType-chips");
-        if (winTypeCont) {
-          winTypeCont.innerHTML = winTypes
-            .map(
-              (wt) =>
-                `<div class="win-type-chip" onclick="window.selectEditWinType('${wt}')">${wt.replace("Gegner-Fehler: ", "Foul: ")}</div>`,
-            )
-            .join("");
-        }
+  // Win-Types initialisieren
+  const winTypes = [
+    "Regulär (8er gelocht)",
+    "Gegner-Fehler: 8er zu früh",
+    "Gegner-Fehler: 8er falsches Loch",
+    "Gegner-Fehler: Foul bei der 8",
+  ];
+  const winTypeCont = document.getElementById("edit-winType-chips");
+  if (winTypeCont) {
+    winTypeCont.innerHTML = winTypes
+      .map(
+        (wt) =>
+          `<div class="win-type-chip" onclick="window.selectEditWinType('${wt}')">${wt.replace("Gegner-Fehler: ", "Foul: ")}</div>`,
+      )
+      .join("");
+  }
 
-        // Leftover Grid initialisieren
-        const leftoverGrid = document.getElementById("edit-leftover-grid");
-        if (leftoverGrid) {
-          window.renderBilliardRack(leftoverGrid, "window.selectEditLeftover");
-        }
+  // Leftover Grid initialisieren
+  const leftoverGrid = document.getElementById("edit-leftover-grid");
+  if (leftoverGrid) {
+    window.renderBilliardRack(leftoverGrid, "window.selectEditLeftover");
+  }
 
-        // Gewinner setzen
-        window.selectEditWinner(parseInt(g.w) || 1);
+  // Gewinner setzen
+  window.selectEditWinner(parseInt(g.w) || 1);
 
-        // Kugeltyp setzen
-        const winnerBall = g.w == 1 ? g.bt1 : g.bt2;
-        window.selectEditBallType(winnerBall || "Voll");
+  // Kugeltyp setzen
+  const winnerBall = g.w == 1 ? g.bt1 : g.bt2;
+  window.selectEditBallType(winnerBall || "Voll");
 
-        // Sieg-Art setzen
-        window.selectEditWinType(g.t || winTypes[0]);
+  // Sieg-Art setzen
+  window.selectEditWinType(g.t || winTypes[0]);
 
-        // Restkugeln setzen
-        window.selectEditLeftover(g.l !== undefined ? parseInt(g.l) : 0);
+  // Restkugeln setzen
+  window.selectEditLeftover(g.l !== undefined ? parseInt(g.l) : 0);
 
-        // Anstoß setzen
-        window.updateEditUI();
-        const breakSel = document.getElementById("edit-breakPlayer");
-        if (breakSel && g.a) breakSel.value = g.a;
+  // Anstoß setzen
+  window.updateEditUI();
+  const breakSel = document.getElementById("edit-breakPlayer");
+  if (breakSel && g.a) breakSel.value = g.a;
 
-        const modal = document.getElementById("editMatchModal");
-        if (modal) modal.style.display = "flex";
-      };
+  if (typeof window.updateModeVisuals === "function") {
+    window.updateModeVisuals();
+  }
 
-      window.updateEditUI = () => {
-        const mode = document.getElementById("edit-mode")?.value || "1:1";
-        const ui11 = document.getElementById("edit-ui-1-1");
-        const ui22 = document.getElementById("edit-ui-2-2");
-        if (ui11) ui11.style.display = mode === "1:1" ? "flex" : "none";
-        if (ui22) ui22.style.display = mode === "2:2" ? "flex" : "none";
+  const modal = document.getElementById("editMatchModal");
+  if (modal) modal.style.display = "flex";
+};
 
-        const n1 =
-          mode === "1:1"
-            ? document.getElementById("edit-p1")?.value || ""
-            : [
-                document.getElementById("edit-t1p1")?.value,
-                document.getElementById("edit-t1p2")?.value,
-              ]
-                .filter(Boolean)
-                .join(" & ");
+window.updateEditUI = () => {
+  const mode = document.getElementById("edit-mode")?.value || "1:1";
+  const ui11 = document.getElementById("edit-ui-1-1");
+  const ui22 = document.getElementById("edit-ui-2-2");
+  if (ui11) ui11.style.display = mode === "1:1" ? "flex" : "none";
+  if (ui22) ui22.style.display = mode === "2:2" ? "flex" : "none";
 
-        const n2 =
-          mode === "1:1"
-            ? document.getElementById("edit-p2")?.value || ""
-            : [
-                document.getElementById("edit-t2p1")?.value,
-                document.getElementById("edit-t2p2")?.value,
-              ]
-                .filter(Boolean)
-                .join(" & ");
+  const n1 =
+    mode === "1:1"
+      ? document.getElementById("edit-p1")?.value || ""
+      : [
+          document.getElementById("edit-t1p1")?.value,
+          document.getElementById("edit-t1p2")?.value,
+        ]
+          .filter(Boolean)
+          .join(" & ");
 
-        const btn1 = document.getElementById("edit-btn-win1");
-        const btn2 = document.getElementById("edit-btn-win2");
-        if (btn1) btn1.innerText = n1 || "Spieler 1";
-        if (btn2) btn2.innerText = n2 || "Spieler 2";
+  const n2 =
+    mode === "1:1"
+      ? document.getElementById("edit-p2")?.value || ""
+      : [
+          document.getElementById("edit-t2p1")?.value,
+          document.getElementById("edit-t2p2")?.value,
+        ]
+          .filter(Boolean)
+          .join(" & ");
 
-        const breakSel = document.getElementById("edit-breakPlayer");
-        if (breakSel) {
-          const currentBreak = breakSel.value;
-          breakSel.innerHTML = '<option value="" disabled selected>Wählen</option>';
-          [n1, n2].forEach((n) => {
-            if (n && !n.includes("undefined")) breakSel.options.add(new Option(n, n));
-          });
-          if (
-            currentBreak &&
-            Array.from(breakSel.options).some((o) => o.value === currentBreak)
-          ) {
-            breakSel.value = currentBreak;
-          }
-        }
+  const btn1 = document.getElementById("edit-btn-win1");
+  const btn2 = document.getElementById("edit-btn-win2");
+  if (btn1) btn1.innerText = n1 || "Spieler 1";
+  if (btn2) btn2.innerText = n2 || "Spieler 2";
 
-        const winnerName = window.editWinnerNum === 1 ? n1 : n2;
-        const label = document.getElementById("edit-ballType-label");
-        if (label) {
-          label.innerText = `Kugel-Typ für ${winnerName || "Gewinner"}`;
-        }
-      };
+  const breakSel = document.getElementById("edit-breakPlayer");
+  if (breakSel) {
+    const currentBreak = breakSel.value;
+    breakSel.innerHTML = '<option value="" disabled selected>Wählen</option>';
+    [n1, n2].forEach((n) => {
+      if (n && !n.includes("undefined")) breakSel.options.add(new Option(n, n));
+    });
+    if (
+      currentBreak &&
+      Array.from(breakSel.options).some((o) => o.value === currentBreak)
+    ) {
+      breakSel.value = currentBreak;
+    }
+  }
 
-      window.selectEditWinner = (num) => {
-        window.editWinnerNum = num;
-        document.getElementById("edit-btn-win1")?.classList.toggle("selected", num === 1);
-        document.getElementById("edit-btn-win2")?.classList.toggle("selected", num === 2);
-        window.updateEditUI();
-      };
+  const winnerName = window.editWinnerNum === 1 ? n1 : n2;
+  const label = document.getElementById("edit-ballType-label");
+  if (label) {
+    label.innerText = `Kugel-Typ für ${winnerName || "Gewinner"}`;
+  }
+};
 
-      window.selectEditBallType = (type) => {
-        const winnerSelectId = window.editWinnerNum === 1 ? "edit-ballType1" : "edit-ballType2";
-        const loserSelectId = window.editWinnerNum === 1 ? "edit-ballType2" : "edit-ballType1";
+window.selectEditWinner = (num) => {
+  window.editWinnerNum = num;
+  document
+    .getElementById("edit-btn-win1")
+    ?.classList.toggle("selected", num === 1);
+  document
+    .getElementById("edit-btn-win2")
+    ?.classList.toggle("selected", num === 2);
+  window.updateEditUI();
+};
 
-        const winInput = document.getElementById(winnerSelectId);
-        const loseInput = document.getElementById(loserSelectId);
-        if (winInput) winInput.value = type;
-        if (loseInput) loseInput.value = type === "Voll" ? "Halb" : "Voll";
+window.selectEditBallType = (type) => {
+  const winnerSelectId =
+    window.editWinnerNum === 1 ? "edit-ballType1" : "edit-ballType2";
+  const loserSelectId =
+    window.editWinnerNum === 1 ? "edit-ballType2" : "edit-ballType1";
 
-        document.getElementById("edit-ball-voll")?.classList.toggle("selected", type === "Voll");
-        document.getElementById("edit-ball-halb")?.classList.toggle("selected", type === "Halb");
-      };
+  const winInput = document.getElementById(winnerSelectId);
+  const loseInput = document.getElementById(loserSelectId);
+  if (winInput) winInput.value = type;
+  if (loseInput) loseInput.value = type === "Voll" ? "Halb" : "Voll";
 
-      window.selectEditWinType = (winType) => {
-        const input = document.getElementById("edit-winType");
-        if (input) input.value = winType;
-        document
-          .querySelectorAll("#edit-winType-chips .win-type-chip")
-          .forEach((chip) => {
-            chip.classList.toggle(
-              "selected",
-              chip.textContent.trim() === winType.replace("Gegner-Fehler: ", "Foul: "),
-            );
-          });
-      };
+  document
+    .getElementById("edit-ball-voll")
+    ?.classList.toggle("selected", type === "Voll");
+  document
+    .getElementById("edit-ball-halb")
+    ?.classList.toggle("selected", type === "Halb");
+};
 
-      window.selectEditLeftover = (num) => {
-        const input = document.getElementById("edit-leftover");
-        if (input) input.value = num;
-        document
-          .querySelectorAll("#edit-leftover-grid .leftover-btn")
-          .forEach((btn) => {
-            btn.classList.toggle("selected", btn.textContent.trim() === String(num));
-          });
-      };
+window.selectEditWinType = (winType) => {
+  const input = document.getElementById("edit-winType");
+  if (input) input.value = winType;
+  document
+    .querySelectorAll("#edit-winType-chips .win-type-chip")
+    .forEach((chip) => {
+      chip.classList.toggle(
+        "selected",
+        chip.textContent.trim() ===
+          winType.replace("Gegner-Fehler: ", "Foul: "),
+      );
+    });
+};
 
-      window.saveEditedMatch = async () => {
-        if (window.editingMatchIndex === -1 || window.editingMatchIndex === undefined) return;
+window.selectEditLeftover = (num) => {
+  const input = document.getElementById("edit-leftover");
+  if (input) input.value = num;
+  document
+    .querySelectorAll("#edit-leftover-grid .leftover-btn")
+    .forEach((btn) => {
+      btn.classList.toggle("selected", btn.textContent.trim() === String(num));
+    });
+};
 
-        const mode = document.getElementById("edit-mode")?.value || "1:1";
-        let p1, p2;
+window.saveEditedMatch = async () => {
+  if (window.editingMatchIndex === -1 || window.editingMatchIndex === undefined)
+    return;
 
-        if (mode === "1:1") {
-          p1 = document.getElementById("edit-p1")?.value;
-          p2 = document.getElementById("edit-p2")?.value;
-        } else {
-          const t1p1 = document.getElementById("edit-t1p1")?.value;
-          const t1p2 = document.getElementById("edit-t1p2")?.value;
-          const t2p1 = document.getElementById("edit-t2p1")?.value;
-          const t2p2 = document.getElementById("edit-t2p2")?.value;
-          p1 = [t1p1, t1p2].filter(Boolean).join(" & ");
-          p2 = [t2p1, t2p2].filter(Boolean).join(" & ");
-        }
+  const mode = document.getElementById("edit-mode")?.value || "1:1";
+  let p1, p2;
 
-        const breakPlayer = document.getElementById("edit-breakPlayer")?.value;
-        const ballType1 = document.getElementById("edit-ballType1")?.value;
-        const ballType2 = document.getElementById("edit-ballType2")?.value;
-        const winType = document.getElementById("edit-winType")?.value;
-        const leftover = document.getElementById("edit-leftover")?.value;
+  if (mode === "1:1") {
+    p1 = document.getElementById("edit-p1")?.value;
+    p2 = document.getElementById("edit-p2")?.value;
+  } else {
+    const t1p1 = document.getElementById("edit-t1p1")?.value;
+    const t1p2 = document.getElementById("edit-t1p2")?.value;
+    const t2p1 = document.getElementById("edit-t2p1")?.value;
+    const t2p2 = document.getElementById("edit-t2p2")?.value;
+    p1 = [t1p1, t1p2].filter(Boolean).join(" & ");
+    p2 = [t2p1, t2p2].filter(Boolean).join(" & ");
+  }
 
-        if (!p1 || !p2 || !window.editWinnerNum || !breakPlayer || !ballType1 || !ballType2 || !winType || leftover === "") {
-          if (window.openErrorModal) {
-            window.openErrorModal("Bitte alle Pflichtfelder für das Match ausfüllen.");
-          }
-          return;
-        }
+  const breakPlayer = document.getElementById("edit-breakPlayer")?.value;
+  const ballType1 = document.getElementById("edit-ballType1")?.value;
+  const ballType2 = document.getElementById("edit-ballType2")?.value;
+  const winType = document.getElementById("edit-winType")?.value;
+  const leftover = document.getElementById("edit-leftover")?.value;
 
-        const oldMatch = window.stats[window.editingMatchIndex] || {};
-        const updatedMatch = {
-          ...oldMatch,
-          m: mode,
-          p1: p1,
-          p2: p2,
-          w: window.editWinnerNum,
-          t: winType,
-          a: breakPlayer,
-          l: parseInt(leftover, 10),
-          bt1: ballType1,
-          bt2: ballType2,
-        };
+  if (
+    !p1 ||
+    !p2 ||
+    !window.editWinnerNum ||
+    !breakPlayer ||
+    !ballType1 ||
+    !ballType2 ||
+    !winType ||
+    leftover === ""
+  ) {
+    if (window.openErrorModal) {
+      window.openErrorModal(
+        "Bitte alle Pflichtfelder für das Match ausfüllen.",
+      );
+    }
+    return;
+  }
 
-        window.stats[window.editingMatchIndex] = updatedMatch;
+  const oldMatch = window.stats[window.editingMatchIndex] || {};
+  const updatedMatch = {
+    ...oldMatch,
+    m: mode,
+    p1: p1,
+    p2: p2,
+    w: window.editWinnerNum,
+    t: winType,
+    a: breakPlayer,
+    l: parseInt(leftover, 10),
+    bt1: ballType1,
+    bt2: ballType2,
+  };
 
-        try {
-          if (window.db && window.dbFns && window.dbFns.setDoc && window.dbFns.doc) {
-            await window.dbFns.setDoc(
-              window.dbFns.doc(window.db, "billard_data", "stats"),
-              { matches: window.stats },
-            );
-          }
+  window.stats[window.editingMatchIndex] = updatedMatch;
 
-          if (typeof window.recalculateAndRender === "function") {
-            window.recalculateAndRender();
-          }
-          if (typeof window.updateAllViews === "function") {
-            window.updateAllViews();
-          }
+  try {
+    if (window.db && window.dbFns && window.dbFns.setDoc && window.dbFns.doc) {
+      const statsDoc =
+        typeof window.getDocName === "function"
+          ? window.getDocName("stats")
+          : "stats";
+      await window.dbFns.setDoc(
+        window.dbFns.doc(window.db, "billard_data", statsDoc),
+        { matches: window.stats },
+      );
+    }
 
-          window.closeEditMatchModal();
-          if (window.closeMatchDetailsModal) window.closeMatchDetailsModal();
-          if (window.openSuccessModal) window.openSuccessModal();
-        } catch (err) {
-          console.error("Error saving edited match:", err);
-          if (window.openErrorModal) {
-            window.openErrorModal("Fehler beim Aktualisieren des Matches:\n" + err.message);
-          }
-        }
-      };
+    if (typeof window.recalculateAndRender === "function") {
+      window.recalculateAndRender();
+    }
+    if (typeof window.updateAllViews === "function") {
+      window.updateAllViews();
+    }
+
+    window.closeEditMatchModal();
+    if (window.closeMatchDetailsModal) window.closeMatchDetailsModal();
+    if (window.openSuccessModal) window.openSuccessModal();
+  } catch (err) {
+    console.error("Error saving edited match:", err);
+    if (window.openErrorModal) {
+      window.openErrorModal(
+        "Fehler beim Aktualisieren des Matches:\n" + err.message,
+      );
+    }
+  }
+};

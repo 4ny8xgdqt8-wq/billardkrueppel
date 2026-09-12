@@ -4,17 +4,17 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
-  getFirestore,
-  doc,
-  onSnapshot,
-  setDoc,
-  getDoc,
-  updateDoc,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import {
   getAuth,
   signInAnonymously,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  doc,
+  getDoc,
+  getFirestore,
+  onSnapshot,
+  setDoc,
+  updateDoc,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD7bNfdV48Setz8aRNd4i3kzKO41kNOHio",
@@ -32,63 +32,156 @@ const auth = getAuth(app);
 window.db = db;
 window.dbFns = { doc, setDoc, getDoc, updateDoc };
 
+// Aktiver App-Modus ('main' = Hauptliga, 'dt' = D&T Duell)
+window.currentAppMode = localStorage.getItem("bk_active_mode") || "main";
+
+window.getDocName = function (baseName) {
+  return window.currentAppMode === "dt" ? `${baseName}_DT` : baseName;
+};
+
+let statsUnsub = null;
+let spielerUnsub = null;
+let dailyUnsub = null;
+
+function subscribeToCollections() {
+  if (statsUnsub) {
+    statsUnsub();
+    statsUnsub = null;
+  }
+  if (spielerUnsub) {
+    spielerUnsub();
+    spielerUnsub = null;
+  }
+  if (dailyUnsub) {
+    dailyUnsub();
+    dailyUnsub = null;
+  }
+
+  const statsDoc = window.getDocName("stats");
+  const spielerDoc = window.getDocName("spieler");
+  const dailyDoc = window.getDocName("daily_achivs");
+
+  statsUnsub = onSnapshot(
+    doc(db, "billard_data", statsDoc),
+    (snap) => {
+      window.stats = snap.exists() ? snap.data().matches || [] : [];
+      window.flags.stats = true;
+      if (typeof window.recalculateAndRender === "function") {
+        window.recalculateAndRender();
+      }
+      if (typeof window.checkAllReadyAndHideLoader === "function") {
+        window.checkAllReadyAndHideLoader();
+      }
+    },
+    (err) => {
+      console.error(`Firebase Stats Fehler (${statsDoc}):`, err);
+      window.flags.stats = true;
+      if (typeof window.checkAllReadyAndHideLoader === "function") {
+        window.checkAllReadyAndHideLoader();
+      }
+    },
+  );
+
+  spielerUnsub = onSnapshot(
+    doc(db, "billard_data", spielerDoc),
+    (snap) => {
+      let names = snap.exists() ? snap.data().names || [] : [];
+      if (names.length === 0 && window.currentAppMode === "dt") {
+        names = ["Daniel", "Thorsten"];
+      }
+      window.spieler = names;
+      window.flags.spieler = true;
+      if (window.updateLoaderStatus)
+        window.updateLoaderStatus("Spieler geladen", 60);
+      if (typeof window.initDropdowns === "function") window.initDropdowns();
+      if (typeof window.generateDynamicAchievements === "function") {
+        window.generateDynamicAchievements();
+      }
+      if (typeof window.recalculateAndRender === "function") {
+        window.recalculateAndRender();
+      }
+      if (typeof window.checkAllReadyAndHideLoader === "function") {
+        window.checkAllReadyAndHideLoader();
+      }
+    },
+    (err) => {
+      console.error(`Firebase Spieler Fehler (${spielerDoc}):`, err);
+      if (window.currentAppMode === "dt") {
+        window.spieler = ["Daniel", "Thorsten"];
+        window.flags.spieler = true;
+        if (typeof window.initDropdowns === "function") window.initDropdowns();
+        if (typeof window.recalculateAndRender === "function")
+          window.recalculateAndRender();
+        if (typeof window.checkAllReadyAndHideLoader === "function")
+          window.checkAllReadyAndHideLoader();
+      }
+    },
+  );
+
+  dailyUnsub = onSnapshot(doc(db, "billard_data", dailyDoc), (snap) => {
+    if (snap.exists()) {
+      window.dailyAchivs = snap.data();
+    } else {
+      window.dailyAchivs = { days: {} };
+    }
+    if (typeof window.recalculateAndRender === "function") {
+      window.recalculateAndRender();
+    }
+  });
+
+  if (typeof window.updateModeVisuals === "function") {
+    window.updateModeVisuals();
+  }
+}
+
+window.switchAppMode = async function (newMode) {
+  if (window.currentAppMode === newMode) return;
+
+  window.currentAppMode = newMode;
+  localStorage.setItem("bk_active_mode", newMode);
+
+  // Caches & Daten zurücksetzen
+  if (window.careerContextCache) window.careerContextCache = {};
+  window.stats = [];
+  window.spieler = [];
+  window.dailyAchivs = { days: {} };
+  window.flags = { stats: false, spieler: false };
+
+  // Loader reaktivieren
+  if (typeof window.resetLoaderState === "function") {
+    window.resetLoaderState();
+  }
+  const l = document.getElementById("loading-overlay");
+  const content = document.getElementById("loader-content");
+  if (l) {
+    l.style.display = "flex";
+    l.style.opacity = "1";
+    l.style.filter = "none";
+    if (content) {
+      content.style.transform = "scale(1)";
+      content.style.opacity = "1";
+    }
+    if (window.updateLoaderStatus) {
+      window.updateLoaderStatus(
+        "Lade " + (newMode === "dt" ? "D&T Duell" : "Hauptliga"),
+        25,
+      );
+    }
+  }
+
+  subscribeToCollections();
+};
+
 // Firebase Listeners starten
 export function initFirebaseService() {
-  if (window.updateLoaderStatus) window.updateLoaderStatus("Verbinde zur Cloud", 15);
+  if (window.updateLoaderStatus)
+    window.updateLoaderStatus("Verbinde zur Cloud", 15);
 
   signInAnonymously(auth)
     .then(() => {
-      if (window.updateLoaderStatus) window.updateLoaderStatus("Synchronisiere Daten", 40);
-
-      onSnapshot(
-        doc(db, "billard_data", "stats"),
-        (snap) => {
-          window.stats = snap.exists() ? snap.data().matches || [] : [];
-          window.flags.stats = true;
-          if (typeof window.recalculateAndRender === "function") {
-            window.recalculateAndRender();
-          }
-          if (typeof window.checkAllReadyAndHideLoader === "function") {
-            window.checkAllReadyAndHideLoader();
-          }
-        },
-        (err) => {
-          console.error("Firebase Stats Fehler:", err);
-          window.flags.stats = true;
-          if (typeof window.checkAllReadyAndHideLoader === "function") {
-            window.checkAllReadyAndHideLoader();
-          }
-        },
-      );
-
-      onSnapshot(
-        doc(db, "billard_data", "spieler"),
-        (snap) => {
-          window.spieler = snap.exists() ? snap.data().names || [] : [];
-          window.flags.spieler = true;
-          if (window.updateLoaderStatus) window.updateLoaderStatus("Spieler geladen", 60);
-          if (typeof window.initDropdowns === "function") window.initDropdowns();
-          if (typeof window.generateDynamicAchievements === "function") {
-            window.generateDynamicAchievements();
-          }
-          if (typeof window.recalculateAndRender === "function") {
-            window.recalculateAndRender();
-          }
-          if (typeof window.checkAllReadyAndHideLoader === "function") {
-            window.checkAllReadyAndHideLoader();
-          }
-        },
-        (err) => console.error("Firebase Spieler Fehler:", err),
-      );
-
-      onSnapshot(doc(db, "billard_data", "daily_achivs"), (snap) => {
-        if (snap.exists()) {
-          window.dailyAchivs = snap.data();
-          if (typeof window.recalculateAndRender === "function") {
-            window.recalculateAndRender();
-          }
-        }
-      });
+      if (window.updateLoaderStatus)
+        window.updateLoaderStatus("Synchronisiere Daten", 40);
+      subscribeToCollections();
     })
     .catch((err) => {
       console.error("Firebase Login Fehler:", err);
@@ -181,7 +274,8 @@ window.doSave = async () => {
     const formattedMsg =
       "Folgende Angaben fehlen:\n\n" +
       missingMessages.map((msg) => "• " + msg).join("\n");
-    if (window.openErrorModal) window.openErrorModal(formattedMsg, missingElements);
+    if (window.openErrorModal)
+      window.openErrorModal(formattedMsg, missingElements);
     return;
   }
 
@@ -192,7 +286,9 @@ window.doSave = async () => {
     window.spieler.length === 0
   ) {
     if (window.openErrorModal) {
-      window.openErrorModal("Die App-Logik wird noch geladen. Bitte kurz warten...");
+      window.openErrorModal(
+        "Die App-Logik wird noch geladen. Bitte kurz warten...",
+      );
     }
     return;
   }
@@ -231,7 +327,9 @@ window.doSave = async () => {
     const updatedStats = [...(window.stats || []), data];
 
     const isSameDay = (dateString, refDate) => {
-      const match = String(dateString || "").match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+      const match = String(dateString || "").match(
+        /^(\d{1,2})\.(\d{1,2})\.(\d{4})/,
+      );
       if (!match) return false;
       return (
         parseInt(match[1], 10) === refDate.getDate() &&
@@ -242,11 +340,15 @@ window.doSave = async () => {
 
     // 1. Match in der Cloud speichern
     window.stats = updatedStats;
-    await setDoc(doc(db, "billard_data", "stats"), { matches: updatedStats });
+    await setDoc(doc(db, "billard_data", window.getDocName("stats")), {
+      matches: updatedStats,
+    });
 
     // 2. Tageserfolge berechnen und mergen
     try {
-      const todayMatches = updatedStats.filter((g) => g && g.d && isSameDay(g.d, now));
+      const todayMatches = updatedStats.filter(
+        (g) => g && g.d && isSameDay(g.d, now),
+      );
       const procData = window.processAllStatsChronologically(
         todayMatches,
         window.spieler,
@@ -254,7 +356,9 @@ window.doSave = async () => {
       );
       const dayResults = {};
       const existingDayData =
-        window.dailyAchivs && window.dailyAchivs.days && window.dailyAchivs.days[isoDay]
+        window.dailyAchivs &&
+        window.dailyAchivs.days &&
+        window.dailyAchivs.days[isoDay]
           ? window.dailyAchivs.days[isoDay]
           : {};
 
@@ -274,10 +378,16 @@ window.doSave = async () => {
       if (Object.keys(finalDayResults).length > 0) {
         const newDaily = { days: {}, ...window.dailyAchivs };
         newDaily.days[isoDay] = finalDayResults;
-        await setDoc(doc(db, "billard_data", "daily_achivs"), newDaily);
+        await setDoc(
+          doc(db, "billard_data", window.getDocName("daily_achivs")),
+          newDaily,
+        );
       }
     } catch (achErr) {
-      console.warn("Erfolge konnten nicht aktualisiert werden, Match wurde aber gespeichert:", achErr);
+      console.warn(
+        "Erfolge konnten nicht aktualisiert werden, Match wurde aber gespeichert:",
+        achErr,
+      );
     }
 
     const winnerName = window.winnerNum === 1 ? p1 : p2;
@@ -285,7 +395,9 @@ window.doSave = async () => {
 
     window.winnerNum = 0;
     window.breakLocked = false;
-    document.querySelectorAll(".win-btn").forEach((btn) => btn.classList.remove("selected"));
+    document
+      .querySelectorAll(".win-btn")
+      .forEach((btn) => btn.classList.remove("selected"));
     document.querySelectorAll(".player-sel").forEach((sel) => (sel.value = ""));
 
     // Gewinner als Spieler 1 / Team 1 setzen
@@ -313,8 +425,12 @@ window.doSave = async () => {
     const leftoverEl = document.getElementById("leftover");
     if (leftoverEl) leftoverEl.value = "";
 
-    document.querySelectorAll(".ball-type-btn").forEach((b) => b.classList.remove("selected"));
-    document.querySelectorAll(".win-type-chip").forEach((c) => c.classList.remove("selected"));
+    document
+      .querySelectorAll(".ball-type-btn")
+      .forEach((b) => b.classList.remove("selected"));
+    document
+      .querySelectorAll(".win-type-chip")
+      .forEach((c) => c.classList.remove("selected"));
 
     if (window.stopMatchTimer) window.stopMatchTimer();
     const durationDisplay = document.getElementById("matchDurationDisplay");
@@ -338,7 +454,9 @@ window.doSave = async () => {
   } catch (err) {
     console.error("Firebase Save Error:", err);
     if (window.openErrorModal) {
-      window.openErrorModal("Fehler beim Speichern:\n" + (err.message || "Unbekannter Fehler"));
+      window.openErrorModal(
+        "Fehler beim Speichern:\n" + (err.message || "Unbekannter Fehler"),
+      );
     }
   } finally {
     if (saveBtn) {
@@ -349,22 +467,38 @@ window.doSave = async () => {
 };
 
 window.doDeleteMatch = async () => {
-  if (window.matchToDeleteIndex === -1 || window.matchToDeleteIndex === undefined) return;
+  if (
+    window.matchToDeleteIndex === -1 ||
+    window.matchToDeleteIndex === undefined
+  )
+    return;
   window.stats.splice(window.matchToDeleteIndex, 1);
-  await setDoc(doc(db, "billard_data", "stats"), { matches: window.stats });
+  await setDoc(doc(db, "billard_data", window.getDocName("stats")), {
+    matches: window.stats,
+  });
   if (window.closeDeleteConfirmModal) window.closeDeleteConfirmModal();
   if (typeof window.updateAllViews === "function") window.updateAllViews();
 };
 
-window.syncDailyAchievementsWithHistory = async function (bypassConfirm = false) {
-  if (!window.stats || !window.spieler || !window.dailyFamePool || !window.dailyShamePool) {
-    if (window.openErrorModal) window.openErrorModal("Daten noch nicht geladen. Bitte kurz warten.");
+window.syncDailyAchievementsWithHistory = async function (
+  bypassConfirm = false,
+) {
+  if (
+    !window.stats ||
+    !window.spieler ||
+    !window.dailyFamePool ||
+    !window.dailyShamePool
+  ) {
+    if (window.openErrorModal)
+      window.openErrorModal("Daten noch nicht geladen. Bitte kurz warten.");
     return;
   }
 
   if (!bypassConfirm) {
-    if (typeof window.closeAchListModal === "function") window.closeAchListModal();
-    if (typeof window.openSyncConfirmModal === "function") window.openSyncConfirmModal();
+    if (typeof window.closeAchListModal === "function")
+      window.closeAchListModal();
+    if (typeof window.openSyncConfirmModal === "function")
+      window.openSyncConfirmModal();
     return;
   }
 
@@ -400,13 +534,17 @@ window.syncDailyAchievementsWithHistory = async function (bypassConfirm = false)
       if (earned.length > 0) {
         if (!newDailyDays[isoDate]) newDailyDays[isoDate] = {};
         const existing = newDailyDays[isoDate][player] || [];
-        newDailyDays[isoDate][player] = Array.from(new Set([...existing, ...earned]));
+        newDailyDays[isoDate][player] = Array.from(
+          new Set([...existing, ...earned]),
+        );
       }
     });
   }
 
   try {
-    await setDoc(doc(db, "billard_data", "daily_achivs"), { days: newDailyDays });
+    await setDoc(doc(db, "billard_data", window.getDocName("daily_achivs")), {
+      days: newDailyDays,
+    });
     if (window.openSuccessModal) window.openSuccessModal();
     if (window.recalculateAndRender) window.recalculateAndRender();
   } catch (err) {
@@ -443,4 +581,3 @@ window.doForceUpdate = async () => {
   const url = window.location.href.split("?")[0];
   window.location.href = url + "?u=" + Date.now();
 };
-

@@ -34,19 +34,23 @@
         return window.playerAvatars[name] || `avatars/${name}.webp`;
       };
       function switchV(id, el, forcedDir) {
-        if (typeof window.switchV === "function") window.switchV(id, el, forcedDir);
+        if (typeof window.switchV === "function")
+          window.switchV(id, el, forcedDir);
       }
       function updateUI() {
         if (typeof window.updateUI === "function") window.updateUI();
       }
       function updateMatchProbability() {
-        if (typeof window.updateMatchProbability === "function") window.updateMatchProbability();
+        if (typeof window.updateMatchProbability === "function")
+          window.updateMatchProbability();
       }
       function openAchListModal() {
-        if (typeof window.openAchListModal === "function") window.openAchListModal();
+        if (typeof window.openAchListModal === "function")
+          window.openAchListModal();
       }
       function closeAchListModal() {
-        if (typeof window.closeAchListModal === "function") window.closeAchListModal();
+        if (typeof window.closeAchListModal === "function")
+          window.closeAchListModal();
       }
     </script>
 
@@ -394,10 +398,30 @@
                 border-bottom: 1px solid rgba(255, 255, 255, 0.08);
               "
             >
-              <div style="position:relative; display:flex; align-items:center; gap:12px;">
+              <div
+                style="
+                  position: relative;
+                  display: flex;
+                  align-items: center;
+                  gap: 12px;
+                "
+              >
                 <!-- <label style="margin:0; z-index:2;">Livedauer</label> -->
-                <div style="flex:1;">
-                  <div id="matchDurationDisplay" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:24px; font-weight:900; color:var(--accent); padding:5px 0; text-shadow:0 0 10px rgba(255,204,0,0.3);">
+                <div style="flex: 1">
+                  <div
+                    id="matchDurationDisplay"
+                    style="
+                      position: absolute;
+                      left: 50%;
+                      top: 50%;
+                      transform: translate(-50%, -50%);
+                      font-size: 24px;
+                      font-weight: 900;
+                      color: var(--accent);
+                      padding: 5px 0;
+                      text-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+                    "
+                  >
                     00:00
                   </div>
                 </div>
@@ -431,7 +455,13 @@
             style="display: none"
           >
             <div
-              style="color: #8e8e93; font-size: 10px; text-align: center; padding: 5px; font-weight: 800;"
+              style="
+                color: #8e8e93;
+                font-size: 10px;
+                text-align: center;
+                padding: 5px;
+                font-weight: 800;
+              "
             >
               Spieler wählen für Prognose
             </div>
@@ -486,15 +516,14 @@
                 gap: 6px;
               "
             >
-              <label style="margin-bottom: 0">🏆 Live Tagessiegplatzierung</label>
+              <label style="margin-bottom: 0"
+                >🏆 Live Tagessiegplatzierung</label
+              >
               <span style="font-size: 10px; color: rgba(255, 255, 255, 0.4)"
                 >ⓘ</span
               >
             </div>
-            <div
-              id="match-daily-winner"
-              style="width: 100%; margin-top: 4px;"
-            >
+            <div id="match-daily-winner" style="width: 100%; margin-top: 4px">
               -
             </div>
           </div>
@@ -711,9 +740,14 @@
               "
             >
               <label style="margin-bottom: 0">🏆 Tagessieger</label>
-              <span style="font-size: 10px; color: rgba(255, 255, 255, 0.4)">ⓘ</span>
+              <span style="font-size: 10px; color: rgba(255, 255, 255, 0.4)"
+                >ⓘ</span
+              >
             </div>
-            <div id="stat-daily-winner" style="width: 100%; margin-top: 4px;"></div>
+            <div
+              id="stat-daily-winner"
+              style="width: 100%; margin-top: 4px"
+            ></div>
           </div>
 
           <div class="stat-subtab-bar">
@@ -757,7 +791,7 @@
               <div
                 class="card cinematic-entry"
                 id="eloTrendCard"
-                style="animation-delay: 0.1s; margin-bottom: 16px;"
+                style="animation-delay: 0.1s; margin-bottom: 16px"
               >
                 <div id="eloRanking"></div>
                 <div id="trendHeader"></div>
@@ -790,8 +824,13 @@
                     margin-bottom: 12px;
                   "
                 >
-                  <label style="margin: 0; color: var(--accent);">⚔️ Direkter Duell-Vergleich</label>
-                  <span style="font-size: 10px; color: #8e8e93; font-weight: 800;">H2H ARENA</span>
+                  <label style="margin: 0; color: var(--accent)"
+                    >⚔️ Direkter Duell-Vergleich</label
+                  >
+                  <span
+                    style="font-size: 10px; color: #8e8e93; font-weight: 800"
+                    >H2H ARENA</span
+                  >
                 </div>
                 <div class="h2h-select-bar">
                   <select
@@ -813,7 +852,12 @@
               <div
                 id="today-matches-card"
                 class="card cinematic-entry"
-                style="display: none; animation-delay: 0.1s; margin-top: 10px; margin-bottom: 14px;"
+                style="
+                  display: none;
+                  animation-delay: 0.1s;
+                  margin-top: 10px;
+                  margin-bottom: 14px;
+                "
               >
                 <label>Session Matches</label>
                 <div id="today-match-list" style="margin-top: 8px"></div>
@@ -857,11 +901,14 @@
             <!-- SUBTAB 3: 🔬 REKORDE & FUN-STATS -->
             <div id="stat-subtab-records" class="stat-subtab-content">
               <!-- Rekord-Vitrine -->
-              <div class="section-label" style="margin-top: 0;">
+              <div class="section-label" style="margin-top: 0">
                 🏅 Hall of Records
               </div>
               <div class="record-showcase-grid">
-                <div class="record-card rec-cyan cinematic-entry" id="stat-rec-fastest-win-card">
+                <div
+                  class="record-card rec-cyan cinematic-entry"
+                  id="stat-rec-fastest-win-card"
+                >
                   <div class="rec-header">
                     <span class="rec-label">Blitz-Sieg</span>
                     <span class="rec-badge-icon">🚀</span>
@@ -872,7 +919,10 @@
                   </div>
                 </div>
 
-                <div class="record-card rec-orange cinematic-entry" id="stat-rec-longest-match-card">
+                <div
+                  class="record-card rec-orange cinematic-entry"
+                  id="stat-rec-longest-match-card"
+                >
                   <div class="rec-header">
                     <span class="rec-label">Marathon</span>
                     <span class="rec-badge-icon">⏳</span>
@@ -883,7 +933,10 @@
                   </div>
                 </div>
 
-                <div class="record-card rec-gold cinematic-entry" id="stat-rec-streak-card">
+                <div
+                  class="record-card rec-gold cinematic-entry"
+                  id="stat-rec-streak-card"
+                >
                   <div class="rec-header">
                     <span class="rec-label">Sieg-Serie</span>
                     <span class="rec-badge-icon">🔥</span>
@@ -894,7 +947,10 @@
                   </div>
                 </div>
 
-                <div class="record-card rec-green cinematic-entry" id="stat-rec-session-gain-card">
+                <div
+                  class="record-card rec-green cinematic-entry"
+                  id="stat-rec-session-gain-card"
+                >
                   <div class="rec-header">
                     <span class="rec-label">Bester Abend</span>
                     <span class="rec-badge-icon">📈</span>
@@ -906,16 +962,11 @@
                 </div>
               </div>
 
-              <div class="section-label">
-                🔬 Spielstil & Fun-Stats
-              </div>
+              <div class="section-label">🔬 Spielstil & Fun-Stats</div>
               <div class="stat-grid">
                 <div
                   class="card cinematic-entry card-hud"
-                  style="
-                    grid-column: span 2;
-                    text-align: center;
-                  "
+                  style="grid-column: span 2; text-align: center"
                 >
                   <label>🎲 Spiele gesamt</label>
                   <div
@@ -932,78 +983,234 @@
                 </div>
                 <div class="card cinematic-entry card-hud">
                   <label>🔪 Killer-Instinkt</label>
-                  <div id="stat-killer" style="font-size: 14px; font-weight: 900; color: #ff3b30;">-</div>
-                  <div style="font-size: 7px; color: #8e8e93; margin-top: 2px; font-weight: 800; text-transform: uppercase;">
+                  <div
+                    id="stat-killer"
+                    style="font-size: 14px; font-weight: 900; color: #ff3b30"
+                  >
+                    -
+                  </div>
+                  <div
+                    style="
+                      font-size: 7px;
+                      color: #8e8e93;
+                      margin-top: 2px;
+                      font-weight: 800;
+                      text-transform: uppercase;
+                    "
+                  >
                     Höchste Ø Restkugeln beim Gegner
                   </div>
                 </div>
                 <div class="card cinematic-entry card-hud">
                   <label>🎯 Reguläre Siege</label>
-                  <div id="stat-regular-wins" style="font-size: 14px; font-weight: 900; color: #34c759;">0%</div>
-                  <div style="font-size: 7px; color: #8e8e93; margin-top: 2px; font-weight: 800; text-transform: uppercase;">
+                  <div
+                    id="stat-regular-wins"
+                    style="font-size: 14px; font-weight: 900; color: #34c759"
+                  >
+                    0%
+                  </div>
+                  <div
+                    style="
+                      font-size: 7px;
+                      color: #8e8e93;
+                      margin-top: 2px;
+                      font-weight: 800;
+                      text-transform: uppercase;
+                    "
+                  >
                     Regulär 8er gelocht
                   </div>
                 </div>
                 <div class="card cinematic-entry card-hud">
                   <label>🥶 Nervenstärke</label>
-                  <div id="stat-clutch" style="font-size: 14px; font-weight: 900; color: #4fc3f7;">-</div>
-                  <div style="font-size: 7px; color: #8e8e93; margin-top: 2px; font-weight: 800; text-transform: uppercase;">
+                  <div
+                    id="stat-clutch"
+                    style="font-size: 14px; font-weight: 900; color: #4fc3f7"
+                  >
+                    -
+                  </div>
+                  <div
+                    style="
+                      font-size: 7px;
+                      color: #8e8e93;
+                      margin-top: 2px;
+                      font-weight: 800;
+                      text-transform: uppercase;
+                    "
+                  >
                     Siege bei gegnerischer 8 (Clutch)
                   </div>
                 </div>
                 <div class="card cinematic-entry card-hud">
                   <label>🛡️ Die Mauer</label>
-                  <div id="stat-mauer" style="font-size: 14px; font-weight: 900; color: #4fc3f7;">-</div>
-                  <div style="font-size: 7px; color: #8e8e93; margin-top: 2px; font-weight: 800; text-transform: uppercase;">
+                  <div
+                    id="stat-mauer"
+                    style="font-size: 14px; font-weight: 900; color: #4fc3f7"
+                  >
+                    -
+                  </div>
+                  <div
+                    style="
+                      font-size: 7px;
+                      color: #8e8e93;
+                      margin-top: 2px;
+                      font-weight: 800;
+                      text-transform: uppercase;
+                    "
+                  >
                     Wenigste Ø Reste bei Niederlage
                   </div>
                 </div>
                 <div class="card cinematic-entry card-hud">
                   <label>🫠 Pechvogel</label>
-                  <div id="stat-pechvogel" style="font-size: 14px; font-weight: 900; color: #fff;">-</div>
-                  <div style="font-size: 7px; color: #8e8e93; margin-top: 2px; font-weight: 800; text-transform: uppercase;">
+                  <div
+                    id="stat-pechvogel"
+                    style="font-size: 14px; font-weight: 900; color: #fff"
+                  >
+                    -
+                  </div>
+                  <div
+                    style="
+                      font-size: 7px;
+                      color: #8e8e93;
+                      margin-top: 2px;
+                      font-weight: 800;
+                      text-transform: uppercase;
+                    "
+                  >
                     Höchste Ø Reste bei Niederlage
                   </div>
                 </div>
                 <div class="card cinematic-entry card-hud">
                   <label>🤦‍♂️ 8er-Fehler-Quote</label>
-                  <div id="stat-lost-by-8error" style="font-size: 14px; font-weight: 900; color: #ff3b30;">0%</div>
-                  <div style="font-size: 7px; color: #8e8e93; margin-top: 2px; font-weight: 800; text-transform: uppercase;">
+                  <div
+                    id="stat-lost-by-8error"
+                    style="font-size: 14px; font-weight: 900; color: #ff3b30"
+                  >
+                    0%
+                  </div>
+                  <div
+                    style="
+                      font-size: 7px;
+                      color: #8e8e93;
+                      margin-top: 2px;
+                      font-weight: 800;
+                      text-transform: uppercase;
+                    "
+                  >
                     Niederlagen durch eigenen 8er-Fehler
                   </div>
                 </div>
                 <div class="card cinematic-entry card-hud">
                   <label>🪤 Nutznießer</label>
-                  <div id="stat-nutzniesser" style="font-size: 14px; font-weight: 900; color: var(--accent);">-</div>
-                  <div style="font-size: 7px; color: #8e8e93; margin-top: 2px; font-weight: 800; text-transform: uppercase;">
+                  <div
+                    id="stat-nutzniesser"
+                    style="
+                      font-size: 14px;
+                      font-weight: 900;
+                      color: var(--accent);
+                    "
+                  >
+                    -
+                  </div>
+                  <div
+                    style="
+                      font-size: 7px;
+                      color: #8e8e93;
+                      margin-top: 2px;
+                      font-weight: 800;
+                      text-transform: uppercase;
+                    "
+                  >
                     Siege durch Fehler des Gegners
                   </div>
                 </div>
                 <div class="card cinematic-entry card-hud">
                   <label>🧛 ELO-Vampir</label>
-                  <div id="stat-vampire" style="font-size: 14px; font-weight: 900; color: #fff;">-</div>
-                  <div style="font-size: 7px; color: #8e8e93; margin-top: 2px; font-weight: 800; text-transform: uppercase;">
+                  <div
+                    id="stat-vampire"
+                    style="font-size: 14px; font-weight: 900; color: #fff"
+                  >
+                    -
+                  </div>
+                  <div
+                    style="
+                      font-size: 7px;
+                      color: #8e8e93;
+                      margin-top: 2px;
+                      font-weight: 800;
+                      text-transform: uppercase;
+                    "
+                  >
                     Größter ELO-Abzieher
                   </div>
                 </div>
                 <div class="card cinematic-entry card-hud">
                   <label>😈 Foul-Spezialist</label>
-                  <div id="stat-foul8-wins" style="font-size: 14px; font-weight: 900; color: var(--accent);">0%</div>
-                  <div style="font-size: 7px; color: #8e8e93; margin-top: 2px; font-weight: 800; text-transform: uppercase;">
+                  <div
+                    id="stat-foul8-wins"
+                    style="
+                      font-size: 14px;
+                      font-weight: 900;
+                      color: var(--accent);
+                    "
+                  >
+                    0%
+                  </div>
+                  <div
+                    style="
+                      font-size: 7px;
+                      color: #8e8e93;
+                      margin-top: 2px;
+                      font-weight: 800;
+                      text-transform: uppercase;
+                    "
+                  >
                     Siege durch Gegner-Foul an der 8
                   </div>
                 </div>
                 <div class="card cinematic-entry card-hud">
                   <label>⏱️ Ø Siegesdauer</label>
-                  <div id="stat-avg-win-duration" style="font-size: 14px; font-weight: 900; color: #34c759;">-</div>
-                  <div id="stat-avg-win-duration-subtitle" style="font-size: 7px; color: #8e8e93; margin-top: 2px; font-weight: 800; text-transform: uppercase;">
+                  <div
+                    id="stat-avg-win-duration"
+                    style="font-size: 14px; font-weight: 900; color: #34c759"
+                  >
+                    -
+                  </div>
+                  <div
+                    id="stat-avg-win-duration-subtitle"
+                    style="
+                      font-size: 7px;
+                      color: #8e8e93;
+                      margin-top: 2px;
+                      font-weight: 800;
+                      text-transform: uppercase;
+                    "
+                  >
                     Effizientester Sieger
                   </div>
                 </div>
-                <div class="card cinematic-entry card-hud" style="grid-column: span 2;">
+                <div
+                  class="card cinematic-entry card-hud"
+                  style="grid-column: span 2"
+                >
                   <label>🐢 Längste Ø Spieldauer</label>
-                  <div id="stat-avg-match-duration" style="font-size: 14px; font-weight: 900; color: #ff9500;">-</div>
-                  <div id="stat-avg-match-duration-subtitle" style="font-size: 7px; color: #8e8e93; margin-top: 2px; font-weight: 800; text-transform: uppercase;">
+                  <div
+                    id="stat-avg-match-duration"
+                    style="font-size: 14px; font-weight: 900; color: #ff9500"
+                  >
+                    -
+                  </div>
+                  <div
+                    id="stat-avg-match-duration-subtitle"
+                    style="
+                      font-size: 7px;
+                      color: #8e8e93;
+                      margin-top: 2px;
+                      font-weight: 800;
+                      text-transform: uppercase;
+                    "
+                  >
                     Der Taktiker
                   </div>
                 </div>
@@ -1024,7 +1231,7 @@
             <!-- SUBTAB 4: 🎱 KUGELN & BREAK -->
             <div id="stat-subtab-balls" class="stat-subtab-content">
               <div class="stat-grid">
-                <div class="card cinematic-entry" style="grid-column: span 2;">
+                <div class="card cinematic-entry" style="grid-column: span 2">
                   <label>Kugel-Verteilung (Siege)</label>
                   <div
                     style="
@@ -1102,7 +1309,7 @@
 
                 <div
                   class="card cinematic-entry card-hud"
-                  style="grid-column: span 2;"
+                  style="grid-column: span 2"
                 >
                   <div
                     style="
@@ -1190,7 +1397,7 @@
                   </div>
                 </div>
 
-                <div class="card cinematic-entry" style="grid-column: span 2;">
+                <div class="card cinematic-entry" style="grid-column: span 2">
                   <label>Kugel-Spezis (Beste Siegrate pro Kugeltyp)</label>
                   <div id="stat-ball-spez"></div>
                 </div>
@@ -1208,7 +1415,15 @@
                   >
                     0%
                   </div>
-                  <div style="font-size: 7px; color: #8e8e93; margin-top: 2px; font-weight: 800; text-transform: uppercase;">
+                  <div
+                    style="
+                      font-size: 7px;
+                      color: #8e8e93;
+                      margin-top: 2px;
+                      font-weight: 800;
+                      text-transform: uppercase;
+                    "
+                  >
                     Siegquote nach eigenem Break
                   </div>
                 </div>
@@ -1226,12 +1441,23 @@
                   >
                     0%
                   </div>
-                  <div style="font-size: 7px; color: #8e8e93; margin-top: 2px; font-weight: 800; text-transform: uppercase;">
+                  <div
+                    style="
+                      font-size: 7px;
+                      color: #8e8e93;
+                      margin-top: 2px;
+                      font-weight: 800;
+                      text-transform: uppercase;
+                    "
+                  >
                     Siegquote bei gegnerischem Break
                   </div>
                 </div>
 
-                <div class="card cinematic-entry card-hud" style="grid-column: span 2;">
+                <div
+                  class="card cinematic-entry card-hud"
+                  style="grid-column: span 2"
+                >
                   <label>🐀 Sieg durch Foul</label>
                   <div
                     id="stat-black"
@@ -1246,12 +1472,12 @@
                   </div>
                 </div>
 
-                <div class="card cinematic-entry" style="grid-column: span 2;">
+                <div class="card cinematic-entry" style="grid-column: span 2">
                   <label>Anstoß-Statistik</label>
-                  <div id="stat-break-counts" style="margin-top: 5px;"></div>
+                  <div id="stat-break-counts" style="margin-top: 5px"></div>
                 </div>
 
-                <div class="card cinematic-entry" style="grid-column: span 2;">
+                <div class="card cinematic-entry" style="grid-column: span 2">
                   <label>Tagessieg-Statistik</label>
                   <div id="stat-daily-wins"></div>
                 </div>
@@ -1397,15 +1623,44 @@
               </div>
             </div>
             <div style="padding: 0 16px 8px 16px">
-              <div class="trophy-room-banner" onclick="window.openAchListModal()">
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <span style="font-size:20px; filter: drop-shadow(0 0 8px rgba(255,204,0,0.5));">🏛️</span>
+              <div
+                class="trophy-room-banner"
+                onclick="window.openAchListModal()"
+              >
+                <div style="display: flex; align-items: center; gap: 10px">
+                  <span
+                    style="
+                      font-size: 20px;
+                      filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.5));
+                    "
+                    >🏛️</span
+                  >
                   <div>
-                    <div style="font-size:12px; font-weight:900; color:#fff; letter-spacing:0.3px;">Trophäenkammer</div>
-                    <div style="font-size:9.5px; color:#8e8e93; font-weight:600;">Alle freischaltbaren Erfolge im Spiel ansehen</div>
+                    <div
+                      style="
+                        font-size: 12px;
+                        font-weight: 900;
+                        color: #fff;
+                        letter-spacing: 0.3px;
+                      "
+                    >
+                      Trophäenkammer
+                    </div>
+                    <div
+                      style="font-size: 9.5px; color: #8e8e93; font-weight: 600"
+                    >
+                      Alle freischaltbaren Erfolge im Spiel ansehen
+                    </div>
                   </div>
                 </div>
-                <span style="color:var(--accent); font-weight:900; font-size:14px;">➔</span>
+                <span
+                  style="
+                    color: var(--accent);
+                    font-weight: 900;
+                    font-size: 14px;
+                  "
+                  >➔</span
+                >
               </div>
             </div>
           </div>
@@ -2846,11 +3101,8 @@
 
     <!-- EDIT MATCH MODAL -->
     <div id="editMatchModal" class="modal">
-      <div
-        class="modal-backdrop"
-        onclick="window.closeEditMatchModal()"
-      ></div>
-      <div class="modal-card" style="max-height: 90vh;">
+      <div class="modal-backdrop" onclick="window.closeEditMatchModal()"></div>
+      <div class="modal-card" style="max-height: 90vh">
         <div
           style="
             padding: 20px;
@@ -2863,48 +3115,113 @@
             );
           "
         >
-          <div style="font-weight: 900; font-size: 18px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px;">
+          <div
+            style="
+              font-weight: 900;
+              font-size: 18px;
+              color: var(--accent);
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            "
+          >
             Match bearbeiten
           </div>
-          <div id="edit-match-date-info" style="font-size: 11px; color: #8e8e93; font-weight: 700; margin-top: 4px;"></div>
+          <div
+            id="edit-match-date-info"
+            style="
+              font-size: 11px;
+              color: #8e8e93;
+              font-weight: 700;
+              margin-top: 4px;
+            "
+          ></div>
         </div>
 
-        <div style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+        <div
+          style="
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+          "
+        >
           <!-- Modus -->
           <div>
             <label>Spielmodus</label>
-            <select id="edit-mode" onchange="window.updateEditUI()" style="margin-bottom: 0;">
+            <select
+              id="edit-mode"
+              onchange="window.updateEditUI()"
+              style="margin-bottom: 0"
+            >
               <option value="1:1">1 gegen 1</option>
               <option value="2:2">2 gegen 2</option>
             </select>
           </div>
 
           <!-- 1:1 Spieler -->
-          <div id="edit-ui-1-1" style="display: flex; flex-direction: column; gap: 10px;">
+          <div
+            id="edit-ui-1-1"
+            style="display: flex; flex-direction: column; gap: 10px"
+          >
             <div>
               <label>Spieler 1</label>
-              <select id="edit-p1" class="edit-player-sel" onchange="window.updateEditUI()" style="margin-bottom: 0;"></select>
+              <select
+                id="edit-p1"
+                class="edit-player-sel"
+                onchange="window.updateEditUI()"
+                style="margin-bottom: 0"
+              ></select>
             </div>
             <div>
               <label>Spieler 2</label>
-              <select id="edit-p2" class="edit-player-sel" onchange="window.updateEditUI()" style="margin-bottom: 0;"></select>
+              <select
+                id="edit-p2"
+                class="edit-player-sel"
+                onchange="window.updateEditUI()"
+                style="margin-bottom: 0"
+              ></select>
             </div>
           </div>
 
           <!-- 2:2 Teams -->
-          <div id="edit-ui-2-2" style="display: none; flex-direction: column; gap: 10px;">
+          <div
+            id="edit-ui-2-2"
+            style="display: none; flex-direction: column; gap: 10px"
+          >
             <div>
               <label>Team 1 (Spieler 1 & 2)</label>
-              <div style="display: flex; gap: 8px;">
-                <select id="edit-t1p1" class="edit-player-sel" onchange="window.updateEditUI()" style="margin-bottom: 0; flex: 1;"></select>
-                <select id="edit-t1p2" class="edit-player-sel" onchange="window.updateEditUI()" style="margin-bottom: 0; flex: 1;"></select>
+              <div style="display: flex; gap: 8px">
+                <select
+                  id="edit-t1p1"
+                  class="edit-player-sel"
+                  onchange="window.updateEditUI()"
+                  style="margin-bottom: 0; flex: 1"
+                ></select>
+                <select
+                  id="edit-t1p2"
+                  class="edit-player-sel"
+                  onchange="window.updateEditUI()"
+                  style="margin-bottom: 0; flex: 1"
+                ></select>
               </div>
             </div>
             <div>
               <label>Team 2 (Spieler 1 & 2)</label>
-              <div style="display: flex; gap: 8px;">
-                <select id="edit-t2p1" class="edit-player-sel" onchange="window.updateEditUI()" style="margin-bottom: 0; flex: 1;"></select>
-                <select id="edit-t2p2" class="edit-player-sel" onchange="window.updateEditUI()" style="margin-bottom: 0; flex: 1;"></select>
+              <div style="display: flex; gap: 8px">
+                <select
+                  id="edit-t2p1"
+                  class="edit-player-sel"
+                  onchange="window.updateEditUI()"
+                  style="margin-bottom: 0; flex: 1"
+                ></select>
+                <select
+                  id="edit-t2p2"
+                  class="edit-player-sel"
+                  onchange="window.updateEditUI()"
+                  style="margin-bottom: 0; flex: 1"
+                ></select>
               </div>
             </div>
           </div>
@@ -2912,24 +3229,52 @@
           <!-- Gewinner -->
           <div>
             <label>Gewinner</label>
-            <div style="display: flex; gap: 10px;">
-              <button id="edit-btn-win1" class="win-btn" type="button" onclick="window.selectEditWinner(1)">Spieler 1</button>
-              <button id="edit-btn-win2" class="win-btn" type="button" onclick="window.selectEditWinner(2)">Spieler 2</button>
+            <div style="display: flex; gap: 10px">
+              <button
+                id="edit-btn-win1"
+                class="win-btn"
+                type="button"
+                onclick="window.selectEditWinner(1)"
+              >
+                Spieler 1
+              </button>
+              <button
+                id="edit-btn-win2"
+                class="win-btn"
+                type="button"
+                onclick="window.selectEditWinner(2)"
+              >
+                Spieler 2
+              </button>
             </div>
           </div>
 
           <!-- Anstoß -->
           <div>
             <label>Anstoß durch</label>
-            <select id="edit-breakPlayer" style="margin-bottom: 0;"></select>
+            <select id="edit-breakPlayer" style="margin-bottom: 0"></select>
           </div>
 
           <!-- Kugel-Auswahl Gewinner -->
           <div>
             <label id="edit-ballType-label">Kugel-Typ Gewinner</label>
-            <div id="edit-ball-type-selector" style="display: flex; gap: 10px;">
-              <button id="edit-ball-voll" class="ball-type-btn" type="button" onclick="window.selectEditBallType('Voll')">🟡 Voll</button>
-              <button id="edit-ball-halb" class="ball-type-btn" type="button" onclick="window.selectEditBallType('Halb')">🔵 Halb</button>
+            <div id="edit-ball-type-selector" style="display: flex; gap: 10px">
+              <button
+                id="edit-ball-voll"
+                class="ball-type-btn"
+                type="button"
+                onclick="window.selectEditBallType('Voll')"
+              >
+                🟡 Voll
+              </button>
+              <button
+                id="edit-ball-halb"
+                class="ball-type-btn"
+                type="button"
+                onclick="window.selectEditBallType('Halb')"
+              >
+                🔵 Halb
+              </button>
             </div>
             <input type="hidden" id="edit-ballType1" />
             <input type="hidden" id="edit-ballType2" />
@@ -2945,7 +3290,11 @@
           <!-- Restkugeln -->
           <div>
             <label>Restkugeln Verlierer</label>
-            <div id="edit-leftover-grid" class="leftover-btn-grid" style="margin-top: 5px;"></div>
+            <div
+              id="edit-leftover-grid"
+              class="leftover-btn-grid"
+              style="margin-top: 5px"
+            ></div>
             <input type="hidden" id="edit-leftover" />
           </div>
         </div>
@@ -2974,7 +3323,7 @@
           </button>
           <button
             class="btn-save"
-            style="margin-top: 0; flex: 1.5;"
+            style="margin-top: 0; flex: 1.5"
             onclick="window.saveEditedMatch()"
           >
             Speichern
@@ -3082,13 +3431,23 @@
               Täglich
             </div>
           </div>
-          <div style="margin-bottom: 8px;">
+          <div style="margin-bottom: 8px">
             <input
               type="text"
               id="ach-search-input"
               placeholder="🔍 Erfolg suchen..."
               oninput="window.filterAchListSearch(this.value)"
-              style="width: 100%; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 7px 12px; color: #fff; font-size: 12px; outline: none; box-sizing: border-box;"
+              style="
+                width: 100%;
+                background: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                padding: 7px 12px;
+                color: #fff;
+                font-size: 12px;
+                outline: none;
+                box-sizing: border-box;
+              "
             />
           </div>
         </div>
@@ -3166,9 +3525,7 @@
       <div class="modal-backdrop"></div>
       <div class="modal-card" style="max-width: 380px">
         <div id="result-step-1-balls" class="result-step active">
-          <label id="winnerBallTypeLabel"
-            >Gewinner-Kugel auswählen</label
-          >
+          <label id="winnerBallTypeLabel">Gewinner-Kugel auswählen</label>
           <div
             id="modal-ball-type-selector"
             style="display: flex; gap: 10px; margin-top: 15px"
@@ -3284,5 +3641,116 @@
       </div>
     </div>
 
+    <!-- Geheimes Modal: Modus-Auswahl -->
+    <div id="modeSelectModal" class="modal" style="display: none">
+      <div class="modal-backdrop" onclick="window.closeModeSelectModal()"></div>
+      <div
+        class="modal-card"
+        style="max-width: 380px; padding: 26px 20px; text-align: center"
+      >
+        <div style="font-size: 38px; margin-bottom: 8px">🎱</div>
+        <div class="modal-title" style="margin-bottom: 6px">Spielmodus</div>
+        <div style="font-size: 13px; color: #8e8e93; margin-bottom: 20px">
+          Wähle die aktive Liga und Datenbank:
+        </div>
+
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+          "
+        >
+          <button
+            id="mode-btn-main"
+            type="button"
+            class="mode-choice-btn"
+            onclick="window.selectAppMode('main')"
+            style="
+              display: flex;
+              align-items: center;
+              gap: 14px;
+              padding: 14px 16px;
+              background: rgba(255, 255, 255, 0.06);
+              border: 1.5px solid rgba(255, 255, 255, 0.12);
+              border-radius: 16px;
+              color: #fff;
+              font-size: 15px;
+              font-weight: 700;
+              cursor: pointer;
+              text-align: left;
+              transition: all 0.2s ease;
+            "
+          >
+            <span style="font-size: 26px">🏆</span>
+            <div style="flex: 1">
+              <div>Hauptliga</div>
+              <div style="font-size: 11px; color: #8e8e93; font-weight: 500">
+                Alle Spieler · reguläre Runden
+              </div>
+            </div>
+            <span
+              id="mode-check-main"
+              style="font-size: 18px; color: var(--accent); display: none"
+              >✓</span
+            >
+          </button>
+
+          <button
+            id="mode-btn-dt"
+            type="button"
+            class="mode-choice-btn"
+            onclick="window.selectAppMode('dt')"
+            style="
+              display: flex;
+              align-items: center;
+              gap: 14px;
+              padding: 14px 16px;
+              background: rgba(255, 255, 255, 0.06);
+              border: 1.5px solid rgba(255, 255, 255, 0.12);
+              border-radius: 16px;
+              color: #fff;
+              font-size: 15px;
+              font-weight: 700;
+              cursor: pointer;
+              text-align: left;
+              transition: all 0.2s ease;
+            "
+          >
+            <span style="font-size: 26px">⚔️</span>
+            <div style="flex: 1">
+              <div>D&T Duell</div>
+              <div style="font-size: 11px; color: #8e8e93; font-weight: 500">
+                Daniel & Thorsten · 1:1 Duell
+              </div>
+            </div>
+            <span
+              id="mode-check-dt"
+              style="font-size: 18px; color: var(--accent); display: none"
+              >✓</span
+            >
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onclick="window.closeModeSelectModal()"
+          style="
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: #8e8e93;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+          "
+        >
+          Schließen
+        </button>
+      </div>
+    </div>
   </body>
 </html>

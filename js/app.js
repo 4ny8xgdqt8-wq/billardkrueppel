@@ -25,7 +25,8 @@ window.updateAllViews = function () {
 
   const startInput = document.querySelector(".custom-date-start");
   const endInput = document.querySelector(".custom-date-end");
-  const isCustomDateActive = (startInput && startInput.value) || (endInput && endInput.value);
+  const isCustomDateActive =
+    (startInput && startInput.value) || (endInput && endInput.value);
 
   const isFilterActive =
     (window.timeFilter !== "all" && window.timeFilter !== "custom") ||
@@ -36,7 +37,10 @@ window.updateAllViews = function () {
     bar.classList.toggle("active", isFilterActive);
   });
 
-  if (window.viewId === "aufzeichnen" && typeof window.updateUI === "function") {
+  if (
+    window.viewId === "aufzeichnen" &&
+    typeof window.updateUI === "function"
+  ) {
     window.updateUI();
   }
 
@@ -44,7 +48,9 @@ window.updateAllViews = function () {
 
   const isToday = window.viewId === "heute";
 
-  const statHeader = document.querySelector("#view-statistik .header-container");
+  const statHeader = document.querySelector(
+    "#view-statistik .header-container",
+  );
   if (statHeader) {
     const toggleBar = statHeader.querySelector(".filter-toggle-bar");
     const titleStack = statHeader.querySelector(".title-stack");
@@ -68,16 +74,23 @@ window.updateAllViews = function () {
       : window.stats;
 
   if (!window.careerStats || !window.careerStatsBeforeToday) {
-    if (typeof window.recalculateAndRender === "function") window.recalculateAndRender();
-    if (window.viewId !== "aufzeichnen" && window.viewId !== "uebersicht") return;
+    if (typeof window.recalculateAndRender === "function")
+      window.recalculateAndRender();
+    if (window.viewId !== "aufzeichnen" && window.viewId !== "uebersicht")
+      return;
   }
 
-  if (window.viewId === "uebersicht" && typeof window.renderHistory === "function") {
+  if (
+    window.viewId === "uebersicht" &&
+    typeof window.renderHistory === "function"
+  ) {
     window.renderHistory(statsToUse);
   }
 
   if (
-    (window.viewId === "statistik" || window.viewId === "heute" || window.viewId === "erfolge") &&
+    (window.viewId === "statistik" ||
+      window.viewId === "heute" ||
+      window.viewId === "erfolge") &&
     typeof window.renderBillardStats === "function"
   ) {
     window.renderBillardStats(
@@ -105,11 +118,22 @@ window.updateAllViews = function () {
       window.careerStatsBeforeToday,
     );
   }
+
+  if (typeof window.updateModeVisuals === "function") {
+    window.updateModeVisuals();
+  }
 };
 
 // -- 3. Tab Navigation & Ambient Moods (Sofort verfügbar) --
 window.switchV = function (id, el, forcedDir) {
-  const tabOrder = ["aufzeichnen", "heute", "statistik", "erfolge", "uebersicht", "regeln"];
+  const tabOrder = [
+    "aufzeichnen",
+    "heute",
+    "statistik",
+    "erfolge",
+    "uebersicht",
+    "regeln",
+  ];
   const oldIdx = tabOrder.indexOf(window.viewId);
   const newIdx = tabOrder.indexOf(id);
 
@@ -120,9 +144,12 @@ window.switchV = function (id, el, forcedDir) {
 
   window.viewId = id;
   const oldActive = document.querySelector(".view.active");
-  document.querySelectorAll(".tab-item").forEach((t) => t.classList.remove("active"));
+  document
+    .querySelectorAll(".tab-item")
+    .forEach((t) => t.classList.remove("active"));
 
-  const targetViewId = id === "heute" || id === "statistik" ? "view-statistik" : "view-" + id;
+  const targetViewId =
+    id === "heute" || id === "statistik" ? "view-statistik" : "view-" + id;
   const targetView = document.getElementById(targetViewId);
 
   if (targetView) {
@@ -145,10 +172,22 @@ window.switchV = function (id, el, forcedDir) {
       particleColor = "rgba(255,149,0,0.03)";
     }
 
-    document.documentElement.style.setProperty("--ambient-main-start", mainStartColor);
-    document.documentElement.style.setProperty("--ambient-main-end", mainEndColor);
-    document.documentElement.style.setProperty("--ambient-gradient-start", gradientStart);
-    document.documentElement.style.setProperty("--ambient-particle-color", particleColor);
+    document.documentElement.style.setProperty(
+      "--ambient-main-start",
+      mainStartColor,
+    );
+    document.documentElement.style.setProperty(
+      "--ambient-main-end",
+      mainEndColor,
+    );
+    document.documentElement.style.setProperty(
+      "--ambient-gradient-start",
+      gradientStart,
+    );
+    document.documentElement.style.setProperty(
+      "--ambient-particle-color",
+      particleColor,
+    );
 
     const scrollArea = document.getElementById("scroll-area");
     if (scrollArea) scrollArea.style.overflowY = "auto";
@@ -168,23 +207,41 @@ window.switchV = function (id, el, forcedDir) {
         oldActive.style.cssText = "";
       }, 400);
     } else if (oldActive === targetView) {
-      oldActive.classList.remove("slide-right", "slide-left", "exit-right", "exit-left");
+      oldActive.classList.remove(
+        "slide-right",
+        "slide-left",
+        "exit-right",
+        "exit-left",
+      );
       oldActive.style.cssText = "";
     }
 
     document.querySelectorAll(".view").forEach((v) => {
       if (v !== targetView && v !== oldActive) {
-        v.classList.remove("active", "slide-right", "slide-left", "exit-right", "exit-left");
+        v.classList.remove(
+          "active",
+          "slide-right",
+          "slide-left",
+          "exit-right",
+          "exit-left",
+        );
         v.style.cssText = "";
       }
     });
 
     targetView.classList.add("active");
-    targetView.classList.remove("slide-right", "slide-left", "exit-right", "exit-left");
+    targetView.classList.remove(
+      "slide-right",
+      "slide-left",
+      "exit-right",
+      "exit-left",
+    );
     targetView.style.cssText = "";
 
     targetView
-      .querySelectorAll(".cinematic-entry, .cinematic-hud, .card-hud, .section-label")
+      .querySelectorAll(
+        ".cinematic-entry, .cinematic-hud, .card-hud, .section-label",
+      )
       .forEach((element) => {
         element.style.animation = "none";
         element.offsetHeight;
@@ -196,7 +253,8 @@ window.switchV = function (id, el, forcedDir) {
   }
 
   // Aktiven Tab in Tabbar markieren
-  const activeTabEl = el || document.querySelector(`.tab-item[onclick*="${id}"]`);
+  const activeTabEl =
+    el || document.querySelector(`.tab-item[onclick*="${id}"]`);
   if (activeTabEl) {
     activeTabEl.classList.add("active");
     const ind = document.getElementById("tab-indicator");
@@ -241,7 +299,9 @@ fetch("sw.js?t=" + Date.now())
     return r.text();
   })
   .then((text) => {
-    const match = text.match(/CACHE_NAME\s*=\s*['"][^'"]*?v?(\d+(?:\.\d+)*)['"]/);
+    const match = text.match(
+      /CACHE_NAME\s*=\s*['"][^'"]*?v?(\d+(?:\.\d+)*)['"]/,
+    );
     if (match && match[1]) updateVersionUI(match[1]);
     else updateVersionUI("v16.2");
   })
@@ -262,6 +322,13 @@ window.hideLoader = () => {
     l.style.filter = "blur(10px)";
     setTimeout(() => (l.style.display = "none"), 300);
   }
+};
+
+window.resetLoaderState = () => {
+  isHiding = false;
+  firebaseDataReady = false;
+  workerFinished = false;
+  isCalculating = false;
 };
 
 window.checkAllReadyAndHideLoader = () => {
@@ -326,7 +393,12 @@ if (tipEl) {
 // Dynamische Status-Botschaften
 const statusEl = document.getElementById("loader-status");
 if (statusEl) {
-  const statuses = ["Kreide Queues", "Mische Kugeln", "Poliere Filz", "Bereite Arena vor"];
+  const statuses = [
+    "Kreide Queues",
+    "Mische Kugeln",
+    "Poliere Filz",
+    "Bereite Arena vor",
+  ];
   let sIdx = 0;
   statusEl.innerText = statuses[sIdx] + "...";
   setInterval(() => {
@@ -341,7 +413,9 @@ if (loaderAvatars) {
   const playersToShow = ["Daniel", "Thorsten", "Peter"];
   loaderAvatars.innerHTML = playersToShow
     .map((p, i) => {
-      const src = window.getAvatarUrl ? window.getAvatarUrl(p) : `avatars/${p}.webp`;
+      const src = window.getAvatarUrl
+        ? window.getAvatarUrl(p)
+        : `avatars/${p}.webp`;
       return `
         <div class="loader-avatar-container" style="animation-delay: ${i * 0.2}s">
           <img loading="lazy" src="${src}" class="loader-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
@@ -446,7 +520,9 @@ window.recalculateAndRender = () => {
 
 // Klick außerhalb schließt Filter
 document.addEventListener("click", (e) => {
-  const activeHeader = document.querySelector(".header-container.filter-active");
+  const activeHeader = document.querySelector(
+    ".header-container.filter-active",
+  );
   if (activeHeader && !activeHeader.contains(e.target)) {
     activeHeader.classList.remove("filter-active");
     if (window.updateErfolgeMask) window.updateErfolgeMask();
@@ -473,3 +549,167 @@ initFirebaseService();
 setTimeout(() => {
   window.switchV("aufzeichnen", document.querySelector(".tab-item.active"));
 }, 50);
+
+// -- 9. Modus-Verwaltung (Hauptliga vs. D&T Duell) & Geheimer Trigger --
+window.openModeSelectModal = () => {
+  const modal = document.getElementById("modeSelectModal");
+  if (!modal) return;
+  const isDt = window.currentAppMode === "dt";
+  const checkMain = document.getElementById("mode-check-main");
+  const checkDt = document.getElementById("mode-check-dt");
+  const btnMain = document.getElementById("mode-btn-main");
+  const btnDt = document.getElementById("mode-btn-dt");
+
+  if (checkMain) checkMain.style.display = !isDt ? "inline" : "none";
+  if (checkDt) checkDt.style.display = isDt ? "inline" : "none";
+  if (btnMain) {
+    btnMain.style.borderColor = !isDt
+      ? "var(--accent)"
+      : "rgba(255, 255, 255, 0.12)";
+    btnMain.style.background = !isDt
+      ? "rgba(255, 204, 0, 0.08)"
+      : "rgba(255, 255, 255, 0.06)";
+  }
+  if (btnDt) {
+    btnDt.style.borderColor = isDt
+      ? "var(--accent)"
+      : "rgba(255, 255, 255, 0.12)";
+    btnDt.style.background = isDt
+      ? "rgba(255, 204, 0, 0.08)"
+      : "rgba(255, 255, 255, 0.06)";
+  }
+
+  modal.style.display = "flex";
+};
+
+window.closeModeSelectModal = () => {
+  const modal = document.getElementById("modeSelectModal");
+  if (modal) modal.style.display = "none";
+};
+
+window.selectAppMode = async (mode) => {
+  window.closeModeSelectModal();
+  if (typeof window.switchAppMode === "function") {
+    await window.switchAppMode(mode);
+  }
+};
+
+window.updateModeVisuals = () => {
+  const isDt = window.currentAppMode === "dt";
+
+  // Diskretes D&T-Badge an jedem Haupttitel
+  document.querySelectorAll(".main-title").forEach((t) => {
+    let badge = t.querySelector(".mode-subtle-badge");
+    if (isDt) {
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "mode-subtle-badge";
+        badge.style.cssText =
+          "font-size: 11px; margin-left: 8px; padding: 2px 7px; border-radius: 8px; background: rgba(255, 204, 0, 0.15); border: 1px solid rgba(255, 204, 0, 0.3); color: var(--accent); font-weight: 800; vertical-align: middle; cursor: pointer; letter-spacing: 0.5px;";
+        badge.innerText = "⚔️ D&T";
+        badge.title = "D&T Duell aktiv (Tippen zum Wechseln)";
+        badge.onclick = (e) => {
+          e.stopPropagation();
+          window.openModeSelectModal();
+        };
+        t.appendChild(badge);
+      }
+    } else {
+      if (badge) badge.remove();
+    }
+  });
+
+  // Untertitel im Aufzeichnen-Header
+  const greetingEl = document.getElementById("dynamic-greeting");
+  if (greetingEl) {
+    if (isDt) {
+      greetingEl.innerText = "D&T Duell · 1 gegen 1";
+    } else if (greetingEl.innerText.startsWith("D&T")) {
+      greetingEl.innerText = "Match erfassen";
+    }
+  }
+
+  // 3. Spielmodus-Kachel im Aufzeichnen-Tab (1:1 / 2:2 & Würfelbutton) im DT-Modus komplett ausblenden
+  const modeSel = document.getElementById("mode");
+  const modeCard = modeSel ? modeSel.closest(".card") : null;
+  if (modeCard) {
+    modeCard.style.display = isDt ? "none" : "";
+  }
+  if (modeSel && isDt) {
+    modeSel.value = "1:1";
+  }
+
+  // 4. Partner-Power (Top Duos %) in den Statistiken im DT-Modus ausblenden
+  const duoRankingEl = document.getElementById("stat-duo-ranking");
+  const duoCard = duoRankingEl ? duoRankingEl.closest(".card") : null;
+  if (duoCard) {
+    duoCard.style.display = isDt ? "none" : "";
+  }
+
+  // 5. Spielmodus im Match-Bearbeiten-Modal (#edit-mode) im DT-Modus ausblenden
+  const editModeSel = document.getElementById("edit-mode");
+  const editModeContainer = editModeSel ? editModeSel.closest("div") : null;
+  if (editModeContainer) {
+    editModeContainer.style.display = isDt ? "none" : "";
+  }
+  if (editModeSel && isDt) {
+    editModeSel.value = "1:1";
+    if (typeof window.updateEditUI === "function") {
+      window.updateEditUI();
+    }
+  }
+};
+
+// Geheimer Trigger: 3-fach Tap oder Long Press (>1.2s) auf Header-Titel oder rechtes Logo
+function initSecretModeTrigger() {
+  let tapCount = 0;
+  let tapTimer = null;
+  let pressTimer = null;
+
+  const trigger = () => {
+    if (navigator.vibrate) {
+      try {
+        navigator.vibrate([30, 40, 30]);
+      } catch (e) {}
+    }
+    window.openModeSelectModal();
+  };
+
+  const handlePointerDown = () => {
+    pressTimer = setTimeout(trigger, 1200);
+  };
+
+  const handlePointerUp = () => {
+    clearTimeout(pressTimer);
+  };
+
+  document.querySelectorAll(".main-title, .header-side.right").forEach((el) => {
+    // 3-fach schneller Tap
+    el.addEventListener("click", () => {
+      tapCount++;
+      clearTimeout(tapTimer);
+      if (tapCount >= 3) {
+        tapCount = 0;
+        trigger();
+      } else {
+        tapTimer = setTimeout(() => {
+          tapCount = 0;
+        }, 500);
+      }
+    });
+
+    // Long Press
+    el.addEventListener("touchstart", handlePointerDown, { passive: true });
+    el.addEventListener("touchend", handlePointerUp, { passive: true });
+    el.addEventListener("touchcancel", handlePointerUp, { passive: true });
+    el.addEventListener("mousedown", handlePointerDown);
+    el.addEventListener("mouseup", handlePointerUp);
+    el.addEventListener("mouseleave", handlePointerUp);
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initSecretModeTrigger);
+} else {
+  initSecretModeTrigger();
+}
