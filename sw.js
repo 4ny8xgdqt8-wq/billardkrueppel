@@ -1,4 +1,4 @@
-const CACHE_NAME = "billard-v19.3";
+const CACHE_NAME = "billard-v19.4";
 const ASSETS = [
   "./",
   "index.html",
@@ -52,6 +52,9 @@ self.addEventListener("activate", (event) => {
 // Fetch: Stale-While-Revalidate Strategie
 // Liefert sofort aus dem Cache für Speed, aktualisiert aber im Hintergrund.
 self.addEventListener("fetch", (event) => {
+  // Nur GET-Requests cachen
+  if (event.request.method !== "GET") return;
+
   // Firebase- und Google-Auth-Anfragen ignorieren (die brauchen Echtzeit-Daten)
   if (
     event.request.url.includes("firestore.googleapis.com") ||

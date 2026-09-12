@@ -2392,19 +2392,31 @@ window.renderBillardStats = function (
       }
     }
 
-    // Alias für Kompatibilität mit index.html
-    window.processAllStatsChronologically = function (matches, players) {
-      // Nutzt die vorhandene computeEloRatings Logik für ELO und processData für Stats
-      const elo = window.computeEloRatings(matches);
-      const base = window.processData(matches);
-      return {
-        pData: base.pData,
-        matchDeltas: {},
-        aggregates: base.aggregates,
-        blackWins: base.blackWins,
-        breakWins: base.breakWins,
+    // Alias für Kompatibilität mit index.html (nur setzen falls noch nicht in elo-calc.js definiert)
+    if (typeof window.processAllStatsChronologically !== "function") {
+      window.processAllStatsChronologically = function (
+        matches,
+        players,
+        todayStr,
+      ) {
+        // Nutzt die vorhandene computeEloRatings Logik für ELO und processData für Stats
+        const elo =
+          typeof window.computeEloRatings === "function"
+            ? window.computeEloRatings(matches)
+            : {};
+        const base =
+          typeof window.processData === "function"
+            ? window.processData(matches, todayStr)
+            : { pData: {}, aggregates: {} };
+        return {
+          pData: base.pData,
+          matchDeltas: {},
+          aggregates: base.aggregates,
+          blackWins: base.blackWins || 0,
+          breakWins: base.breakWins || 0,
+        };
       };
-    };
+    }
 
     // --- ELO Rangliste + Erklärung (Gesamt & Session) ---
     function renderEloRanking(pData, show = true, isToday = false) {
@@ -3201,7 +3213,7 @@ window.renderHistory = function renderHistory(statsToRender) {
       .map((p, idx) => {
         const avatarSrc = safeGetAvatarUrl
           ? safeGetAvatarUrl(p)
-          : `avatars/${p}.png`;
+          : `avatars/${p}.webp`;
         const isLast = idx === players.length - 1;
         const margin = isLast ? "0" : "-6px";
         return `<img loading="lazy" src="${avatarSrc}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.2); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;"><div style="display:none; width:${size}px; height:${size}px; border-radius:6px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:${size * 0.6}px; border:1px solid rgba(255,255,255,0.1); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;">👤</div>`;

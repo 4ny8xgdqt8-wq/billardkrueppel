@@ -30,7 +30,7 @@ window.updateAvatarPreviews = () => {
         const src =
           window.getAvatarUrl && typeof window.getAvatarUrl === "function"
             ? window.getAvatarUrl(n)
-            : `avatars/${n}.png`;
+            : `avatars/${n}.webp`;
 
         // Zeige animierte Umrandung, wenn Spieler auf einer Siegesserie ist
         const streakClass =
@@ -292,7 +292,7 @@ window.openTeamModal = () => {
                     <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding:16px; background:${isSelected ? "rgba(52,199,89,0.12)" : "rgba(255,255,255,0.03)"}; border-radius:18px; cursor: pointer; border: 1px solid ${isSelected ? "#34c759" : "rgba(255,255,255,0.1)"}; transition: all 0.2s ease;">
                         <input type="checkbox" value="${p}" class="team-p-check" style="display:none;" onchange="this.parentElement.style.background=this.checked?'rgba(52,199,89,0.12)':'rgba(255,255,255,0.03)'; this.parentElement.style.borderColor=this.checked?'#34c759':'rgba(255,255,255,0.1)'; this.parentElement.querySelector('.check-mark').style.opacity=this.checked?'1':'0.1';" ${isSelected ? "checked" : ""}>
                         <div style="display:flex; align-items:center; gap:12px;">
-                            <img loading="lazy" src="${window.getAvatarUrl ? window.getAvatarUrl(p) : `avatars/${p}.png`}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
+                            <img loading="lazy" src="${window.getAvatarUrl ? window.getAvatarUrl(p) : `avatars/${p}.webp`}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
                             <div style="display:none; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,0.1);">👤</div>
                             <span style="font-size:16px; font-weight:800; color: #fff;">${p}</span>
                         </div>
@@ -590,7 +590,7 @@ window.calcBreak = () => {
         const src =
           window.getAvatarUrl && typeof window.getAvatarUrl === "function"
             ? window.getAvatarUrl(n)
-            : `avatars/${n}.png`;
+            : `avatars/${n}.webp`;
         return `
                         <div style="position:relative; width:${size}px; height:${size}px;">
                             <img loading="lazy" src="${src}" onerror="this.style.display='none'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:15px; object-fit:cover; border:2px solid var(--accent); z-index:2; background:transparent;">

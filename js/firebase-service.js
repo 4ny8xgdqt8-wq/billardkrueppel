@@ -480,6 +480,21 @@ window.doDeleteMatch = async () => {
   if (typeof window.updateAllViews === "function") window.updateAllViews();
 };
 
+window.openSyncConfirmModal = () => {
+  const modal = document.getElementById("syncConfirmModal");
+  if (modal) modal.style.display = "flex";
+};
+
+window.closeSyncConfirmModal = () => {
+  const modal = document.getElementById("syncConfirmModal");
+  if (modal) modal.style.display = "none";
+};
+
+window.doRetroSync = () => {
+  window.closeSyncConfirmModal();
+  window.syncDailyAchievementsWithHistory(true);
+};
+
 window.syncDailyAchievementsWithHistory = async function (
   bypassConfirm = false,
 ) {
