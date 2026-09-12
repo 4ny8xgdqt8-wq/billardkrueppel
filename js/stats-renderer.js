@@ -7,13 +7,20 @@ window.playerAvatars = window.playerAvatars || {
   Thorsten: "avatars/Thorsten.webp",
   Peter: "avatars/Peter.webp",
 };
-window.getAvatarUrl = window.getAvatarUrl || ((name) => {
-  return (window.playerAvatars && window.playerAvatars[name]) || `avatars/${name}.webp`;
-});
+window.getAvatarUrl =
+  window.getAvatarUrl ||
+  ((name) => {
+    return (
+      (window.playerAvatars && window.playerAvatars[name]) ||
+      `avatars/${name}.webp`
+    );
+  });
 
 const safeGetAvatarUrl = (name) => {
-  if (typeof window.getAvatarUrl === "function") return window.getAvatarUrl(name);
-  if (window.playerAvatars && window.playerAvatars[name]) return window.playerAvatars[name];
+  if (typeof window.getAvatarUrl === "function")
+    return window.getAvatarUrl(name);
+  if (window.playerAvatars && window.playerAvatars[name])
+    return window.playerAvatars[name];
   return `avatars/${name}.webp`;
 };
 window.safeGetAvatarUrl = safeGetAvatarUrl;
@@ -57,8 +64,10 @@ window.renderBillardStats = function (
     !filterToday && stats && stats.length !== allSafeStats.length;
 
   const safeGetAvatarUrl = (name) => {
-    if (typeof window.getAvatarUrl === "function") return window.getAvatarUrl(name);
-    if (window.playerAvatars && window.playerAvatars[name]) return window.playerAvatars[name];
+    if (typeof window.getAvatarUrl === "function")
+      return window.getAvatarUrl(name);
+    if (window.playerAvatars && window.playerAvatars[name])
+      return window.playerAvatars[name];
     return `avatars/${name}.webp`;
   };
 
@@ -79,6 +88,138 @@ window.renderBillardStats = function (
   // --- DATUM & SICHERE DATEN ---
   const actualTodayStr = window.getTodayStr();
   let todayStr = actualTodayStr;
+
+  // --- HILFSFUNKTIONEN FÜR HISTORISCHE KARRIERE-KONTEXTE & TAGESSIEGER-SCORES ---
+  const parseDayDate = (dStr) => {
+    if (!dStr) return null;
+    const s = String(dStr).split(",")[0].trim();
+    let m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+    if (m) {
+      const yy = parseInt(m[3], 10);
+      const mm = parseInt(m[2], 10);
+      const dd = parseInt(m[1], 10);
+      return { year: yy, month: mm, day: dd, num: yy * 10000 + mm * 100 + dd };
+    }
+    m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) {
+      const yy = parseInt(m[1], 10);
+      const mm = parseInt(m[2], 10);
+      const dd = parseInt(m[3], 10);
+      return { year: yy, month: mm, day: dd, num: yy * 10000 + mm * 100 + dd };
+    }
+    return null;
+  };
+
+  const actualTodayObj = parseDayDate(actualTodayStr);
+  const actualTodayNum = actualTodayObj ? actualTodayObj.num : null;
+
+  const careerContextCache = new Map();
+  const getCareerContext = (targetDStr) => {
+    const p = parseDayDate(targetDStr);
+    if (!p) {
+      return {
+        dAll: precalculatedCareerStats || { pData: {} },
+        dBefore: precalculatedCareerStatsBeforeToday || { pData: {} },
+      };
+    }
+    if (careerContextCache.has(p.num)) {
+      return careerContextCache.get(p.num);
+    }
+    // Wenn das Datum exakt der aktuelle Kalendertag ist, Worker-Vorabberechnung nutzen
+    if (
+      actualTodayNum &&
+      p.num === actualTodayNum &&
+      precalculatedCareerStats &&
+      precalculatedCareerStatsBeforeToday
+    ) {
+      const res = {
+        dAll: precalculatedCareerStats,
+        dBefore: precalculatedCareerStatsBeforeToday,
+      };
+      careerContextCache.set(p.num, res);
+      return res;
+    }
+    const matchesBefore = allSafeStats.filter((g) => {
+      const gp = parseDayDate(g.d);
+      return gp && gp.num < p.num;
+    });
+    const matchesUpTo = allSafeStats.filter((g) => {
+      const gp = parseDayDate(g.d);
+      return gp && gp.num <= p.num;
+    });
+    const res = {
+      dBefore: window.calculateStatsLocally(matchesBefore, window.spieler),
+      dAll: window.calculateStatsLocally(matchesUpTo, window.spieler),
+    };
+    careerContextCache.set(p.num, res);
+    return res;
+  };
+
+  const computeDailyWinnerScore = (d, dAllPlayer, dBeforePlayer) => {
+    if (!d || !d.todayGames) return 0;
+
+    let score = (d.todayGames || 0) * 1; // +1 pro Spiel (Teilnahme)
+    score += (d.todayWins || 0) * 3; // +3 pro Sieg
+    score += ((d.todayGames || 0) - (d.todayWins || 0)) * -1; // -1 pro Niederlage
+
+    score += (d.todayRegularWins || 0) * 1;
+    score += (d.todayBreakWins || 0) * 3;
+    score += (d.todayClutchWins || 0) * 2;
+    score += (d.todayCloseLosses || 0) * 1;
+
+    score += (d.todayMaxStreak || 0) * 1; // +1 pro Sieg in der längsten Serie
+    score += (d.todayStolenServiceWins || 0) * 2;
+
+    if (d.todayWins > 0)
+      score += Math.round((d.todayKillerPoints / d.todayWins) * 0.5); // +0.5 pro Ø Restkugel
+
+    let nemesis = null;
+    let maxL = 0;
+    const h2hBefore = dBeforePlayer?.headToHead || {};
+    Object.entries(h2hBefore).forEach(([opp, st]) => {
+      if (st && st.l > maxL) {
+        maxL = st.l;
+        nemesis = opp;
+      }
+    });
+    if (
+      nemesis &&
+      d.headToHead &&
+      d.headToHead[nemesis] &&
+      d.headToHead[nemesis].w > 0
+    ) {
+      score += 4;
+    }
+
+    score -= (d.todayBlackWinsCount || 0) * 1;
+    score -= (d.todayLostBy8BallError || 0) * 2;
+    // Abzug für hohe Ø Restkugeln bei Niederlagen
+    if (d.todayAvgRest > 0 && (d.todayGames || 0) - (d.todayWins || 0) > 0) {
+      score += Math.round(d.todayAvgRest * -0.25); // -0.25 pro Ø Restkugel
+    }
+
+    let fameCount = 0,
+      shameCount = 0;
+    // Tägliche Pools prüfen
+    (window.dailyFamePool || []).forEach((ach) => {
+      if (ach.cond(d)) fameCount++;
+    });
+    (window.dailyShamePool || []).forEach((ach) => {
+      if (ach.cond(d)) shameCount++;
+    });
+    // Neue Karriere-Meilensteine, die an diesem Spieltag geknackt wurden
+    const targetAll = dAllPlayer || d;
+    const targetBefore = dBeforePlayer || { headToHead: {} };
+    (window.famePool || []).forEach((ach) => {
+      if (ach.cond(targetAll) && !ach.cond(targetBefore)) fameCount++;
+    });
+    (window.shamePool || []).forEach((ach) => {
+      if (ach.cond(targetAll) && !ach.cond(targetBefore)) shameCount++;
+    });
+    score += fameCount * 2 - shameCount * 2;
+
+    return score;
+  };
 
   // --- SPIELEABEND FILTER FÜR HEUTE-TAB IM HEADER ---
   const statHeader = document.querySelector(
@@ -493,8 +634,10 @@ window.renderBillardStats = function (
         }
       }
 
-      const activePlayer = !isTodayTab ? (window.activeAchPlayer || (labels[0] || "all")) : null;
-      const activeCat = !isTodayTab ? (window.activeAchCategory || "all") : "all";
+      const activePlayer = !isTodayTab
+        ? window.activeAchPlayer || labels[0] || "all"
+        : null;
+      const activeCat = !isTodayTab ? window.activeAchCategory || "all" : "all";
 
       // Filter: Wenn ein einzelner Spieler aktiv ist, nur diesen rendern
       if (!isTodayTab && activePlayer !== "all" && p !== activePlayer) {
@@ -657,7 +800,9 @@ window.renderBillardStats = function (
           ? "rgba(255, 59, 48, 0.85)"
           : "rgba(52, 199, 89, 0.85)";
 
-        const borderStyle = isShame ? `border-left: 3px solid ${borderCol};` : "";
+        const borderStyle = isShame
+          ? `border-left: 3px solid ${borderCol};`
+          : "";
         return `
     <div class="stat-row-item ${tierClass} ${isMaxTier && !isShame ? "achievement-glow-fame" : ""} ${isShame ? "achievement-glow-shame shame-bg" : ""}" style="${borderStyle}">
       <div class="achievement-icon">${item.i}</div>
@@ -720,7 +865,9 @@ window.renderBillardStats = function (
       } else if (activeCat === "daily") {
         achHtmlContent =
           dailyEntries.length > 0
-            ? dailyEntries.map(([title, cnt]) => renderDailyCard(title, cnt)).join("")
+            ? dailyEntries
+                .map(([title, cnt]) => renderDailyCard(title, cnt))
+                .join("")
             : `<div style="color:#555; font-size:11px; text-align:center; padding:20px; font-style:italic;">Noch keine Tageserfolge gesammelt.</div>`;
       } else {
         // "all"
@@ -874,7 +1021,7 @@ window.renderBillardStats = function (
     });
 
     if (!isTodayTab && labels.length > 0) {
-      const activePlayer = window.activeAchPlayer || (labels[0] || "all");
+      const activePlayer = window.activeAchPlayer || labels[0] || "all";
       const segmentBarHtml = `
         <div class="player-segment-bar">
           <button class="player-segment-btn ${activePlayer === "all" ? "active" : ""}" onclick="window.setAchPlayerFilter('all')">
@@ -1045,76 +1192,19 @@ window.renderBillardStats = function (
           ? `${dateParts[2]}-${dateParts[1].padStart(2, "0")}-${dateParts[0].padStart(2, "0")}`
           : "unknown";
 
+      const { dAll: sessionCareerStatsAll, dBefore: sessionCareerStatsBefore } =
+        getCareerContext(todayStr);
+
       labels.forEach((p) => {
-        const d = res.pData[p]; // Heutige Session-Daten
-        const dAll = precalculatedCareerStats?.pData[p] || d;
-        const dBefore = precalculatedCareerStatsBeforeToday?.pData?.[p] || {
+        const d = res.pData[p]; // Session-Daten des ausgewählten Tages
+        if (!d || d.todayGames === 0) return;
+
+        const dAllPlayer = sessionCareerStatsAll?.pData?.[p] || d;
+        const dBeforePlayer = sessionCareerStatsBefore?.pData?.[p] || {
           headToHead: {},
         };
 
-        if (!d || d.todayGames === 0) return;
-
-        // --- PERFORMANCE-INDEX (SESSION MVP) BERECHNUNG ---
-        let score = (d.todayGames || 0) * 1; // +1 pro Spiel (Teilnahme)
-        score += (d.todayWins || 0) * 3; // +3 pro Sieg
-        score += ((d.todayGames || 0) - (d.todayWins || 0)) * -1; // -1 pro Niederlage
-
-        score += (d.todayRegularWins || 0) * 1;
-        score += (d.todayBreakWins || 0) * 3;
-        score += (d.todayClutchWins || 0) * 2;
-        score += (d.todayCloseLosses || 0) * 1;
-
-        score += (d.todayMaxStreak || 0) * 1; // +1 pro Sieg in der längsten Serie
-        score += (d.todayStolenServiceWins || 0) * 2;
-
-        if (d.todayWins > 0)
-          score += Math.round((d.todayKillerPoints / d.todayWins) * 0.5); // +0.5 pro Ø Restkugel
-
-        let nemesis = null;
-        let maxL = 0;
-        Object.entries(dBefore.headToHead || {}).forEach(([opp, st]) => {
-          if (st.l > maxL) {
-            maxL = st.l;
-            nemesis = opp;
-          }
-        });
-        if (
-          nemesis &&
-          d.headToHead &&
-          d.headToHead[nemesis] &&
-          d.headToHead[nemesis].w > 0
-        )
-          score += 4;
-
-        score -= (d.todayBlackWinsCount || 0) * 1;
-        score -= (d.todayLostBy8BallError || 0) * 2;
-        // Abzug für hohe Ø Restkugeln bei Niederlagen
-        if (
-          d.todayAvgRest > 0 &&
-          (d.todayGames || 0) - (d.todayWins || 0) > 0
-        ) {
-          score += Math.round(d.todayAvgRest * -0.25); // -0.25 pro Ø Restkugel
-        }
-
-        let fameCount = 0,
-          shameCount = 0;
-        // Tägliche Pools prüfen
-        window.dailyFamePool.forEach((ach) => {
-          if (ach.cond(d)) fameCount++;
-        });
-        window.dailyShamePool.forEach((ach) => {
-          if (ach.cond(d)) shameCount++;
-        });
-        // Neue Karriere-Meilensteine, die heute geknackt wurden
-        window.famePool.forEach((ach) => {
-          if (ach.cond(dAll) && !ach.cond(dBefore)) fameCount++;
-        });
-        window.shamePool.forEach((ach) => {
-          if (ach.cond(dAll) && !ach.cond(dBefore)) shameCount++;
-        });
-        score += fameCount * 2 - shameCount * 2;
-
-        // Store player score for later sorting
+        const score = computeDailyWinnerScore(d, dAllPlayer, dBeforePlayer);
         playerScores.push({ player: p, score: score });
       });
 
@@ -1136,23 +1226,31 @@ window.renderBillardStats = function (
 
       if (playerScores.length > 0) {
         let winnerPodiumHtml = "";
-        const uniqueScores = [...new Set(playerScores.map((ps) => ps.score))].slice(0, 3);
+        const uniqueScores = [
+          ...new Set(playerScores.map((ps) => ps.score)),
+        ].slice(0, 3);
 
         const places = { 1: null, 2: null, 3: null };
 
         if (uniqueScores.length > 0) {
           const score = uniqueScores[0];
-          const players = playerScores.filter((ps) => ps.score === score).map((p) => p.player);
+          const players = playerScores
+            .filter((ps) => ps.score === score)
+            .map((p) => p.player);
           places[1] = { players, score };
         }
         if (uniqueScores.length > 1) {
           const score = uniqueScores[1];
-          const players = playerScores.filter((ps) => ps.score === score).map((p) => p.player);
+          const players = playerScores
+            .filter((ps) => ps.score === score)
+            .map((p) => p.player);
           places[2] = { players, score };
         }
         if (uniqueScores.length > 2) {
           const score = uniqueScores[2];
-          const players = playerScores.filter((ps) => ps.score === score).map((p) => p.player);
+          const players = playerScores
+            .filter((ps) => ps.score === score)
+            .map((p) => p.player);
           places[3] = { players, score };
         }
 
@@ -1307,12 +1405,15 @@ window.renderBillardStats = function (
         (x) => x.val === maxVal && x.relevantGames >= minThreshold,
       );
       if (tops.length === 0) return "-";
-      return tops
-        .map(
-          (x) =>
-            `<span style="display:inline-flex; align-items:center; gap:4px; margin:2px 4px 2px 0;"><img src="${safeGetAvatarUrl(x.p)}" style="width:18px; height:18px; border-radius:50%; object-fit:cover; vertical-align:middle; border:1px solid rgba(255,255,255,0.2);" onerror="this.style.display='none'"><b>${x.p}</b></span>`,
-        )
-        .join(" / ") + ` <span style="opacity:0.9; font-weight:800;">(${maxVal}${suffix})</span>`;
+      return (
+        tops
+          .map(
+            (x) =>
+              `<span style="display:inline-flex; align-items:center; gap:4px; margin:2px 4px 2px 0;"><img src="${safeGetAvatarUrl(x.p)}" style="width:18px; height:18px; border-radius:50%; object-fit:cover; vertical-align:middle; border:1px solid rgba(255,255,255,0.2);" onerror="this.style.display='none'"><b>${x.p}</b></span>`,
+          )
+          .join(" / ") +
+        ` <span style="opacity:0.9; font-weight:800;">(${maxVal}${suffix})</span>`
+      );
     };
 
     // 1. Pechvogel (Ø Restkugeln bei Niederlage)
@@ -1518,13 +1619,23 @@ window.renderBillardStats = function (
 
       if (byId("stat-mauer"))
         byId("stat-mauer").innerHTML =
-          topWall.map((x) => `<span style="display:inline-flex; align-items:center; gap:4px; margin:2px 4px 2px 0;"><img src="${safeGetAvatarUrl(x.p)}" style="width:18px; height:18px; border-radius:50%; object-fit:cover; vertical-align:middle; border:1px solid rgba(255,255,255,0.2);" onerror="this.style.display='none'"><b>${x.p}</b></span>`).join(" / ") + " <span style=\"opacity:0.9; font-weight:800;\">(" + minWall.toFixed(1) + ")</span>";
+          topWall
+            .map(
+              (x) =>
+                `<span style="display:inline-flex; align-items:center; gap:4px; margin:2px 4px 2px 0;"><img src="${safeGetAvatarUrl(x.p)}" style="width:18px; height:18px; border-radius:50%; object-fit:cover; vertical-align:middle; border:1px solid rgba(255,255,255,0.2);" onerror="this.style.display='none'"><b>${x.p}</b></span>`,
+            )
+            .join(" / ") +
+          ' <span style="opacity:0.9; font-weight:800;">(' +
+          minWall.toFixed(1) +
+          ")</span>";
     } else {
       if (byId("stat-mauer")) byId("stat-mauer").innerText = "-";
     }
 
     // --- ZEITBASIERTE STATISTIKEN ---
-    const timeStatsPData = filterToday ? res.pData : (precalculatedCareerStats?.pData || {});
+    const timeStatsPData = filterToday
+      ? res.pData
+      : precalculatedCareerStats?.pData || {};
     const timeStatsLabels = Object.keys(timeStatsPData);
 
     // Schnellster Sieg
@@ -1560,7 +1671,9 @@ window.renderBillardStats = function (
       } else {
         byId("stat-fastest-win").innerText = "-";
         const fastHolder = byId("stat-fastest-win-holder");
-        if (fastHolder) fastHolder.innerHTML = '<span class="rec-name">Kürzeste Partie</span>';
+        if (fastHolder)
+          fastHolder.innerHTML =
+            '<span class="rec-name">Kürzeste Partie</span>';
       }
     }
 
@@ -1597,7 +1710,9 @@ window.renderBillardStats = function (
       } else {
         byId("stat-longest-match").innerText = "-";
         const longHolder = byId("stat-longest-match-holder");
-        if (longHolder) longHolder.innerHTML = '<span class="rec-name">Längste Schlacht</span>';
+        if (longHolder)
+          longHolder.innerHTML =
+            '<span class="rec-name">Längste Schlacht</span>';
       }
     }
 
@@ -1608,8 +1723,12 @@ window.renderBillardStats = function (
 
       timeStatsLabels.forEach((p) => {
         const d = timeStatsPData[p];
-        const wins = filterToday ? (d.todayWinsWithDuration || 0) : (d.winsWithDuration || 0);
-        const totalDur = filterToday ? d.todayTotalWinDuration : d.totalWinDuration;
+        const wins = filterToday
+          ? d.todayWinsWithDuration || 0
+          : d.winsWithDuration || 0;
+        const totalDur = filterToday
+          ? d.todayTotalWinDuration
+          : d.totalWinDuration;
         const avgDur = wins > 0 ? totalDur / wins : 0;
 
         if (wins >= minWinsForAvg && avgDur > 0 && avgDur < bestAvgWinDur) {
@@ -1620,25 +1739,32 @@ window.renderBillardStats = function (
       if (bestAvgWinDur !== Infinity && bestAvgWinDur > 0) {
         const efficientPlayers = timeStatsLabels.filter((p) => {
           const d = timeStatsPData[p];
-          const wins = filterToday ? (d.todayWinsWithDuration || 0) : (d.winsWithDuration || 0);
-          const totalDur = filterToday ? d.todayTotalWinDuration : d.totalWinDuration;
+          const wins = filterToday
+            ? d.todayWinsWithDuration || 0
+            : d.winsWithDuration || 0;
+          const totalDur = filterToday
+            ? d.todayTotalWinDuration
+            : d.totalWinDuration;
           const avgDur = wins > 0 ? totalDur / wins : 0;
-          return wins >= minWinsForAvg && Math.abs(avgDur - bestAvgWinDur) < 0.001;
+          return (
+            wins >= minWinsForAvg && Math.abs(avgDur - bestAvgWinDur) < 0.001
+          );
         });
         const totalSeconds = Math.round(bestAvgWinDur);
         const mins = Math.floor(totalSeconds / 60);
         const secs = totalSeconds % 60;
-        byId("stat-avg-win-duration").innerText = `${efficientPlayers.join(" / ")} (${String(mins).padStart(2, "0")}:${String(secs).padStart(2, '0')})`;
+        byId("stat-avg-win-duration").innerText =
+          `${efficientPlayers.join(" / ")} (${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")})`;
 
         const subLabel = byId("stat-avg-win-duration-subtitle");
         if (subLabel) {
-            subLabel.innerText = `Effizientester Sieger (min. ${minWinsForAvg} Siege)`;
+          subLabel.innerText = `Effizientester Sieger (min. ${minWinsForAvg} Siege)`;
         }
       } else {
         byId("stat-avg-win-duration").innerText = "-";
         const subLabel = byId("stat-avg-win-duration-subtitle");
         if (subLabel) {
-            subLabel.innerText = `Effizientester Sieger (min. ${minWinsForAvg} Siege)`;
+          subLabel.innerText = `Effizientester Sieger (min. ${minWinsForAvg} Siege)`;
         }
       }
     }
@@ -1650,8 +1776,12 @@ window.renderBillardStats = function (
 
       timeStatsLabels.forEach((p) => {
         const d = timeStatsPData[p];
-        const games = filterToday ? (d.todayGamesWithDuration || 0) : (d.gamesWithDuration || 0);
-        const totalDur = filterToday ? d.todayTotalMatchDuration : d.totalMatchDuration;
+        const games = filterToday
+          ? d.todayGamesWithDuration || 0
+          : d.gamesWithDuration || 0;
+        const totalDur = filterToday
+          ? d.todayTotalMatchDuration
+          : d.totalMatchDuration;
         const avgDur = games > 0 ? totalDur / games : 0;
 
         if (games >= minGamesForAvgMatch && avgDur > maxAvgMatchDur) {
@@ -1662,22 +1792,32 @@ window.renderBillardStats = function (
       if (maxAvgMatchDur > 0) {
         const slowPlayers = timeStatsLabels.filter((p) => {
           const d = timeStatsPData[p];
-          const games = filterToday ? (d.todayGamesWithDuration || 0) : (d.gamesWithDuration || 0);
-          const totalDur = filterToday ? d.todayTotalMatchDuration : d.totalMatchDuration;
+          const games = filterToday
+            ? d.todayGamesWithDuration || 0
+            : d.gamesWithDuration || 0;
+          const totalDur = filterToday
+            ? d.todayTotalMatchDuration
+            : d.totalMatchDuration;
           const avgDur = games > 0 ? totalDur / games : 0;
-          return games >= minGamesForAvgMatch && Math.abs(avgDur - maxAvgMatchDur) < 0.001;
+          return (
+            games >= minGamesForAvgMatch &&
+            Math.abs(avgDur - maxAvgMatchDur) < 0.001
+          );
         });
         const totalSeconds = Math.round(maxAvgMatchDur);
         const mins = Math.floor(totalSeconds / 60);
         const secs = totalSeconds % 60;
-        byId("stat-avg-match-duration").innerText = `${slowPlayers.join(" / ")} (${String(mins).padStart(2, "0")}:${String(secs).padStart(2, '0')})`;
+        byId("stat-avg-match-duration").innerText =
+          `${slowPlayers.join(" / ")} (${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")})`;
 
         const subLabel = byId("stat-avg-match-duration-subtitle");
-        if (subLabel) subLabel.innerText = `Der Taktiker (min. ${minGamesForAvgMatch} Spiele)`;
+        if (subLabel)
+          subLabel.innerText = `Der Taktiker (min. ${minGamesForAvgMatch} Spiele)`;
       } else {
         byId("stat-avg-match-duration").innerText = "-";
         const subLabel = byId("stat-avg-match-duration-subtitle");
-        if (subLabel) subLabel.innerText = `Der Taktiker (min. ${minGamesForAvgMatch} Spiele)`;
+        if (subLabel)
+          subLabel.innerText = `Der Taktiker (min. ${minGamesForAvgMatch} Spiele)`;
       }
     }
 
@@ -1696,10 +1836,11 @@ window.renderBillardStats = function (
       if (window.dailyAchivs && window.dailyAchivs.days) {
         for (const dateStr in window.dailyAchivs.days) {
           const dayData = window.dailyAchivs.days[dateStr];
-          const dayMatches = (window.stats || []).filter(
-            (g) =>
-              g.d && g.d.startsWith(dateStr.split("-").reverse().join(".")),
-          );
+          const targetDay = parseDayDate(dateStr);
+          const dayMatches = (window.stats || []).filter((g) => {
+            const gp = parseDayDate(g && g.d);
+            return gp && targetDay && gp.num === targetDay.num;
+          });
           if (dayMatches.length === 0) continue;
 
           const dayStats = window.calculateStatsLocally(
@@ -1707,8 +1848,7 @@ window.renderBillardStats = function (
             window.spieler,
             dateStr.split("-").reverse().join("."),
           );
-          const dAll = precalculatedCareerStats || { pData: {} };
-          const dBefore = precalculatedCareerStatsBeforeToday || { pData: {} };
+          const { dAll, dBefore } = getCareerContext(dateStr);
 
           const playerScores = Object.keys(dayStats.pData)
             .map((player) => {
@@ -1716,70 +1856,16 @@ window.renderBillardStats = function (
               const d = dayStats.pData[player];
               if (!d || d.todayGames === 0) return { player, score: 0 };
 
-              let score = (d.todayGames || 0) * 1; // +1 pro Spiel (Teilnahme)
-              score += (d.todayWins || 0) * 3; // +3 pro Sieg
-              score += ((d.todayGames || 0) - (d.todayWins || 0)) * -1; // -1 pro Niederlage
-
-              score += (d.todayRegularWins || 0) * 1;
-              score += (d.todayBreakWins || 0) * 3;
-              score += (d.todayClutchWins || 0) * 2;
-              score += (d.todayCloseLosses || 0) * 1;
-
-              score += (d.todayMaxStreak || 0) * 1; // +1 pro Sieg in der längsten Serie
-              score += (d.todayStolenServiceWins || 0) * 2;
-
-              if (d.todayWins > 0)
-                score += Math.round((d.todayKillerPoints / d.todayWins) * 0.5); // +0.5 pro Ø Restkugel
-
-              let nemesis = null;
-              let maxL = 0;
+              const dAllPlayer = dAll.pData ? dAll.pData[player] || d : d;
               const dBeforePlayer = dBefore.pData
                 ? dBefore.pData[player] || { headToHead: {} }
                 : { headToHead: {} };
-              Object.entries(dBeforePlayer.headToHead || {}).forEach(
-                ([opp, st]) => {
-                  if (st.l > maxL) {
-                    maxL = st.l;
-                    nemesis = opp;
-                  }
-                },
+
+              const score = computeDailyWinnerScore(
+                d,
+                dAllPlayer,
+                dBeforePlayer,
               );
-              if (
-                nemesis &&
-                d.headToHead &&
-                d.headToHead[nemesis] &&
-                d.headToHead[nemesis].w > 0
-              )
-                score += 4;
-
-              score -= (d.todayBlackWinsCount || 0) * 1;
-              score -= (d.todayLostBy8BallError || 0) * 2;
-              if (
-                d.todayAvgRest > 0 &&
-                (d.todayGames || 0) - (d.todayWins || 0) > 0
-              ) {
-                score += Math.round(d.todayAvgRest * -0.25);
-              }
-
-              let fameCount = 0,
-                shameCount = 0;
-              const dAllPlayer = dAll.pData ? dAll.pData[player] || d : d;
-              window.dailyFamePool.forEach((ach) => {
-                if (ach.cond(d)) fameCount++;
-              });
-              window.dailyShamePool.forEach((ach) => {
-                if (ach.cond(d)) shameCount++;
-              });
-              window.famePool.forEach((ach) => {
-                if (ach.cond(dAllPlayer) && !ach.cond(dBeforePlayer))
-                  fameCount++;
-              });
-              window.shamePool.forEach((ach) => {
-                if (ach.cond(dAllPlayer) && !ach.cond(dBeforePlayer))
-                  shameCount++;
-              });
-              score += fameCount * 2 - shameCount * 2;
-
               return { player, score };
             })
             .sort((a, b) => b.score - a.score);
@@ -1820,7 +1906,8 @@ window.renderBillardStats = function (
       const dailyWinsHtml =
         sortedPlayers.length > 0
           ? sortedPlayers
-              .map( // FIX: Animation delay was wrong
+              .map(
+                // FIX: Animation delay was wrong
                 (p, idx) => `
                 <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding: 10px; border-radius:16px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.27 + idx * 0.05}s;">
                     <div style="display:flex; align-items:center; gap:10px;">
@@ -1964,14 +2051,20 @@ window.renderBillardStats = function (
     // --- ANSTOSS-STATISTIK ---
     const breakCountsEl = byId("stat-break-counts");
     if (breakCountsEl) {
-        const breakCounts = labels.map(p => {
-            const d = res.pData[p];
-            const count = filterToday ? d.todayBreakGames || 0 : d.breakGames || 0;
-            return { p, count };
-        }).sort((a, b) => b.count - a.count);
+      const breakCounts = labels
+        .map((p) => {
+          const d = res.pData[p];
+          const count = filterToday
+            ? d.todayBreakGames || 0
+            : d.breakGames || 0;
+          return { p, count };
+        })
+        .sort((a, b) => b.count - a.count);
 
-        if (breakCounts.some(item => item.count > 0)) {
-            breakCountsEl.innerHTML = breakCounts.map((item, idx) => `
+      if (breakCounts.some((item) => item.count > 0)) {
+        breakCountsEl.innerHTML = breakCounts
+          .map(
+            (item, idx) => `
                 <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding: 10px; border-radius:16px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.22 + idx * 0.05}s;">
                     <div style="display:flex; align-items:center; gap:10px;">
                         <div style="font-size:14px; font-weight:900; color:var(--accent); min-width:20px; text-align:center;">${idx + 1}.</div>
@@ -1982,10 +2075,13 @@ window.renderBillardStats = function (
                         ${item.count}x
                     </div>
                 </div>
-            `).join('');
-        } else {
-            breakCountsEl.innerHTML = '<div style="text-align:center; color:#8e8e93; font-size:10px; padding-top: 5px;">Keine Anstoß-Daten vorhanden.</div>';
-        }
+            `,
+          )
+          .join("");
+      } else {
+        breakCountsEl.innerHTML =
+          '<div style="text-align:center; color:#8e8e93; font-size:10px; padding-top: 5px;">Keine Anstoß-Daten vorhanden.</div>';
+      }
     }
 
     // --- DIREKTE DUELLE (Dominanz) ---
@@ -2018,7 +2114,7 @@ window.renderBillardStats = function (
                                 <div style="font-size: 10px; opacity: 0.85; color: #8e8e93; margin-top: 3px;"><span style="color:#34c759; font-weight:800;">S: ${m.p1_wins}</span> / <span style="color:#ff3b30; font-weight:800;">N: ${m.p2_wins}</span></div>
                             </div>
                         </div>
-                        
+
                         <!-- Trenner -->
                         <div style="text-align:center; min-width:50px; padding: 0 5px;">
                             <span style="font-weight:900; font-size:10px; color:var(--accent); background:rgba(255,204,0,0.15); border:1px solid rgba(255,204,0,0.3); padding:3px 7px; border-radius:6px; letter-spacing:1px;">VS</span>
@@ -2077,8 +2173,7 @@ window.renderBillardStats = function (
             a.localeCompare(b, "de"),
         );
 
-      if (byId("stat-streak"))
-        byId("stat-streak").innerText = `${maxStreak}x`;
+      if (byId("stat-streak")) byId("stat-streak").innerText = `${maxStreak}x`;
       const streakCard = byId("stat-rec-streak-card");
       if (streakCard) {
         const holder = streakCard.querySelector(".rec-holder");
@@ -2848,29 +2943,27 @@ window.renderBillardStats = function (
   }
 };
 
+window.openPlayerProfile = (name) => {
+  // Nutze careerStats statt lastProcessedStats, um Filter-Einfluss zu vermeiden
+  const stats = window.careerStats || window.lastProcessedStats;
+  if (!stats || !stats.pData[name]) return;
+  const d = stats.pData[name];
 
+  const header = document.getElementById("profileHeader");
+  const content = document.getElementById("profileStats");
 
-      window.openPlayerProfile = (name) => {
-        // Nutze careerStats statt lastProcessedStats, um Filter-Einfluss zu vermeiden
-        const stats = window.careerStats || window.lastProcessedStats;
-        if (!stats || !stats.pData[name]) return;
-        const d = stats.pData[name];
+  if (content) content.scrollTop = 0;
+  setTimeout(() => {
+    if (content) content.scrollTop = 0;
+  }, 50);
 
-        const header = document.getElementById("profileHeader");
-        const content = document.getElementById("profileStats");
-
-        if (content) content.scrollTop = 0;
-        setTimeout(() => {
-          if (content) content.scrollTop = 0;
-        }, 50);
-
-        const streakClass =
-          d.currentStreak >= 1
-            ? "streak-fire"
-            : d.loseStreak >= 3
-              ? "streak-frost"
-              : "";
-        header.innerHTML = `
+  const streakClass =
+    d.currentStreak >= 1
+      ? "streak-fire"
+      : d.loseStreak >= 3
+        ? "streak-frost"
+        : "";
+  header.innerHTML = `
                 <div class="avatar-frame ${streakClass}" style="margin-bottom:15px;">
                     <img loading="lazy" src="${safeGetAvatarUrl(name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" style="width:90px; height:90px; border-radius:22px; border:4px solid var(--accent); object-fit:cover; box-shadow: 0 0 20px rgba(255,204,0,0.5);">
                 </div>
@@ -2878,26 +2971,26 @@ window.renderBillardStats = function (
                 <div style="font-size:10px; color:#8e8e93; font-weight:800; text-transform:uppercase; margin-top:8px; letter-spacing:1.5px;">Spieler-Steckbrief</div>
             `;
 
-        const winRate = d.games > 0 ? Math.round((d.wins / d.games) * 100) : 0;
+  const winRate = d.games > 0 ? Math.round((d.wins / d.games) * 100) : 0;
 
-        // Bestimme Lieblingskugel basierend auf allen Spielen (Karriere)
-        let favBall = "-";
-        if (window.stats) {
-          let v = 0,
-            h = 0;
-          window.stats.forEach((g) => {
-            const p1Arr = (g.p1 || "").split(" & ").map((s) => s.trim());
-            const p2Arr = (g.p2 || "").split(" & ").map((s) => s.trim());
-            if (p1Arr.includes(name) && g.bt1 && g.w == 1)
-              g.bt1 === "Voll" ? v++ : h++;
-            if (p2Arr.includes(name) && g.bt2 && g.w == 2)
-              g.bt2 === "Voll" ? v++ : h++;
-          });
-          if (v > h) favBall = "🟡 Voll";
-          else if (h > v) favBall = "🔵 Halb";
-        }
+  // Bestimme Lieblingskugel basierend auf allen Spielen (Karriere)
+  let favBall = "-";
+  if (window.stats) {
+    let v = 0,
+      h = 0;
+    window.stats.forEach((g) => {
+      const p1Arr = (g.p1 || "").split(" & ").map((s) => s.trim());
+      const p2Arr = (g.p2 || "").split(" & ").map((s) => s.trim());
+      if (p1Arr.includes(name) && g.bt1 && g.w == 1)
+        g.bt1 === "Voll" ? v++ : h++;
+      if (p2Arr.includes(name) && g.bt2 && g.w == 2)
+        g.bt2 === "Voll" ? v++ : h++;
+    });
+    if (v > h) favBall = "🟡 Voll";
+    else if (h > v) favBall = "🔵 Halb";
+  }
 
-        content.innerHTML = `
+  content.innerHTML = `
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:20px;">
                     <div class="card" style="margin-bottom:0; padding:15px; background: linear-gradient(135deg, rgba(255, 204, 0, 0.05) 0%, rgba(28, 28, 30, 0.8) 100%); border: 1px solid rgba(255,204,0,0.25); box-shadow: inset 0 0 10px rgba(255,204,0,0.05), 0 4px 15px rgba(0,0,0,0.3); text-align:center;">
                         <label style="padding:0; font-size: 9px; letter-spacing: 1px;">Aktuelles ELO</label>
@@ -2908,10 +3001,10 @@ window.renderBillardStats = function (
                         <div id="prof-winrate" style="font-size:24px; font-weight:900; color:#34c759; text-shadow: 0 0 10px rgba(52,199,89,0.3);">0%</div>
                     </div>
                 </div>
-                
+
                 <!-- Call animateNumber directly after content is set -->
 
-                
+
                 <div class="section-label" style="margin-top:0;">📊 Karriere-Highlights</div>
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     <div style="display:flex; justify-content:space-between; font-size:13px; padding:12px; background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border-radius:14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
@@ -2937,62 +3030,62 @@ window.renderBillardStats = function (
                     </div>
                 </div>
             `;
-        // Call animateNumber directly after content is set
-        window.animateNumber("prof-elo", d.elo || 1000);
-        window.animateNumber("prof-winrate", winRate);
+  // Call animateNumber directly after content is set
+  window.animateNumber("prof-elo", d.elo || 1000);
+  window.animateNumber("prof-winrate", winRate);
 
-        document.getElementById("playerProfileModal").style.display = "flex";
-      };
+  document.getElementById("playerProfileModal").style.display = "flex";
+};
 
-      window.closeMatchDetailsModal = () => {
-        document.getElementById("matchDetailsModal").style.display = "none";
-      };
+window.closeMatchDetailsModal = () => {
+  document.getElementById("matchDetailsModal").style.display = "none";
+};
 
-      window.openMatchDetails = (index) => {
-        window.currentViewingMatchIndex = index;
-        const g = window.stats[index];
-        if (!g) return;
+window.openMatchDetails = (index) => {
+  window.currentViewingMatchIndex = index;
+  const g = window.stats[index];
+  if (!g) return;
 
-        // Nutze die bereits vom Worker berechneten globalen Stats
-        const matchData =
-          window.careerStats && window.careerStats.matchDeltas
-            ? window.careerStats.matchDeltas[index]
-            : {};
-        const delta = matchData.eloDelta || 0;
+  // Nutze die bereits vom Worker berechneten globalen Stats
+  const matchData =
+    window.careerStats && window.careerStats.matchDeltas
+      ? window.careerStats.matchDeltas[index]
+      : {};
+  const delta = matchData.eloDelta || 0;
 
-        const header = document.getElementById("matchDetailsHeader");
-        const content = document.getElementById("matchDetailsContent");
+  const header = document.getElementById("matchDetailsHeader");
+  const content = document.getElementById("matchDetailsContent");
 
-        if (content) content.scrollTop = 0;
+  if (content) content.scrollTop = 0;
 
-        const isWin1 = parseInt(g.w) === 1;
-        const isWin2 = parseInt(g.w) === 2;
+  const isWin1 = parseInt(g.w) === 1;
+  const isWin2 = parseInt(g.w) === 2;
 
-        if (typeof window.processAllStatsChronologically !== "function") return; // Guard against Chart.js not loaded
+  if (typeof window.processAllStatsChronologically !== "function") return; // Guard against Chart.js not loaded
 
-        header.innerHTML = `
+  header.innerHTML = `
                 <div style="font-weight:900; color:var(--accent); font-size:18px; text-transform:uppercase; letter-spacing:1px;">Match Details</div>
                 <div style="font-size:11px; color:#8e8e93; font-weight:700; margin-top:4px;">${g.d || ""}</div>
             `;
 
-        const getAvatarStack = (playerName, size = 50, effectClass = "") => {
-          const names = (playerName || "")
-            .split(" & ")
-            .map((n) => n.trim())
-            .filter(Boolean);
-          return names
-            .map(
-              (n) => `
+  const getAvatarStack = (playerName, size = 50, effectClass = "") => {
+    const names = (playerName || "")
+      .split(" & ")
+      .map((n) => n.trim())
+      .filter(Boolean);
+    return names
+      .map(
+        (n) => `
                     <div class="avatar-frame ${effectClass}" style="position:relative; width:${size}px; height:${size}px; min-width:${size}px;">
                         <img loading="lazy" src="${safeGetAvatarUrl(n)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:12px; object-fit:cover; border:2px solid rgba(255,255,255,0.2); z-index:2; background:transparent; ${effectClass === "match-shame" ? "filter: grayscale(0.1); opacity: 0.9;" : ""}">
                         <div style="display:none; width:${size}px; height:${size}px; border-radius:12px; background:rgba(255,255,255,0.05); align-items:center; justify-content:center; font-size:${size * 0.5}px; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.2);">👤</div>
                     </div>
                 `,
-            )
-            .join("");
-        };
+      )
+      .join("");
+  };
 
-        content.innerHTML = `
+  content.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
                     <div style="flex:1; text-align:center; opacity:${isWin1 ? "1" : "0.5"}; transform:${isWin1 ? "scale(1.1)" : "scale(0.95) translateY(5px)"}; transition:all 0.3s;">
                         <div style="display:flex; justify-content:center; gap:12px; margin-bottom:10px;">${getAvatarStack(g.p1, 50, isWin1 ? "streak-fire" : "match-shame")}</div>
@@ -3086,92 +3179,90 @@ window.renderBillardStats = function (
                 }
             `;
 
-        document.getElementById("matchDetailsModal").style.display = "flex";
-        if (content) content.scrollTop = 0;
-      };
+  document.getElementById("matchDetailsModal").style.display = "flex";
+  if (content) content.scrollTop = 0;
+};
 
+window.renderHistory = function renderHistory(statsToRender) {
+  const container = document.getElementById("history-list");
+  const list = statsToRender || window.stats;
 
+  // Nutze bereits berechnete Daten statt Neu-Berechnung
+  const processed = window.careerStats || { matchDeltas: {} };
+  const deltas = processed.matchDeltas || {};
 
-window.renderHistory =       function renderHistory(statsToRender) {
-        const container = document.getElementById("history-list");
-        const list = statsToRender || window.stats;
+  const counter = document.getElementById("match-counter");
+  if (counter) counter.innerText = "Matches: " + list.length;
 
-        // Nutze bereits berechnete Daten statt Neu-Berechnung
-        const processed = window.careerStats || { matchDeltas: {} };
-        const deltas = processed.matchDeltas || {};
+  const getAvatarHtml = (playerName, size = 18) => {
+    if (!playerName) return "";
+    const players = playerName.split(" & ").map((p) => p.trim());
+    return players
+      .map((p, idx) => {
+        const avatarSrc = safeGetAvatarUrl
+          ? safeGetAvatarUrl(p)
+          : `avatars/${p}.png`;
+        const isLast = idx === players.length - 1;
+        const margin = isLast ? "0" : "-6px";
+        return `<img loading="lazy" src="${avatarSrc}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.2); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;"><div style="display:none; width:${size}px; height:${size}px; border-radius:6px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:${size * 0.6}px; border:1px solid rgba(255,255,255,0.1); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;">👤</div>`;
+      })
+      .join("");
+  };
 
-        const counter = document.getElementById("match-counter");
-        if (counter) counter.innerText = "Matches: " + list.length;
+  const getBallBadge = (type) => {
+    if (!type) return "";
+    return `<span style="display:inline-flex; align-items:center; opacity:0.8;">${window.getBallIcon(type).replace('width="14"', 'width="12"').replace('height="14"', 'height="12"').replace("margin-right:4px;", "")}</span>`;
+  };
 
-        const getAvatarHtml = (playerName, size = 18) => {
-          if (!playerName) return "";
-          const players = playerName.split(" & ").map((p) => p.trim());
-          return players
-            .map((p, idx) => {
-              const avatarSrc = safeGetAvatarUrl
-                ? safeGetAvatarUrl(p)
-                : `avatars/${p}.png`;
-              const isLast = idx === players.length - 1;
-              const margin = isLast ? "0" : "-6px";
-              return `<img loading="lazy" src="${avatarSrc}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.2); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;"><div style="display:none; width:${size}px; height:${size}px; border-radius:6px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:${size * 0.6}px; border:1px solid rgba(255,255,255,0.1); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;">👤</div>`;
-            })
-            .join("");
-        };
+  let html = "";
+  let lastDate = "";
 
-        const getBallBadge = (type) => {
-          if (!type) return "";
-          return `<span style="display:inline-flex; align-items:center; opacity:0.8;">${window.getBallIcon(type).replace('width="14"', 'width="12"').replace('height="14"', 'height="12"').replace("margin-right:4px;", "")}</span>`;
-        };
+  const sortedList = list.slice().reverse().slice(0, 50); // Performance-Limit
 
-        let html = "";
-        let lastDate = "";
+  if (sortedList.length === 0) {
+    container.innerHTML =
+      '<div style="text-align:center;color:#8e8e93;padding:40px;">Keine Spiele vorhanden.</div>';
+    return;
+  }
 
-        const sortedList = list.slice().reverse().slice(0, 50); // Performance-Limit
+  sortedList.forEach((g, idx) => {
+    const i = window.stats.indexOf(g);
+    const dateParts = (g.d || "").split(", ");
+    const date = dateParts[0];
+    const time = dateParts[1] || "";
 
-        if (sortedList.length === 0) {
-          container.innerHTML =
-            '<div style="text-align:center;color:#8e8e93;padding:40px;">Keine Spiele vorhanden.</div>';
-          return;
-        }
+    if (date !== lastDate) {
+      html += `<div class="history-date-header" style="animation: tip-fade 0.5s ease-out forwards; animation-delay: ${idx * 0.05}s"><span>${date}</span></div>`;
+      lastDate = date;
+    }
 
-        sortedList.forEach((g, idx) => {
-          const i = window.stats.indexOf(g);
-          const dateParts = (g.d || "").split(", ");
-          const date = dateParts[0];
-          const time = dateParts[1] || "";
+    const isWin1 = g.w == 1;
+    const isWin2 = g.w == 2;
+    const dData = deltas[i] || { eloDelta: 0 };
+    const delta = typeof dData === "object" ? dData.eloDelta || 0 : dData;
 
-          if (date !== lastDate) {
-            html += `<div class="history-date-header" style="animation: tip-fade 0.5s ease-out forwards; animation-delay: ${idx * 0.05}s"><span>${date}</span></div>`;
-            lastDate = date;
-          }
+    // Dauer-Display berechnen (formatierte Dauer, Sekunden, fallback auf Minuten)
+    const pad = (n) => String(n).padStart(2, "0");
+    let durationDisplay = "00:00";
+    if (g && g.durationFormatted) {
+      durationDisplay = g.durationFormatted;
+    } else if (g && typeof g.durationSeconds === "number") {
+      const m2 = Math.floor(g.durationSeconds / 60);
+      const s2 = g.durationSeconds % 60;
+      durationDisplay = `${pad(m2)}:${pad(s2)}`;
+    } else if (g && typeof g.duration === "number") {
+      durationDisplay = `${pad(g.duration)}:00`;
+    }
 
-          const isWin1 = g.w == 1;
-          const isWin2 = g.w == 2;
-          const dData = deltas[i] || { eloDelta: 0 };
-          const delta = typeof dData === "object" ? dData.eloDelta || 0 : dData;
- 
-          // Dauer-Display berechnen (formatierte Dauer, Sekunden, fallback auf Minuten)
-          const pad = (n) => String(n).padStart(2, "0");
-          let durationDisplay = "00:00";
-          if (g && g.durationFormatted) {
-            durationDisplay = g.durationFormatted;
-          } else if (g && typeof g.durationSeconds === "number") {
-            const m2 = Math.floor(g.durationSeconds / 60);
-            const s2 = g.durationSeconds % 60;
-            durationDisplay = `${pad(m2)}:${pad(s2)}`;
-          } else if (g && typeof g.duration === "number") {
-            durationDisplay = `${pad(g.duration)}:00`;
-          }
- 
-          // Cinematic Card Style
-          const winGlow = "0 0 20px rgba(52, 199, 89, 0.15)";
-          const borderStyle = isWin1
-            ? `border-left: 3px solid #34c759;`
-            : `border-right: 3px solid #34c759;`;
-          const hasBreak1 = g.a === g.p1;
-          const hasBreak2 = g.a === g.p2;
- 
-          html += ` 
+    // Cinematic Card Style
+    const winGlow = "0 0 20px rgba(52, 199, 89, 0.15)";
+    const borderStyle = isWin1
+      ? `border-left: 3px solid #34c759;`
+      : `border-right: 3px solid #34c759;`;
+    const hasBreak1 = g.a === g.p1;
+    const hasBreak2 = g.a === g.p2;
+
+    html += `
                 <div class="card" onclick="window.openMatchDetails(${i})" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; ${borderStyle} animation: history-card-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: ${idx * 0.05}s; opacity: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5); background: var(--card); transition: all 0.3s ease; cursor:pointer;">
                     <div style="padding: 15px 14px 12px 14px; display: flex; align-items: center; justify-content: space-between; position: relative;">
                         <!-- Team 1 -->
@@ -3227,140 +3318,140 @@ window.renderHistory =       function renderHistory(statsToRender) {
                         </div>
                     </div>
                 </div>`;
-        });
+  });
 
-        container.innerHTML = html;
+  container.innerHTML = html;
+};
+
+window.activeAchListFilter = "all";
+window.achListSearchQuery = "";
+window.filterAchListSearch = (query) => {
+  window.achListSearchQuery = String(query || "")
+    .trim()
+    .toLowerCase();
+  window.renderAchList(window.activeAchListFilter || "all");
+};
+
+window.openAchListModal = () => {
+  const container = document.getElementById("achListContainer");
+  const searchInp = document.getElementById("ach-search-input");
+  if (searchInp) searchInp.value = "";
+  window.achListSearchQuery = "";
+  if (typeof window.renderAchList === "function") {
+    window.renderAchList("all");
+  }
+  const modal = document.getElementById("achListModal");
+  if (modal) modal.style.display = "flex";
+  if (container) container.scrollTop = 0;
+};
+window.closeAchListModal = () => {
+  const modal = document.getElementById("achListModal");
+  if (modal) modal.style.display = "none";
+};
+window.renderAchList = (filter) => {
+  window.activeAchListFilter = filter;
+  const c = document.getElementById("achListContainer");
+  if (c) c.scrollTop = 0;
+  const pills = document.querySelectorAll("#achListModal .filter-pill");
+  const fNames = ["all", "fame", "shame", "daily"];
+  pills.forEach((p, idx) =>
+    p.classList.toggle("active", fNames[idx] === filter),
+  );
+
+  // 1. Alle verfügbaren Karriere-Achievements sammeln (Fame + Shame + Killer)
+  let pool = [
+    ...(window.famePool || []).map((a) => ({ ...a, k: "fame" })),
+    ...(window.shamePool || []).map((a) => ({ ...a, k: "shame" })),
+    ...(window.generatedKillerAchs || []).map((a) => ({
+      ...a,
+      k: "fame",
+    })),
+  ];
+
+  // 2. Pool basierend auf Filter bestimmen
+  if (filter === "all") {
+    pool = [
+      ...pool,
+      ...(window.dailyFamePool || []).map((a) => ({
+        ...a,
+        k: "fame",
+        isDaily: true,
+      })),
+      ...(window.dailyShamePool || []).map((a) => ({
+        ...a,
+        k: "shame",
+        isDaily: true,
+      })),
+    ];
+  } else if (filter === "fame") {
+    pool = pool.filter((a) => a.k === "fame");
+  } else if (filter === "shame") {
+    pool = pool.filter((a) => a.k === "shame");
+  } else {
+    // 'daily' filter
+    pool = [
+      ...(window.dailyFamePool || []).map((a) => ({ ...a, isDaily: true })),
+      ...(window.dailyShamePool || []).map((a) => ({ ...a, isDaily: true })),
+    ];
+  }
+
+  // Live-Suche filtern
+  if (window.achListSearchQuery) {
+    const q = window.achListSearchQuery;
+    pool = pool.filter((a) => {
+      const t = (a.t || "").toLowerCase();
+      const h = (a.h || "").toLowerCase();
+      const d = Array.isArray(a.d)
+        ? a.d.join(" ").toLowerCase()
+        : (a.d || "").toLowerCase();
+      return t.includes(q) || h.includes(q) || d.includes(q);
+    });
+  }
+
+  // 3. Sortierung: Kategorie (Fame vor Shame) -> Dann alphabetisch nach Name
+  pool.sort((a, b) => {
+    if (a.k !== b.k) return a.k === "fame" ? -1 : 1;
+    return (a.t || "").localeCompare(b.t || "", "de");
+  });
+
+  // 4. HTML generieren
+  if (!c) return;
+  c.innerHTML = pool
+    .map((a, idx) => {
+      const isShame = a.k === "shame";
+      const categoryColor = isShame ? "var(--error)" : "#34c759";
+      const howColor = isShame
+        ? "rgba(255, 59, 48, 0.85)"
+        : "rgba(52, 199, 89, 0.85)";
+      const howIcon = isShame ? "💀" : "🏆";
+      const isMaxTier = a.max === true;
+      const phrase = Array.isArray(a.d) ? a.d[0] || "" : a.d || "";
+
+      let tierClass = "";
+      let tierBadge = "";
+      if (a.tier) {
+        if (a.tier <= 3) {
+          tierClass = "ach-tier-bronze";
+          tierBadge = `<span class="tier-badge-pill tier-pill-bronze">Tier ${a.tier}</span>`;
+        } else if (a.tier <= 6) {
+          tierClass = "ach-tier-silver";
+          tierBadge = `<span class="tier-badge-pill tier-pill-silver">Tier ${a.tier}</span>`;
+        } else if (a.tier <= 9) {
+          tierClass = "ach-tier-gold";
+          tierBadge = `<span class="tier-badge-pill tier-pill-gold">Tier ${a.tier}</span>`;
+        } else {
+          tierClass = "ach-tier-diamond";
+          tierBadge = `<span class="tier-badge-pill tier-pill-diamond">💎 Max</span>`;
+        }
+      } else if (isMaxTier && !isShame) {
+        tierClass = "ach-tier-diamond";
+        tierBadge = `<span class="tier-badge-pill tier-pill-diamond">💎 Max</span>`;
       }
 
-
-
-      window.activeAchListFilter = "all";
-      window.achListSearchQuery = "";
-      window.filterAchListSearch = (query) => {
-        window.achListSearchQuery = String(query || "").trim().toLowerCase();
-        window.renderAchList(window.activeAchListFilter || "all");
-      };
-
-      window.openAchListModal = () => {
-        const container = document.getElementById("achListContainer");
-        const searchInp = document.getElementById("ach-search-input");
-        if (searchInp) searchInp.value = "";
-        window.achListSearchQuery = "";
-        if (typeof window.renderAchList === "function") {
-          window.renderAchList("all");
-        }
-        const modal = document.getElementById("achListModal");
-        if (modal) modal.style.display = "flex";
-        if (container) container.scrollTop = 0;
-      };
-      window.closeAchListModal = () => {
-        const modal = document.getElementById("achListModal");
-        if (modal) modal.style.display = "none";
-      };
-      window.renderAchList = (filter) => {
-        window.activeAchListFilter = filter;
-        const c = document.getElementById("achListContainer");
-        if (c) c.scrollTop = 0;
-        const pills = document.querySelectorAll("#achListModal .filter-pill");
-        const fNames = ["all", "fame", "shame", "daily"];
-        pills.forEach((p, idx) =>
-          p.classList.toggle("active", fNames[idx] === filter),
-        );
-
-        // 1. Alle verfügbaren Karriere-Achievements sammeln (Fame + Shame + Killer)
-        let pool = [
-          ...(window.famePool || []).map((a) => ({ ...a, k: "fame" })),
-          ...(window.shamePool || []).map((a) => ({ ...a, k: "shame" })),
-          ...(window.generatedKillerAchs || []).map((a) => ({
-            ...a,
-            k: "fame",
-          })),
-        ];
-
-        // 2. Pool basierend auf Filter bestimmen
-        if (filter === "all") {
-          pool = [
-            ...pool,
-            ...(window.dailyFamePool || []).map((a) => ({
-              ...a,
-              k: "fame",
-              isDaily: true,
-            })),
-            ...(window.dailyShamePool || []).map((a) => ({
-              ...a,
-              k: "shame",
-              isDaily: true,
-            })),
-          ];
-        } else if (filter === "fame") {
-          pool = pool.filter((a) => a.k === "fame");
-        } else if (filter === "shame") {
-          pool = pool.filter((a) => a.k === "shame");
-        } else {
-          // 'daily' filter
-          pool = [
-            ...(window.dailyFamePool || []).map((a) => ({ ...a, isDaily: true })),
-            ...(window.dailyShamePool || []).map((a) => ({ ...a, isDaily: true })),
-          ];
-        }
-
-        // Live-Suche filtern
-        if (window.achListSearchQuery) {
-          const q = window.achListSearchQuery;
-          pool = pool.filter((a) => {
-            const t = (a.t || "").toLowerCase();
-            const h = (a.h || "").toLowerCase();
-            const d = Array.isArray(a.d)
-              ? a.d.join(" ").toLowerCase()
-              : (a.d || "").toLowerCase();
-            return t.includes(q) || h.includes(q) || d.includes(q);
-          });
-        }
-
-        // 3. Sortierung: Kategorie (Fame vor Shame) -> Dann alphabetisch nach Name
-        pool.sort((a, b) => {
-          if (a.k !== b.k) return a.k === "fame" ? -1 : 1;
-          return (a.t || "").localeCompare(b.t || "", "de");
-        });
-
-        // 4. HTML generieren
-        if (!c) return;
-        c.innerHTML = pool
-          .map((a, idx) => {
-            const isShame = a.k === "shame";
-            const categoryColor = isShame ? "var(--error)" : "#34c759";
-            const howColor = isShame
-              ? "rgba(255, 59, 48, 0.85)"
-              : "rgba(52, 199, 89, 0.85)";
-            const howIcon = isShame ? "💀" : "🏆";
-            const isMaxTier = a.max === true;
-            const phrase = Array.isArray(a.d) ? a.d[0] || "" : a.d || "";
-
-            let tierClass = "";
-            let tierBadge = "";
-            if (a.tier) {
-              if (a.tier <= 3) {
-                tierClass = "ach-tier-bronze";
-                tierBadge = `<span class="tier-badge-pill tier-pill-bronze">Tier ${a.tier}</span>`;
-              } else if (a.tier <= 6) {
-                tierClass = "ach-tier-silver";
-                tierBadge = `<span class="tier-badge-pill tier-pill-silver">Tier ${a.tier}</span>`;
-              } else if (a.tier <= 9) {
-                tierClass = "ach-tier-gold";
-                tierBadge = `<span class="tier-badge-pill tier-pill-gold">Tier ${a.tier}</span>`;
-              } else {
-                tierClass = "ach-tier-diamond";
-                tierBadge = `<span class="tier-badge-pill tier-pill-diamond">💎 Max</span>`;
-              }
-            } else if (isMaxTier && !isShame) {
-              tierClass = "ach-tier-diamond";
-              tierBadge = `<span class="tier-badge-pill tier-pill-diamond">💎 Max</span>`;
-            }
-
-            const borderStyle = isShame
-              ? `border-left: 3px solid ${categoryColor};`
-              : "";
-            return `
+      const borderStyle = isShame
+        ? `border-left: 3px solid ${categoryColor};`
+        : "";
+      return `
                 <div class="stat-row-item ${tierClass} ${isMaxTier && !isShame ? "achievement-glow-fame" : ""} ${isShame ? "achievement-glow-shame shame-bg" : ""}" style="${borderStyle} animation: ach-card-enter 0.3s ease-out forwards; animation-delay: ${Math.min(idx * 0.015, 0.5)}s; opacity: 0;">
                   <div class="achievement-icon">${a.i}</div>
                   <div style="flex:1; min-width:0;">
@@ -3375,9 +3466,9 @@ window.renderHistory =       function renderHistory(statsToRender) {
                     <div class="achievement-how" style="color:${howColor};">${howIcon} ${a.h || ""}</div>
                   </div>
                 </div>`;
-          })
-          .join("");
-      };
+    })
+    .join("");
+};
 
 /* ==========================================================================
    Dashboard Sub-Tabs & Interactive H2H Logic
@@ -3407,7 +3498,9 @@ window.setStatSubTab = function (tabName, btnEl) {
       if (key === tabName) {
         el.classList.add("active");
         // Sicherstellen, dass alle Karten und Elemente sichtbar sind (verhindert hängende opacity: 0)
-        el.querySelectorAll(".cinematic-entry, .card-modern, .card, [style*='opacity']").forEach((child) => {
+        el.querySelectorAll(
+          ".cinematic-entry, .card-modern, .card, [style*='opacity']",
+        ).forEach((child) => {
           child.style.opacity = "1";
           child.style.transform = "none";
           child.style.visibility = "visible";
@@ -3418,17 +3511,28 @@ window.setStatSubTab = function (tabName, btnEl) {
     }
   }
 
-  if (tabName === "duelle" && typeof window.updateInteractiveH2H === "function") {
+  if (
+    tabName === "duelle" &&
+    typeof window.updateInteractiveH2H === "function"
+  ) {
     window.updateInteractiveH2H();
   }
 
   if (tabName === "ranking") {
     const winCanvas = document.getElementById("winChart");
-    if (winCanvas && winCanvas.__myWinChart && typeof winCanvas.__myWinChart.resize === "function") {
+    if (
+      winCanvas &&
+      winCanvas.__myWinChart &&
+      typeof winCanvas.__myWinChart.resize === "function"
+    ) {
       winCanvas.__myWinChart.resize();
     }
     const eloCanvas = document.getElementById("eloHistoryChart");
-    if (eloCanvas && eloCanvas.__myEloChart && typeof eloCanvas.__myEloChart.resize === "function") {
+    if (
+      eloCanvas &&
+      eloCanvas.__myEloChart &&
+      typeof eloCanvas.__myEloChart.resize === "function"
+    ) {
       eloCanvas.__myEloChart.resize();
     }
   }
@@ -3440,9 +3544,10 @@ window.updateInteractiveH2H = function () {
   const outputEl = document.getElementById("h2h-interactive-output");
   if (!p1Sel || !p2Sel || !outputEl) return;
 
-  const spieler = (window.spieler && window.spieler.length >= 2)
-    ? window.spieler
-    : ["Daniel", "Thorsten", "Peter"];
+  const spieler =
+    window.spieler && window.spieler.length >= 2
+      ? window.spieler
+      : ["Daniel", "Thorsten", "Peter"];
 
   if (p1Sel.options.length < spieler.length) {
     const prev1 = p1Sel.value;
@@ -3478,9 +3583,17 @@ window.updateInteractiveH2H = function () {
   // Scope-bezogene Spieleliste ermitteln
   let matches = [];
   if (isSession) {
-    matches = scope.statsToday || (typeof window.getTodayStats === "function" ? window.getTodayStats() : []);
+    matches =
+      scope.statsToday ||
+      (typeof window.getTodayStats === "function"
+        ? window.getTodayStats()
+        : []);
   } else if (scope.isFiltered) {
-    matches = scope.currentStats || (typeof window.getFilteredStats === "function" ? window.getFilteredStats() : window.stats || []);
+    matches =
+      scope.currentStats ||
+      (typeof window.getFilteredStats === "function"
+        ? window.getFilteredStats()
+        : window.stats || []);
   } else {
     matches = scope.currentStats || window.stats || [];
   }
@@ -3497,7 +3610,10 @@ window.updateInteractiveH2H = function () {
       window.careerStats.pData &&
       window.careerStats.pData[p] &&
       window.careerStats.pData[p].elo) ||
-    (scope.res && scope.res.pData && scope.res.pData[p] && scope.res.pData[p].elo) ||
+    (scope.res &&
+      scope.res.pData &&
+      scope.res.pData[p] &&
+      scope.res.pData[p].elo) ||
     1200;
   const elo1 = getE(p1);
   const elo2 = getE(p2);
@@ -3526,8 +3642,8 @@ window.updateInteractiveH2H = function () {
   const duelLabel = isSession
     ? "Duelle (Heute)"
     : scope.isFiltered
-    ? "Duelle (Filter)"
-    : "Duelle (Gesamt)";
+      ? "Duelle (Filter)"
+      : "Duelle (Gesamt)";
 
   const eloLabel = isSession ? "Session-Delta" : "ELO-Fluss";
 
@@ -3574,12 +3690,17 @@ window.updateInteractiveH2H = function () {
   // Fall 3: Duelle sind im aktuellen Scope vorhanden
   let p1Wins = 0;
   let p2Wins = 0;
-  let p1VollWins = 0, p1HalbWins = 0;
-  let p2VollWins = 0, p2HalbWins = 0;
-  let p1BreakGames = 0, p1BreakWins = 0;
-  let p2BreakGames = 0, p2BreakWins = 0;
+  let p1VollWins = 0,
+    p1HalbWins = 0;
+  let p2VollWins = 0,
+    p2HalbWins = 0;
+  let p1BreakGames = 0,
+    p1BreakWins = 0;
+  let p2BreakGames = 0,
+    p2BreakWins = 0;
   let regWinsCount = 0;
-  let p1LossesRest = [], p2LossesRest = [];
+  let p1LossesRest = [],
+    p2LossesRest = [];
   let durations = [];
 
   duels.forEach((g) => {
@@ -3622,9 +3743,7 @@ window.updateInteractiveH2H = function () {
 
   // ELO Transfer
   const trans =
-    (scope.res &&
-      scope.res.aggregates &&
-      scope.res.aggregates.eloTransfers) ||
+    (scope.res && scope.res.aggregates && scope.res.aggregates.eloTransfers) ||
     (window.careerStats &&
       window.careerStats.aggregates &&
       window.careerStats.aggregates.eloTransfers) ||
@@ -3679,8 +3798,14 @@ window.updateInteractiveH2H = function () {
   }
 
   // Break Effizienz
-  const p1BreakRate = p1BreakGames > 0 ? Math.round((p1BreakWins / p1BreakGames) * 100) + "%" : "-";
-  const p2BreakRate = p2BreakGames > 0 ? Math.round((p2BreakWins / p2BreakGames) * 100) + "%" : "-";
+  const p1BreakRate =
+    p1BreakGames > 0
+      ? Math.round((p1BreakWins / p1BreakGames) * 100) + "%"
+      : "-";
+  const p2BreakRate =
+    p2BreakGames > 0
+      ? Math.round((p2BreakWins / p2BreakGames) * 100) + "%"
+      : "-";
 
   // Match Finish %
   const regPct = total > 0 ? Math.round((regWinsCount / total) * 100) : 0;
@@ -3691,7 +3816,9 @@ window.updateInteractiveH2H = function () {
   let avgDurStr = "-";
   if (durations.length > 0) {
     const minDur = Math.min(...durations);
-    const avgDur = Math.round(durations.reduce((s, v) => s + v, 0) / durations.length);
+    const avgDur = Math.round(
+      durations.reduce((s, v) => s + v, 0) / durations.length,
+    );
     const minM = Math.floor(minDur / 60);
     const minS = minDur % 60;
     fastestStr = `${String(minM).padStart(2, "0")}:${String(minS).padStart(2, "0")} Min`;
@@ -3701,8 +3828,18 @@ window.updateInteractiveH2H = function () {
   }
 
   // Zähigkeit (Ø Restkugeln bei Niederlage)
-  const p1AvgRest = p1LossesRest.length > 0 ? (p1LossesRest.reduce((s, v) => s + v, 0) / p1LossesRest.length).toFixed(1) : "-";
-  const p2AvgRest = p2LossesRest.length > 0 ? (p2LossesRest.reduce((s, v) => s + v, 0) / p2LossesRest.length).toFixed(1) : "-";
+  const p1AvgRest =
+    p1LossesRest.length > 0
+      ? (p1LossesRest.reduce((s, v) => s + v, 0) / p1LossesRest.length).toFixed(
+          1,
+        )
+      : "-";
+  const p2AvgRest =
+    p2LossesRest.length > 0
+      ? (p2LossesRest.reduce((s, v) => s + v, 0) / p2LossesRest.length).toFixed(
+          1,
+        )
+      : "-";
 
   outputEl.innerHTML = `
     <div class="h2h-battle-row">
