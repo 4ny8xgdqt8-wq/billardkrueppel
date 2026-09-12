@@ -151,16 +151,25 @@
               <div class="main-title">Billardkrüppel</div>
               <div class="sub-title" id="dynamic-greeting">Match erfassen</div>
             </div>
-            <div class="header-side right">
-              <img
-                loading="lazy"
-                src="logo.png"
-                class="logo-img"
-                style="cursor: pointer; opacity: 0.6"
+            <div class="header-side right" style="gap: 6px">
+              <button
+                type="button"
+                class="btn-header-action"
+                onclick="window.openAppInfoModal()"
+                title="App-Info & Changelog"
+                aria-label="App-Info & Changelog"
+              >
+                ℹ️
+              </button>
+              <button
+                type="button"
+                class="btn-header-action"
                 onclick="window.forceUpdate()"
-                title="Update suchen"
-                onerror="this.style.display = 'none'"
-              />
+                title="App aktualisieren"
+                aria-label="App aktualisieren"
+              >
+                🔄
+              </button>
             </div>
           </div>
           <div
@@ -553,15 +562,25 @@
                 Zeitraum filtern <span class="filter-chevron">▼</span>
               </div>
             </div>
-            <div class="header-side right">
-              <img
-                loading="lazy"
-                src="logo.png"
-                class="logo-img"
-                style="cursor: pointer; opacity: 0.6"
+            <div class="header-side right" style="gap: 6px">
+              <button
+                type="button"
+                class="btn-header-action"
+                onclick="window.openAppInfoModal()"
+                title="App-Info & Changelog"
+                aria-label="App-Info & Changelog"
+              >
+                ℹ️
+              </button>
+              <button
+                type="button"
+                class="btn-header-action"
                 onclick="window.forceUpdate()"
-                onerror="this.style.display = 'none'"
-              />
+                title="App aktualisieren"
+                aria-label="App aktualisieren"
+              >
+                🔄
+              </button>
             </div>
             <div class="filter-row">
               <button
@@ -649,15 +668,25 @@
                 Zeitraum filtern <span class="filter-chevron">▼</span>
               </div>
             </div>
-            <div class="header-side right">
-              <img
-                loading="lazy"
-                src="logo.png"
-                class="logo-img"
-                style="cursor: pointer; opacity: 0.6"
+            <div class="header-side right" style="gap: 6px">
+              <button
+                type="button"
+                class="btn-header-action"
+                onclick="window.openAppInfoModal()"
+                title="App-Info & Changelog"
+                aria-label="App-Info & Changelog"
+              >
+                ℹ️
+              </button>
+              <button
+                type="button"
+                class="btn-header-action"
                 onclick="window.forceUpdate()"
-                onerror="this.style.display = 'none'"
-              />
+                title="App aktualisieren"
+                aria-label="App aktualisieren"
+              >
+                🔄
+              </button>
             </div>
             <div class="filter-row">
               <button
@@ -1553,15 +1582,25 @@
                   Zeitraum filtern <span class="filter-chevron">▼</span>
                 </div>
               </div>
-              <div class="header-side right">
-                <img
-                  loading="lazy"
-                  src="logo.png"
-                  class="logo-img"
-                  style="cursor: pointer; opacity: 0.6"
+              <div class="header-side right" style="gap: 6px">
+                <button
+                  type="button"
+                  class="btn-header-action"
+                  onclick="window.openAppInfoModal()"
+                  title="App-Info & Changelog"
+                  aria-label="App-Info & Changelog"
+                >
+                  ℹ️
+                </button>
+                <button
+                  type="button"
+                  class="btn-header-action"
                   onclick="window.forceUpdate()"
-                  onerror="this.style.display = 'none'"
-                />
+                  title="App aktualisieren"
+                  aria-label="App aktualisieren"
+                >
+                  🔄
+                </button>
               </div>
               <div class="filter-row">
                 <button
@@ -1690,16 +1729,25 @@
               <div class="main-title">Regeln</div>
               <div class="sub-title">Handbuch & Aufbau</div>
             </div>
-            <div class="header-side right">
-              <img
-                loading="lazy"
-                src="logo.png"
-                class="logo-img"
-                style="cursor: pointer; opacity: 0.6"
+            <div class="header-side right" style="gap: 6px">
+              <button
+                type="button"
+                class="btn-header-action"
+                onclick="window.openAppInfoModal()"
+                title="App-Info & Changelog"
+                aria-label="App-Info & Changelog"
+              >
+                ℹ️
+              </button>
+              <button
+                type="button"
+                class="btn-header-action"
                 onclick="window.forceUpdate()"
-                title="Update suchen"
-                onerror="this.style.display = 'none'"
-              />
+                title="App aktualisieren"
+                aria-label="App aktualisieren"
+              >
+                🔄
+              </button>
             </div>
           </div>
           <div class="section-label">📜 Der Spielablauf</div>
@@ -3750,6 +3798,153 @@
         >
           Schließen
         </button>
+      </div>
+    </div>
+
+    <!-- App-Info & Changelog Modal -->
+    <div id="appInfoModal" class="modal" style="display: none">
+      <div class="modal-backdrop" onclick="window.closeAppInfoModal()"></div>
+      <div
+        class="modal-card"
+        style="
+          max-width: 500px;
+          width: 92%;
+          max-height: 82vh;
+          display: flex;
+          flex-direction: column;
+          padding: 20px;
+          text-align: left;
+          border-radius: 20px;
+        "
+        onclick="event.stopPropagation()"
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+          "
+        >
+          <div style="display: flex; align-items: center; gap: 10px">
+            <img
+              src="logo.png"
+              style="width: 32px; height: 32px; object-fit: contain"
+              alt="Logo"
+            />
+            <div>
+              <div style="font-weight: 900; font-size: 1.1rem; color: #ffffff">
+                Billardkrüppel
+              </div>
+              <span
+                id="app-info-version"
+                style="
+                  font-size: 0.75rem;
+                  color: var(--accent);
+                  font-weight: 700;
+                  background: rgba(255, 204, 0, 0.12);
+                  padding: 2px 8px;
+                  border-radius: 6px;
+                  border: 1px solid rgba(255, 204, 0, 0.3);
+                "
+              >
+                v19.5
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="window.closeAppInfoModal()"
+            title="Schließen"
+            style="
+              width: 30px;
+              height: 30px;
+              border-radius: 8px;
+              background: rgba(255, 255, 255, 0.08);
+              border: 1px solid rgba(255, 255, 255, 0.15);
+              color: #e2e8f0;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 1rem;
+            "
+          >
+            ✕
+          </button>
+        </div>
+
+        <div
+          id="app-info-body"
+          style="
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 6px;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            color: #d1d5db;
+          "
+        >
+          <div style="text-align: center; padding: 24px; color: #94a3b8">
+            Lade Changelog & Anleitung...
+          </div>
+        </div>
+
+        <div
+          style="
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+          "
+        >
+          <button
+            type="button"
+            onclick="
+              window.closeAppInfoModal();
+              window.forceUpdate();
+            "
+            style="
+              flex: 1;
+              padding: 10px 14px;
+              background: rgba(255, 204, 0, 0.15);
+              border: 1px solid var(--accent);
+              border-radius: 12px;
+              color: var(--accent);
+              font-weight: 700;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 6px;
+              font-size: 13px;
+              transition: all 0.2s ease;
+            "
+          >
+            🔄 App aktualisieren
+          </button>
+          <button
+            type="button"
+            onclick="window.closeAppInfoModal()"
+            style="
+              padding: 10px 18px;
+              background: rgba(255, 255, 255, 0.08);
+              border: 1px solid rgba(255, 255, 255, 0.15);
+              border-radius: 12px;
+              color: #8e8e93;
+              font-weight: 600;
+              cursor: pointer;
+              font-size: 13px;
+            "
+          >
+            Schließen
+          </button>
+        </div>
       </div>
     </div>
   </body>

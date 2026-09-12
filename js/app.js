@@ -660,7 +660,76 @@ window.updateModeVisuals = () => {
   }
 };
 
-// Geheimer Trigger: 3-fach Tap oder Long Press (>1.2s) auf Header-Titel oder rechtes Logo
+// -- 10. App-Info & Changelog Modal --
+function parseMarkdownToHtml(md) {
+  if (!md) return "";
+  let html = md
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(
+      /^### (.*$)/gim,
+      '<h4 style="color: var(--accent); font-size: 0.95rem; font-weight: 800; margin: 16px 0 6px 0;">$1</h4>',
+    )
+    .replace(
+      /^## (.*$)/gim,
+      '<h3 style="color: #ffffff; font-size: 1.05rem; font-weight: 800; margin: 20px 0 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">$1</h3>',
+    )
+    .replace(
+      /^# (.*$)/gim,
+      '<h2 style="color: var(--accent); font-size: 1.2rem; font-weight: 900; margin: 0 0 10px 0;">$1</h2>',
+    )
+    .replace(/\*\*(.*?)\*\*/gim, '<strong style="color: #ffffff;">$1</strong>')
+    .replace(/\*(.*?)\*/gim, '<span style="color: #fde047;">$1</span>')
+    .replace(
+      /^---$/gim,
+      '<hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 14px 0;">',
+    )
+    .replace(
+      /^\* (.*$)/gim,
+      '<li style="margin-bottom: 6px; margin-left: 18px; color: #cbd5e1;">$1</li>',
+    )
+    .replace(
+      /^- (.*$)/gim,
+      '<li style="margin-bottom: 6px; margin-left: 18px; color: #cbd5e1;">$1</li>',
+    )
+    .replace(
+      /`([^`]+)`/gim,
+      '<code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; color: var(--accent); font-size: 0.82rem;">$1</code>',
+    );
+
+  return html;
+}
+
+window.openAppInfoModal = async function () {
+  const modal = document.getElementById("appInfoModal");
+  const body = document.getElementById("app-info-body");
+  const verEl = document.getElementById("app-info-version");
+  if (!modal) return;
+
+  modal.style.display = "flex";
+  if (verEl) {
+    verEl.textContent = "v19.5";
+  }
+
+  if (body) {
+    try {
+      const res = await fetch("README.md?t=" + Date.now());
+      if (!res.ok) throw new Error("README.md konnte nicht geladen werden");
+      const text = await res.text();
+      body.innerHTML = parseMarkdownToHtml(text);
+    } catch (e) {
+      body.innerHTML = `<div style="color: #f87171; text-align: center; padding: 20px;">Fehler beim Laden des Changelogs: ${e.message}</div>`;
+    }
+  }
+};
+
+window.closeAppInfoModal = function () {
+  const modal = document.getElementById("appInfoModal");
+  if (modal) modal.style.display = "none";
+};
+
+// Geheimer Trigger: 3-fach Tap oder Long Press (>1.2s) auf Header-Titel oder linkes Logo
 function initSecretModeTrigger() {
   let tapCount = 0;
   let tapTimer = null;
@@ -683,29 +752,31 @@ function initSecretModeTrigger() {
     clearTimeout(pressTimer);
   };
 
-  document.querySelectorAll(".main-title, .header-side.right").forEach((el) => {
-    // 3-fach schneller Tap
-    el.addEventListener("click", () => {
-      tapCount++;
-      clearTimeout(tapTimer);
-      if (tapCount >= 3) {
-        tapCount = 0;
-        trigger();
-      } else {
-        tapTimer = setTimeout(() => {
+  document
+    .querySelectorAll(".main-title, .header-side:not(.right)")
+    .forEach((el) => {
+      // 3-fach schneller Tap
+      el.addEventListener("click", () => {
+        tapCount++;
+        clearTimeout(tapTimer);
+        if (tapCount >= 3) {
           tapCount = 0;
-        }, 500);
-      }
-    });
+          trigger();
+        } else {
+          tapTimer = setTimeout(() => {
+            tapCount = 0;
+          }, 500);
+        }
+      });
 
-    // Long Press
-    el.addEventListener("touchstart", handlePointerDown, { passive: true });
-    el.addEventListener("touchend", handlePointerUp, { passive: true });
-    el.addEventListener("touchcancel", handlePointerUp, { passive: true });
-    el.addEventListener("mousedown", handlePointerDown);
-    el.addEventListener("mouseup", handlePointerUp);
-    el.addEventListener("mouseleave", handlePointerUp);
-  });
+      // Long Press
+      el.addEventListener("touchstart", handlePointerDown, { passive: true });
+      el.addEventListener("touchend", handlePointerUp, { passive: true });
+      el.addEventListener("touchcancel", handlePointerUp, { passive: true });
+      el.addEventListener("mousedown", handlePointerDown);
+      el.addEventListener("mouseup", handlePointerUp);
+      el.addEventListener("mouseleave", handlePointerUp);
+    });
 }
 
 if (document.readyState === "loading") {

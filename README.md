@@ -6,6 +6,13 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### 📲 Schnellzugriff & App-Info (v19.5)
+
+- **Header-Schnellzugriff:** Rechts oben im App-Kopf stehen ab sofort zwei Schnellzugriffs-Buttons bereit: Ein Info-Button (`ℹ️`) und ein Aktualisierungs-Button (`🔄`).
+- **Interaktives App-Info- & Changelog-Fenster:** Über den Info-Button (`ℹ️`) können die aktuelle App-Version, Beschreibungen und alle Neuerungen direkt in einem übersichtlichen Dialogfenster nachgelesen werden.
+- **Komfortable Ein-Klick-Aktualisierung:** Mit dem Update-Button (`🔄`) lässt sich die App jederzeit mit einem einzigen Klick auf den neuesten Stand bringen.
+- **Offline-Cache (v19.5):** Aktualisierung des Offline-Speichers auf Version 19.5 für sofortige Verfügbarkeit aller neuen Funktionen auf Smartphones und PCs.
+
 ### 🛠️ Fehlerbehebungen & Stabilitäts-Update (v19.4)
 
 - **Erfolgs-Synchronisierung:** Der Bestätigungsdialog zur nachträglichen Prüfung und Synchronisierung historischer Tages-Erfolge lässt sich nun wieder reibungslos öffnen, starten und abbrechen.

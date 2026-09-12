@@ -29,11 +29,12 @@ body {
   background:
     /* Overhead Table Spotlight Beam */
     radial-gradient(
-      ellipse 80% 50% at 50% -10%,
-      rgba(255, 204, 0, 0.09) 0%,
-      rgba(52, 199, 89, 0.04) 40%,
-      transparent 75%
-    ) fixed,
+        ellipse 80% 50% at 50% -10%,
+        rgba(255, 204, 0, 0.09) 0%,
+        rgba(52, 199, 89, 0.04) 40%,
+        transparent 75%
+      )
+      fixed,
     linear-gradient(
         to bottom,
         var(--ambient-main-start) var(--ambient-gradient-start),
@@ -193,18 +194,13 @@ body {
   padding: calc(var(--safe-top) + 10px) 16px 10px 16px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 10px;
   margin-left: -16px;
   margin-right: -16px;
   margin-bottom: 15px;
   border-bottom: none;
-  mask-image: linear-gradient(
-    to bottom,
-    black 0%,
-    black 90%,
-    transparent 100%
-  );
+  mask-image: linear-gradient(to bottom, black 0%, black 90%, transparent 100%);
   -webkit-mask-image: linear-gradient(
     to bottom,
     black 0%,
@@ -225,10 +221,46 @@ body {
 .header-side {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
+  min-width: 78px;
+  flex-shrink: 0;
 }
 
 .header-side.right {
   justify-content: flex-end;
+  min-width: 78px;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.btn-header-action {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f3f4f6;
+  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.btn-header-action:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 204, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-header-action:active {
+  transform: scale(0.92);
+  background: rgba(255, 204, 0, 0.2);
 }
 
 .logo-img {
@@ -242,6 +274,8 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .main-title {
@@ -674,10 +708,16 @@ select option {
 }
 
 .player-segment-btn.active {
-  background: linear-gradient(135deg, rgba(255, 204, 0, 0.2), rgba(255, 204, 0, 0.08));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 204, 0, 0.2),
+    rgba(255, 204, 0, 0.08)
+  );
   border-color: var(--accent);
   color: #ffffff;
-  box-shadow: 0 0 15px rgba(255, 204, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 0 15px rgba(255, 204, 0, 0.25),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .player-segment-btn img {
@@ -698,7 +738,9 @@ select option {
   background: linear-gradient(145deg, #2a2a2d 0%, #171719 100%);
   border-radius: 20px;
   border: 1px solid rgba(255, 204, 0, 0.25);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.08);
   padding: 16px;
   margin-bottom: 14px;
   position: relative;
@@ -712,7 +754,11 @@ select option {
   right: -40px;
   width: 140px;
   height: 140px;
-  background: radial-gradient(circle, rgba(255, 204, 0, 0.15) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 204, 0, 0.15) 0%,
+    transparent 70%
+  );
   pointer-events: none;
 }
 
@@ -788,7 +834,7 @@ select option {
   background: rgba(255, 255, 255, 0.15);
   border-color: rgba(255, 255, 255, 0.3);
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .ach-category-pill.active-fame {
@@ -811,7 +857,11 @@ select option {
 
 /* Modern Trophäenkammer Action Bar */
 .trophy-room-banner {
-  background: linear-gradient(135deg, rgba(255, 204, 0, 0.12), rgba(0, 0, 0, 0.4));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 204, 0, 0.12),
+    rgba(0, 0, 0, 0.4)
+  );
   border: 1px solid rgba(255, 204, 0, 0.25);
   border-radius: 14px;
   padding: 10px 14px;
@@ -825,7 +875,11 @@ select option {
 
 .trophy-room-banner:hover {
   border-color: var(--accent);
-  background: linear-gradient(135deg, rgba(255, 204, 0, 0.18), rgba(0, 0, 0, 0.5));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 204, 0, 0.18),
+    rgba(0, 0, 0, 0.5)
+  );
   box-shadow: 0 4px 15px rgba(255, 204, 0, 0.15);
 }
 
@@ -843,11 +897,7 @@ select option {
 }
 
 .btn-ready {
-  background: linear-gradient(
-    135deg,
-    #34c759 0%,
-    #248a3d 100%
-  ) !important;
+  background: linear-gradient(135deg, #34c759 0%, #248a3d 100%) !important;
   box-shadow: 0 0 35px rgba(52, 199, 89, 0.7);
   animation: btn-ready-glow 1.5s infinite alternate ease-in-out;
   position: relative;
@@ -1314,7 +1364,8 @@ select option {
   align-items: center;
   justify-content: flex-end;
   position: relative;
-  animation: podium-col-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: podium-col-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+    forwards;
   opacity: 0;
 }
 
@@ -1407,21 +1458,27 @@ select option {
   height: 58px;
   border-radius: 18px;
   border: 2.5px solid #ffcc00;
-  box-shadow: 0 0 24px rgba(255, 204, 0, 0.55), 0 6px 16px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 24px rgba(255, 204, 0, 0.55),
+    0 6px 16px rgba(0, 0, 0, 0.5);
 }
 
 .podium-column.p-2 .podium-avatar-wrap img {
   width: 46px;
   height: 46px;
   border-color: #c8d0dc;
-  box-shadow: 0 0 14px rgba(200, 208, 220, 0.35), 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 0 14px rgba(200, 208, 220, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .podium-column.p-3 .podium-avatar-wrap img {
   width: 42px;
   height: 42px;
   border-color: #cd7f32;
-  box-shadow: 0 0 12px rgba(205, 127, 50, 0.35), 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 0 12px rgba(205, 127, 50, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .podium-avatar-wrap img:not(:first-child) {
@@ -1444,7 +1501,9 @@ select option {
   font-size: 14px;
   font-weight: 900;
   color: #ffcc00;
-  text-shadow: 0 0 12px rgba(255, 204, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.8);
+  text-shadow:
+    0 0 12px rgba(255, 204, 0, 0.45),
+    0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .podium-score-pill {
@@ -1473,29 +1532,48 @@ select option {
 
 .podium-pedestal.pedestal-1 {
   height: 90px;
-  background: linear-gradient(180deg, rgba(255, 204, 0, 0.26) 0%, rgba(255, 170, 0, 0.08) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 204, 0, 0.26) 0%,
+    rgba(255, 170, 0, 0.08) 100%
+  );
   border: 1px solid rgba(255, 204, 0, 0.4);
   border-top: 3px solid #ffcc00;
   border-radius: 14px 14px 4px 4px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 0 25px rgba(255, 204, 0, 0.2);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3),
+    0 0 25px rgba(255, 204, 0, 0.2);
 }
 
 .podium-pedestal.pedestal-2 {
   height: 64px;
-  background: linear-gradient(180deg, rgba(220, 228, 240, 0.20) 0%, rgba(180, 192, 208, 0.05) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(220, 228, 240, 0.2) 0%,
+    rgba(180, 192, 208, 0.05) 100%
+  );
   border: 1px solid rgba(200, 212, 228, 0.35);
   border-top: 3px solid #d4dce8;
   border-radius: 12px 12px 4px 4px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .podium-pedestal.pedestal-3 {
   height: 46px;
-  background: linear-gradient(180deg, rgba(205, 127, 50, 0.20) 0%, rgba(160, 90, 30, 0.05) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(205, 127, 50, 0.2) 0%,
+    rgba(160, 90, 30, 0.05) 100%
+  );
   border: 1px solid rgba(205, 127, 50, 0.35);
   border-top: 3px solid #cd7f32;
   border-radius: 12px 12px 4px 4px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
 .pedestal-num {
@@ -1673,10 +1751,16 @@ select option {
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   padding: 12px;
-  background: radial-gradient(circle at 50% 30%, rgba(15, 40, 25, 0.7) 0%, rgba(5, 15, 10, 0.9) 100%);
+  background: radial-gradient(
+    circle at 50% 30%,
+    rgba(15, 40, 25, 0.7) 0%,
+    rgba(5, 15, 10, 0.9) 100%
+  );
   border: 1px solid rgba(52, 199, 89, 0.25);
   border-radius: 18px;
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6), 0 8px 20px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 2px 10px rgba(0, 0, 0, 0.6),
+    0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 .rack-ball {
@@ -1699,9 +1783,15 @@ select option {
 }
 
 .rack-ball.selected {
-  background: linear-gradient(135deg, rgba(255, 204, 0, 0.25) 0%, rgba(255, 149, 0, 0.15) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 204, 0, 0.25) 0%,
+    rgba(255, 149, 0, 0.15) 100%
+  );
   border: 1.5px solid var(--accent);
-  box-shadow: 0 0 16px rgba(255, 204, 0, 0.35), inset 0 0 8px rgba(255, 204, 0, 0.2);
+  box-shadow:
+    0 0 16px rgba(255, 204, 0, 0.35),
+    inset 0 0 8px rgba(255, 204, 0, 0.2);
   transform: translateY(-2px) scale(1.04);
 }
 
@@ -1714,19 +1804,30 @@ select option {
   justify-content: center;
   font-size: 11px;
   font-weight: 900;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset -2px -2px 5px rgba(0, 0, 0, 0.5), inset 2px 2px 5px rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.4),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.5),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.6);
   transition: transform 0.25s ease;
 }
 
 .rack-ball.selected .rack-ball-sphere {
   transform: scale(1.15);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6), inset -2px -2px 4px rgba(0, 0, 0, 0.4), inset 2px 2px 6px rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.6),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.4),
+    inset 2px 2px 6px rgba(255, 255, 255, 0.9);
 }
 
 /* --- 3. Versus Arena Face-Off Card --- */
 .vs-arena-card {
   position: relative;
-  background: linear-gradient(135deg, rgba(255, 204, 0, 0.08) 0%, rgba(20, 20, 24, 0.85) 50%, rgba(79, 195, 247, 0.08) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 204, 0, 0.08) 0%,
+    rgba(20, 20, 24, 0.85) 50%,
+    rgba(79, 195, 247, 0.08) 100%
+  );
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
   padding: 16px;
@@ -1756,7 +1857,9 @@ select option {
   font-weight: 900;
   font-size: 13px;
   letter-spacing: 0.5px;
-  box-shadow: 0 0 20px rgba(255, 204, 0, 0.5), 0 0 6px rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 0 20px rgba(255, 204, 0, 0.5),
+    0 0 6px rgba(255, 255, 255, 0.8);
   animation: pulse-gold 2.5s infinite alternate ease-in-out;
 }
 
@@ -1799,7 +1902,11 @@ select option {
 }
 
 .quick-filter-pill.active {
-  background: linear-gradient(135deg, rgba(255, 204, 0, 0.22) 0%, rgba(255, 149, 0, 0.15) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 204, 0, 0.22) 0%,
+    rgba(255, 149, 0, 0.15) 100%
+  );
   border-color: var(--accent);
   color: #ffffff;
   box-shadow: 0 0 12px rgba(255, 204, 0, 0.3);
@@ -1848,10 +1955,16 @@ select option {
 }
 
 .stat-subtab-btn.active {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.06) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .stat-subtab-btn.active .subtab-icon {
@@ -1875,7 +1988,11 @@ select option {
 
 /* 3. Interactive Head-to-Head Arena Card */
 .h2h-interactive-card {
-  background: linear-gradient(135deg, rgba(28, 28, 35, 0.95) 0%, rgba(18, 18, 22, 0.95) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(28, 28, 35, 0.95) 0%,
+    rgba(18, 18, 22, 0.95) 100%
+  );
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
   padding: 16px;
@@ -1905,7 +2022,9 @@ select option {
 
 .h2h-select {
   flex: 1;
-  background: rgba(255, 255, 255, 0.08) url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23ffcc00%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E") no-repeat right 12px center;
+  background: rgba(255, 255, 255, 0.08)
+    url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23ffcc00%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")
+    no-repeat right 12px center;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
@@ -2155,7 +2274,11 @@ select option {
 
 .record-card {
   position: relative;
-  background: linear-gradient(145deg, rgba(30, 30, 36, 0.9) 0%, rgba(20, 20, 24, 0.9) 100%);
+  background: linear-gradient(
+    145deg,
+    rgba(30, 30, 36, 0.9) 0%,
+    rgba(20, 20, 24, 0.9) 100%
+  );
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   padding: 12px 10px;
@@ -2164,7 +2287,9 @@ select option {
   justify-content: space-between;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   overflow: hidden;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .record-card:hover {
@@ -2174,45 +2299,65 @@ select option {
 
 .record-card.rec-gold {
   border-color: rgba(255, 204, 0, 0.35);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 204, 0, 0.2);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 204, 0, 0.2);
 }
 .record-card.rec-gold::before {
   content: "";
   position: absolute;
-  top: 0; left: 0; right: 0; height: 2px;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
   background: linear-gradient(90deg, transparent, #ffcc00, transparent);
 }
 
 .record-card.rec-cyan {
   border-color: rgba(79, 195, 247, 0.35);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(79, 195, 247, 0.2);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(79, 195, 247, 0.2);
 }
 .record-card.rec-cyan::before {
   content: "";
   position: absolute;
-  top: 0; left: 0; right: 0; height: 2px;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
   background: linear-gradient(90deg, transparent, #4fc3f7, transparent);
 }
 
 .record-card.rec-orange {
   border-color: rgba(255, 149, 0, 0.35);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 149, 0, 0.2);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 149, 0, 0.2);
 }
 .record-card.rec-orange::before {
   content: "";
   position: absolute;
-  top: 0; left: 0; right: 0; height: 2px;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
   background: linear-gradient(90deg, transparent, #ff9500, transparent);
 }
 
 .record-card.rec-green {
   border-color: rgba(52, 199, 89, 0.35);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(52, 199, 89, 0.2);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(52, 199, 89, 0.2);
 }
 .record-card.rec-green::before {
   content: "";
   position: absolute;
-  top: 0; left: 0; right: 0; height: 2px;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
   background: linear-gradient(90deg, transparent, #34c759, transparent);
 }
 
@@ -2300,6 +2445,3 @@ select option {
   color: var(--accent);
   margin-left: 2px;
 }
-
-
-
