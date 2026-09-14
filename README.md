@@ -6,6 +6,62 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### 🏛️ VIP Trophäenkammer & sauberes App-Logo (v22.8)
+
+- **VIP Trophäenkammer im neuen Look:** Das Nachschlagewerk aller Trophäen und Meilensteine erstrahlt im edlen Glassmorphism-Design (`.ach-vip-card`) – vollständig abgestimmt auf die Session- und Spieler-Erfolge:
+  - **Edle Trophäen-Karten:** Farbkodierte Karten für Diamant (Meister), Gold, Silber, Bronze, Schande und Tageserfolge mit Freischaltbedingung, Zitat und Status-Tags.
+  - **Erweiterte Schnellfilter:** Filterung nach `Alle`, `🏆 Ruhm`, `💀 Schande`, `💎 Meister` und `👑 Daily`.
+  - **Live-Suchleiste & Zähler:** Dynamische Anzeige der Treffer (z. B. _„🏛️ 86 Trophäen im Kompendium“_ oder _„🔍 12 Treffer“_) mit schnellem Lösch-Button (`✕`).
+  - **Schnell-Schließen:** Komfortabler Schließen-Button (`✕`) direkt im oberen Header des Modals.
+- **Bereinigtes App-Logo:** Das Logo in den Ansichts-Headern ist nun ein rein statisches Markenelement mit voller Leuchtkraft. Die redundante Klickfunktion zum Suchen von Updates wurde entfernt; für Updates steht der dedizierte Header-Button (`🔄`) bereit.
+- **Offline-Cache (v22.8):** Aktualisierung des Offline-Speichers auf Version 22.8 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 💎 Intelligente Status- & Fortschrittsanzeige für alle Trophäen (v22.7)
+
+- **Aussagekräftige Trophäen-Fußzeilen:** Die unpassende und verwirrende Sammelraten-Anzeige wurde komplett ersetzt. Jede Trophäe zeigt nun ihren echten, konkreten Status:
+  - **💎 Meister-Status:** Vollendete Max-Tier-Erfolge werden mit `💎 Meister-Status vollendet` und dem Siegel `PERFEKTION` gewürdigt.
+  - **🥇 Stufen-Fortschritt:** Mehrstufige Trophäen weisen die aktuelle Stufe im Verhältnis zum Maximum aus (z. B. `Stufe 8 von 10 erreicht`).
+  - **🔥 Serien-Historie:** Dynamische Serien zeigen, wie oft die Serie gelang und wann sie abriss (z. B. `🔥 3× erreicht · ⚡ 2× gerissen`).
+  - **⚠️ Schand-Erfolge:** Klare Kennzeichnung des Schandflecks in der Spielerkarriere.
+  - **🏆 Dauerhafte Meilensteine:** Kennzeichnung als dauerhaft in der Karriere freigeschaltet.
+- **Offline-Cache (v22.7):** Aktualisierung des Offline-Speichers auf Version 22.7 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 🎯 Bereinigte Tageserfolge & präzise Trennung von Langzeit-Trophäen (v22.6)
+
+- **Reine Tagesauszeichnungen:** In der Rubrik „Bisherige Tageserfolge“ und beim Filter „📅 Tageserfolge“ werden ab sofort ausschließlich echte Tagesauszeichnungen (wie _Tageskönig_, _Tagesserie_, _Eiswasser-Venen_, _Abräumer_ etc.) aufgeführt.
+- **Saubere Trennung von Tier- & Karriereerfolgen:** Langzeit- und Lebenswerkerfolge mit Stufen (Tier 1–10) verbleiben exklusiv in der Karriere-Trophäenliste und vermischen sich nicht mehr mit den Tages-Historien.
+- **Präziser Daily-Zähler:** Die Auszeichnung `👑 Daily` im Spielerprofil zeigt nun exakt die tatsächlich an einzelnen Abenden errungenen Tagestitel.
+- **Offline-Cache (v22.6):** Aktualisierung des Offline-Speichers auf Version 22.6 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 📐 Kompakter Session-Header & optimierte Profilbilder (v22.5)
+
+- **Kompaktes Spieler-Profil im Session-Tab:** Das Profilbild des Spielers in den Session-Erfolgen wurde auf eine harmonische, handliche Größe skaliert, sodass der Header nun schlank und platzsparend abschließt.
+- **Strafferes Layout:** Die Abstände und Polsterungen rund um die Session-Erfolge wurden optimiert, damit mehr Trophäen und Matches ohne langes Scrollen direkt im Blickfeld liegen.
+- **Offline-Cache (v22.5):** Aktualisierung des Offline-Speichers auf Version 22.5 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 🌟 Großes Redesign der Erfolge-Seite & Hall of Fame (v22.4)
+
+- **VIP Showcase & Hall of Fame:** Die Erfolge-Seite präsentiert sich im neuen VIP-Look mit goldenen Akzenten, Glassmorphism und dynamischen Animationen.
+- **Hero-Profil & Fortschritt:** Großzügiges Spielerprofil mit Level-Icon (z. B. `👑 RANG 18 • BILLARD-GOTT`), Wins-Chip, animiertem Fortschrittsbalken und nächster Rang-Vorschau.
+- **4-Kachel KPI-Dashboard:** Sofortiger Überblick über 🏆 Gesamt-Erfolge, 💎 Meister (Max-Tier), 💀 Schandflecke und 👑 Daily MVP Siege.
+- **Farbkodierte Trophäen-Karten:**
+  - **💎 Meister (Max-Tier):** Leuchtendes Diamantblau mit `💎 MAX`-Badge für vollendete Lebenswerk-Erfolge.
+  - **🥇 / 🥈 / 🥉 Stufen-Trophäen:** Gold-, Silber- und Bronze-Kennzeichnung für die jeweiligen Trophäen-Ränge.
+  - **💀 Schande:** Düsterer Obsidian-Look mit blutrotem Leuchten und `💀 SCHANDE`-Kennzeichnung.
+  - **👑 Bisherige Tageserfolge:** Zähler-Badges für gesammelte Tageserfolge (z. B. `5×`).
+- **Schnellfilter-Leiste:** Schnelles Umschalten zwischen allen Erfolgen, Ruhm, Meister, Schande und Tageserfolgen mit Zähleranzeige.
+- **Offline-Cache (v22.4):** Aktualisierung des Offline-Speichers auf Version 22.4 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 🏆 Großes Redesign der Session-Erfolge & Trophäen (v22.3)
+
+- **Cinematic Trophy Cards:** Die Session-Erfolge erstrahlen in einem komplett überarbeiteten Look mit individuellen Spieler-Boxen, dynamischen Zählern und aufklappbaren Akkordeon-Karten.
+- **Klare Typen-Differenzierung & Farbkodierung:**
+  - **Tages-Ruhm (Fame):** Smaragdgrüner Leuchtrahmen, dezente Tönung und grüne `+1 Pkt`-Pille für die MVP-Wertung.
+  - **Tages-Schande (Shame):** Kräftiger roter Akzent, warnender Hintergrund und unmissverständliche `Schande`-Markierung.
+  - **Karriere-Meilensteine (Milestone):** Leuchtendes Gold mit glänzendem Rahmen, goldenem `✨ NEU`-Badge und `+2 Pkt`-Wertung für frisch freigeschaltete Lebenswerk-Erfolge.
+- **Zusammenfassende Spieler-Karten:** Jeder Spieler hat eine kompakte Kopfzeile mit Avatar, Spieltags-Statistiken (z. B. `4 Spiele • 3 Siege`) und einer Übersicht der gesammelten Auszeichnungen (z. B. `🏆 2 Erfolge · 1 Meilenstein`).
+- **Offline-Cache (v22.3):** Aktualisierung des Offline-Speichers auf Version 22.3 für sofortige Verfügbarkeit auf allen Geräten.
+
 ### 🟢 Restkugel-Auswahl über volle Breite (v22.2)
 
 - **Horizontale Kugel-Reihe im Bearbeiten-Modal:** Beim Bearbeiten und Erfassen von Matches erstreckt sich das grüne Billardtuch mit den 3D-Kugeln (0 bis 7) nun wieder über die gesamte Fensterbreite, anstatt schmal gestaucht zu sein.

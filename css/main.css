@@ -3297,3 +3297,714 @@ select option {
   padding: 2px 7px;
   border-radius: 6px;
 }
+
+/* --- Cinematic Session-Erfolge (Konzept 1: Hall of Records Trophy Cards) --- */
+.session-player-box {
+  background: linear-gradient(
+    145deg,
+    rgba(26, 31, 46, 0.95) 0%,
+    rgba(15, 19, 30, 0.95) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.session-player-header {
+  padding: 7px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.session-player-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.session-player-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.session-player-avatar.gold {
+  border-color: #ffd60a;
+  box-shadow: 0 0 8px rgba(255, 214, 10, 0.35);
+}
+
+.session-player-name {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.2px;
+  line-height: 1.15;
+}
+
+.session-player-sub {
+  font-size: 0.64rem;
+  color: #8e8e93;
+  margin-top: 1px;
+}
+
+.session-badge-count {
+  font-size: 0.65rem;
+  font-weight: 800;
+  background: rgba(255, 204, 0, 0.15);
+  color: #ffd60a;
+  border: 1px solid rgba(255, 204, 0, 0.35);
+  padding: 2px 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.session-badge-count.shame-only {
+  background: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+  border-color: rgba(255, 69, 58, 0.35);
+}
+
+.session-badge-count.empty {
+  background: rgba(255, 255, 255, 0.05);
+  color: #8e8e93;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.session-card-list {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.session-ach-card {
+  position: relative;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.session-ach-card.fame {
+  border-left: 4px solid #30d158;
+  background: linear-gradient(
+    90deg,
+    rgba(48, 209, 88, 0.08) 0%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+}
+
+.session-ach-card.shame {
+  border-left: 4px solid #ff453a;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 69, 58, 0.08) 0%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+}
+
+.session-ach-card.milestone {
+  border-left: 4px solid #ffd60a;
+  border-top: 1px solid rgba(255, 204, 0, 0.25);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 204, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+}
+
+.session-ach-icon {
+  font-size: 26px;
+  min-width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.session-ach-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-ach-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-ach-title {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-pill-new {
+  font-size: 0.62rem;
+  font-weight: 900;
+  background: #ffd60a;
+  color: #000;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  animation: badge-pulse 1.5s infinite ease-in-out;
+}
+
+.session-pill-pts {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #30d158;
+  background: rgba(48, 209, 88, 0.15);
+  border: 1px solid rgba(48, 209, 88, 0.3);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.session-pill-shame {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #ff453a;
+  background: rgba(255, 69, 58, 0.15);
+  border: 1px solid rgba(255, 69, 58, 0.3);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.session-ach-phrase {
+  font-size: 0.72rem;
+  color: #acacb0;
+  font-style: italic;
+  margin: 2px 0 4px 0;
+  line-height: 1.35;
+}
+
+.session-ach-desc {
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.session-ach-desc.fame {
+  color: #34c759;
+}
+
+.session-ach-desc.shame {
+  color: #ff453a;
+}
+
+.session-ach-desc.milestone {
+  color: #ffd60a;
+}
+
+/* ========================================================
+   VIP SHOWCASE & HALL OF FAME (ERFOLGE REDESIGN v22.4)
+   ======================================================== */
+
+.ach-vip-hero {
+  background: linear-gradient(145deg, #182033 0%, #101524 100%);
+  border: 1px solid rgba(255, 214, 10, 0.35);
+  border-radius: 20px;
+  padding: 18px 16px;
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ach-vip-hero::after {
+  content: "";
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 214, 10, 0.12) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.ach-vip-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.ach-vip-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ach-vip-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ach-vip-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  border: 2px solid #ffd60a;
+  box-shadow: 0 0 20px rgba(255, 214, 10, 0.35);
+  object-fit: cover;
+}
+
+.ach-vip-lvl-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 1.15rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+}
+
+.ach-vip-name {
+  font-size: 1.22rem;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  color: #fff;
+  line-height: 1.15;
+}
+
+.ach-vip-rank {
+  font-size: 0.74rem;
+  color: #ffd60a;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+.ach-vip-wins {
+  background: rgba(255, 214, 10, 0.15);
+  border: 1px solid rgba(255, 214, 10, 0.3);
+  color: #ffd60a;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-weight: 900;
+  font-size: 0.95rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.ach-vip-wins small {
+  display: block;
+  font-size: 0.65rem;
+  opacity: 0.7;
+}
+
+.ach-vip-progress-wrap {
+  margin-bottom: 14px;
+}
+
+.ach-vip-progress-bar {
+  height: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ach-vip-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff9500, #ffd60a);
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(255, 214, 10, 0.5);
+  position: relative;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ach-vip-progress-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: progress-shimmer 2s infinite;
+}
+
+.ach-vip-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  color: #94a3b8;
+}
+
+.ach-vip-progress-meta b {
+  color: #ffd60a;
+}
+
+.ach-vip-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 440px) {
+  .ach-vip-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.ach-vip-kpi-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 8px 6px;
+  text-align: center;
+}
+
+.ach-vip-kpi-num {
+  font-size: 1.15rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.ach-vip-kpi-lbl {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* Filter Pills */
+.ach-vip-filter-pills {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.ach-vip-filter-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.ach-vip-pill {
+  background: #141b2a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 6px 13px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #94a3b8;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.ach-vip-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.ach-vip-pill.active {
+  background: #1f2b45;
+  border-color: #ffd60a;
+  color: #ffd60a;
+  box-shadow: 0 0 12px rgba(255, 214, 10, 0.25);
+}
+
+.ach-vip-pill.active-diamond {
+  background: rgba(100, 210, 255, 0.15);
+  border-color: rgba(100, 210, 255, 0.4);
+  color: #64d2ff;
+  box-shadow: 0 0 12px rgba(100, 210, 255, 0.25);
+}
+
+.ach-vip-pill.active-fame {
+  background: rgba(48, 209, 88, 0.15);
+  border-color: rgba(48, 209, 88, 0.4);
+  color: #30d158;
+}
+
+.ach-vip-pill.active-shame {
+  background: rgba(255, 69, 58, 0.15);
+  border-color: rgba(255, 69, 58, 0.4);
+  color: #ff453a;
+}
+
+.ach-vip-pill.active-daily {
+  background: rgba(255, 214, 10, 0.15);
+  border-color: rgba(255, 214, 10, 0.4);
+  color: #ffd60a;
+}
+
+/* Trophy Cards List */
+.ach-vip-trophy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.ach-vip-card {
+  display: flex;
+  gap: 14px;
+  background: #121826;
+  border-radius: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.ach-vip-card:hover {
+  transform: translateY(-1px);
+}
+
+.ach-vip-card.diamond {
+  border-color: rgba(100, 210, 255, 0.45);
+  background: linear-gradient(135deg, rgba(100, 210, 255, 0.1) 0%, #121826 60%);
+  box-shadow: 0 0 20px rgba(100, 210, 255, 0.12);
+}
+
+.ach-vip-card.gold {
+  border-color: rgba(255, 214, 10, 0.45);
+  background: linear-gradient(135deg, rgba(255, 214, 10, 0.08) 0%, #121826 60%);
+}
+
+.ach-vip-card.silver {
+  border-color: rgba(200, 200, 210, 0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(200, 200, 210, 0.05) 0%,
+    #121826 60%
+  );
+}
+
+.ach-vip-card.bronze {
+  border-color: rgba(205, 127, 50, 0.35);
+  background: linear-gradient(135deg, rgba(205, 127, 50, 0.05) 0%, #121826 60%);
+}
+
+.ach-vip-card.fame {
+  border-color: rgba(48, 209, 88, 0.35);
+  background: linear-gradient(135deg, rgba(48, 209, 88, 0.06) 0%, #121826 60%);
+}
+
+.ach-vip-card.shame {
+  border-color: rgba(255, 69, 58, 0.35);
+  background: linear-gradient(135deg, rgba(255, 69, 58, 0.08) 0%, #121826 60%);
+}
+
+.ach-vip-icon-box {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ach-vip-card.diamond .ach-vip-icon-box {
+  background: rgba(100, 210, 255, 0.15);
+  border-color: rgba(100, 210, 255, 0.4);
+}
+
+.ach-vip-card.gold .ach-vip-icon-box {
+  background: rgba(255, 214, 10, 0.15);
+  border-color: rgba(255, 214, 10, 0.4);
+}
+
+.ach-vip-card.shame .ach-vip-icon-box {
+  background: rgba(255, 69, 58, 0.15);
+  border-color: rgba(255, 69, 58, 0.4);
+}
+
+.ach-vip-card.fame .ach-vip-icon-box {
+  background: rgba(48, 209, 88, 0.15);
+  border-color: rgba(48, 209, 88, 0.4);
+}
+
+.ach-vip-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ach-vip-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.ach-vip-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ach-vip-badge {
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.ach-vip-badge.diamond {
+  background: rgba(100, 210, 255, 0.2);
+  color: #64d2ff;
+  border: 1px solid rgba(100, 210, 255, 0.4);
+  text-shadow: 0 0 8px rgba(100, 210, 255, 0.5);
+}
+
+.ach-vip-badge.gold {
+  background: rgba(255, 214, 10, 0.2);
+  color: #ffd60a;
+  border: 1px solid rgba(255, 214, 10, 0.4);
+}
+
+.ach-vip-badge.silver {
+  background: rgba(200, 200, 205, 0.2);
+  color: #d1d1d6;
+  border: 1px solid rgba(200, 200, 205, 0.4);
+}
+
+.ach-vip-badge.bronze {
+  background: rgba(205, 127, 50, 0.2);
+  color: #cd7f32;
+  border: 1px solid rgba(205, 127, 50, 0.4);
+}
+
+.ach-vip-badge.shame {
+  background: rgba(255, 69, 58, 0.2);
+  color: #ff453a;
+  border: 1px solid rgba(255, 69, 58, 0.4);
+}
+
+.ach-vip-badge.daily {
+  background: rgba(255, 214, 10, 0.15);
+  color: #ffd60a;
+  border: 1px solid rgba(255, 214, 10, 0.3);
+}
+
+.ach-vip-quote {
+  font-size: 0.78rem;
+  color: #acacb0;
+  font-style: italic;
+  margin-bottom: 4px;
+  line-height: 1.35;
+}
+
+.ach-vip-card.diamond .ach-vip-quote {
+  color: #64d2ff;
+}
+
+.ach-vip-card.gold .ach-vip-quote {
+  color: #ffd60a;
+}
+
+.ach-vip-card.fame .ach-vip-quote {
+  color: #30d158;
+}
+
+.ach-vip-card.shame .ach-vip-quote {
+  color: #ff453a;
+}
+
+.ach-vip-how {
+  font-size: 0.73rem;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.ach-vip-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.7rem;
+}
+
+.ach-vip-rate-tag {
+  color: #8e8e93;
+  font-weight: 600;
+}
+
+.ach-vip-rate-tag b.up {
+  color: #30d158;
+}
+
+.ach-vip-rate-tag b.down {
+  color: #ff453a;
+}
+
+/* "Alle Spieler" VIP Box */
+.ach-vip-all-box {
+  background: #121826;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.2s ease;
+}
+
+.ach-vip-all-box:hover {
+  border-color: rgba(255, 214, 10, 0.3);
+}
+
+.ach-vip-all-header {
+  padding: 16px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}

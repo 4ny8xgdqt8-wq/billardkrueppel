@@ -457,12 +457,19 @@ window.renderBillardStats = function (
       window.dailyAchivs && window.dailyAchivs.days
         ? window.dailyAchivs.days
         : {};
+    const validDailyTitles = new Set(
+      [...(window.dailyFamePool || []), ...(window.dailyShamePool || [])].map(
+        (x) => x.t,
+      ),
+    );
     for (const dayKey in days) {
       const dayRec = days[dayKey] || {};
       const arr = dayRec[playerName] || [];
       if (Array.isArray(arr)) {
         arr.forEach((t) => {
-          counts[t] = (counts[t] || 0) + 1;
+          if (validDailyTitles.has(t)) {
+            counts[t] = (counts[t] || 0) + 1;
+          }
         });
       }
     }
@@ -475,11 +482,18 @@ window.renderBillardStats = function (
         ? window.dailyAchivs.days
         : {};
     let daysWithAch = 0;
+    const validDailyTitles = new Set(
+      [...(window.dailyFamePool || []), ...(window.dailyShamePool || [])].map(
+        (x) => x.t,
+      ),
+    );
 
     for (const dayKey in days) {
       const dayRec = days[dayKey] || {}; // Correctly access day record
       const arr = dayRec[playerName] || [];
-      if (Array.isArray(arr) && arr.length > 0) daysWithAch++;
+      if (Array.isArray(arr) && arr.some((t) => validDailyTitles.has(t))) {
+        daysWithAch++;
+      }
     }
 
     return { daysWithAch };
@@ -535,7 +549,7 @@ window.renderBillardStats = function (
       proc.pData &&
       Object.keys(proc.pData).some((p) => proc.pData[p].todayGames > 0)
     ) {
-      achHtml += `<div class="section-label" style="margin-top: 40px;">🕒 Session Erfolge</div>`;
+      achHtml += `<div class="section-label" style="margin-top: 14px; margin-bottom: 8px; font-size: 0.82rem;">🕒 Session Erfolge & Meilensteine</div>`;
     }
 
     const labels = Object.keys(proc.pData).sort();
@@ -773,100 +787,143 @@ window.renderBillardStats = function (
       const totalAchCount = currentAchs.length;
       const totalCombinedCount = currentAchs.length + dailyEntries.length;
 
+      // Vorab-Ermittlung der Höchststufe pro Track-Gruppe
+      const trackMaxTiers = {};
+      [...window.famePool, ...window.shamePool].forEach((ach) => {
+        if (ach.g && ach.tier) {
+          trackMaxTiers[ach.g] = Math.max(trackMaxTiers[ach.g] || 0, ach.tier);
+        }
+      });
+
       // Achievement-HTML bauen
       const createAchRow2 = (item, name, aIdx) => {
-        const phraseIndex = getFixedIndex(name + item.t, item.d.length);
-        const phrase = item.d[phraseIndex] || "";
+        const phraseIndex = getFixedIndex(
+          name + item.t,
+          item.d ? item.d.length : 1,
+        );
+        const phrase = item.d ? item.d[phraseIndex] || "" : "";
         const isShame = item.k === "shame";
-        const howIcon = isShame ? "💀" : "🏆";
-        const isMaxTier = item.max === true;
+        const isMaxTier = item.max === true || (item.tier && item.tier >= 10);
+        let howIcon = isShame ? "💀" : "🏆";
         const newBadge = item.isNew
-          ? `<span style="background:var(--accent); color:#000; font-size:8px; font-weight:900; padding:2px 5px; border-radius:4px; margin-left:8px; vertical-align:middle; animation: badge-pulse 1.5s infinite ease-in-out;">NEU</span>`
+          ? `<span class="session-pill-new" style="margin-left:6px;">NEU</span>`
           : "";
         const achKey = item.g ? `${item.g}_${item.tier}` : item.t;
         const tracker = d.achTracker
           ? d.achTracker[achKey] || d.achTracker[item.t]
           : null;
-        const trackerHtml =
-          tracker && (tracker.earned > 0 || tracker.lost > 0)
-            ? `<div style="font-size:9px; color:#8e8e93; margin-top:3px; font-weight:600;">Sammelrate: <span style="color:#34c759;">📈 ${tracker.earned}</span> | <span style="color:#ff3b30;">📉 ${tracker.lost}</span></div>`
-            : "";
 
-        // Holographische Trophäen-Stufen (kompakt)
-        let tierClass = "";
-        let tierBadge = "";
-        if (item.tier) {
-          if (item.tier <= 3) {
-            tierClass = "ach-tier-bronze";
-            tierBadge = `<span class="tier-badge-pill tier-pill-bronze">Tier ${item.tier}</span>`;
-          } else if (item.tier <= 6) {
-            tierClass = "ach-tier-silver";
-            tierBadge = `<span class="tier-badge-pill tier-pill-silver">Tier ${item.tier}</span>`;
-          } else if (item.tier <= 9) {
-            tierClass = "ach-tier-gold";
-            tierBadge = `<span class="tier-badge-pill tier-pill-gold">Tier ${item.tier}</span>`;
-          } else {
-            tierClass = "ach-tier-diamond";
-            tierBadge = `<span class="tier-badge-pill tier-pill-diamond">💎 Max</span>`;
-          }
-        } else if (isMaxTier && !isShame) {
-          tierClass = "ach-tier-diamond";
-          tierBadge = `<span class="tier-badge-pill tier-pill-diamond">💎 Max</span>`;
+        let footerHtml = "";
+        if (isMaxTier && !isShame) {
+          footerHtml = `
+            <div class="ach-vip-footer">
+              <span class="ach-vip-rate-tag" style="color:#64d2ff; font-weight:700;">💎 Meister-Status vollendet</span>
+              <span style="color:#64d2ff; font-weight:800; font-size:0.68rem;">PERFEKTION</span>
+            </div>`;
+        } else if (item.g && item.tier) {
+          const maxTier = trackMaxTiers[item.g] || item.tier;
+          footerHtml = `
+            <div class="ach-vip-footer">
+              <span class="ach-vip-rate-tag">Stufe <b style="color:#ffd60a;">${item.tier} von ${maxTier}</b> erreicht</span>
+              <span style="color:#ffd60a; font-weight:800; font-size:0.68rem;">AKTIV</span>
+            </div>`;
+        } else if (tracker && tracker.lost > 0) {
+          footerHtml = `
+            <div class="ach-vip-footer">
+              <span class="ach-vip-rate-tag">Historie: <b class="up">🔥 ${tracker.earned}× erreicht</b> · <b class="down">⚡ ${tracker.lost}× gerissen</b></span>
+              <span style="color:#ff9500; font-weight:800; font-size:0.68rem;">SERIE</span>
+            </div>`;
+        } else if (isShame) {
+          const shameText =
+            tracker && tracker.earned > 1
+              ? `${tracker.earned}× in Karriere vorgefallen`
+              : "Schandfleck in Karriere registriert";
+          footerHtml = `
+            <div class="ach-vip-footer">
+              <span class="ach-vip-rate-tag" style="color:#ff453a;">⚠️ ${shameText}</span>
+              <span style="color:#ff453a; font-weight:800; font-size:0.68rem;">SCHANDE</span>
+            </div>`;
+        } else {
+          footerHtml = `
+            <div class="ach-vip-footer">
+              <span class="ach-vip-rate-tag" style="color:#30d158;">🏆 Dauerhaft in Karriere freigeschaltet</span>
+              <span style="color:#30d158; font-weight:800; font-size:0.68rem;">FREIGESCHALTET</span>
+            </div>`;
         }
 
-        const borderCol = isShame ? "var(--error)" : "#34c759";
-        const textCol = isShame
-          ? "rgba(255, 59, 48, 0.85)"
-          : "rgba(52, 199, 89, 0.85)";
+        let cardClass = "fame";
+        let tierBadge = "";
+        if (isShame) {
+          cardClass = "shame";
+          tierBadge = `<span class="ach-vip-badge shame">💀 Schande</span>`;
+        } else if (isMaxTier) {
+          cardClass = "diamond";
+          tierBadge = `<span class="ach-vip-badge diamond">💎 MAX</span>`;
+          howIcon = "⭐";
+        } else if (item.tier) {
+          if (item.tier <= 3) {
+            cardClass = "bronze";
+            tierBadge = `<span class="ach-vip-badge bronze">🥉 Tier ${item.tier}</span>`;
+          } else if (item.tier <= 6) {
+            cardClass = "silver";
+            tierBadge = `<span class="ach-vip-badge silver">🥈 Tier ${item.tier}</span>`;
+          } else {
+            cardClass = "gold";
+            tierBadge = `<span class="ach-vip-badge gold">🥇 Tier ${item.tier}</span>`;
+          }
+        } else {
+          cardClass = "fame";
+          tierBadge = `<span class="ach-vip-badge gold">🏆 Erfolg</span>`;
+        }
 
-        const borderStyle = isShame
-          ? `border-left: 3px solid ${borderCol};`
-          : "";
         return `
-    <div class="stat-row-item ${tierClass} ${isMaxTier && !isShame ? "achievement-glow-fame" : ""} ${isShame ? "achievement-glow-shame shame-bg" : ""}" style="${borderStyle}">
-      <div class="achievement-icon">${item.i}</div>
-      <div style="flex:1; min-width:0;">
-        <div class="achievement-title" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-          <span style="${isMaxTier ? "color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.4);" : ""}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.t}${isMaxTier ? " ⭐" : ""} ${newBadge}</span>
-          ${tierBadge}
-        </div>
-        ${phrase ? `<div class="achievement-phrase">"${phrase}"</div>` : ""}
-        <div class="achievement-how" style="color:${textCol};">${howIcon} ${item.h || ""}</div>
-        ${trackerHtml}
-      </div>
-    </div>`;
+          <div class="ach-vip-card ${cardClass}">
+            <div class="ach-vip-icon-box">${item.i || (isShame ? "💀" : "🏆")}</div>
+            <div class="ach-vip-body">
+              <div class="ach-vip-top">
+                <span class="ach-vip-title">${item.t || ""}${isMaxTier && !isShame ? " ⭐" : ""}${newBadge}</span>
+                ${tierBadge}
+              </div>
+              ${phrase ? `<div class="ach-vip-quote">„${phrase}“</div>` : ""}
+              <div class="ach-vip-how">${howIcon} ${item.h || ""}</div>
+              ${footerHtml}
+            </div>
+          </div>`;
       };
 
       const renderDailyCard = (title, cnt) => {
         const ach = [...window.dailyFamePool, ...window.dailyShamePool].find(
           (x) => x.t === title,
         );
-        if (!ach) return "";
-        const ic = ach.i || "🏷️";
+        const ic = ach ? ach.i || "🏷️" : "🏷️";
         const isShame =
-          ach.k === "shame" || window.dailyShamePool.some((s) => s.t === title);
-        const categoryColor = isShame ? "var(--error)" : "#34c759";
-        const howColor = isShame
-          ? "rgba(255, 69, 58, 0.70)"
-          : "rgba(52, 199, 89, 0.70)";
+          (ach && ach.k === "shame") ||
+          window.dailyShamePool.some((s) => s.t === title);
+        const cardClass = isShame ? "shame" : "gold";
+        const badgeClass = isShame ? "shame" : "daily";
+        const badgeText = isShame ? "💀 Schande" : "👑 Daily";
+        const phraseIndex = getFixedIndex(
+          p + (ach ? ach.t : title),
+          ach && ach.d ? ach.d.length : 1,
+        );
+        const phrase = ach && ach.d ? ach.d[phraseIndex] || "" : "";
         const howIcon = isShame ? "💀" : "🏆";
-        const phraseIndex = getFixedIndex(p + ach.t, ach.d.length);
-        const phrase = ach.d[phraseIndex];
 
-        const borderStyle = isShame
-          ? `border-left: 3px solid ${categoryColor};`
-          : "border-left: none;";
-        return `<div class="stat-row-item ${isShame ? "achievement-glow-shame shame-bg" : ""}" style="${borderStyle}">
-          <div class="achievement-icon">${ic}</div>
-          <div style="flex:1; min-width:0;">
-            <div class="achievement-title" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</span>
-              <span class="stat-value-badge" style="color:#ffcc00; background:rgba(255,204,0,0.15); border-color:rgba(255,204,0,0.2); flex-shrink:0;">${cnt}×</span>
+        return `
+          <div class="ach-vip-card ${cardClass}">
+            <div class="ach-vip-icon-box">${ic}</div>
+            <div class="ach-vip-body">
+              <div class="ach-vip-top">
+                <span class="ach-vip-title">${title}</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span class="ach-vip-badge ${badgeClass}">${badgeText}</span>
+                  <span class="ach-vip-badge daily" style="background:#ffd60a; color:#000; font-weight:900;">${cnt}×</span>
+                </div>
+              </div>
+              ${phrase ? `<div class="ach-vip-quote">„${phrase}“</div>` : ""}
+              <div class="ach-vip-how">${howIcon} ${ach ? ach.h || "" : ""}</div>
             </div>
-            ${phrase ? `<div class="achievement-phrase">"${phrase}"</div>` : ""}
-            <div class="achievement-how" style="color:${howColor};">${howIcon} ${ach.h || ""}</div>
-          </div>
-        </div>`;
+          </div>`;
       };
 
       // Trophäen-Inhalt nach Kategorie-Filter
@@ -875,25 +932,33 @@ window.renderBillardStats = function (
         achHtmlContent =
           fameAchs.length > 0
             ? fameAchs.map((it, aIdx) => createAchRow2(it, p, aIdx)).join("")
-            : `<div style="color:#555; font-size:11px; text-align:center; padding:20px; font-style:italic;">Keine Ruhmes-Erfolge vorhanden.</div>`;
+            : `<div style="color:#8e8e93; font-size:11px; text-align:center; padding:20px; font-style:italic;">Keine Ruhmes-Erfolge vorhanden.</div>`;
+      } else if (activeCat === "diamond") {
+        const diamondAchs = currentAchs.filter(
+          (a) => a.max === true || (a.tier && a.tier >= 10),
+        );
+        achHtmlContent =
+          diamondAchs.length > 0
+            ? diamondAchs.map((it, aIdx) => createAchRow2(it, p, aIdx)).join("")
+            : `<div style="color:#8e8e93; font-size:11px; text-align:center; padding:20px; font-style:italic;">Noch keine Meister-Erfolge (Max-Tier) freigeschaltet.</div>`;
       } else if (activeCat === "shame") {
         achHtmlContent =
           shameAchs.length > 0
             ? shameAchs.map((it, aIdx) => createAchRow2(it, p, aIdx)).join("")
-            : `<div style="color:#555; font-size:11px; text-align:center; padding:20px; font-style:italic;">Keine Schand-Erfolge vorhanden (reine Weste!).</div>`;
+            : `<div style="color:#8e8e93; font-size:11px; text-align:center; padding:20px; font-style:italic;">Keine Schand-Erfolge vorhanden (reine Weste!).</div>`;
       } else if (activeCat === "daily") {
         achHtmlContent =
           dailyEntries.length > 0
             ? dailyEntries
                 .map(([title, cnt]) => renderDailyCard(title, cnt))
                 .join("")
-            : `<div style="color:#555; font-size:11px; text-align:center; padding:20px; font-style:italic;">Noch keine Tageserfolge gesammelt.</div>`;
+            : `<div style="color:#8e8e93; font-size:11px; text-align:center; padding:20px; font-style:italic;">Noch keine Tageserfolge gesammelt.</div>`;
       } else {
         // "all"
         achHtmlContent =
           currentAchs.length > 0
             ? currentAchs.map((it, aIdx) => createAchRow2(it, p, aIdx)).join("")
-            : `<div style="color:#555; font-size:11px; text-align:center; padding:20px; font-style:italic;">Noch ein unbeschriebenes Blatt.</div>`;
+            : `<div style="color:#8e8e93; font-size:11px; text-align:center; padding:20px; font-style:italic;">Noch ein unbeschriebenes Blatt.</div>`;
 
         if (!isTodayTab && dailyEntries.length > 0) {
           achHtmlContent +=
@@ -902,7 +967,7 @@ window.renderBillardStats = function (
                 <div style="color:#ffcc00; font-size:11px; font-weight:900; text-transform:uppercase; display:flex; align-items:center; gap:6px;">
                   <span>👑</span> <span>Bisherige Tageserfolge</span>
                 </div>
-              </div><div style="margin-top:10px;">` +
+              </div><div style="margin-top:10px; display:flex; flex-direction:column; gap:10px;">` +
             dailyEntries
               .map(([title, cnt]) => renderDailyCard(title, cnt))
               .join("") +
@@ -914,123 +979,212 @@ window.renderBillardStats = function (
       let playerBoxHtml = "";
 
       if (isTodayTab) {
+        const renderSessionAchCard = (item, playerName, aIdx) => {
+          const phraseIndex = getFixedIndex(
+            playerName + item.t,
+            item.d ? item.d.length : 1,
+          );
+          const phrase = item.d ? item.d[phraseIndex] || "" : "";
+          const isShame = item.k === "shame";
+          const isMilestone = item.isNew === true;
+
+          let cardClass = "fame";
+          let ptsHtml = '<span class="session-pill-pts">+1 Pkt</span>';
+          let descClass = "fame";
+          let howIcon = "🏆";
+
+          if (isMilestone) {
+            cardClass = "milestone";
+            ptsHtml = `
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="session-pill-new">NEU</span>
+                <span class="session-pill-pts">+2 Pkt</span>
+              </div>`;
+            descClass = "milestone";
+            howIcon = "⭐";
+          } else if (isShame) {
+            cardClass = "shame";
+            ptsHtml = '<span class="session-pill-shame">Schande</span>';
+            descClass = "shame";
+            howIcon = "💀";
+          }
+
+          return `
+            <div class="session-ach-card ${cardClass}">
+              <div class="session-ach-icon">${item.i || (isShame ? "💀" : "🏆")}</div>
+              <div class="session-ach-body">
+                <div class="session-ach-title-row">
+                  <span class="session-ach-title">${item.t || "Erfolg"}</span>
+                  ${ptsHtml}
+                </div>
+                ${phrase ? `<div class="session-ach-phrase">„${phrase}“</div>` : ""}
+                <div class="session-ach-desc ${descClass}">${howIcon} ${item.h || ""}</div>
+              </div>
+            </div>`;
+        };
+
+        const fameCount = currentAchs.filter(
+          (a) => a.k === "fame" && !a.isNew,
+        ).length;
+        const shameCount = currentAchs.filter(
+          (a) => a.k === "shame" && !a.isNew,
+        ).length;
+        const milestoneCount = currentAchs.filter((a) => a.isNew).length;
+
+        let badgeCountHtml = "";
+        if (currentAchs.length === 0) {
+          badgeCountHtml =
+            '<span class="session-badge-count empty">0 Erfolge</span>';
+        } else if (milestoneCount > 0) {
+          badgeCountHtml = `<span class="session-badge-count">🏆 ${fameCount + shameCount} Erfolg${fameCount + shameCount === 1 ? "" : "e"} · ${milestoneCount} Meilenstein${milestoneCount === 1 ? "" : "e"}</span>`;
+        } else if (fameCount === 0 && shameCount > 0) {
+          badgeCountHtml = `<span class="session-badge-count shame-only">💀 ${shameCount} Schande</span>`;
+        } else {
+          badgeCountHtml = `<span class="session-badge-count">🏆 ${currentAchs.length} Erfolg${currentAchs.length === 1 ? "" : "e"}</span>`;
+        }
+
+        const subInfo =
+          d.todayWins > 0
+            ? `${d.todayWins} Sieg${d.todayWins === 1 ? "" : "e"} in ${d.todayGames} Spielen heute`
+            : `${d.todayGames} Spiele heute absolviert`;
+
+        const achHtmlContentToday =
+          currentAchs.length > 0
+            ? currentAchs
+                .map((it, aIdx) => renderSessionAchCard(it, p, aIdx))
+                .join("")
+            : '<div style="color:#8e8e93; font-size:11px; text-align:center; padding:16px; font-style:italic;">Noch keine Session-Erfolge am heutigen Abend erspielt.</div>';
+
         playerBoxHtml = `
-            <div class="card-modern" style="margin-bottom:15px; border-radius:22px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.1}s; opacity: 0; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
-              <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
-                   style="padding:15px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor:pointer; -webkit-tap-highlight-color: transparent; display:flex; align-items:center; gap:12px;">
-                <div class="ach-chevron expanded"></div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:12px; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
-                  <div style="display:none; width:32px; height:32px; border-radius:12px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:18px; border:1px solid rgba(255,255,255,0.1);">👤</div>
-                  <div style="color:#ffffff; font-weight:900; font-size:16px; line-height:1; letter-spacing: 0.5px;">${p}</div>
+            <div class="session-player-box cinematic-entry" style="animation-delay: ${idx * 0.08}s;">
+              <div class="session-player-header" onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'flex' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);">
+                <div class="session-player-left">
+                  <img src="${safeGetAvatarUrl(p)}" class="session-player-avatar ${currentAchs.length > 0 ? "gold" : ""}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'">
+                  <div style="display:none; width:32px; height:32px; border-radius:50%; background:#1e293b; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;">👤</div>
+                  <div>
+                    <div class="session-player-name">${p}</div>
+                    <div class="session-player-sub">${subInfo}</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  ${badgeCountHtml}
+                  <div class="ach-chevron expanded"></div>
                 </div>
               </div>
-              <div style="padding:12px 12px 6px 12px; display:block;">
-                ${achHtmlContent}
+              <div class="session-card-list" style="display:flex;">
+                ${achHtmlContentToday}
               </div>
             </div>`;
       } else if (activePlayer !== "all") {
-        // Einzelauswahl Showcase
+        // Einzelauswahl VIP Showcase
         playerBoxHtml = `
-            <div class="ach-hero-profile" style="animation: ach-card-enter 0.4s ease-out forwards;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <div style="display:flex; align-items:center; gap:14px;">
-                  <div style="position:relative;">
-                    <img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:52px; height:52px; border-radius:16px; object-fit:cover; border:2px solid var(--accent); box-shadow: 0 0 20px rgba(255,204,0,0.35);">
+            <div class="ach-vip-hero cinematic-entry">
+              <div class="ach-vip-head">
+                <div class="ach-vip-profile">
+                  <div class="ach-vip-avatar-wrap">
+                    <img src="${safeGetAvatarUrl(p)}" class="ach-vip-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'">
                     <div style="display:none; width:52px; height:52px; border-radius:16px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:24px; border:1px solid rgba(255,255,255,0.1);">👤</div>
-                    <span style="position:absolute; bottom:-4px; right:-4px; font-size:18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); line-height:1;">${currentLvl.icon}</span>
+                    <span class="ach-vip-lvl-badge">${currentLvl.icon}</span>
                   </div>
                   <div>
-                    <div style="color:#ffffff; font-weight:900; font-size:20px; line-height:1.1; letter-spacing: 0.3px;">${p}</div>
-                    <div style="color:var(--accent); font-weight:800; font-size:10px; text-transform:uppercase; margin-top:4px; letter-spacing:1px; display:flex; align-items:center; gap:6px;">
-                      <span>RANG ${currentLvlIndex}</span> • <span>${currentLvl.title}</span>
-                    </div>
+                    <div class="ach-vip-name">${p}</div>
+                    <div class="ach-vip-rank">RANG ${currentLvlIndex} • ${currentLvl.title}</div>
                   </div>
                 </div>
-                <div style="text-align:right;">
-                  <div class="stat-value-badge" style="font-size:13px; padding:4px 10px; border-radius:8px; background:rgba(255,204,0,0.15); border-color:rgba(255,204,0,0.3); color:#ffcc00;">${dLvl.wins} <span style="font-size:8px; opacity:0.7;">WINS</span></div>
+                <div class="ach-vip-wins">
+                  ${dLvl.wins}
+                  <small>WINS</small>
                 </div>
               </div>
 
-              <div class="progress-bar-container" style="margin-bottom:6px; height:8px;">
-                <div class="progress-bar-fill" style="width:${progressPercent}%;"></div>
+              <div class="ach-vip-progress-wrap">
+                <div class="ach-vip-progress-bar">
+                  <div class="ach-vip-progress-fill" style="width: ${progressPercent}%;"></div>
+                </div>
+                <div class="ach-vip-progress-meta">
+                  <span>${infoText}</span>
+                  <span><b>${progressPercent}%</b></span>
+                </div>
               </div>
 
-              <div style="color:#8e8e93; font-size:10px; display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight: 500;">${infoText}</span>
-                <span style="font-weight:900; color:#ffcc00;">${progressPercent}%</span>
-              </div>
-
-              <div class="ach-summary-pills">
-                <div class="ach-summary-pill">
-                  <div class="ach-summary-pill-val" style="color:#ffcc00;">${totalAchCount}</div>
-                  <div class="ach-summary-pill-lbl">🏆 Erfolge</div>
+              <div class="ach-vip-kpis">
+                <div class="ach-vip-kpi-card">
+                  <div class="ach-vip-kpi-num" style="color: #ffd60a;">${totalAchCount}</div>
+                  <div class="ach-vip-kpi-lbl">🏆 Erfolge</div>
                 </div>
-                <div class="ach-summary-pill">
-                  <div class="ach-summary-pill-val" style="color:#4FC3F7;">${maxDiamondCount}</div>
-                  <div class="ach-summary-pill-lbl">💎 Meister</div>
+                <div class="ach-vip-kpi-card">
+                  <div class="ach-vip-kpi-num" style="color: #64d2ff;">${maxDiamondCount}</div>
+                  <div class="ach-vip-kpi-lbl">💎 Meister</div>
                 </div>
-                <div class="ach-summary-pill">
-                  <div class="ach-summary-pill-val" style="color:#34c759;">${totalDailySum}×</div>
-                  <div class="ach-summary-pill-lbl">👑 Daily</div>
+                <div class="ach-vip-kpi-card">
+                  <div class="ach-vip-kpi-num" style="color: #ff453a;">${shameAchs.length}</div>
+                  <div class="ach-vip-kpi-lbl">💀 Schande</div>
+                </div>
+                <div class="ach-vip-kpi-card">
+                  <div class="ach-vip-kpi-num" style="color: #30d158;">${totalDailySum}×</div>
+                  <div class="ach-vip-kpi-lbl">👑 Daily</div>
                 </div>
               </div>
             </div>
 
-            <!-- Sub-Kategorie Filter -->
-            <div class="ach-category-pills">
-              <div class="ach-category-pill ${activeCat === "all" ? "active" : ""}" onclick="window.setAchCategoryFilter('all')">
+            <!-- Sub-Kategorie Filter Pills -->
+            <div class="ach-vip-filter-pills">
+              <button type="button" class="ach-vip-pill ${activeCat === "all" ? "active" : ""}" onclick="window.setAchCategoryFilter('all')">
                 🏆 Alle (${totalCombinedCount})
-              </div>
-              <div class="ach-category-pill ${activeCat === "fame" ? "active-fame" : ""}" onclick="window.setAchCategoryFilter('fame')">
+              </button>
+              <button type="button" class="ach-vip-pill ${activeCat === "fame" ? "active-fame" : ""}" onclick="window.setAchCategoryFilter('fame')">
                 ✨ Ruhm (${fameAchs.length})
-              </div>
-              <div class="ach-category-pill ${activeCat === "shame" ? "active-shame" : ""}" onclick="window.setAchCategoryFilter('shame')">
+              </button>
+              <button type="button" class="ach-vip-pill ${activeCat === "diamond" ? "active-diamond" : ""}" onclick="window.setAchCategoryFilter('diamond')">
+                💎 Meister (${maxDiamondCount})
+              </button>
+              <button type="button" class="ach-vip-pill ${activeCat === "shame" ? "active-shame" : ""}" onclick="window.setAchCategoryFilter('shame')">
                 💀 Schande (${shameAchs.length})
-              </div>
-              <div class="ach-category-pill ${activeCat === "daily" ? "active-daily" : ""}" onclick="window.setAchCategoryFilter('daily')">
+              </button>
+              <button type="button" class="ach-vip-pill ${activeCat === "daily" ? "active-daily" : ""}" onclick="window.setAchCategoryFilter('daily')">
                 📅 Tageserfolge (${dailyEntries.length})
-              </div>
+              </button>
             </div>
 
             <!-- Trophäenliste -->
-            <div style="margin-bottom: 20px;">
+            <div class="ach-vip-trophy-list">
               ${achHtmlContent}
             </div>`;
       } else {
         // "Alle Spieler" Übersicht
         playerBoxHtml = `
-            <div class="achievement-card-hero" style="border-radius:24px; margin-bottom:15px; overflow:hidden; animation: ach-card-enter 0.5s ease-out forwards; animation-delay: ${idx * 0.08}s; opacity: 0; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
-              <div onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);"
-                   style="padding:18px; cursor:pointer; -webkit-tap-highlight-color: transparent;">
+            <div class="ach-vip-all-box cinematic-entry" style="animation-delay: ${idx * 0.06}s;">
+              <div class="ach-vip-all-header" onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'flex' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                   <div style="display:flex; align-items:center; gap:12px;">
                     <div class="ach-chevron collapsed"></div>
-                    <div style="display:flex; align-items:center; gap:14px;">
-                      <img src="${safeGetAvatarUrl(p)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:44px; height:44px; border-radius:14px; object-fit:cover; border:2px solid var(--accent); box-shadow: 0 0 15px rgba(255,204,0,0.2);">
-                      <div style="display:none; width:36px; height:36px; border-radius:12px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:20px; border:1px solid rgba(255,255,255,0.1);">👤</div>
-                      <div>
-                        <div style="color:#ffffff; font-weight:900; font-size:20px; line-height:1; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${p}</div>
-                        <div style="color:var(--accent); font-weight:900; font-size:9px; text-transform:uppercase; margin-top:6px; letter-spacing:1px; display:flex; align-items:center; gap:8px;"><span style="font-size:22px; filter: drop-shadow(0 0 10px rgba(255,204,0,0.5)); line-height: 1;">${currentLvl.icon}</span> <span>RANG ${currentLvlIndex} • ${currentLvl.title}</span></div>
-                      </div>
+                    <div class="ach-vip-avatar-wrap">
+                      <img src="${safeGetAvatarUrl(p)}" class="ach-vip-avatar" style="width:44px; height:44px; border-radius:14px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'">
+                      <div style="display:none; width:44px; height:44px; border-radius:14px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:20px; border:1px solid rgba(255,255,255,0.1);">👤</div>
+                      <span class="ach-vip-lvl-badge" style="font-size:1rem;">${currentLvl.icon}</span>
+                    </div>
+                    <div>
+                      <div class="ach-vip-name" style="font-size:1.1rem;">${p}</div>
+                      <div class="ach-vip-rank" style="font-size:0.7rem;">RANG ${currentLvlIndex} • ${currentLvl.title}</div>
                     </div>
                   </div>
-                  <div style="text-align:right;">
-                    <div class="stat-value-badge" style="font-size:14px; padding:4px 10px;">${dLvl.wins} <span style="font-size:8px; opacity:0.6; margin-left:2px;">WINS</span></div>
+                  <div class="ach-vip-wins" style="padding:4px 10px; font-size:0.88rem;">
+                    ${dLvl.wins}
+                    <small>WINS</small>
                   </div>
                 </div>
 
-                <div class="progress-bar-container" style="margin-bottom:8px;">
-                  <div class="progress-bar-fill" style="width:${progressPercent}%;"></div>
+                <div class="ach-vip-progress-bar" style="margin-bottom:6px; height:6px;">
+                  <div class="ach-vip-progress-fill" style="width:${progressPercent}%;"></div>
                 </div>
 
-                <div style="color:#8e8e93; font-size:10px; display:flex; justify-content:space-between; align-items:center;">
-                  <span style="font-weight: 500; letter-spacing: 0.1px;">${infoText}</span>
-                  <span style="font-weight:900; color:#ffcc00; background:rgba(255,204,0,0.15); padding:2px 6px; border-radius:6px; border: 1px solid rgba(255,204,0,0.2);">${progressPercent}%</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; color:#8e8e93;">
+                  <span>${infoText}</span>
+                  <span style="font-weight:900; color:#ffd60a;">${progressPercent}%</span>
                 </div>
               </div>
 
-              <div style="padding:12px 12px 6px 12px; display:none;">
+              <div class="ach-vip-trophy-list" style="padding:0 14px 14px 14px; display:none;">
                 ${achHtmlContent}
               </div>
             </div>`;
@@ -3851,17 +4005,33 @@ window.renderHistory = function renderHistory(statsToRender) {
 
 window.activeAchListFilter = "all";
 window.achListSearchQuery = "";
+
 window.filterAchListSearch = (query) => {
   window.achListSearchQuery = String(query || "")
     .trim()
     .toLowerCase();
+  const clearBtn = document.getElementById("ach-search-clear");
+  if (clearBtn) {
+    clearBtn.style.display = window.achListSearchQuery ? "flex" : "none";
+  }
+  window.renderAchList(window.activeAchListFilter || "all");
+};
+
+window.clearAchListSearch = () => {
+  const searchInp = document.getElementById("ach-search-input");
+  if (searchInp) searchInp.value = "";
+  const clearBtn = document.getElementById("ach-search-clear");
+  if (clearBtn) clearBtn.style.display = "none";
+  window.achListSearchQuery = "";
   window.renderAchList(window.activeAchListFilter || "all");
 };
 
 window.openAchListModal = () => {
   const container = document.getElementById("achListContainer");
   const searchInp = document.getElementById("ach-search-input");
+  const clearBtn = document.getElementById("ach-search-clear");
   if (searchInp) searchInp.value = "";
+  if (clearBtn) clearBtn.style.display = "none";
   window.achListSearchQuery = "";
   if (typeof window.renderAchList === "function") {
     window.renderAchList("all");
@@ -3870,16 +4040,18 @@ window.openAchListModal = () => {
   if (modal) modal.style.display = "flex";
   if (container) container.scrollTop = 0;
 };
+
 window.closeAchListModal = () => {
   const modal = document.getElementById("achListModal");
   if (modal) modal.style.display = "none";
 };
+
 window.renderAchList = (filter) => {
   window.activeAchListFilter = filter;
   const c = document.getElementById("achListContainer");
   if (c) c.scrollTop = 0;
   const pills = document.querySelectorAll("#achListModal .filter-pill");
-  const fNames = ["all", "fame", "shame", "daily"];
+  const fNames = ["all", "fame", "shame", "diamond", "daily"];
   pills.forEach((p, idx) =>
     p.classList.toggle("active", fNames[idx] === filter),
   );
@@ -3893,6 +4065,14 @@ window.renderAchList = (filter) => {
       k: "fame",
     })),
   ];
+
+  // Ermittlung der maximalen Stufen pro Gruppe
+  const trackMaxTiers = {};
+  pool.forEach((a) => {
+    if (a.g && a.tier) {
+      trackMaxTiers[a.g] = Math.max(trackMaxTiers[a.g] || 0, a.tier);
+    }
+  });
 
   // 2. Pool basierend auf Filter bestimmen
   if (filter === "all") {
@@ -3913,11 +4093,23 @@ window.renderAchList = (filter) => {
     pool = pool.filter((a) => a.k === "fame");
   } else if (filter === "shame") {
     pool = pool.filter((a) => a.k === "shame");
+  } else if (filter === "diamond") {
+    pool = pool.filter(
+      (a) => a.k === "fame" && (a.max === true || (a.tier && a.tier >= 10)),
+    );
   } else {
     // 'daily' filter
     pool = [
-      ...(window.dailyFamePool || []).map((a) => ({ ...a, isDaily: true })),
-      ...(window.dailyShamePool || []).map((a) => ({ ...a, isDaily: true })),
+      ...(window.dailyFamePool || []).map((a) => ({
+        ...a,
+        k: "fame",
+        isDaily: true,
+      })),
+      ...(window.dailyShamePool || []).map((a) => ({
+        ...a,
+        k: "shame",
+        isDaily: true,
+      })),
     ];
   }
 
@@ -3934,64 +4126,104 @@ window.renderAchList = (filter) => {
     });
   }
 
-  // 3. Sortierung: Kategorie (Fame vor Shame) -> Dann alphabetisch nach Name
+  // Header-Zähler aktualisieren
+  const subtitleEl = document.getElementById("achListSubtitle");
+  if (subtitleEl) {
+    if (window.achListSearchQuery) {
+      subtitleEl.textContent = `🔍 ${pool.length} ${pool.length === 1 ? "Trophäe gefunden" : "Trophäen gefunden"}`;
+    } else {
+      subtitleEl.textContent = `🏛️ ${pool.length} Trophäen im Kompendium`;
+    }
+  }
+
+  // 3. Sortierung: Kategorie (Fame vor Shame) -> Stufen-Gruppe -> Alphabetisch
   pool.sort((a, b) => {
     if (a.k !== b.k) return a.k === "fame" ? -1 : 1;
+    if (a.g && b.g && a.g === b.g) return (a.tier || 0) - (b.tier || 0);
     return (a.t || "").localeCompare(b.t || "", "de");
   });
 
   // 4. HTML generieren
   if (!c) return;
+  if (pool.length === 0) {
+    c.innerHTML = `
+      <div style="text-align:center; padding:40px 20px; color:#8e8e93;">
+        <div style="font-size:32px; margin-bottom:8px;">🔍</div>
+        <div style="font-size:14px; font-weight:700; color:#fff;">Keine Trophäen gefunden</div>
+        <div style="font-size:12px; margin-top:4px;">Passe den Filter oder Suchbegriff an.</div>
+      </div>`;
+    return;
+  }
+
   c.innerHTML = pool
     .map((a, idx) => {
       const isShame = a.k === "shame";
-      const categoryColor = isShame ? "var(--error)" : "#34c759";
-      const howColor = isShame
-        ? "rgba(255, 59, 48, 0.85)"
-        : "rgba(52, 199, 89, 0.85)";
-      const howIcon = isShame ? "💀" : "🏆";
-      const isMaxTier = a.max === true;
+      const isMaxTier = a.max === true || (a.tier && a.tier >= 10);
+      const isDaily = a.isDaily === true;
+      let howIcon = isShame ? "💀" : isMaxTier ? "⭐" : "🏆";
       const phrase = Array.isArray(a.d) ? a.d[0] || "" : a.d || "";
 
-      let tierClass = "";
+      let cardClass = "fame";
       let tierBadge = "";
-      if (a.tier) {
+      let footerText = "";
+      let footerTag = "";
+
+      if (isShame) {
+        cardClass = "shame";
+        tierBadge = isDaily
+          ? `<span class="ach-vip-badge shame">💀 Daily Shame</span>`
+          : `<span class="ach-vip-badge shame">💀 Schande</span>`;
+        footerText = isDaily
+          ? "Täglicher Schand-Erfolg"
+          : "Karriere-Schandfleck";
+        footerTag = `<span style="color:#ff453a; font-weight:800; font-size:0.68rem;">SCHANDE</span>`;
+      } else if (isMaxTier) {
+        cardClass = "diamond";
+        tierBadge = `<span class="ach-vip-badge diamond">💎 MAX</span>`;
+        footerText = "Meister-Stufe (Vollendung)";
+        footerTag = `<span style="color:#64d2ff; font-weight:800; font-size:0.68rem;">MEISTER</span>`;
+      } else if (isDaily) {
+        cardClass = "gold";
+        tierBadge = `<span class="ach-vip-badge daily">👑 Daily</span>`;
+        footerText = "Tages-Herausforderung";
+        footerTag = `<span style="color:#ffd60a; font-weight:800; font-size:0.68rem;">TAGESZIEL</span>`;
+      } else if (a.tier) {
         if (a.tier <= 3) {
-          tierClass = "ach-tier-bronze";
-          tierBadge = `<span class="tier-badge-pill tier-pill-bronze">Tier ${a.tier}</span>`;
+          cardClass = "bronze";
+          tierBadge = `<span class="ach-vip-badge bronze">🥉 Tier ${a.tier}</span>`;
         } else if (a.tier <= 6) {
-          tierClass = "ach-tier-silver";
-          tierBadge = `<span class="tier-badge-pill tier-pill-silver">Tier ${a.tier}</span>`;
-        } else if (a.tier <= 9) {
-          tierClass = "ach-tier-gold";
-          tierBadge = `<span class="tier-badge-pill tier-pill-gold">Tier ${a.tier}</span>`;
+          cardClass = "silver";
+          tierBadge = `<span class="ach-vip-badge silver">🥈 Tier ${a.tier}</span>`;
         } else {
-          tierClass = "ach-tier-diamond";
-          tierBadge = `<span class="tier-badge-pill tier-pill-diamond">💎 Max</span>`;
+          cardClass = "gold";
+          tierBadge = `<span class="ach-vip-badge gold">🥇 Tier ${a.tier}</span>`;
         }
-      } else if (isMaxTier && !isShame) {
-        tierClass = "ach-tier-diamond";
-        tierBadge = `<span class="tier-badge-pill tier-pill-diamond">💎 Max</span>`;
+        const maxTier = trackMaxTiers[a.g] || a.tier;
+        footerText = `Stufe ${a.tier} von ${maxTier} der Serie`;
+        footerTag = `<span style="color:#ffd60a; font-weight:800; font-size:0.68rem;">STUFE ${a.tier}</span>`;
+      } else {
+        cardClass = "fame";
+        tierBadge = `<span class="ach-vip-badge gold">🏆 Erfolg</span>`;
+        footerText = "Dauerhafter Karriere-Meilenstein";
+        footerTag = `<span style="color:#30d158; font-weight:800; font-size:0.68rem;">ERFOLG</span>`;
       }
 
-      const borderStyle = isShame
-        ? `border-left: 3px solid ${categoryColor};`
-        : "";
       return `
-                <div class="stat-row-item ${tierClass} ${isMaxTier && !isShame ? "achievement-glow-fame" : ""} ${isShame ? "achievement-glow-shame shame-bg" : ""}" style="${borderStyle} animation: ach-card-enter 0.3s ease-out forwards; animation-delay: ${Math.min(idx * 0.015, 0.5)}s; opacity: 0;">
-                  <div class="achievement-icon">${a.i}</div>
-                  <div style="flex:1; min-width:0;">
-                    <div class="achievement-title" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                        <span style="${isMaxTier ? "color:#4FC3F7; text-shadow: 0 0 8px rgba(79,195,247,0.4);" : ""}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.t}${isMaxTier ? " ⭐" : ""}</span>
-                        <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
-                          ${tierBadge}
-                          ${a.isDaily ? '<span style="font-size:7px; color:var(--accent); border:1px solid rgba(255,204,0,0.3); padding:1px 3px; border-radius:3px; vertical-align:middle; opacity:0.8;">DAILY</span>' : ""}
-                        </div>
-                    </div>
-                    ${phrase ? `<div class="achievement-phrase">${phrase}</div>` : ""}
-                    <div class="achievement-how" style="color:${howColor};">${howIcon} ${a.h || ""}</div>
-                  </div>
-                </div>`;
+        <div class="ach-vip-card ${cardClass}" style="animation: ach-card-enter 0.25s ease-out forwards; animation-delay: ${Math.min(idx * 0.01, 0.4)}s; opacity: 0;">
+          <div class="ach-vip-icon-box">${a.i || (isShame ? "💀" : "🏆")}</div>
+          <div class="ach-vip-body">
+            <div class="ach-vip-top">
+              <span class="ach-vip-title">${a.t || ""}${isMaxTier && !isShame ? " ⭐" : ""}</span>
+              ${tierBadge}
+            </div>
+            ${phrase ? `<div class="ach-vip-quote">„${phrase}“</div>` : ""}
+            <div class="ach-vip-how">${howIcon} ${a.h || ""}</div>
+            <div class="ach-vip-footer">
+              <span class="ach-vip-rate-tag">${footerText}</span>
+              ${footerTag}
+            </div>
+          </div>
+        </div>`;
     })
     .join("");
 };

@@ -835,8 +835,7 @@ window.enrichStatsWithAchievements = function (
       const isMatchFromToday = g.d && g.d.startsWith(todayStr);
 
       // Zentrale Funktion zum Speichern neuer Erfolge (Daily + Langzeit)
-      const recordNewAch = (ach, player) => {
-        // player-Parameter hinzugefügt
+      const recordNewAch = (ach, isDaily = false) => {
         if (!matchDeltas[originalIndex])
           matchDeltas[originalIndex] = {
             eloDelta: Math.round(20 * Math.abs(eloChangeBase)),
@@ -854,8 +853,8 @@ window.enrichStatsWithAchievements = function (
           max: ach.max,
         });
 
-        // In die persistente Tages-Statistik schreiben (für Daily-Sammler & Historie)
-        if (isMatchFromToday && isFullHistory && dailyAchivs) {
+        // In die persistente Tages-Statistik schreiben (NUR echte Tages-Erfolge, keine Langzeit-/Tier-Erfolge!)
+        if (isDaily && isMatchFromToday && isFullHistory && dailyAchivs) {
           if (!dailyAchivs.days) dailyAchivs.days = {};
           if (!dailyAchivs.days[isoTodayStr])
             dailyAchivs.days[isoTodayStr] = {};
@@ -878,7 +877,7 @@ window.enrichStatsWithAchievements = function (
         dailyPool.forEach((ach) => {
           const hasNow = ach.cond(d);
           const hadBefore = ach.cond(dBefore);
-          if (hasNow && !hadBefore) recordNewAch(ach);
+          if (hasNow && !hadBefore) recordNewAch(ach, true);
           else if (
             !hasNow &&
             hadBefore &&
@@ -915,7 +914,7 @@ window.enrichStatsWithAchievements = function (
           hasNow &&
           (!dBefore.achTracker[achKey] || !dBefore.achTracker[achKey].active)
         ) {
-          recordNewAch(ach);
+          recordNewAch(ach, false);
         }
       });
     });
@@ -998,12 +997,19 @@ window.enrichStatsWithAchievements = function (
           });
         }
       }
+      const validDailyTitles = new Set(
+        [...(window.dailyFamePool || []), ...(window.dailyShamePool || [])].map(
+          (x) => x.t,
+        ),
+      );
       for (const achTitle in dailyCounts) {
-        d.achTracker[achTitle] = {
-          earned: dailyCounts[achTitle],
-          lost: 0,
-          active: true,
-        };
+        if (validDailyTitles.has(achTitle)) {
+          d.achTracker[achTitle] = {
+            earned: dailyCounts[achTitle],
+            lost: 0,
+            active: true,
+          };
+        }
       }
     }
 
