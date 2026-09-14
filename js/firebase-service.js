@@ -449,18 +449,8 @@ window.doSave = async () => {
         mode: prevMode,
         durationFormatted: durFormatted,
       });
-    }
-
-    if (typeof confetti === "function") {
-      setTimeout(() => {
-        confetti({
-          particleCount: 150,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#ffcc00", "#34c759", "#ffffff"],
-          zIndex: 99999,
-        });
-      }, 50);
+    } else if (typeof window.triggerVictoryFx === "function") {
+      window.triggerVictoryFx();
     }
   } catch (err) {
     console.error("Firebase Save Error:", err);

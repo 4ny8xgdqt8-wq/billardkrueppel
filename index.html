@@ -1514,41 +1514,50 @@
                   "
                 ></div>
 
-                <!-- 5. Anstoß-Vorteil -->
                 <div
-                  class="stat-card-modern cinematic-entry"
-                  style="--card-accent: #30d158"
+                  style="
+                    grid-column: 1 / -1;
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                    gap: 12px;
+                  "
                 >
-                  <div class="stat-card-main">
-                    <div class="stat-card-badge-top">⚡ Anstoß-Vorteil</div>
-                    <div class="stat-card-player-label">Eigenes Break</div>
-                    <div class="stat-card-sublabel">
-                      Siegquote nach eigenem Anstoß
+                  <!-- 5. Anstoß-Vorteil -->
+                  <div
+                    class="stat-card-modern cinematic-entry"
+                    style="--card-accent: #30d158"
+                  >
+                    <div class="stat-card-main">
+                      <div class="stat-card-badge-top">⚡ Anstoß-Vorteil</div>
+                      <div class="stat-card-player-label">Eigenes Break</div>
+                      <div class="stat-card-sublabel">
+                        Siegquote nach eigenem Anstoß
+                      </div>
+                    </div>
+                    <div class="stat-metric-hero" id="stat-break-adv-val">
+                      <div class="stat-hero-pill pill-green">
+                        <span id="stat-break-adv">0%</span>
+                      </div>
                     </div>
                   </div>
-                  <div class="stat-metric-hero" id="stat-break-adv-val">
-                    <div class="stat-hero-pill pill-green">
-                      <span id="stat-break-adv">0%</span>
-                    </div>
-                  </div>
-                </div>
 
-                <!-- 6. Service-Dieb -->
-                <div
-                  class="stat-card-modern cinematic-entry"
-                  style="--card-accent: #ffd60a"
-                >
-                  <div class="stat-card-main">
-                    <div class="stat-card-badge-top">🕵️ Service-Dieb</div>
-                    <div id="stat-service-thief" class="stat-card-holder-row">
-                      -
+                  <!-- 6. Service-Dieb -->
+                  <div
+                    class="stat-card-modern cinematic-entry"
+                    style="--card-accent: #ffd60a"
+                  >
+                    <div class="stat-card-main">
+                      <div class="stat-card-badge-top">🕵️ Service-Dieb</div>
+                      <div id="stat-service-thief" class="stat-card-holder-row">
+                        -
+                      </div>
+                      <div class="stat-card-sublabel">
+                        Siegquote bei gegnerischem Break
+                      </div>
                     </div>
-                    <div class="stat-card-sublabel">
-                      Siegquote bei gegnerischem Break
+                    <div class="stat-metric-hero" id="stat-service-thief-val">
+                      <div class="stat-hero-pill pill-gold">-</div>
                     </div>
-                  </div>
-                  <div class="stat-metric-hero" id="stat-service-thief-val">
-                    <div class="stat-hero-pill pill-gold">-</div>
                   </div>
                 </div>
 
@@ -2674,198 +2683,77 @@
         </div>
       </div>
 
-      <!-- Duell Arena mit 2 echten 3D-Würfeln -->
-      <div class="dice-duel-container">
-        <!-- Kontrahent 1 -->
-        <div class="dice-fighter" id="fighter1">
-          <div
-            id="duelAvatarWrap1"
-            style="
-              display: flex;
-              gap: 6px;
-              justify-content: center;
-              align-items: center;
-              min-height: 52px;
-            "
-          >
-            <img
-              src="avatars/Thorsten.webp"
-              id="duelAvatar1"
-              class="dice-avatar"
-              alt="Fighter 1"
-              onerror="this.style.display = 'none'"
-            />
-          </div>
-          <div class="dice-name" id="duelName1">Spieler 1</div>
-          <div class="dice-scene">
-            <div class="dice-cube" id="cube1">
-              <div class="dice-face face-1"><div class="pip red"></div></div>
-              <div class="dice-face face-2">
-                <div class="pip"></div>
-                <div class="pip"></div>
-              </div>
-              <div class="dice-face face-3">
-                <div class="pip"></div>
-                <div class="pip"></div>
-                <div class="pip"></div>
-              </div>
-              <div class="dice-face face-4">
-                <div class="col">
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                </div>
-                <div class="col">
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                </div>
-              </div>
-              <div class="dice-face face-5">
-                <div class="col">
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                </div>
-                <div class="center-col"><div class="pip"></div></div>
-                <div class="col">
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                </div>
-              </div>
-              <div class="dice-face face-6">
-                <div class="col">
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                </div>
-                <div class="col">
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                </div>
-              </div>
+      <!-- Duell Arena mit TAOM-Kreidewürfel & Billardtisch-Sockel -->
+      <div class="chalk-stage">
+        <div class="chalk-fighters-bar">
+          <div class="chalk-fighter-col" id="fighter1">
+            <div id="duelAvatarWrap1" class="chalk-avatar-wrap">
+              <img
+                src="avatars/Thorsten.webp"
+                id="duelAvatar1"
+                class="dice-avatar"
+                alt="Fighter 1"
+                onerror="this.style.display = 'none'"
+              />
             </div>
+            <div class="dice-name" id="duelName1">Spieler 1</div>
           </div>
-          <div
-            id="score1"
-            style="
-              font-size: 24px;
-              font-weight: 900;
-              color: #fff;
-              min-height: 32px;
-              margin-top: 4px;
-            "
-          >
-            -
+          <div class="chalk-vs-badge">VS</div>
+          <div class="chalk-fighter-col" id="fighter2">
+            <div id="duelAvatarWrap2" class="chalk-avatar-wrap">
+              <img
+                src="avatars/Daniel.webp"
+                id="duelAvatar2"
+                class="dice-avatar"
+                alt="Fighter 2"
+                onerror="this.style.display = 'none'"
+              />
+            </div>
+            <div class="dice-name" id="duelName2">Spieler 2</div>
           </div>
         </div>
 
-        <!-- VS Badge -->
-        <div
-          style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-          "
-        >
-          <div
-            style="
-              width: 36px;
-              height: 36px;
-              border-radius: 50%;
-              background: rgba(255, 204, 0, 0.2);
-              border: 1px solid rgba(255, 204, 0, 0.5);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 11px;
-              font-weight: 900;
-              color: #ffd60a;
-            "
-          >
-            VS
-          </div>
-        </div>
+        <div class="felt-table"></div>
+        <div class="chalk-puff" id="chalkPuff"></div>
 
-        <!-- Kontrahent 2 -->
-        <div class="dice-fighter" id="fighter2">
-          <div
-            id="duelAvatarWrap2"
-            style="
-              display: flex;
-              gap: 6px;
-              justify-content: center;
-              align-items: center;
-              min-height: 52px;
-            "
-          >
-            <img
-              src="avatars/Daniel.webp"
-              id="duelAvatar2"
-              class="dice-avatar"
-              alt="Fighter 2"
-              onerror="this.style.display = 'none'"
-            />
-          </div>
-          <div class="dice-name" id="duelName2">Spieler 2</div>
-          <div class="dice-scene">
-            <div class="dice-cube" id="cube2">
-              <div class="dice-face face-1"><div class="pip red"></div></div>
-              <div class="dice-face face-2">
-                <div class="pip"></div>
-                <div class="pip"></div>
+        <div class="chalk-cube-wrap-3d">
+          <div class="chalk-cube" id="chalkCube">
+            <div class="chalk-face cface-p1 cf-front">
+              <div class="chalk-brand">TAOM</div>
+              <div class="chalk-dent">👑</div>
+              <div class="cface-name" id="chalkFaceName1">Spieler 1</div>
+            </div>
+            <div class="chalk-face cface-p2 cf-back">
+              <div class="chalk-brand">TAOM</div>
+              <div class="chalk-dent">⚡</div>
+              <div class="cface-name" id="chalkFaceName2">Spieler 2</div>
+            </div>
+            <div class="chalk-face cface-side cf-right">
+              <div
+                style="font-size: 10px; font-weight: 900; letter-spacing: 1.5px"
+              >
+                TAOM
               </div>
-              <div class="dice-face face-3">
-                <div class="pip"></div>
-                <div class="pip"></div>
-                <div class="pip"></div>
+              <div style="font-size: 20px; margin: 4px 0">🎱</div>
+              <div style="font-size: 8px; opacity: 0.7">PYRO</div>
+            </div>
+            <div class="chalk-face cface-side cf-left">
+              <div
+                style="font-size: 10px; font-weight: 900; letter-spacing: 1.5px"
+              >
+                TAOM
               </div>
-              <div class="dice-face face-4">
-                <div class="col">
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                </div>
-                <div class="col">
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                </div>
-              </div>
-              <div class="dice-face face-5">
-                <div class="col">
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                </div>
-                <div class="center-col"><div class="pip"></div></div>
-                <div class="col">
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                </div>
-              </div>
-              <div class="dice-face face-6">
-                <div class="col">
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                </div>
-                <div class="col">
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                  <div class="pip"></div>
-                </div>
-              </div>
+              <div style="font-size: 20px; margin: 4px 0">🎱</div>
+              <div style="font-size: 8px; opacity: 0.7">PYRO</div>
+            </div>
+            <div class="chalk-face cface-top-felt cf-top">
+              <div class="chalk-dent">🟢</div>
+            </div>
+            <div class="chalk-face cface-top-felt cf-bottom">
+              <div class="chalk-dent">🟢</div>
             </div>
           </div>
-          <div
-            id="score2"
-            style="
-              font-size: 24px;
-              font-weight: 900;
-              color: #fff;
-              min-height: 32px;
-              margin-top: 4px;
-            "
-          >
-            -
-          </div>
+          <div class="chalk-shadow-3d"></div>
         </div>
       </div>
 
@@ -2999,6 +2887,21 @@
         </div>
       </div>
     </div>
+
+    <!-- Canvas Overlay für den Sieges-Effekt (Jackpot Storm) -->
+    <canvas
+      id="victoryFxCanvas"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 100000;
+        display: none;
+      "
+    ></canvas>
 
     <div id="diceModal" class="modal">
       <div class="modal-backdrop" onclick="window.closeDiceModal()"></div>

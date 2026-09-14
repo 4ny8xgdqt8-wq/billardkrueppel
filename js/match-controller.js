@@ -164,10 +164,141 @@ window.openSuccessModal = (info = {}) => {
   if (durEl) durEl.innerText = info.durationFormatted || "-";
 
   modal.style.display = "flex";
+
+  if (typeof window.triggerVictoryFx === "function") {
+    setTimeout(() => {
+      window.triggerVictoryFx();
+    }, 50);
+  }
 };
 
 window.closeSuccessModal = () => {
-  document.getElementById("successModal").style.display = "none";
+  const modal = document.getElementById("successModal");
+  if (modal) modal.style.display = "none";
+  if (typeof window.stopVictoryFx === "function") {
+    window.stopVictoryFx();
+  }
+};
+
+// ==========================================
+// SIEGES-EFFEKT: BILLARD & JACKPOT STORM (v24.0)
+// ==========================================
+let victoryFxAnimId = null;
+
+window.stopVictoryFx = () => {
+  if (victoryFxAnimId) {
+    cancelAnimationFrame(victoryFxAnimId);
+    victoryFxAnimId = null;
+  }
+  const canvas = document.getElementById("victoryFxCanvas");
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.style.display = "none";
+  }
+};
+
+window.triggerVictoryFx = () => {
+  window.stopVictoryFx();
+
+  // 1. Hintergrund-Fächer aus Gold & Grün Konfetti
+  if (typeof confetti === "function") {
+    try {
+      confetti({
+        particleCount: 90,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ["#ffd60a", "#30d158", "#ffffff", "#ffaa00"],
+        zIndex: 99999,
+      });
+    } catch (e) {
+      console.warn("Confetti error:", e);
+    }
+  }
+
+  // 2. Taumelnde Billard-Tokens & Pokale (Canvas)
+  const canvas = document.getElementById("victoryFxCanvas");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.display = "block";
+
+  const cx = window.innerWidth / 2;
+  const tokens = ["🎱", "🏆", "🪙", "✨", "🎱", "🏆", "🪙", "👑"];
+  const particles = [];
+  const count = 48;
+
+  for (let i = 0; i < count; i++) {
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.35;
+    const speed = 12 + Math.random() * 16;
+    particles.push({
+      x: cx + (Math.random() - 0.5) * 140,
+      y: window.innerHeight * 0.75,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      char: tokens[Math.floor(Math.random() * tokens.length)],
+      size: 26 + Math.random() * 14,
+      rotation: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.18,
+      wobbleAngle: Math.random() * Math.PI * 2,
+      wobbleSpeed: 0.08 + Math.random() * 0.08,
+      alpha: 1,
+      gravity: 0.38,
+    });
+  }
+
+  function loop(now) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = 0;
+
+    for (const p of particles) {
+      if (p.alpha <= 0.01 || p.y > window.innerHeight + 80) continue;
+      alive++;
+
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += p.gravity;
+      p.vx *= 0.985;
+      p.rotation += p.rotSpeed;
+      p.wobbleAngle += p.wobbleSpeed;
+
+      // Ab 60% der Bildschirmhöhe sanft ausfaden beim Absinken
+      if (p.y > window.innerHeight * 0.6 && p.vy > 0) {
+        p.alpha -= 0.012;
+      }
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+
+      // 3D Taumel / Schwing-Effekt
+      const scaleX = Math.cos(p.wobbleAngle);
+      ctx.scale(scaleX, 1);
+
+      ctx.font = `${Math.round(p.size)}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 4;
+      ctx.fillText(p.char, 0, 0);
+
+      ctx.restore();
+    }
+
+    if (alive > 0) {
+      victoryFxAnimId = requestAnimationFrame(loop);
+    } else {
+      window.stopVictoryFx();
+    }
+  }
+
+  victoryFxAnimId = requestAnimationFrame(loop);
 };
 
 window.closePlayerProfileModal = () => {
@@ -622,42 +753,51 @@ window.syncBallTypes = (n) => {
   if (typeof window.updateUI === "function") window.updateUI();
 };
 
-// Sound Synthese via Web Audio API (authentisches Holzwürfel-Klackern)
-function playDiceSound() {
+// Sound Synthese via Web Audio API (Profil 4: Casino-Glücksrad / Arcade Clicker)
+function playDiceSound(isLand = false) {
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
 
-    // Mehrere kurze Impulse für das Klackern der rollenden Würfel
-    const times = [0, 0.08, 0.18, 0.32, 0.48, 0.68, 0.85, 1.05];
-    times.forEach((t, i) => {
+    if (isLand) {
+      // Heller Dreiklang bei der Landung (Sieger-Bestätigung)
+      [880, 1174, 1320].forEach((f, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = f;
+        gain.gain.setValueAtTime(0.14, ctx.currentTime + idx * 0.04);
+        gain.gain.exponentialRampToValueAtTime(
+          0.001,
+          ctx.currentTime + idx * 0.04 + 0.18,
+        );
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + idx * 0.04);
+        osc.stop(ctx.currentTime + idx * 0.04 + 0.2);
+      });
+      return;
+    }
+
+    // Schnelles, befriedigendes Klick-Rattern während des Wirbelns
+    const clicks = 12;
+    for (let i = 0; i < clicks; i++) {
+      const t = (i / clicks) * 0.95;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
-
-      // Frequenz variieren (hölzernes Geräusch)
       osc.type = "sine";
-      osc.frequency.setValueAtTime(
-        450 + Math.random() * 350,
-        ctx.currentTime + t,
+      osc.frequency.setValueAtTime(1400 + i * 50, ctx.currentTime + t);
+      gain.gain.setValueAtTime(0.16, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        ctx.currentTime + t + 0.025,
       );
-
-      filter.type = "bandpass";
-      filter.frequency.setValueAtTime(600, ctx.currentTime + t);
-      filter.Q.setValueAtTime(3, ctx.currentTime + t);
-
-      const vol = ((times.length - i) / times.length) * 0.12;
-      gain.gain.setValueAtTime(vol, ctx.currentTime + t);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.04);
-
-      osc.connect(filter);
-      filter.connect(gain);
+      osc.connect(gain);
       gain.connect(ctx.destination);
-
       osc.start(ctx.currentTime + t);
-      osc.stop(ctx.currentTime + t + 0.045);
-    });
+      osc.stop(ctx.currentTime + t + 0.03);
+    }
   } catch (e) {}
 }
 
@@ -746,15 +886,18 @@ window.calcBreak = () => {
   if (nameEl1) nameEl1.textContent = p1Name;
   if (nameEl2) nameEl2.textContent = p2Name;
 
+  const faceName1 = document.getElementById("chalkFaceName1");
+  const faceName2 = document.getElementById("chalkFaceName2");
+  if (faceName1) faceName1.textContent = p1Name;
+  if (faceName2) faceName2.textContent = p2Name;
+
   const overlay = document.getElementById("diceDuelOverlay");
   const banner = document.getElementById("duelResultBanner");
   const subtitle = document.getElementById("duelSubtitle");
   const f1 = document.getElementById("fighter1");
   const f2 = document.getElementById("fighter2");
-  const c1 = document.getElementById("cube1");
-  const c2 = document.getElementById("cube2");
-  const s1 = document.getElementById("score1");
-  const s2 = document.getElementById("score2");
+  const chalkCube = document.getElementById("chalkCube");
+  const puff = document.getElementById("chalkPuff");
 
   if (!overlay) return;
 
@@ -763,61 +906,63 @@ window.calcBreak = () => {
     banner.style.opacity = "0";
     banner.style.transform = "translateY(10px)";
   }
-  if (subtitle) subtitle.textContent = "Würfel rollen auf dem Tisch...";
+  if (subtitle) subtitle.textContent = "Kreide wirbelt über das Tuch...";
   if (f1) f1.classList.remove("winner");
   if (f2) f2.classList.remove("winner");
-  if (s1) {
-    s1.textContent = "-";
-    s1.style.color = "#fff";
-  }
-  if (s2) {
-    s2.textContent = "-";
-    s2.style.color = "#fff";
-  }
 
-  // Würfelergebnisse ermitteln (kein Unentschieden)
-  let roll1 = Math.floor(Math.random() * 6) + 1;
-  let roll2 = Math.floor(Math.random() * 6) + 1;
-  while (roll1 === roll2) {
-    roll2 = Math.floor(Math.random() * 6) + 1;
+  // Reset cube rotation
+  if (chalkCube) {
+    chalkCube.style.transition = "none";
+    chalkCube.style.transform = "rotateX(0deg) rotateY(0deg)";
+    void chalkCube.offsetWidth; // Trigger reflow
+    chalkCube.classList.add("rolling");
   }
 
-  if (c1) c1.classList.add("rolling");
-  if (c2) c2.classList.add("rolling");
-  playDiceSound();
+  // Würfelsound starten
+  playDiceSound(false);
 
-  const rot1 = faceRotations[roll1];
-  const rot2 = faceRotations[roll2];
-  const extraSpins1 = 720;
-  const extraSpins2 = 1080;
+  // Kryptografisch fairer 50:50 Münzwurf
+  const cryptoBuf = new Uint32Array(1);
+  window.crypto.getRandomValues(cryptoBuf);
+  const p1Wins = cryptoBuf[0] % 2 === 0;
 
-  if (c1)
-    c1.style.transform = `rotateX(${extraSpins1 + rot1.x}deg) rotateY(${extraSpins1 + rot1.y}deg) rotateZ(360deg)`;
-  if (c2)
-    c2.style.transform = `rotateX(${extraSpins2 + rot2.x}deg) rotateY(${extraSpins2 + rot2.y}deg) rotateZ(-360deg)`;
+  // 3D-Schrägwinkel auf dem Tisch (rotateX -18deg), damit der Würfel perfekt räumlich steht!
+  // Front (P1): 22deg + 720deg (2 volle Umdrehungen) = 742deg
+  // Back (P2): 202deg + 720deg = 922deg
+  const targetY = p1Wins ? 742 : 922;
+
+  requestAnimationFrame(() => {
+    if (chalkCube) {
+      chalkCube.style.transition =
+        "transform 1.25s cubic-bezier(0.15, 0.9, 0.25, 1.15)";
+      chalkCube.style.transform = `rotateX(-18deg) rotateY(${targetY}deg)`;
+    }
+  });
 
   setTimeout(() => {
-    if (c1) c1.classList.remove("rolling");
-    if (c2) c2.classList.remove("rolling");
+    if (chalkCube) chalkCube.classList.remove("rolling");
 
-    if (s1) s1.textContent = roll1;
-    if (s2) s2.textContent = roll2;
+    // Dumpfer Aufprallklack auf Filz
+    playDiceSound(true);
 
-    const winner = roll1 > roll2 ? p1Name : p2Name;
+    // Kreidestaub-Wölkchen beim Aufprall
+    if (puff) {
+      puff.classList.remove("active");
+      void puff.offsetWidth;
+      puff.classList.add("active");
+    }
+
+    const winner = p1Wins ? p1Name : p2Name;
     duelLastWinner = winner;
 
-    if (roll1 > roll2) {
+    if (p1Wins) {
       if (f1) f1.classList.add("winner");
-      if (s1) s1.style.color = "#ffd60a";
-      if (s2) s2.style.color = "#8e8e93";
     } else {
       if (f2) f2.classList.add("winner");
-      if (s2) s2.style.color = "#ffd60a";
-      if (s1) s1.style.color = "#8e8e93";
     }
 
     if (subtitle)
-      subtitle.textContent = `Ergebnis: ${p1Name} (${roll1}) vs. ${p2Name} (${roll2})`;
+      subtitle.textContent = `Die Kreide entscheidet: ${winner} oben!`;
     const winTextEl = document.getElementById("duelWinnerText");
     if (winTextEl)
       winTextEl.textContent = `👑 ${winner} sichert sich den Anstoß!`;

@@ -65,6 +65,9 @@ window.updateAllViews = function () {
       if (toggleBar) toggleBar.style.display = "flex";
       if (titleStack) titleStack.style.pointerEvents = "auto";
     }
+    if (typeof window.updateStatHeaderOffset === "function") {
+      window.updateStatHeaderOffset();
+    }
   }
 
   const statsToUse = isToday
@@ -695,8 +698,43 @@ function initSecretModeTrigger() {
     });
 }
 
+window.updateStatHeaderOffset = () => {
+  const statHeader = document.querySelector(
+    "#view-statistik .header-container",
+  );
+  if (!statHeader) return;
+  const h = statHeader.getBoundingClientRect().height;
+  if (h > 0) {
+    document.documentElement.style.setProperty(
+      "--stat-header-offset",
+      `${Math.ceil(h)}px`,
+    );
+  }
+};
+
+function initStatHeaderObserver() {
+  const statHeader = document.querySelector(
+    "#view-statistik .header-container",
+  );
+  if (!statHeader) return;
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(() => {
+      window.updateStatHeaderOffset();
+    });
+    ro.observe(statHeader);
+  }
+  window.addEventListener("resize", window.updateStatHeaderOffset, {
+    passive: true,
+  });
+  window.updateStatHeaderOffset();
+}
+
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initSecretModeTrigger);
+  document.addEventListener("DOMContentLoaded", () => {
+    initSecretModeTrigger();
+    initStatHeaderObserver();
+  });
 } else {
   initSecretModeTrigger();
+  initStatHeaderObserver();
 }

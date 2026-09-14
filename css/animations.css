@@ -367,176 +367,268 @@
   justify-content: center;
   padding: 20px;
 }
-.dice-duel-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  margin: 30px 0 20px 0;
-}
-.dice-fighter {
+
+/* Chalk Duel Arena */
+.chalk-stage {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: 340px;
+  margin: 10px auto 0 auto;
+  perspective: 900px;
+  perspective-origin: 50% 35%;
+  position: relative;
+  min-height: 250px;
 }
-.dice-avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  object-fit: cover;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+.chalk-fighters-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  margin-bottom: 20px;
 }
-.dice-name {
-  font-size: 14px;
+.chalk-fighter-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 110px;
+  transition: transform 0.3s ease;
+}
+.chalk-fighter-col.winner {
+  transform: scale(1.1);
+}
+.chalk-avatar-wrap {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+  min-height: 52px;
+}
+.chalk-vs-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #111622;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffd60a;
+  font-size: 11px;
   font-weight: 900;
-  color: #fff;
-  text-align: center;
-  max-width: 140px;
-  word-break: break-word;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.6);
 }
 
-/* 3D Dice Scene & Cube */
-.dice-scene {
-  width: 64px;
-  height: 64px;
-  perspective: 800px;
-  margin-top: 6px;
+/* Grüner Billard-Filztisch Sockel */
+.felt-table {
+  position: absolute;
+  bottom: 0px;
+  width: 270px;
+  height: 115px;
+  background: radial-gradient(
+    ellipse at center,
+    #1b6343 0%,
+    #0f402b 65%,
+    #072418 100%
+  );
+  border-radius: 50%;
+  border: 4px solid #3d2415;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.8),
+    inset 0 2px 14px rgba(0, 0, 0, 0.6);
+  transform: rotateX(62deg);
+  transform-style: preserve-3d;
 }
-.dice-cube {
-  width: 64px;
-  height: 64px;
+.felt-table::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 25px rgba(0, 255, 136, 0.15);
+}
+
+/* 3D Chalk Container */
+.chalk-cube-wrap-3d {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  transform-style: preserve-3d;
+  z-index: 10;
+  margin: 10px auto 25px auto;
+}
+.chalk-cube {
+  width: 76px;
+  height: 76px;
   position: relative;
   transform-style: preserve-3d;
-  transform: rotateX(0deg) rotateY(0deg);
-  transition: transform 1.2s cubic-bezier(0.15, 0.9, 0.25, 1.15);
+  transform: rotateX(-18deg) rotateY(22deg);
+  transition: transform 1.25s cubic-bezier(0.15, 0.9, 0.25, 1.15);
 }
-.dice-cube.rolling {
-  animation: dice-tumble-shake 0.2s infinite ease-in-out;
+.chalk-cube.rolling {
+  animation: chalk-tumble-3d 0.18s infinite linear;
 }
-@keyframes dice-tumble-shake {
-  0%,
-  100% {
-    transform: translateY(0) rotateZ(0deg);
+@keyframes chalk-tumble-3d {
+  0% {
+    transform: translateY(-50px) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
   }
   50% {
-    transform: translateY(-16px) rotateZ(10deg);
+    transform: translateY(-90px) rotateX(180deg) rotateY(180deg) rotateZ(90deg);
+  }
+  100% {
+    transform: translateY(-50px) rotateX(360deg) rotateY(360deg) rotateZ(180deg);
+  }
+}
+.chalk-shadow-3d {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%) rotateX(65deg);
+  width: 74px;
+  height: 28px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.3) 55%,
+    transparent 75%
+  );
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+.chalk-cube.rolling + .chalk-shadow-3d {
+  transform: translateX(-50%) rotateX(65deg) scale(0.6);
+  opacity: 0.3;
+}
+
+/* Kreidestaub Puff */
+.chalk-puff {
+  position: absolute;
+  bottom: 35px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(0, 240, 255, 0.6);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.8);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 15;
+}
+.chalk-puff.active {
+  animation: puff-burst 0.5s ease-out forwards;
+}
+@keyframes puff-burst {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(8);
+    opacity: 0;
   }
 }
 
-.dice-face {
+.chalk-face {
   position: absolute;
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(145deg, #ffffff 0%, #e2e8f0 100%);
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  width: 76px;
+  height: 76px;
   border-radius: 12px;
-  box-shadow:
-    inset 0 0 10px rgba(0, 0, 0, 0.1),
-    0 6px 16px rgba(0, 0, 0, 0.5);
-  display: grid;
-  padding: 9px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+  padding: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.18);
 }
-
-/* 3D Cube Faces Positioning (translateZ = 32px for 64px cube) */
-.face-1 {
-  transform: rotateY(0deg) translateZ(32px);
-}
-.face-2 {
-  transform: rotateY(90deg) translateZ(32px);
-}
-.face-3 {
-  transform: rotateY(180deg) translateZ(32px);
-}
-.face-4 {
-  transform: rotateY(-90deg) translateZ(32px);
-}
-.face-5 {
-  transform: rotateX(90deg) translateZ(32px);
-}
-.face-6 {
-  transform: rotateX(-90deg) translateZ(32px);
-}
-
-/* Dice Dots / Pips */
-.pip {
-  width: 10px;
-  height: 10px;
-  background: #0f172a;
-  border-radius: 50%;
+.cface-p1 {
+  background: radial-gradient(
+    circle at 35% 35%,
+    #2563eb 0%,
+    #1d4ed8 40%,
+    #0f2766 100%
+  );
+  border: 2px solid #ffd60a;
   box-shadow:
-    inset 0 1px 2px rgba(0, 0, 0, 0.8),
-    0 1px 1px rgba(255, 255, 255, 0.8);
+    inset 0 0 14px rgba(255, 214, 10, 0.5),
+    0 0 20px rgba(0, 0, 0, 0.7);
+  color: #ffd60a;
 }
-.pip.red {
-  background: #dc2626;
+.cface-p2 {
+  background: radial-gradient(
+    circle at 35% 35%,
+    #06b6d4 0%,
+    #0891b2 40%,
+    #083344 100%
+  );
+  border: 2px solid #00f0ff;
+  box-shadow:
+    inset 0 0 14px rgba(0, 240, 255, 0.5),
+    0 0 20px rgba(0, 0, 0, 0.7);
+  color: #00f0ff;
 }
-
-/* Face Grid Dot Layouts */
-.face-1 {
+.cface-side {
+  background: radial-gradient(circle at 50% 50%, #152233 0%, #0d1520 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  color: #8e8e93;
+}
+.cface-top-felt {
+  background: radial-gradient(circle at 50% 50%, #0c3624 0%, #051a11 100%);
+  border: 1.5px solid rgba(52, 199, 89, 0.3);
+}
+.chalk-dent {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #050b12 0%, #0d1722 70%, #1c2b3d 100%);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 20px;
 }
-.face-1 .pip {
-  width: 14px;
-  height: 14px;
+.chalk-brand {
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  opacity: 0.8;
+  margin-bottom: 2px;
 }
-
-.face-2 {
-  display: flex;
-  justify-content: space-between;
+.cface-name {
+  font-size: 10px;
+  font-weight: 900;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70px;
 }
-.face-2 .pip:nth-child(2) {
-  align-self: flex-end;
+.cf-front {
+  transform: rotateY(0deg) translateZ(38px);
 }
-
-.face-3 {
-  display: flex;
-  justify-content: space-between;
+.cf-back {
+  transform: rotateY(180deg) translateZ(38px);
 }
-.face-3 .pip:nth-child(2) {
-  align-self: center;
+.cf-right {
+  transform: rotateY(90deg) translateZ(38px);
 }
-.face-3 .pip:nth-child(3) {
-  align-self: flex-end;
+.cf-left {
+  transform: rotateY(-90deg) translateZ(38px);
 }
-
-.face-4 {
-  display: flex;
-  justify-content: space-between;
+.cf-top {
+  transform: rotateX(90deg) translateZ(38px);
 }
-.face-4 .col {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.face-5 {
-  display: flex;
-  justify-content: space-between;
-}
-.face-5 .col {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-.face-5 .center-col {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.face-6 {
-  display: flex;
-  justify-content: space-between;
-}
-.face-6 .col {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+.cf-bottom {
+  transform: rotateX(-90deg) translateZ(38px);
 }
 
 /* Glow on Winner */

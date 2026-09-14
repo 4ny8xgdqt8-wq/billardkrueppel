@@ -1994,7 +1994,7 @@ select option {
 .stat-subtab-bar {
   position: -webkit-sticky;
   position: sticky;
-  top: calc(var(--safe-top) + 62px);
+  top: calc(var(--stat-header-offset, calc(var(--safe-top, 0px) + 64px)) + 4px);
   z-index: 850;
   display: flex;
   gap: 6px;
