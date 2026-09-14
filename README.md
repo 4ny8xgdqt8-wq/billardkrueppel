@@ -6,6 +6,46 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### 🟢 Restkugel-Auswahl über volle Breite (v22.2)
+
+- **Horizontale Kugel-Reihe im Bearbeiten-Modal:** Beim Bearbeiten und Erfassen von Matches erstreckt sich das grüne Billardtuch mit den 3D-Kugeln (0 bis 7) nun wieder über die gesamte Fensterbreite, anstatt schmal gestaucht zu sein.
+- **Bequeme Kugel-Auswahl:** Alle Restkugeln sind sauber horizontal nebeneinander angeordnet und lassen sich komfortabel und fehlerfrei antippen.
+- **Offline-Cache (v22.2):** Aktualisierung des Offline-Speichers auf Version 22.2 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 🎱 Lückenlose Historie & Horizontale Kugel-Karten (v22.1)
+
+- **Vollständige Historie aller Spieleabende:** In der Match-Historie werden nun ausnahmslos alle gespielten Spieleabende und Partien chronologisch angezeigt – die bisherige Begrenzung auf die letzten 50 Spiele wurde vollständig aufgehoben.
+- **Kugel-Statistiken nebeneinander:** In der Rubrik „Kugeln & Break“ sind die Kacheln für die Kugelarten (**„🟡 Voll-Spezialist“** & **„🔵 Halb-Spezialist“** sowie die Kugel-Spezis mit Top-Siegrate) nun symmetrisch nebeneinander über die gesamte Bildschirmbreite angeordnet.
+- **Offline-Cache (v22.1):** Aktualisierung des Offline-Speichers auf Version 22.1 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 📜 Großes Redesign der Match-Historie (v22.0)
+
+- **Moderne Match-Karten:** Die gesamte Historie-Liste erstrahlt im neuen „Hall-of-Records“-Design mit dynamischen Leuchtkanten, eleganten Glas-Effekten und weicher Einblend-Animation.
+- **Sieger & Verlierer auf einen Blick:** Der Gewinner wird mit Krone 👑, leuchtendem Avatar und kräftiger Schrift hervorgehoben, während der Verlierer dezent abgedunkelt wird.
+- **Farbcodierte Siegarten:** Reguläre Triumphe strahlen in sattem Grün, während durch gegnerische Fehler oder Fouls entschiedene Matches in markantem Warm-Orange mit präzisem Hinweistext dargestellt werden.
+- **Fixierte Datums-Kopfzeilen mit Zähler:** Beim Scrollen durch die Historie bleiben die Datums-Header oben am Bildschirmrand haften und zeigen zusätzlich die Anzahl der gespielten Matches des jeweiligen Tages an (z. B. `📅 14.09.2026 • 4 Matches`).
+- **Direkte Aktionen:** Jedes Match bietet im Kartenfuß direkt erreichbare Schaltflächen zum Bearbeiten (✏️) und Löschen (🗑️) des Spiels.
+- **Offline-Cache (v22.0):** Aktualisierung des Offline-Speichers auf Version 22.0 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 📏 Zeit-Kacheln über volle Seitenbreite (v21.6)
+
+- **Volle Breiten-Nutzung:** Die beiden Zeit-Kacheln **„⏱️ Ø Siegesdauer“** und **„🐢 Längste Spieldauer“** spannen sich nun über die gesamte Seitenbreite der Rubrik „Rekorde & Fun-Stats“.
+- **Ausbalanciertes 50/50-Layout:** Beide Karten teilen sich die Zeile exakt zur Hälfte und schließen bündig mit den Außenrändern ab, sodass kein ungenutzter Freiraum mehr verbleibt.
+- **Offline-Cache (v21.6):** Aktualisierung des Offline-Speichers auf Version 21.6 für sofortige Verfügbarkeit auf allen Geräten.
+
+### ⏱️ Spieldauer-Kacheln nebeneinander (v21.5)
+
+- **Symmetrische 2er-Reihe:** In der Rubrik „Rekorde & Fun-Stats“ sind die beiden Zeit-Kacheln **„⏱️ Ø Siegesdauer“** und **„🐢 Längste Spieldauer“** nun bündig und gleich groß nebeneinander platziert.
+- **Harmonisches Raster:** Das Statistik-Raster schließt dadurch mit einer perfekten zweispaltigen Zeile ab, ohne unschöne Lücken oder überbreite Einzelkarten.
+- **Offline-Cache (v21.5):** Aktualisierung des Offline-Speichers auf Version 21.5 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 📌 Oben fixierte Seitenauswahl beim Scrollen (v21.4)
+
+- **Sticky-Navigation:** Die Leiste der Seitenauswahl (🏆 Rangliste, ⚔️ Duelle, 🔬 Rekorde, 🎱 Kugeln) bleibt beim Herunterscrollen nun dauerhaft oben am Bildschirmrand fixiert.
+- **Sofortiger Wechsel:** Auch tief in langen Listen (z. B. bei den Duellen oder der Rangliste) kann jederzeit bequem und ohne Zurückscrollen zwischen den Rubriken gewechselt werden.
+- **Edler Frost-Effekt:** Ein hochwertiger Milchglas-Hintergrund mit Weichzeichner und dezentem Schatten sorgt dafür, dass die Tabs jederzeit perfekt lesbar bleiben und durchscrollende Inhalte elegant überlagern.
+- **Offline-Cache (v21.4):** Aktualisierung des Offline-Speichers auf Version 21.4 für sofortige Verfügbarkeit auf allen Geräten.
+
 ### ⚔️ Session-Matches exklusiv unter Duelle (v21.3)
 
 - **Saubere Rubrik-Trennung:** Die gespielten Session-Matches werden nun ausschließlich in der Rubrik „Duelle“ angezeigt.

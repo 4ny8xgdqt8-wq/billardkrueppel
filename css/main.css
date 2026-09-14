@@ -1233,36 +1233,83 @@ select option {
 }
 
 .history-date-header {
-  position: sticky;
   position: -webkit-sticky;
+  position: sticky;
   top: calc(var(--safe-top) + 55px);
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.8) 0%,
-    rgba(0, 0, 0, 0) 100%
+    rgba(11, 15, 25, 0.95) 0%,
+    rgba(11, 15, 25, 0.82) 80%,
+    transparent 100%
   );
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 15px 16px 10px 16px;
-  margin: 0 -16px 12px -16px;
-  font-size: 11px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 12px 16px 8px 16px;
+  margin: 10px -16px 12px -16px;
+  font-size: 0.78rem;
   font-weight: 900;
-  color: #8e8e93;
-  text-transform: uppercase;
+  color: var(--accent);
   letter-spacing: 1px;
+  text-transform: uppercase;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.history-date-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.history-date-count {
+  font-size: 0.68rem;
+  color: #8e8e93;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.history-actions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.history-date-header::before {
-  content: "";
-  width: 4px;
-  height: 4px;
-  background: var(--accent);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--accent);
+.history-btn-action {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.history-btn-action:hover,
+.history-btn-action:active {
+  background: rgba(255, 204, 0, 0.15);
+  color: #ffcc00;
+  border-color: rgba(255, 204, 0, 0.4);
+}
+
+.history-btn-action.del:hover,
+.history-btn-action.del:active {
+  background: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+  border-color: rgba(255, 69, 58, 0.4);
 }
 
 .rank-1-card {
@@ -1748,10 +1795,12 @@ select option {
 
 /* --- 2. 3D Billiard Ball Rack (Restkugeln-Auswahl auf Billardtuch) --- */
 .rack-felt-table {
+  width: 100%;
+  box-sizing: border-box;
   background: radial-gradient(circle at 50% 40%, #0d2818 0%, #05140b 100%);
   border: 2px solid rgba(52, 199, 89, 0.3);
   border-radius: 20px;
-  padding: 16px 12px;
+  padding: 14px 10px;
   box-shadow:
     inset 0 4px 16px rgba(0, 0, 0, 0.8),
     0 10px 24px rgba(0, 0, 0, 0.5);
@@ -1760,12 +1809,13 @@ select option {
 }
 
 .rack-felt-title {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 800;
   color: #34d399;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   margin-bottom: 12px;
+  line-height: 1.35;
 }
 
 .billiard-rack {
@@ -1773,14 +1823,16 @@ select option {
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 6px;
+  width: 100%;
   max-width: 440px;
   margin: 0 auto;
 }
 
 .billiard-ball {
-  width: 44px;
-  height: 44px;
+  width: clamp(32px, 8vw, 40px);
+  height: clamp(32px, 8vw, 40px);
+  flex-shrink: 0;
   border-radius: 50%;
   position: relative;
   display: flex;
@@ -1978,15 +2030,20 @@ select option {
 
 /* 2. Dashboard Sub-Tab Segment Switcher */
 .stat-subtab-bar {
+  position: -webkit-sticky;
+  position: sticky;
+  top: calc(var(--safe-top) + 62px);
+  z-index: 850;
   display: flex;
   gap: 6px;
-  background: rgba(18, 18, 22, 0.75);
+  background: rgba(18, 18, 22, 0.88);
   padding: 4px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 16px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
 }
 
 .stat-subtab-btn {

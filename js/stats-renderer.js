@@ -3690,36 +3690,38 @@ window.renderHistory = function renderHistory(statsToRender) {
   const counter = document.getElementById("match-counter");
   if (counter) counter.innerText = "Matches: " + list.length;
 
-  const getAvatarHtml = (playerName, size = 18) => {
-    if (!playerName) return "";
-    const players = playerName.split(" & ").map((p) => p.trim());
-    return players
-      .map((p, idx) => {
-        const avatarSrc = safeGetAvatarUrl
-          ? safeGetAvatarUrl(p)
-          : `avatars/${p}.webp`;
-        const isLast = idx === players.length - 1;
-        const margin = isLast ? "0" : "-6px";
-        return `<img loading="lazy" src="${avatarSrc}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.2); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;"><div style="display:none; width:${size}px; height:${size}px; border-radius:6px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:${size * 0.6}px; border:1px solid rgba(255,255,255,0.1); margin-right:${margin}; position:relative; z-index:${players.length - idx}; vertical-align:middle;">👤</div>`;
+  const getAv = (pName, isWinner = false, size = 32) => {
+    if (!pName) return "";
+    const names = pName.split(" & ").map((s) => s.trim());
+    return names
+      .map((n, pIdx) => {
+        const src = safeGetAvatarUrl
+          ? safeGetAvatarUrl(n)
+          : `avatars/${n}.webp`;
+        const margin = pIdx === names.length - 1 ? "0" : "-10px";
+        return `<img loading="lazy" src="${src}" class="match-avatar-chip" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; margin-right:${margin}; position:relative; z-index:${names.length - pIdx};">
+                <div class="match-avatar-chip" style="display:none; width:${size}px; height:${size}px; background:#1e293b; align-items:center; justify-content:center; font-size:${Math.round(size * 0.55)}px; margin-right:${margin}; position:relative; z-index:${names.length - pIdx};">👤</div>`;
       })
       .join("");
   };
 
-  const getBallBadge = (type) => {
-    if (!type) return "";
-    return `<span style="display:inline-flex; align-items:center; opacity:0.8;">${window.getBallIcon(type).replace('width="14"', 'width="12"').replace('height="14"', 'height="12"').replace("margin-right:4px;", "")}</span>`;
-  };
-
-  let html = "";
-  let lastDate = "";
-
-  const sortedList = list.slice().reverse().slice(0, 50); // Performance-Limit
+  const sortedList = list.slice().reverse();
 
   if (sortedList.length === 0) {
     container.innerHTML =
       '<div style="text-align:center;color:#8e8e93;padding:40px;">Keine Spiele vorhanden.</div>';
     return;
   }
+
+  // Tageszähler vorab berechnen
+  const dateCounts = {};
+  sortedList.forEach((g) => {
+    const d = (g.d || "").split(", ")[0];
+    if (d) dateCounts[d] = (dateCounts[d] || 0) + 1;
+  });
+
+  let html = "";
+  let lastDate = "";
 
   sortedList.forEach((g, idx) => {
     const i = window.stats.indexOf(g);
@@ -3728,7 +3730,14 @@ window.renderHistory = function renderHistory(statsToRender) {
     const time = dateParts[1] || "";
 
     if (date !== lastDate) {
-      html += `<div class="history-date-header" style="animation: tip-fade 0.5s ease-out forwards; animation-delay: ${idx * 0.05}s"><span>${date}</span></div>`;
+      const count = dateCounts[date] || 1;
+      html += `
+        <div class="history-date-header" style="animation: tip-fade 0.5s ease-out forwards; animation-delay: ${idx * 0.03}s">
+          <div class="history-date-title">
+            <span>📅 ${date}</span>
+          </div>
+          <div class="history-date-count">${count} ${count === 1 ? "Match" : "Matches"}</div>
+        </div>`;
       lastDate = date;
     }
 
@@ -3736,6 +3745,18 @@ window.renderHistory = function renderHistory(statsToRender) {
     const isWin2 = g.w == 2;
     const dData = deltas[i] || { eloDelta: 0 };
     const delta = typeof dData === "object" ? dData.eloDelta || 0 : dData;
+    const hasBreak1 = g.a === g.p1;
+    const hasBreak2 = g.a === g.p2;
+
+    const winTypeStr = String(g.t || "").trim();
+    const isRegular =
+      !winTypeStr ||
+      winTypeStr.includes("Regulär") ||
+      winTypeStr.includes("gelocht") ||
+      winTypeStr.toLowerCase().includes("normal");
+    const isNonRegular = !isRegular;
+    const cardAccent = isNonRegular ? "#ff9500" : "#30d158";
+    const winnerName = isWin1 ? g.p1 : g.p2;
 
     // Dauer-Display berechnen (formatierte Dauer, Sekunden, fallback auf Minuten)
     const pad = (n) => String(n).padStart(2, "0");
@@ -3750,70 +3771,79 @@ window.renderHistory = function renderHistory(statsToRender) {
       durationDisplay = `${pad(g.duration)}:00`;
     }
 
-    // Cinematic Card Style
-    const winGlow = "0 0 20px rgba(52, 199, 89, 0.15)";
-    const borderStyle = isWin1
-      ? `border-left: 3px solid #34c759;`
-      : `border-right: 3px solid #34c759;`;
-    const hasBreak1 = g.a === g.p1;
-    const hasBreak2 = g.a === g.p2;
+    const ballBadge1 = g.bt1
+      ? g.bt1 === "Voll"
+        ? "🟡 Volle"
+        : "🔵 Halbe"
+      : "";
+    const ballBadge2 = g.bt2
+      ? g.bt2 === "Voll"
+        ? "🟡 Volle"
+        : "🔵 Halbe"
+      : "";
+
+    const sub1Parts = [];
+    if (ballBadge1) sub1Parts.push(`<span>${ballBadge1}</span>`);
+    if (hasBreak1)
+      sub1Parts.push(`<span style="color:#ffcc00;">⚡ Anstoß</span>`);
+    if (!isWin1 && typeof g.l !== "undefined")
+      sub1Parts.push(`<span>Rest: ${g.l}</span>`);
+
+    const sub2Parts = [];
+    if (!isWin2 && typeof g.l !== "undefined")
+      sub2Parts.push(`<span>Rest: ${g.l}</span>`);
+    if (hasBreak2)
+      sub2Parts.push(`<span style="color:#ffcc00;">⚡ Anstoß</span>`);
+    if (ballBadge2) sub2Parts.push(`<span>${ballBadge2}</span>`);
+
+    const cleanWinType = winTypeStr.replace(/^Gegner-Fehler:\s*/i, "");
+    const modeWinText = isNonRegular
+      ? `<span style="color:#ff9500; font-weight:800;">⚠️ ${cleanWinType || "Gegner-Fehler"}</span>`
+      : `${g.m || "1:1"} · ${winTypeStr || "Regulärer Sieg"}`;
+    const calloutReason = isNonRegular
+      ? ` (${cleanWinType || "Gegner-Fehler"})`
+      : "";
 
     html += `
-                <div class="card" onclick="window.openMatchDetails(${i})" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; ${borderStyle} animation: history-card-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: ${idx * 0.05}s; opacity: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5); background: var(--card); transition: all 0.3s ease; cursor:pointer;">
-                    <div style="padding: 15px 14px 12px 14px; display: flex; align-items: center; justify-content: space-between; position: relative;">
-                        <!-- Team 1 -->
-                        <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; overflow: hidden;">
-                            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
-                                <div style="display: flex; align-items: center; flex-shrink: 0; border: 1px solid ${isWin1 ? "#34c759" : "transparent"}; border-radius: 8px; padding: 2px;">${getAvatarHtml(g.p1, 22)}</div>
-                                <div style="font-size: 14px; font-weight: 900; color: ${isWin1 ? "#fff" : "var(--error)"}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; display: flex; align-items: center; gap: 4px;">
-                                    ${g.p1} ${hasBreak1 ? '<span title="Anstoß" style="color:var(--accent); font-size:10px;">⚡</span>' : ""}
-                                </div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 4px;">
-                                ${isWin1 ? `<span style="font-size: 10px; font-weight: 900; color: #34c759; background: rgba(52,199,89,0.1); padding: 1px 5px; border-radius: 4px;">+${delta}</span>` : `<span style="font-size: 10px; font-weight: 900; color: var(--error); background: rgba(255,59,48,0.1); padding: 1px 5px; border-radius: 4px;">-${delta}</span>`} ${getBallBadge(g.bt1)}
-                                <span style="font-size: 8px; font-weight: 800; color: #444; text-transform: uppercase;">${g.bt1}</span>
-                            </div>
-                        </div>
-
-                        <!-- VS Divider -->
-                        <div style="padding: 0 15px; display: flex; flex-direction: column; align-items: center; opacity: 0.2;">
-                            <div style="font-size: 9px; font-weight: 900; color: #fff; letter-spacing: 1px;">VS</div>
-                        </div>
-
-                        <!-- Team 2 -->
-                        <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; overflow: hidden; text-align: right;">
-                            <div style="display: flex; align-items: center; gap: 10px; width: 100%; justify-content: flex-end;">
-                                <div style="font-size: 14px; font-weight: 900; color: ${isWin2 ? "#fff" : "var(--error)"}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
-                                    ${hasBreak2 ? '<span title="Anstoß" style="color:var(--accent); font-size:10px;">⚡</span>' : ""} ${g.p2}
-                                </div>
-                                <div style="display: flex; align-items: center; flex-shrink: 0; border: 1px solid ${isWin2 ? "#34c759" : "transparent"}; border-radius: 8px; padding: 2px;">${getAvatarHtml(g.p2, 22)}</div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 4px;">
-                                <span style="font-size: 8px; font-weight: 800; color: #444; text-transform: uppercase;">${g.bt2}</span>
-                                ${getBallBadge(g.bt2)} ${isWin2 ? `<span style="font-size: 10px; font-weight: 900; color: #34c759; background: rgba(52,199,89,0.1); padding: 1px 5px; border-radius: 4px;">+${delta}</span>` : `<span style="font-size: 10px; font-weight: 900; color: var(--error); background: rgba(255,59,48,0.1); padding: 1px 5px; border-radius: 4px;">-${delta}</span>`}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Footer Info -->
-                    <div style="background: rgba(0,0,0,0.2); padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.03);">
-                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1;">
-                            <span style="font-size: 9px; color: #8e8e93; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">${time}</span>
-                            <span style="opacity:0.4;">•</span>
-                            <span style="font-size: 9px; color: #7fc9ff; font-weight: 800;">${durationDisplay}</span>
-                            <span style="height: 3px; width: 3px; border-radius: 50%; background: #444;"></span>
-                            <span style="font-size: 9px; color: var(--accent); font-weight: 800;">MODUS: ${g.m === "1:1" ? "1 VS 1" : "2 VS 2"}</span>
-                            <span style="height: 3px; width: 3px; border-radius: 50%; background: #444;"></span>
-                            <span style="font-size: 9px; color: #8e8e93; font-weight: 700;">REST: ${g.l}</span>
-                            <span style="height: 3px; width: 3px; border-radius: 50%; background: #444;"></span>
-                            <span style="font-size: 9px; color: #8e8e93; font-weight: 700;">SIEG: ${g.t}</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
-                             <div style="font-size:10px; color:rgba(255,204,0,0.7); transition: color 0.3s; cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,204,0,0.7)'" onclick="event.stopPropagation(); window.openEditMatchModal(${i})">Bearbeiten</div>
-                             <div style="font-size:10px; color:rgba(255,255,255,0.2); transition: color 0.3s; cursor:pointer;" onmouseover="this.style.color='var(--error)'" onmouseout="this.style.color='rgba(255,255,255,0.2)'" onclick="event.stopPropagation(); window.requestDelete(${i})">Löschen</div>
-                        </div>
-                    </div>
-                </div>`;
+      <div onclick="window.openMatchDetails(${i})" class="match-card-modern cinematic-entry ${isNonRegular ? "non-regular" : ""}" style="--card-accent: ${cardAccent}; animation-delay: ${idx * 0.03}s;">
+          <div class="match-card-header">
+              <div class="match-card-header-left">
+                  <span class="match-num-tag">${time ? `${time} Uhr` : `Match #${idx + 1}`}</span>
+                  <span>•</span>
+                  <span class="match-duration-tag">⏱️ ${durationDisplay}</span>
+              </div>
+              <div>${modeWinText}</div>
+          </div>
+          <div class="match-duel-arena">
+              <div class="match-team ${isWin1 ? "winner" : "loser"}">
+                  <div style="display:flex; flex-shrink:0;">${getAv(g.p1, isWin1, 32)}</div>
+                  <div style="min-width:0; overflow:hidden;">
+                      <div class="match-player-name">${g.p1} ${isWin1 ? "👑" : ""}</div>
+                      <div class="match-team-sub">${sub1Parts.join(" <span>•</span> ")}</div>
+                  </div>
+              </div>
+              <div class="match-vs-badge">VS</div>
+              <div class="match-team right ${isWin2 ? "winner" : "loser"}">
+                  <div style="min-width:0; overflow:hidden;">
+                      <div class="match-player-name">${isWin2 ? "👑 " : ""}${g.p2}</div>
+                      <div class="match-team-sub">${sub2Parts.join(" <span>•</span> ")}</div>
+                  </div>
+                  <div style="display:flex; flex-shrink:0;">${getAv(g.p2, isWin2, 32)}</div>
+              </div>
+          </div>
+          <div class="match-card-footer">
+              <div style="display:flex; align-items:center; gap:8px;">
+                  <div class="match-winner-callout">
+                      <span>🏆 Sieger: ${winnerName}${calloutReason}</span>
+                  </div>
+                  <div class="match-elo-pill">${delta > 0 ? "+" : ""}${delta} ELO</div>
+              </div>
+              <div class="history-actions">
+                  <button class="history-btn-action" onclick="event.stopPropagation(); window.openEditMatchModal(${i})">✏️ Bearbeiten</button>
+                  <button class="history-btn-action del" onclick="event.stopPropagation(); window.requestDelete(${i})">🗑️ Löschen</button>
+              </div>
+          </div>
+      </div>`;
   });
 
   container.innerHTML = html;

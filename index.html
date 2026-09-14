@@ -1230,56 +1230,70 @@
                   </div>
                 </div>
 
-                <!-- 11. Ø Siegesdauer -->
                 <div
-                  class="stat-card-modern cinematic-entry"
-                  style="--card-accent: #30d158"
+                  style="
+                    grid-column: 1 / -1;
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                    gap: 12px;
+                  "
                 >
-                  <div class="stat-card-main">
-                    <div class="stat-card-badge-top">⏱️ Ø Siegesdauer</div>
-                    <div
-                      id="stat-avg-win-duration"
-                      class="stat-card-holder-row"
-                    >
-                      -
-                    </div>
-                    <div
-                      id="stat-avg-win-duration-subtitle"
-                      class="stat-card-sublabel"
-                    >
-                      Effizientester Sieger
-                    </div>
-                  </div>
-                  <div class="stat-metric-hero" id="stat-avg-win-duration-val">
-                    <div class="stat-hero-pill pill-green">-</div>
-                  </div>
-                </div>
-
-                <!-- 12. Längste Ø Spieldauer -->
-                <div
-                  class="stat-card-modern span-2 cinematic-entry"
-                  style="--card-accent: #ff9500"
-                >
-                  <div class="stat-card-main">
-                    <div class="stat-card-badge-top">🐢 Längste Spieldauer</div>
-                    <div
-                      id="stat-avg-match-duration"
-                      class="stat-card-holder-row"
-                    >
-                      -
-                    </div>
-                    <div
-                      id="stat-avg-match-duration-subtitle"
-                      class="stat-card-sublabel"
-                    >
-                      Der Taktiker
-                    </div>
-                  </div>
+                  <!-- 11. Ø Siegesdauer -->
                   <div
-                    class="stat-metric-hero"
-                    id="stat-avg-match-duration-val"
+                    class="stat-card-modern cinematic-entry"
+                    style="--card-accent: #30d158"
                   >
-                    <div class="stat-hero-pill pill-gold">-</div>
+                    <div class="stat-card-main">
+                      <div class="stat-card-badge-top">⏱️ Ø Siegesdauer</div>
+                      <div
+                        id="stat-avg-win-duration"
+                        class="stat-card-holder-row"
+                      >
+                        -
+                      </div>
+                      <div
+                        id="stat-avg-win-duration-subtitle"
+                        class="stat-card-sublabel"
+                      >
+                        Effizientester Sieger
+                      </div>
+                    </div>
+                    <div
+                      class="stat-metric-hero"
+                      id="stat-avg-win-duration-val"
+                    >
+                      <div class="stat-hero-pill pill-green">-</div>
+                    </div>
+                  </div>
+
+                  <!-- 12. Längste Ø Spieldauer -->
+                  <div
+                    class="stat-card-modern cinematic-entry"
+                    style="--card-accent: #ff9500"
+                  >
+                    <div class="stat-card-main">
+                      <div class="stat-card-badge-top">
+                        🐢 Längste Spieldauer
+                      </div>
+                      <div
+                        id="stat-avg-match-duration"
+                        class="stat-card-holder-row"
+                      >
+                        -
+                      </div>
+                      <div
+                        id="stat-avg-match-duration-subtitle"
+                        class="stat-card-sublabel"
+                      >
+                        Der Taktiker
+                      </div>
+                    </div>
+                    <div
+                      class="stat-metric-hero"
+                      id="stat-avg-match-duration-val"
+                    >
+                      <div class="stat-hero-pill pill-gold">-</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1366,42 +1380,64 @@
                   </div>
                 </div>
 
-                <!-- 2. 🟡 Voll-Spezialist -->
+                <!-- 2 & 3: Voll- & Halb-Spezialist nebeneinander über volle Breite -->
                 <div
-                  class="stat-card-modern cinematic-entry"
-                  style="--card-accent: #ffcc00"
+                  style="
+                    grid-column: 1 / -1;
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                    gap: 12px;
+                  "
                 >
-                  <div class="stat-card-main">
-                    <div class="stat-card-badge-top">🟡 Voll-Spezialist</div>
-                    <div id="stat-top-voll" class="stat-card-holder-row">-</div>
-                    <div class="stat-card-sublabel">
-                      Meiste Siege mit vollen Kugeln
+                  <!-- 2. 🟡 Voll-Spezialist -->
+                  <div
+                    class="stat-card-modern cinematic-entry"
+                    style="--card-accent: #ffcc00"
+                  >
+                    <div class="stat-card-main">
+                      <div class="stat-card-badge-top">🟡 Voll-Spezialist</div>
+                      <div id="stat-top-voll" class="stat-card-holder-row">
+                        -
+                      </div>
+                      <div class="stat-card-sublabel">
+                        Meiste Siege mit vollen Kugeln
+                      </div>
+                    </div>
+                    <div class="stat-metric-hero" id="stat-top-voll-val">
+                      <div class="stat-hero-pill pill-gold">-</div>
                     </div>
                   </div>
-                  <div class="stat-metric-hero" id="stat-top-voll-val">
-                    <div class="stat-hero-pill pill-gold">-</div>
+
+                  <!-- 3. 🔵 Halb-Spezialist -->
+                  <div
+                    class="stat-card-modern cinematic-entry"
+                    style="--card-accent: #4fc3f7"
+                  >
+                    <div class="stat-card-main">
+                      <div class="stat-card-badge-top">🔵 Halb-Spezialist</div>
+                      <div id="stat-top-halb" class="stat-card-holder-row">
+                        -
+                      </div>
+                      <div class="stat-card-sublabel">
+                        Meiste Siege mit halben Kugeln
+                      </div>
+                    </div>
+                    <div class="stat-metric-hero" id="stat-top-halb-val">
+                      <div class="stat-hero-pill pill-cyan">-</div>
+                    </div>
                   </div>
                 </div>
 
-                <!-- 3. 🔵 Halb-Spezialist -->
+                <!-- 4. Kugel-Spezis (Beste Siegrate pro Kugeltyp) nebeneinander über volle Breite -->
                 <div
-                  class="stat-card-modern cinematic-entry"
-                  style="--card-accent: #4fc3f7"
-                >
-                  <div class="stat-card-main">
-                    <div class="stat-card-badge-top">🔵 Halb-Spezialist</div>
-                    <div id="stat-top-halb" class="stat-card-holder-row">-</div>
-                    <div class="stat-card-sublabel">
-                      Meiste Siege mit halben Kugeln
-                    </div>
-                  </div>
-                  <div class="stat-metric-hero" id="stat-top-halb-val">
-                    <div class="stat-hero-pill pill-cyan">-</div>
-                  </div>
-                </div>
-
-                <!-- 4. Kugel-Spezis (Beste Siegrate pro Kugeltyp) -->
-                <div id="stat-ball-spez" style="display: contents"></div>
+                  id="stat-ball-spez"
+                  style="
+                    grid-column: 1 / -1;
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                    gap: 12px;
+                  "
+                ></div>
 
                 <!-- 5. Anstoß-Vorteil -->
                 <div
