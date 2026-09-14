@@ -25,6 +25,25 @@ const safeGetAvatarUrl = (name) => {
 };
 window.safeGetAvatarUrl = safeGetAvatarUrl;
 
+window.showAppToast = function (text) {
+  let toast = document.getElementById("app-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "app-toast";
+    toast.style.cssText =
+      "position:fixed; bottom:84px; left:50%; transform:translateX(-50%); background:rgba(15,23,42,0.95); color:#f8fafc; padding:10px 18px; border-radius:12px; font-size:13px; font-weight:600; border:1px solid rgba(212,175,55,0.4); box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:99999; pointer-events:none; transition:opacity 0.25s ease, transform 0.25s ease; opacity:0;";
+    document.body.appendChild(toast);
+  }
+  toast.innerText = text;
+  toast.style.opacity = "1";
+  toast.style.transform = "translateX(-50%) translateY(0)";
+  if (toast.__timer) clearTimeout(toast.__timer);
+  toast.__timer = setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(-50%) translateY(10px)";
+  }, 2200);
+};
+
 window.activeAchPlayer = null;
 window.activeAchCategory = "all";
 
@@ -1344,45 +1363,12 @@ window.renderBillardStats = function (
       hEl = byId("stat-balls-halb");
     if (vEl) vEl.innerText = vRate + "%";
     if (hEl) hEl.innerText = hRate + "%";
+    const barVoll = byId("stat-balls-bar-voll");
+    if (barVoll) barVoll.style.width = vRate + "%";
 
     // --- TOP KUGEL-SPIELER BERECHNEN ---
     // Use pre-calculated aggregates from worker
     const playerBallWins = agg.playerBallWins || {};
-
-    let topVollPlayers = [],
-      maxVollWins = 0;
-    let topHalbPlayers = [],
-      maxHalbWins = 0;
-
-    for (const player in playerBallWins) {
-      const vollWins = playerBallWins[player]["Voll"];
-      const halbWins = playerBallWins[player]["Halb"];
-
-      if (vollWins > maxVollWins) {
-        maxVollWins = vollWins;
-        topVollPlayers = [player];
-      } else if (vollWins === maxVollWins && vollWins > 0) {
-        topVollPlayers.push(player);
-      }
-
-      if (halbWins > maxHalbWins) {
-        maxHalbWins = halbWins;
-        topHalbPlayers = [player];
-      } else if (halbWins === maxHalbWins && halbWins > 0) {
-        topHalbPlayers.push(player);
-      }
-    }
-
-    if (byId("stat-top-voll"))
-      byId("stat-top-voll").innerText =
-        maxVollWins > 0
-          ? `${topVollPlayers.join(" / ")} (${maxVollWins}x)`
-          : "-";
-    if (byId("stat-top-halb"))
-      byId("stat-top-halb").innerText =
-        maxHalbWins > 0
-          ? `${topHalbPlayers.join(" / ")} (${maxHalbWins}x)`
-          : "-";
 
     // Global-Stats berechnen (unabhängig vom Filter für Vergleichswerte sinnvoll)
     const breakRate = Math.round(
@@ -1396,24 +1382,80 @@ window.renderBillardStats = function (
     );
     if (byId("stat-black")) byId("stat-black").innerText = blackRate + "%";
 
-    // --- TOP-SPIELER BERECHNUNGEN (MIT AVATAR-CHIPS) ---
-    const getTopPlayerStr = (valArray, key, suffix = "", minThreshold = 0) => {
-      const maxVal =
-        valArray.length > 0 ? Math.max(...valArray.map((x) => x.val)) : 0;
-      if (maxVal <= 0) return "-";
-      const tops = valArray.filter(
-        (x) => x.val === maxVal && x.relevantGames >= minThreshold,
+    // --- TOP-SPIELER BERECHNUNGEN (MODERN STAT-TILES) ---
+    const renderModernStatTile = (holderId, valId, valArray, options = {}) => {
+      const holderEl = byId(holderId);
+      const valEl = byId(valId);
+      const {
+        suffix = "",
+        unit = "",
+        pillClass = "pill-gold",
+        minThreshold = 0,
+        isMin = false,
+        formatVal = null,
+      } = options;
+      if (!holderEl) return;
+
+      const validVals = (valArray || []).filter(
+        (x) => x.relevantGames >= minThreshold && x.val > 0,
       );
-      if (tops.length === 0) return "-";
-      return (
-        tops
+      if (validVals.length === 0) {
+        holderEl.innerHTML =
+          '<span class="stat-card-player-label" style="color:#64748b;">-</span>';
+        if (valEl)
+          valEl.innerHTML = `<div class="stat-hero-pill ${pillClass}">-</div>`;
+        return;
+      }
+
+      const targetVal = isMin
+        ? Math.min(...validVals.map((x) => x.val))
+        : Math.max(...validVals.map((x) => x.val));
+
+      const tops = validVals.filter((x) => Math.abs(x.val - targetVal) < 0.001);
+      if (tops.length === 0) {
+        holderEl.innerHTML =
+          '<span class="stat-card-player-label" style="color:#64748b;">-</span>';
+        if (valEl)
+          valEl.innerHTML = `<div class="stat-hero-pill ${pillClass}">-</div>`;
+        return;
+      }
+
+      // Left side: Player Avatar & Name or Stack
+      let holderHtml = "";
+      if (tops.length === 1) {
+        const p = tops[0].p;
+        holderHtml = `
+          <img src="${safeGetAvatarUrl(p)}" class="stat-card-avatar" alt="${p}" onerror="this.src='logo.png'">
+          <span class="stat-card-player-label">${p}</span>
+        `;
+      } else if (tops.length === 2) {
+        holderHtml = `
+          <div class="stat-avatar-stack">
+            <img src="${safeGetAvatarUrl(tops[0].p)}" alt="${tops[0].p}" onerror="this.src='logo.png'">
+            <img src="${safeGetAvatarUrl(tops[1].p)}" alt="${tops[1].p}" onerror="this.src='logo.png'">
+          </div>
+          <span class="stat-card-player-label">${tops[0].p} & ${tops[1].p}</span>
+        `;
+      } else {
+        const stack = tops
+          .slice(0, 3)
           .map(
-            (x) =>
-              `<span style="display:inline-flex; align-items:center; gap:4px; margin:2px 4px 2px 0;"><img src="${safeGetAvatarUrl(x.p)}" style="width:18px; height:18px; border-radius:50%; object-fit:cover; vertical-align:middle; border:1px solid rgba(255,255,255,0.2);" onerror="this.style.display='none'"><b>${x.p}</b></span>`,
+            (t) =>
+              `<img src="${safeGetAvatarUrl(t.p)}" alt="${t.p}" onerror="this.src='logo.png'">`,
           )
-          .join(" / ") +
-        ` <span style="opacity:0.9; font-weight:800;">(${maxVal}${suffix})</span>`
-      );
+          .join("");
+        holderHtml = `
+          <div class="stat-avatar-stack">${stack}</div>
+          <span class="stat-card-player-label">Trio gleichauf</span>
+        `;
+      }
+      holderEl.innerHTML = holderHtml;
+
+      // Right side: Hero Pill
+      const displayVal = formatVal ? formatVal(targetVal) : targetVal;
+      if (valEl) {
+        valEl.innerHTML = `<div class="stat-hero-pill ${pillClass}">${displayVal}${suffix ? `<span class="unit">${suffix}</span>` : ""}${unit ? ` <span class="unit">${unit}</span>` : ""}</div>`;
+      }
     };
 
     // 1. Pechvogel (Ø Restkugeln bei Niederlage)
@@ -1426,8 +1468,10 @@ window.renderBillardStats = function (
       const val = losses > 0 ? parseFloat((rest / losses).toFixed(1)) : 0;
       return { p, val, relevantGames: losses };
     });
-    if (byId("stat-pechvogel"))
-      byId("stat-pechvogel").innerHTML = getTopPlayerStr(pechVals, "val");
+    renderModernStatTile("stat-pechvogel", "stat-pechvogel-val", pechVals, {
+      unit: "Ø Reste",
+      pillClass: "pill-gold",
+    });
 
     // 2. Reguläre Siege (Präzisions-Schütze)
     const regWinVals = labels.map((p) => {
@@ -1437,13 +1481,17 @@ window.renderBillardStats = function (
       const val = wins > 0 ? Math.round((reg / wins) * 100) : 0;
       return { p, val, relevantGames: wins };
     });
-    if (byId("stat-regular-wins"))
-      byId("stat-regular-wins").innerHTML = getTopPlayerStr(
-        regWinVals,
-        "val",
-        "%",
-        filterToday ? 1 : 3,
-      );
+    renderModernStatTile(
+      "stat-regular-wins",
+      "stat-regular-wins-val",
+      regWinVals,
+      {
+        suffix: "%",
+        unit: "Quote",
+        pillClass: "pill-green",
+        minThreshold: filterToday ? 1 : 3,
+      },
+    );
 
     // 3. Foul-Spezialist (Absolute Siege durch Gegner-Foul an der 8)
     const foul8Vals = labels.map((p) => {
@@ -1451,12 +1499,10 @@ window.renderBillardStats = function (
       const val = filterToday ? d.todayFoul8Wins || 0 : d.foul8Wins || 0;
       return { p, val, relevantGames: val };
     });
-    if (byId("stat-foul8-wins"))
-      byId("stat-foul8-wins").innerHTML = getTopPlayerStr(
-        foul8Vals,
-        "val",
-        "x",
-      );
+    renderModernStatTile("stat-foul8-wins", "stat-foul8-wins-val", foul8Vals, {
+      suffix: "x",
+      pillClass: "pill-purple",
+    });
 
     // 4. 8er-Fehler-Quote (Niederlagen durch eigenen Fehler an der 8)
     const lost8Vals = labels.map((p) => {
@@ -1468,13 +1514,17 @@ window.renderBillardStats = function (
       const val = games > 0 ? Math.round((errLosses / games) * 100) : 0;
       return { p, val, relevantGames: games };
     });
-    if (byId("stat-lost-by-8error"))
-      byId("stat-lost-by-8error").innerHTML = getTopPlayerStr(
-        lost8Vals,
-        "val",
-        "%",
-        filterToday ? 1 : 3,
-      );
+    renderModernStatTile(
+      "stat-lost-by-8error",
+      "stat-lost-by-8error-val",
+      lost8Vals,
+      {
+        suffix: "%",
+        unit: "Quote",
+        pillClass: "pill-red",
+        minThreshold: filterToday ? 1 : 3,
+      },
+    );
 
     // 5. Nutzniesser (Gesamte Siege durch Schwarz-Fehler)
     const nutzVals = labels.map((p) => {
@@ -1484,12 +1534,10 @@ window.renderBillardStats = function (
         : d.blackWinsCount || 0;
       return { p, val, relevantGames: val };
     });
-    if (byId("stat-nutzniesser"))
-      byId("stat-nutzniesser").innerHTML = getTopPlayerStr(
-        nutzVals,
-        "val",
-        "x",
-      );
+    renderModernStatTile("stat-nutzniesser", "stat-nutzniesser-val", nutzVals, {
+      suffix: "x",
+      pillClass: "pill-gold",
+    });
 
     // 6. Nervenstärke (Clutch Wins)
     const clutchVals = labels.map((p) => {
@@ -1498,8 +1546,11 @@ window.renderBillardStats = function (
         : res.pData[p].clutchWins || 0;
       return { p, val, relevantGames: val };
     });
-    if (byId("stat-clutch"))
-      byId("stat-clutch").innerHTML = getTopPlayerStr(clutchVals, "val", "x");
+    renderModernStatTile("stat-clutch", "stat-clutch-val", clutchVals, {
+      suffix: "x",
+      unit: "Clutch",
+      pillClass: "pill-blue",
+    });
 
     // 7. Killer-Instinkt
     const killerVals = labels.map((p) => {
@@ -1515,8 +1566,10 @@ window.renderBillardStats = function (
           : 0;
       return { p, val, relevantGames: wins };
     });
-    if (byId("stat-killer"))
-      byId("stat-killer").innerHTML = getTopPlayerStr(killerVals, "val");
+    renderModernStatTile("stat-killer", "stat-killer-val", killerVals, {
+      unit: "Ø Reste",
+      pillClass: "pill-red",
+    });
 
     // 8. Service-Dieb (Best Winrate after Opponent Break)
     const thiefVals = labels.map((p) => {
@@ -1531,29 +1584,72 @@ window.renderBillardStats = function (
       return { p, val, relevantGames: oppGames };
     });
     if (byId("stat-service-thief"))
-      byId("stat-service-thief").innerHTML = getTopPlayerStr(
+      renderModernStatTile(
+        "stat-service-thief",
+        "stat-service-thief-val",
         thiefVals,
-        "val",
-        "%",
-        filterToday ? 1 : 5,
+        {
+          suffix: "%",
+          pillClass: "pill-gold",
+          minThreshold: filterToday ? 1 : 5,
+        },
       );
+
+    // Top Kugel-Spezialisten (Modern Stat Cards)
+    const vollCandidates = Object.keys(playerBallWins).map((p) => ({
+      p,
+      val: playerBallWins[p]["Voll"] || 0,
+      relevantGames: playerBallWins[p]["Voll"] || 0,
+    }));
+    renderModernStatTile("stat-top-voll", "stat-top-voll-val", vollCandidates, {
+      unit: "Siege",
+      pillClass: "pill-gold",
+      minThreshold: 1,
+    });
+
+    const halbCandidates = Object.keys(playerBallWins).map((p) => ({
+      p,
+      val: playerBallWins[p]["Halb"] || 0,
+      relevantGames: playerBallWins[p]["Halb"] || 0,
+    }));
+    renderModernStatTile("stat-top-halb", "stat-top-halb-val", halbCandidates, {
+      unit: "Siege",
+      pillClass: "pill-cyan",
+      minThreshold: 1,
+    });
 
     // 9. ELO-Vampir (Wer hat wen am meisten geschröpft)
     const transfers = res.aggregates?.eloTransfers || {};
-    let topVampireStr = "-";
     const sortedTransfers = Object.entries(transfers).sort(
       (a, b) => b[1] - a[1],
     );
-    if (sortedTransfers.length > 0) {
-      const [key, val] = sortedTransfers[0];
-      const players = key.split(" -> ");
-      if (players.length === 2) {
-        topVampireStr = `<span style="display:inline-flex; align-items:center; gap:4px;"><img src="${safeGetAvatarUrl(players[0])}" style="width:18px; height:18px; border-radius:50%; object-fit:cover; vertical-align:middle; border:1px solid #ffcc00;" onerror="this.style.display='none'"><b>${players[0]}</b></span> → <b>${players[1]}</b> <span style="color:#34c759; font-weight:900;">(+${val} Pkt.)</span>`;
+    const vampireHolder = byId("stat-vampire");
+    const vampireVal = byId("stat-vampire-val");
+    if (vampireHolder) {
+      if (sortedTransfers.length > 0 && sortedTransfers[0][1] > 0) {
+        const [key, val] = sortedTransfers[0];
+        const players = key.split(" -> ");
+        if (players.length === 2) {
+          vampireHolder.innerHTML = `
+            <img src="${safeGetAvatarUrl(players[0])}" class="stat-card-avatar" alt="${players[0]}" onerror="this.src='logo.png'">
+            <span style="font-weight:900; color:#fff; font-size:0.9rem;">${players[0]}</span>
+            <span style="color:var(--accent); font-size:0.8rem;">⚔️</span>
+            <img src="${safeGetAvatarUrl(players[1])}" class="stat-card-avatar" alt="${players[1]}" onerror="this.src='logo.png'">
+            <span style="font-weight:700; color:#94a3b8; font-size:0.9rem;">${players[1]}</span>
+          `;
+          if (vampireVal)
+            vampireVal.innerHTML = `<div class="stat-hero-pill pill-green">+${val} <span class="unit">Pkt.</span></div>`;
+        } else {
+          vampireHolder.innerHTML = `<span class="stat-card-player-label">${key}</span>`;
+          if (vampireVal)
+            vampireVal.innerHTML = `<div class="stat-hero-pill pill-green">+${val} <span class="unit">Pkt.</span></div>`;
+        }
       } else {
-        topVampireStr = `${key} (${val} Pkt.)`;
+        vampireHolder.innerHTML = `<span class="stat-card-player-label" style="color:#64748b;">-</span>`;
+        if (vampireVal)
+          vampireVal.innerHTML = `<div class="stat-hero-pill pill-green">-</div>`;
       }
     }
-    if (byId("stat-vampire")) byId("stat-vampire").innerHTML = topVampireStr;
 
     // 10. Session-Rekord (Höchster ELO-Gewinn an einem Tag)
     let sessionRecVal = "-";
@@ -1608,29 +1704,12 @@ window.renderBillardStats = function (
 
     // Die Mauer (Zäher Verlierer: Min Ø Restkugeln bei Niederlage)
     const wallCandidates = pechVals.filter((x) => x.relevantGames > 0);
-    if (wallCandidates.length > 0) {
-      const minWall = Math.min(...wallCandidates.map((x) => x.val));
-      const topWall = wallCandidates
-        .filter((x) => x.val === minWall)
-        .sort(
-          (a, b) =>
-            b.relevantGames - a.relevantGames || a.p.localeCompare(b.p, "de"),
-        );
-
-      if (byId("stat-mauer"))
-        byId("stat-mauer").innerHTML =
-          topWall
-            .map(
-              (x) =>
-                `<span style="display:inline-flex; align-items:center; gap:4px; margin:2px 4px 2px 0;"><img src="${safeGetAvatarUrl(x.p)}" style="width:18px; height:18px; border-radius:50%; object-fit:cover; vertical-align:middle; border:1px solid rgba(255,255,255,0.2);" onerror="this.style.display='none'"><b>${x.p}</b></span>`,
-            )
-            .join(" / ") +
-          ' <span style="opacity:0.9; font-weight:800;">(' +
-          minWall.toFixed(1) +
-          ")</span>";
-    } else {
-      if (byId("stat-mauer")) byId("stat-mauer").innerText = "-";
-    }
+    renderModernStatTile("stat-mauer", "stat-mauer-val", wallCandidates, {
+      isMin: true,
+      unit: "Ø Reste",
+      pillClass: "pill-cyan",
+      formatVal: (v) => v.toFixed(1),
+    });
 
     // --- ZEITBASIERTE STATISTIKEN ---
     const timeStatsPData = filterToday
@@ -1753,15 +1832,45 @@ window.renderBillardStats = function (
         const totalSeconds = Math.round(bestAvgWinDur);
         const mins = Math.floor(totalSeconds / 60);
         const secs = totalSeconds % 60;
-        byId("stat-avg-win-duration").innerText =
-          `${efficientPlayers.join(" / ")} (${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")})`;
+        const timeFormatted = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+
+        const winDurHolder = byId("stat-avg-win-duration");
+        const winDurVal = byId("stat-avg-win-duration-val");
+        if (winDurHolder) {
+          let holderHtml = "";
+          if (efficientPlayers.length === 1) {
+            holderHtml = `
+              <img src="${safeGetAvatarUrl(efficientPlayers[0])}" class="stat-card-avatar" alt="${efficientPlayers[0]}" onerror="this.src='logo.png'">
+              <span class="stat-card-player-label">${efficientPlayers[0]}</span>
+            `;
+          } else {
+            const stack = efficientPlayers
+              .map(
+                (p) =>
+                  `<img src="${safeGetAvatarUrl(p)}" alt="${p}" onerror="this.src='logo.png'">`,
+              )
+              .join("");
+            holderHtml = `<div class="stat-avatar-stack">${stack}</div><span class="stat-card-player-label">${efficientPlayers.join(" & ")}</span>`;
+          }
+          winDurHolder.innerHTML = holderHtml;
+        }
+        if (winDurVal) {
+          winDurVal.innerHTML = `<div class="stat-hero-pill pill-green">${timeFormatted} <span class="unit">min</span></div>`;
+        }
 
         const subLabel = byId("stat-avg-win-duration-subtitle");
         if (subLabel) {
           subLabel.innerText = `Effizientester Sieger (min. ${minWinsForAvg} Siege)`;
         }
       } else {
-        byId("stat-avg-win-duration").innerText = "-";
+        const winDurHolder = byId("stat-avg-win-duration");
+        const winDurVal = byId("stat-avg-win-duration-val");
+        if (winDurHolder)
+          winDurHolder.innerHTML =
+            '<span class="stat-card-player-label" style="color:#64748b;">-</span>';
+        if (winDurVal)
+          winDurVal.innerHTML =
+            '<div class="stat-hero-pill pill-green">-</div>';
         const subLabel = byId("stat-avg-win-duration-subtitle");
         if (subLabel) {
           subLabel.innerText = `Effizientester Sieger (min. ${minWinsForAvg} Siege)`;
@@ -1807,14 +1916,44 @@ window.renderBillardStats = function (
         const totalSeconds = Math.round(maxAvgMatchDur);
         const mins = Math.floor(totalSeconds / 60);
         const secs = totalSeconds % 60;
-        byId("stat-avg-match-duration").innerText =
-          `${slowPlayers.join(" / ")} (${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")})`;
+        const timeFormatted = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+
+        const matchDurHolder = byId("stat-avg-match-duration");
+        const matchDurVal = byId("stat-avg-match-duration-val");
+        if (matchDurHolder) {
+          let holderHtml = "";
+          if (slowPlayers.length === 1) {
+            holderHtml = `
+              <img src="${safeGetAvatarUrl(slowPlayers[0])}" class="stat-card-avatar" alt="${slowPlayers[0]}" onerror="this.src='logo.png'">
+              <span class="stat-card-player-label">${slowPlayers[0]}</span>
+            `;
+          } else {
+            const stack = slowPlayers
+              .map(
+                (p) =>
+                  `<img src="${safeGetAvatarUrl(p)}" alt="${p}" onerror="this.src='logo.png'">`,
+              )
+              .join("");
+            holderHtml = `<div class="stat-avatar-stack">${stack}</div><span class="stat-card-player-label">${slowPlayers.join(" & ")}</span>`;
+          }
+          matchDurHolder.innerHTML = holderHtml;
+        }
+        if (matchDurVal) {
+          matchDurVal.innerHTML = `<div class="stat-hero-pill pill-gold">${timeFormatted} <span class="unit">min</span></div>`;
+        }
 
         const subLabel = byId("stat-avg-match-duration-subtitle");
         if (subLabel)
           subLabel.innerText = `Der Taktiker (min. ${minGamesForAvgMatch} Spiele)`;
       } else {
-        byId("stat-avg-match-duration").innerText = "-";
+        const matchDurHolder = byId("stat-avg-match-duration");
+        const matchDurVal = byId("stat-avg-match-duration-val");
+        if (matchDurHolder)
+          matchDurHolder.innerHTML =
+            '<span class="stat-card-player-label" style="color:#64748b;">-</span>';
+        if (matchDurVal)
+          matchDurVal.innerHTML =
+            '<div class="stat-hero-pill pill-gold">-</div>';
         const subLabel = byId("stat-avg-match-duration-subtitle");
         if (subLabel)
           subLabel.innerText = `Der Taktiker (min. ${minGamesForAvgMatch} Spiele)`;
@@ -1907,23 +2046,28 @@ window.renderBillardStats = function (
         sortedPlayers.length > 0
           ? sortedPlayers
               .map(
-                // FIX: Animation delay was wrong
                 (p, idx) => `
-                <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding: 10px; border-radius:16px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.27 + idx * 0.05}s;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="font-size:14px; font-weight:900; color:var(--accent); min-width:20px; text-align:center;">${idx + 1}.</div>
-                        <img src="${safeGetAvatarUrl(p.name)}" style="width:30px; height:30px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
-                        <div style="font-size:13px; font-weight:800; color:#fff;">${p.name}</div>
+                <div class="stat-card-modern cinematic-entry" style="--card-accent: #ffcc00; margin-bottom:8px; animation-delay: ${1.27 + idx * 0.05}s;">
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">${idx + 1}. Platz</div>
+                    <div class="stat-card-holder-row">
+                      <img src="${safeGetAvatarUrl(p.name)}" class="stat-card-avatar" onerror="this.style.display='none'">
+                      <span class="stat-card-player-label">${p.name}</span>
                     </div>
-                    <div style="display:flex; gap:8px; font-size:11px; font-weight:900;">
-                        <span title="1. Plätze">🥇 ${p[1]}</span>
-                        <span title="2. Plätze" style="opacity:0.7;">🥈 ${p[2]}</span>
-                        <span title="3. Plätze" style="opacity:0.5;">🥉 ${p[3]}</span>
+                    <div class="stat-card-sublabel">Tagessieg-Bilanz</div>
+                  </div>
+                  <div class="stat-metric-hero" style="flex-direction:column; gap:4px; align-items:flex-end;">
+                    <div style="display:flex; gap:6px; font-size:11px; font-weight:900;">
+                      <span title="1. Plätze" style="color:#ffcc00;">🥇 ${p[1]}</span>
+                      <span title="2. Plätze" style="color:#d1d1d6;">🥈 ${p[2]}</span>
+                      <span title="3. Plätze" style="color:#cd7f32;">🥉 ${p[3]}</span>
                     </div>
+                  </div>
                 </div>`,
               )
               .join("")
           : '<div style="font-size:10px; color:#8e8e93; text-align:center; padding:5px;">Noch keine Tagessieger ermittelt.</div>';
+
       dailyWinsEl.innerHTML = dailyWinsHtml;
     }
 
@@ -1956,26 +2100,27 @@ window.renderBillardStats = function (
         duoRanking.length > 0
           ? duoRanking
               .map((t, idx) => {
-                // Added idx for animation-delay
-                const pNames = t.name.split(" & "); // This is inside a parent card that needs styling
+                const pNames = t.name.split(" & ");
+                const avatarStack = pNames
+                  .map(
+                    (p, pi) =>
+                      `<img src="${safeGetAvatarUrl(p)}" class="stat-card-avatar" onerror="this.style.display='none'" style="border-radius:8px; margin-left:${pi > 0 ? "-8px" : "0"}; z-index:${2 - pi};">`,
+                  )
+                  .join("");
+                const medals = ["👑", "🥈", "🥉"];
                 return `
-                <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:10px; padding: 12px; border-radius:18px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.1 + idx * 0.05}s; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <div style="display:flex; flex-direction:column; align-items:center; min-width:18px; margin-right:4px;">
-                            <span style="color:var(--accent); font-weight:900; font-size:14px;">${idx + 1}</span>
-                        </div>
-                        <div style="display:flex; align-items:center; position:relative; width:45px; height:30px;">
-                            ${pNames.map((p, pIdx) => `<img src="${safeGetAvatarUrl(p)}" style="position:absolute; left:${pIdx * 15}px; width:28px; height:30px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.2); z-index:${2 - pIdx}; transform: rotate(${pIdx === 0 ? "-5deg" : "5deg"}); box-shadow: 4px 0 10px rgba(0,0,0,0.3);">`).join("")}
-                        </div>
-                        <div style="margin-left:12px;">
-                            <div style="color:#fff; font-weight:900; font-size:13px; letter-spacing:0.3px;">${t.name}</div>
-                            <div style="font-size:8px; color:#8e8e93; font-weight:700; text-transform:uppercase; margin-top:2px;">Elite Duo Synergy</div>
-                        </div>
+                <div class="stat-card-modern cinematic-entry" style="--card-accent: #30d158; margin-bottom:10px; animation-delay: ${1.1 + idx * 0.05}s;">
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">${medals[idx] || idx + 1 + "."} Partner-Duo</div>
+                    <div class="stat-card-holder-row">
+                      <div class="stat-avatar-stack">${avatarStack}</div>
+                      <span class="stat-card-player-label">${t.name}</span>
                     </div>
-                    <div style="text-align:right;">
-                        <div class="stat-value-badge green">${t.wr}%</div>
-                        <div style="font-size:8px; color:#8e8e93; font-weight:800; margin-top:4px;">${t.wins}W / ${t.games}G</div>
-                    </div>
+                    <div class="stat-card-sublabel">${t.wins}S / ${t.games}G · Elite Duo Synergy</div>
+                  </div>
+                  <div class="stat-metric-hero">
+                    <div class="stat-hero-pill pill-green">${t.wr}%</div>
+                  </div>
                 </div>`;
               })
               .join("")
@@ -2002,23 +2147,37 @@ window.renderBillardStats = function (
 
     const spezEl = byId("stat-ball-spez");
     if (spezEl) {
-      spezEl.innerHTML = `<div style="animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: 1.15s;">
-                <div style="display:flex; justify-content:space-around; align-items:center; padding: 10px 0; ">
-                    <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
-                        <div style="font-size:8px; color:#8e8e93; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Voll-Profi</div>
-                        <img src="${safeGetAvatarUrl(topVollarbeiter.n)}" style="width:36px; height:36px; border-radius:12px; border:3px solid #ffcc00; box-shadow: 0 0 15px rgba(255,204,0,0.3);">
-                        <div style="font-size:14px; font-weight:900; color:#fff; text-shadow: 0 0 8px rgba(255,255,255,0.2);">${topVollarbeiter.n}</div>
-                        <div style="font-size:11px; color:#34c759; font-weight:900; text-shadow: 0 0 8px rgba(52,199,89,0.3);">${topVollarbeiter.wr > 0 ? Math.round(topVollarbeiter.wr) + "%" : "-"}</div>
-                    </div>
-                    <div style="height:40px; width:1px; background:rgba(255,255,255,0.1);"></div>
-                    <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
-                        <div style="font-size:8px; color:#8e8e93; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Halbe-As</div>
-                        <img src="${safeGetAvatarUrl(topHalbeExperte.n)}" style="width:36px; height:36px; border-radius:12px; border:3px solid #4FC3F7; box-shadow: 0 0 15px rgba(79,195,247,0.3);">
-                        <div style="font-size:14px; font-weight:900; color:#fff; text-shadow: 0 0 8px rgba(255,255,255,0.2);">${topHalbeExperte.n}</div>
-                        <div style="font-size:11px; color:#34c759; font-weight:900; text-shadow: 0 0 8px rgba(52,199,89,0.3);">${topHalbeExperte.wr > 0 ? Math.round(topHalbeExperte.wr) + "%" : "-"}</div>
-                    </div>
-                </div>
-              </div>`;
+      const vollVal =
+        topVollarbeiter.wr > 0 ? Math.round(topVollarbeiter.wr) + "%" : "-";
+      const halbVal =
+        topHalbeExperte.wr > 0 ? Math.round(topHalbeExperte.wr) + "%" : "-";
+      spezEl.innerHTML = `
+        <div class="stat-card-modern cinematic-entry" style="--card-accent: #ffcc00; animation-delay: 1.15s;">
+          <div class="stat-card-main">
+            <div class="stat-card-badge-top">🟡 Voll-Profi</div>
+            <div class="stat-card-holder-row">
+              <img src="${safeGetAvatarUrl(topVollarbeiter.n)}" class="stat-card-avatar" onerror="this.style.display='none'" style="border:2px solid #ffcc00;">
+              <span class="stat-card-player-label">${topVollarbeiter.n}</span>
+            </div>
+            <div class="stat-card-sublabel">Beste Siegrate mit vollen Kugeln</div>
+          </div>
+          <div class="stat-metric-hero">
+            <div class="stat-hero-pill pill-gold">${vollVal}</div>
+          </div>
+        </div>
+        <div class="stat-card-modern cinematic-entry" style="--card-accent: #4fc3f7; animation-delay: 1.2s;">
+          <div class="stat-card-main">
+            <div class="stat-card-badge-top">🔵 Halbe-As</div>
+            <div class="stat-card-holder-row">
+              <img src="${safeGetAvatarUrl(topHalbeExperte.n)}" class="stat-card-avatar" onerror="this.style.display='none'" style="border:2px solid #4fc3f7;">
+              <span class="stat-card-player-label">${topHalbeExperte.n}</span>
+            </div>
+            <div class="stat-card-sublabel">Beste Siegrate mit halben Kugeln</div>
+          </div>
+          <div class="stat-metric-hero">
+            <div class="stat-hero-pill pill-cyan">${halbVal}</div>
+          </div>
+        </div>`;
     }
 
     // --- ANGSTGEGNER LOGIK (Wer dominiert wen am meisten?) ---
@@ -2040,12 +2199,42 @@ window.renderBillardStats = function (
         const mb = kb ? meetings[kb] || 0 : 0;
         return mb - ma || a.localeCompare(b, "de");
       });
-    if (maxWins > 0) {
-      if (byId("stat-angst"))
-        byId("stat-angst").innerText =
-          topMatchups.join(" / ") + ` (${maxWins} Siege)`;
-    } else {
-      if (byId("stat-angst")) byId("stat-angst").innerText = "-";
+    const angstHolder = byId("stat-angst");
+    const angstVal = byId("stat-angst-val");
+    if (angstHolder) {
+      if (maxWins > 0 && topMatchups.length > 0) {
+        const renderedPairs = topMatchups
+          .slice(0, 2)
+          .map((pair) => {
+            const parts = pair.split(" -> ");
+            if (parts.length === 2) {
+              const winner = parts[0];
+              const loser = parts[1];
+              return `<div style="display:inline-flex; align-items:center; gap:6px;">
+                <img src="${safeGetAvatarUrl(winner)}" class="stat-card-avatar" alt="${winner}" onerror="this.style.display='none'">
+                <span class="stat-card-player-label">${winner}</span>
+                <span style="font-size:0.75rem; color:#94a3b8; font-weight:700;">⚔️</span>
+                <img src="${safeGetAvatarUrl(loser)}" class="stat-card-avatar" alt="${loser}" onerror="this.style.display='none'">
+                <span class="stat-card-player-label" style="color:#94a3b8;">${loser}</span>
+              </div>`;
+            }
+            return `<span class="stat-card-player-label">${pair}</span>`;
+          })
+          .join(
+            '<span style="color:#64748b; font-size:0.8rem; margin:0 6px;">&</span>',
+          );
+
+        angstHolder.innerHTML = renderedPairs;
+        if (angstVal) {
+          angstVal.innerHTML = `<div class="stat-hero-pill pill-red">${maxWins} <span class="unit">Siege</span></div>`;
+        }
+      } else {
+        angstHolder.innerHTML =
+          '<span class="stat-card-player-label" style="color:#64748b;">-</span>';
+        if (angstVal) {
+          angstVal.innerHTML = '<div class="stat-hero-pill pill-red">-</div>';
+        }
+      }
     }
 
     // --- ANSTOSS-STATISTIK ---
@@ -2065,15 +2254,18 @@ window.renderBillardStats = function (
         breakCountsEl.innerHTML = breakCounts
           .map(
             (item, idx) => `
-                <div class="card-modern" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding: 10px; border-radius:16px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.22 + idx * 0.05}s;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="font-size:14px; font-weight:900; color:var(--accent); min-width:20px; text-align:center;">${idx + 1}.</div>
-                        <img src="${safeGetAvatarUrl(item.p)}" style="width:30px; height:30px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
-                        <div style="font-size:13px; font-weight:800; color:#fff;">${item.p}</div>
+                <div class="stat-card-modern cinematic-entry" style="--card-accent: #ffcc00; margin-bottom:8px; animation-delay: ${1.22 + idx * 0.05}s;">
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">${idx + 1}. Platz</div>
+                    <div class="stat-card-holder-row">
+                      <img src="${safeGetAvatarUrl(item.p)}" class="stat-card-avatar" onerror="this.style.display='none'">
+                      <span class="stat-card-player-label">${item.p}</span>
                     </div>
-                    <div style="font-size:13px; font-weight:900; color: #fff;">
-                        ${item.count}x
-                    </div>
+                    <div class="stat-card-sublabel">Eigene Anstöße</div>
+                  </div>
+                  <div class="stat-metric-hero">
+                    <div class="stat-hero-pill pill-gold">${item.count}×</div>
+                  </div>
                 </div>
             `,
           )
@@ -2102,39 +2294,35 @@ window.renderBillardStats = function (
         dominantMatchups.length > 0
           ? dominantMatchups
               .map((m, idx) => {
+                const winner = m.wr1 >= m.wr2 ? m.p1 : m.p2;
+                const winnerWr = Math.max(m.wr1, m.wr2);
                 return `
-                <div class="card-modern" style="display:flex; flex-direction:column; gap:12px; margin-bottom:12px; padding: 14px; border-radius:20px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${1.32 + idx * 0.05}s; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; position: relative; z-index: 1;">
-                        <!-- Linker Spieler (Gold / Orange) -->
-                        <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                            <img src="${safeGetAvatarUrl(m.p1)}" style="width:38px; height:38px; border-radius:12px; border:2px solid #ffcc00; object-fit:cover; box-shadow: 0 0 12px rgba(255,204,0,0.3);" onerror="this.style.display='none'">
-                            <div style="overflow:hidden;">
-                                <div style="font-size:12px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p1}</div>
-                                <div class="stat-value-badge" style="margin-top:3px; display:inline-block; color:#ffcc00; border: 1px solid rgba(255,204,0,0.3); background: rgba(255,204,0,0.12); font-weight:900;">${m.wr1}%</div>
-                                <div style="font-size: 10px; opacity: 0.85; color: #8e8e93; margin-top: 3px;"><span style="color:#34c759; font-weight:800;">S: ${m.p1_wins}</span> / <span style="color:#ff3b30; font-weight:800;">N: ${m.p2_wins}</span></div>
-                            </div>
-                        </div>
-
-                        <!-- Trenner -->
-                        <div style="text-align:center; min-width:50px; padding: 0 5px;">
-                            <span style="font-weight:900; font-size:10px; color:var(--accent); background:rgba(255,204,0,0.15); border:1px solid rgba(255,204,0,0.3); padding:3px 7px; border-radius:6px; letter-spacing:1px;">VS</span>
-                            <div style="font-size:8px; color:#8e8e93; font-weight:800; margin-top:4px;">${m.games} Partien</div>
-                        </div>
-
-                        <!-- Rechter Spieler (Cyan / Blau) -->
-                        <div style="display:flex; align-items:center; gap:10px; flex:1; justify-content:flex-end; text-align:right; overflow:hidden;">
-                            <div style="overflow:hidden;">
-                                <div style="font-size:12px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p2}</div>
-                                <div class="stat-value-badge" style="margin-top:3px; display:inline-block; color:#4fc3f7; border: 1px solid rgba(79,195,247,0.3); background: rgba(79,195,247,0.12); font-weight:900;">${m.wr2}%</div>
-                                <div style="font-size: 10px; opacity: 0.85; color: #8e8e93; margin-top: 3px;"><span style="color:#34c759; font-weight:800;">S: ${m.p2_wins}</span> / <span style="color:#ff3b30; font-weight:800;">N: ${m.p1_wins}</span></div>
-                            </div>
-                            <img src="${safeGetAvatarUrl(m.p2)}" style="width:38px; height:38px; border-radius:12px; border:2px solid #4fc3f7; object-fit:cover; box-shadow: 0 0 12px rgba(79,195,247,0.3);" onerror="this.style.display='none'">
-                        </div>
+                <div class="stat-card-modern span-2 cinematic-entry" style="--card-accent: #ffcc00; flex-direction:column; align-items:stretch; gap:10px; margin-bottom:10px; animation-delay: ${1.32 + idx * 0.05}s;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <!-- Spieler 1 -->
+                    <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+                      <img src="${safeGetAvatarUrl(m.p1)}" class="stat-card-avatar" onerror="this.style.display='none'" style="border:2px solid #ffcc00; border-radius:10px; width:32px; height:32px;">
+                      <div style="min-width:0;">
+                        <div class="stat-card-player-label" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p1}</div>
+                        <div class="stat-card-sublabel">${m.p1_wins}S · ${m.wr1}%</div>
+                      </div>
                     </div>
-                    <!-- Moderner H2H Farbbalken (Gold-zu-Cyan) -->
-                    <div style="position: relative; height: 9px; background: linear-gradient(90deg, #0288d1 0%, #4fc3f7 100%); border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), 0 0 8px rgba(79,195,247,0.25); border: 1px solid rgba(255,255,255,0.08);">
-                        <div style="height: 100%; width: ${m.wr1}%; background: linear-gradient(90deg, #ffcc00 0%, #ff9500 100%); border-radius: 6px 0 0 6px; box-shadow: 0 0 10px rgba(255,204,0,0.4); animation: bar-grow 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; transform-origin: left; transform: scaleX(0); animation-delay: ${1.32 + idx * 0.05}s;"></div>
+                    <!-- VS-Badge -->
+                    <div class="h2h-vs-badge" style="flex-shrink:0;">VS</div>
+                    <!-- Spieler 2 -->
+                    <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0; justify-content:flex-end; text-align:right;">
+                      <div style="min-width:0;">
+                        <div class="stat-card-player-label" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.p2}</div>
+                        <div class="stat-card-sublabel">${m.p2_wins}S · ${m.wr2}%</div>
+                      </div>
+                      <img src="${safeGetAvatarUrl(m.p2)}" class="stat-card-avatar" onerror="this.style.display='none'" style="border:2px solid #4fc3f7; border-radius:10px; width:32px; height:32px;">
                     </div>
+                  </div>
+                  <!-- Progress-Bar -->
+                  <div style="height:6px; background:rgba(79,195,247,0.25); border-radius:4px; overflow:hidden;">
+                    <div style="height:100%; width:${m.wr1}%; background:linear-gradient(90deg,#ffcc00,#ff9500); border-radius:4px; transition:width 0.6s ease;"></div>
+                  </div>
+                  <div class="stat-card-badge-top" style="justify-content:center;">${m.games} Partien · ⚡ Dominiert: ${winner} (${winnerWr}%)</div>
                 </div>`;
               })
               .join("")
@@ -2332,7 +2520,7 @@ window.renderBillardStats = function (
         if (eloCanvas.__myEloChart) eloCanvas.__myEloChart.destroy();
 
         if (topEloPlayers.length > 0) {
-          eloHistoryContainer.style.display = "block";
+          eloHistoryContainer.style.display = "flex";
           const WINDOW_SIZE = 10; // Fokus auf die Form (letzte 10 Spiele)
           const totalMatchCount = currentStats.length; // Gesamtanzahl der Matches in der Auswahl
           const displayCount = Math.min(WINDOW_SIZE, totalMatchCount);
@@ -2551,27 +2739,30 @@ window.renderBillardStats = function (
                 : "±0";
           const deltaColor =
             r.sessionDelta > 0
-              ? "#34c759"
+              ? "#30d158"
               : r.sessionDelta < 0
-                ? "#ff3b30"
+                ? "#ff453a"
                 : "#8e8e93";
-          deltaHtml = `<div style="font-size:10px; font-weight:800; color:${deltaColor}; margin-top:1px;">${deltaSign} heute</div>`;
+          deltaHtml = `<div style="font-size:9px; font-weight:800; color:${deltaColor}; margin-top:3px;">${deltaSign} heute</div>`;
         }
 
+        const pillClass = isFirst ? "pill-green" : "pill-gold";
+        const cardAccent = isFirst ? "#30d158" : "#ffcc00";
+
         html += `
-              <div onclick="window.openPlayerProfile('${r.name}')" class="card-modern ${isFirst ? "rank-1-card" : ""}" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; padding: 12px; border-radius: 20px; cursor:pointer; ${isFirst ? "" : "animation: ach-card-enter 0.4s ease-out forwards; opacity: 0;"} animation-delay: ${0.5 + i * 0.05}s; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid ${isFirst ? "#ffcc00" : "rgba(255, 255, 255, 0.1)"}; box-shadow: ${isFirst ? "0 0 20px rgba(255,204,0,0.2)" : "0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05)"};">
-                <div style="min-width:28px; text-align:center; font-size:16px;">${badge || i + 1 + "."}</div>
-                <div class="avatar-frame ${streakClass}">
-                  <img src="${safeGetAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15);">
+              <div onclick="window.openPlayerProfile('${r.name}')" class="stat-card-modern cinematic-entry ${isFirst ? "rank-1-card" : ""}" style="--card-accent: ${cardAccent}; margin-bottom:10px; cursor:pointer; animation-delay: ${0.5 + i * 0.05}s; ${isFirst ? "border-color: rgba(48,209,88,0.3);" : ""}">
+                <div class="stat-card-main">
+                  <div class="stat-card-badge-top">${badge ? badge + " Platz" : i + 1 + ". Platz"}</div>
+                  <div class="stat-card-holder-row">
+                    <div class="avatar-frame ${streakClass}">
+                      <img src="${safeGetAvatarUrl(r.name)}" onerror="this.style.display='none'" class="stat-card-avatar" style="border-radius:10px; width:30px; height:30px;">
+                    </div>
+                    <span class="stat-card-player-label" style="color:${getPlayerColor(r.name)};">${r.name}${streakEmoji}</span>
+                  </div>
+                  <div class="stat-card-sublabel">${matchesSubtitle}</div>
                 </div>
-                <div style="display:none; width:30px; height:30px; border-radius:10px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
-                <div style="flex:1; overflow:hidden;">
-                  <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.name} ${streakEmoji}</div>
-                  <div style="font-size:10px; color:#acacb0; margin-top:2px;">${matchesSubtitle}</div>
-                </div>
-                <div style="text-align:right;">
-                  <div id="rank-elo-${i}" style="font-size:16px; font-weight:900; color:#34c759; text-shadow: 0 0 10px rgba(52,199,89,0.3);">${Math.round(r.elo)}</div>
-                  <div style="font-size:9px; color:#8e8e93; text-transform:uppercase; font-weight:800; margin-top:2px;">ELO</div>
+                <div class="stat-metric-hero">
+                  <div class="stat-hero-pill ${pillClass}" id="rank-elo-${i}">—</div>
                   ${deltaHtml}
                 </div>
               </div>
@@ -2820,20 +3011,44 @@ window.renderBillardStats = function (
         const labelGames = isToday
           ? `Session: ${r.w}-${r.l} (${r.wr}%)`
           : `Letzte ${r.g}: ${r.w}-${r.l} (${r.wr}%)`;
+        const streakBadge =
+          r.streak >= 1
+            ? `<span style="font-size:12px; animation: streak-pulse 1.5s infinite ease-in-out;">🔥</span><span style="font-size:10px; font-weight:900; color:var(--accent);">${r.streak}</span>`
+            : r.loseStreak >= 3
+              ? `<span style="font-size:12px;">❄️</span><span style="font-size:10px; font-weight:900; color:#4fc3f7;">${r.loseStreak}</span>`
+              : "";
+
+        const rankEmoji =
+          i === 0 ? "🔥" : i === 1 ? "✨" : i === 2 ? "📈" : i + 1 + ".";
+        const pillClass =
+          r.eloDelta > 0
+            ? "pill-green"
+            : r.eloDelta < 0
+              ? "pill-red"
+              : "pill-gold";
+        const cardAccent = isTopForm
+          ? "#30d158"
+          : r.eloDelta < 0
+            ? "#ff453a"
+            : "#ffcc00";
+        const deltaSign = r.eloDelta > 0 ? `+${r.eloDelta}` : `${r.eloDelta}`;
+
         listHtml += `
-              <div onclick="window.openPlayerProfile('${r.name}')" class="card-modern" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; background: ${isTopForm ? "linear-gradient(135deg, rgba(52, 199, 89, 0.2) 0%, #1a1a1c 100%)" : "linear-gradient(145deg, #2c2c2e, #1a1a1c)"}; padding: 12px; border-radius: 20px; border: 1px solid ${isTopForm ? "#34c759" : "rgba(255, 255, 255, 0.1)"}; box-shadow: ${isTopForm ? "0 0 20px rgba(52,199,89,0.2)" : "0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05)"}; cursor:pointer; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: ${0.5 + i * 0.05}s;">
-                <div style="min-width:28px; text-align:center; font-size:16px;">${i === 0 ? "🔥" : i === 1 ? "✨" : i === 2 ? "📈" : i + 1 + "."}</div>
-                <div class="avatar-frame ${streakClass}">
-                  <img src="${safeGetAvatarUrl(r.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:32px; height:32px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15);">
+              <div onclick="window.openPlayerProfile('${r.name}')" class="stat-card-modern cinematic-entry" style="--card-accent: ${cardAccent}; margin-bottom:10px; cursor:pointer; animation-delay: ${0.5 + i * 0.05}s; ${isTopForm ? "border-color: rgba(48,209,88,0.3);" : ""}">
+                <div class="stat-card-main">
+                  <div class="stat-card-badge-top">${rankEmoji} Form-Ranking</div>
+                  <div class="stat-card-holder-row">
+                    <div class="avatar-frame ${streakClass}">
+                      <img src="${safeGetAvatarUrl(r.name)}" onerror="this.style.display='none'" class="stat-card-avatar" style="border-radius:10px; width:30px; height:30px;">
+                    </div>
+                    <span class="stat-card-player-label" style="color:${getPlayerColor(r.name)};">${r.name}</span>
+                    ${streakBadge ? `<span style="display:inline-flex; gap:2px; align-items:center; margin-left:4px;">${streakBadge}</span>` : ""}
+                  </div>
+                  <div class="stat-card-sublabel">${labelGames}</div>
                 </div>
-                <div style="display:none; width:30px; height:30px; border-radius:10px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,0.1);">👤</div>
-                <div style="flex:1; overflow:hidden;">
-                  <div style="font-size:14px; font-weight:900; color:${getPlayerColor(r.name)}; text-shadow: 0 0 8px rgba(255,204,0,0.2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.name}</div>
-                  <div style="font-size:10px; color:#acacb0; margin-top:2px;">${labelGames}${r.streak >= 1 ? ` • S: ${r.streak}` : ""}</div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-size:16px; font-weight:900; ${deltaStyle(r.eloDelta)} text-shadow: 0 0 10px ${r.eloDelta > 0 ? "rgba(52,199,89,0.3)" : r.eloDelta < 0 ? "rgba(255,59,48,0.3)" : "rgba(255,255,255,0.1)"};">${deltaSign(r.eloDelta)}</div>
-                  <div style="font-size:9px; color:#8e8e93; text-transform:uppercase; font-weight:800; margin-top:2px;">ELO Δ</div>
+                <div class="stat-metric-hero">
+                  <div class="stat-hero-pill ${pillClass}">${deltaSign}</div>
+                  <div style="font-size:9px; color:#8e8e93; text-transform:uppercase; font-weight:800; margin-top:3px; text-align:center;">ELO Δ</div>
                 </div>
               </div>
             `;
@@ -2843,16 +3058,140 @@ window.renderBillardStats = function (
       el.innerHTML = listHtml;
     }
 
+    // --- 🔥 Formkurve & Streak-Tracker (Letzte 5 Spiele) ---
+    function renderFormCurve(playerList, pData) {
+      const container =
+        byId("formCurveContainer") ||
+        document.getElementById("formCurveContainer");
+      const card =
+        byId("formCurveCard") || document.getElementById("formCurveCard");
+      if (!container) return;
+      if (card) card.style.display = "flex";
+
+      const activePlayers =
+        Array.isArray(playerList) && playerList.length > 0
+          ? playerList
+          : Object.keys(pData || {});
+
+      if (activePlayers.length === 0) {
+        container.innerHTML =
+          '<div style="color:#94a3b8; font-size:12px; text-align:center; padding:10px;">Keine Spieldaten vorhanden</div>';
+        return;
+      }
+
+      // Alle Matches chronologisch absteigend (neueste zuerst)
+      const allMatches = (window.stats || []).slice().reverse();
+
+      const cardsHtml = activePlayers
+        .map((name) => {
+          // Letzte 5 Spiele sammeln
+          const recent = [];
+          for (const m of allMatches) {
+            if (recent.length >= 5) break;
+            const isP1 =
+              m.p1 === name ||
+              (typeof m.p1 === "string" && m.p1.split(" & ").includes(name));
+            const isP2 =
+              m.p2 === name ||
+              (typeof m.p2 === "string" && m.p2.split(" & ").includes(name));
+            if (!isP1 && !isP2) continue;
+            const won = (isP1 && m.w == 1) || (isP2 && m.w == 2);
+            const opp = isP1 ? m.p2 : m.p1;
+            recent.push({
+              won,
+              date: m.d || "",
+              opp: opp || "Gegner",
+              winType: m.t || "Regulär",
+            });
+          }
+
+          // Streak berechnen: aufeinanderfolgende Resultate vom neuesten Match
+          let streakType = "neutral";
+          let streakText = "⚖️ Ausgeglichen";
+          if (recent.length > 0) {
+            const firstWon = recent[0].won;
+            let count = 0;
+            for (const g of recent) {
+              if (g.won === firstWon) count++;
+              else break;
+            }
+            if (firstWon) {
+              if (count >= 3) {
+                streakType = "hot";
+                streakText = `🔥 ${count}er Win-Streak`;
+              } else {
+                streakType = "mild";
+                streakText = `⚡ ${count} Siege in Folge`;
+              }
+            } else {
+              if (count >= 2) {
+                streakType = "cold";
+                streakText = `❄️ ${count} Niederlagen`;
+              } else {
+                streakType = "neutral";
+                streakText = `📉 Zuletzt verloren`;
+              }
+            }
+          }
+
+          // Siege in den letzten 5
+          const winsCount = recent.filter((r) => r.won).length;
+          const totalRecent = recent.length;
+          const winPercent =
+            totalRecent > 0 ? Math.round((winsCount / totalRecent) * 100) : 0;
+
+          // Pills: chronologisch von links nach rechts (ältestes links, neuestes rechts)
+          const pillsRecent = recent.slice().reverse();
+          let pillsHtml = "";
+          for (let i = 0; i < 5; i++) {
+            if (i < pillsRecent.length) {
+              const item = pillsRecent[i];
+              const cls = item.won ? "win" : "loss";
+              const letter = item.won ? "S" : "N";
+              const tip = `${item.won ? "Sieg" : "Niederlage"} gegen ${item.opp} (${item.date})`;
+              pillsHtml += `<div class="form-pill ${cls}" onclick="window.showAppToast('${tip.replace(/'/g, "\\'")}')" title="${tip}">${letter}</div>`;
+            } else {
+              pillsHtml += `<div class="form-pill empty" title="Noch kein 5. Spiel">-</div>`;
+            }
+          }
+
+          const avatarUrl = safeGetAvatarUrl(name);
+
+          return `
+          <div class="form-player-card">
+            <div class="form-player-info">
+              <img src="${avatarUrl}" alt="${name}" class="form-avatar" onerror="this.src='logo.png'" />
+              <div>
+                <div class="form-name">${name}</div>
+                <span class="form-streak-badge streak-${streakType}">${streakText}</span>
+              </div>
+            </div>
+            <div class="form-pills">
+              ${pillsHtml}
+            </div>
+            <div class="form-rate">
+              ${winPercent}%
+              <div style="font-size:10px; font-weight:700; color:#94a3b8;">${winsCount}/${totalRecent}</div>
+            </div>
+          </div>
+        `;
+        })
+        .join("");
+
+      container.innerHTML = cardsHtml;
+    }
+
     const eloCard =
       byId("eloTrendCard") || document.getElementById("eloTrendCard");
     if (eloCard) eloCard.style.display = "block";
 
     if (eloHistoryContainer) {
-      eloHistoryContainer.style.display = !filterToday ? "block" : "none";
+      eloHistoryContainer.style.display = !filterToday ? "flex" : "none";
     }
 
     renderEloRanking(res.pData, true, filterToday);
     renderTrendingPlayers(currentStats, true, filterToday);
+    renderFormCurve(window.spieler, res.pData);
   } else {
     // --- Keine Daten: UI sauber zurücksetzen ---
     const setText = (id, txt) => {
@@ -2882,11 +3221,44 @@ window.renderBillardStats = function (
     setText("stat-fastest-win", "-");
     setText("stat-streak", "-");
     if (byId("stat-break-counts")) byId("stat-break-counts").innerHTML = "";
+    const dailyWinsResetEl = document.getElementById("stat-daily-wins");
+    if (dailyWinsResetEl) dailyWinsResetEl.innerHTML = "";
     setText("stat-mauer", "-");
     setText("stat-longest-match", "-");
     setText("stat-avg-win-duration", "-");
     setText("stat-avg-match-duration", "-");
-    setText("stat-daily-wins", "-");
+
+    [
+      "stat-killer-val",
+      "stat-regular-wins-val",
+      "stat-clutch-val",
+      "stat-mauer-val",
+      "stat-pechvogel-val",
+      "stat-lost-by-8error-val",
+      "stat-nutzniesser-val",
+      "stat-vampire-val",
+      "stat-foul8-wins-val",
+      "stat-service-thief-val",
+      "stat-avg-win-duration-val",
+      "stat-avg-match-duration-val",
+      "stat-top-voll-val",
+      "stat-top-halb-val",
+      "stat-angst-val",
+    ].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div class="stat-hero-pill">-</div>';
+    });
+
+    const ballBarEl = document.getElementById("stat-balls-bar-voll");
+    if (ballBarEl) ballBarEl.style.width = "50%";
+    const breakAdvVal = document.getElementById("stat-break-adv-val");
+    if (breakAdvVal)
+      breakAdvVal.innerHTML =
+        '<div class="stat-hero-pill pill-green"><span id="stat-break-adv">0%</span></div>';
+    const blackVal = document.getElementById("stat-black-val");
+    if (blackVal)
+      blackVal.innerHTML =
+        '<div class="stat-hero-pill pill-red"><span id="stat-black">0%</span></div>';
 
     const dailyWinnerCards = [
       document.getElementById("stat-daily-winner-card"),
@@ -2911,9 +3283,12 @@ window.renderBillardStats = function (
       if (statDailyWinnerCard) statDailyWinnerCard.style.display = "none";
       if (statDailyWinnerEl) statDailyWinnerEl.innerText = "";
     }
-    setText("stat-head-to-head", "-");
-    setText("stat-duo-ranking", "-");
-    setText("stat-ball-spez", "-");
+    const h2hResetEl = document.getElementById("stat-head-to-head");
+    if (h2hResetEl) h2hResetEl.innerHTML = "";
+    const duoResetEl = document.getElementById("stat-duo-ranking");
+    if (duoResetEl) duoResetEl.innerHTML = "";
+    const spezResetEl = document.getElementById("stat-ball-spez");
+    if (spezResetEl) spezResetEl.innerHTML = "";
 
     const eloEl = document.getElementById("eloRanking");
     if (eloEl) eloEl.innerHTML = "";
@@ -2924,6 +3299,10 @@ window.renderBillardStats = function (
     if (eloTrendCard) eloTrendCard.style.display = "none";
     const eloHistoryContainer = document.getElementById("eloHistoryContainer");
     if (eloHistoryContainer) eloHistoryContainer.style.display = "none";
+    const formCurveContainer = document.getElementById("formCurveContainer");
+    if (formCurveContainer) formCurveContainer.innerHTML = "";
+    const formCurveCard = document.getElementById("formCurveCard");
+    if (formCurveCard) formCurveCard.style.display = "none";
 
     // Chart-Reset Fix
     const oldWinChart = document.getElementById("winChart");
@@ -3633,7 +4012,7 @@ window.updateInteractiveH2H = function () {
   // Fall 1: In der Session oder im Filter gibt es überhaupt noch keine Spiele
   if (totalMatchesInScope === 0) {
     outputEl.innerHTML = `
-      <div style="text-align:center; padding: 25px 12px; color: #8e8e93;">
+      <div class="h2h-radar-card" style="text-align:center; padding: 25px 12px; color: #8e8e93;">
         <div style="font-size: 28px; margin-bottom: 6px;">🎱</div>
         <div style="font-size: 13px; font-weight: 800; color: #fff;">${isSession ? "Noch keine Spiele in dieser Session" : "Keine Spiele im gewählten Zeitraum"}</div>
         <div style="font-size: 10px; margin-top: 4px; opacity: 0.7;">Sobald 1:1-Matches vorliegen, erscheint hier der direkte Vergleich.</div>
@@ -3657,42 +4036,54 @@ window.updateInteractiveH2H = function () {
       ? "Duelle (Filter)"
       : "Duelle (Gesamt)";
 
-  const eloLabel = isSession ? "Session-Delta" : "ELO-Fluss";
+  const eloLabel = isSession ? "Session-Delta" : "ELO-Saldo";
 
   // Fall 2: Spiele sind da, aber p1 und p2 haben in diesem Scope noch nicht gegeneinander gespielt
   if (duels.length === 0) {
     outputEl.innerHTML = `
-      <div class="h2h-battle-row">
-        <div class="h2h-fighter fighter-1">
-          <img src="${safeAvatar(p1)}" class="h2h-fighter-avatar" onerror="this.style.display='none'">
-          <div class="h2h-fighter-name">${p1}</div>
-          <div class="h2h-fighter-elo">${Math.round(elo1)} ELO</div>
+      <div class="h2h-radar-card">
+        <div class="h2h-fighters-row">
+          <div class="h2h-fighter">
+            <img src="${safeAvatar(p1)}" class="h2h-fighter-avatar" onerror="this.style.display='none'">
+            <div>
+              <div class="h2h-fighter-name">${p1}</div>
+              <div class="h2h-fighter-elo">${Math.round(elo1)} ELO</div>
+            </div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 1.4rem; font-weight: 900; color: #fff; letter-spacing: 1px;">0 : 0</div>
+            <div style="font-size: 0.72rem; font-weight: 700; color: #94a3b8;">${isSession ? "Heute noch kein Duell" : "Kein direktes Duell im Zeitraum"}</div>
+          </div>
+          <div class="h2h-fighter right">
+            <img src="${safeAvatar(p2)}" class="h2h-fighter-avatar" onerror="this.style.display='none'">
+            <div style="text-align: right;">
+              <div class="h2h-fighter-name">${p2}</div>
+              <div class="h2h-fighter-elo">${Math.round(elo2)} ELO</div>
+            </div>
+          </div>
         </div>
-        <div class="h2h-center-score">
-          <div class="h2h-score-text">0 : 0</div>
-          <div class="h2h-score-lead">${isSession ? "Heute noch kein direktes Duell" : "Kein direktes Duell im Zeitraum"}</div>
+        <div class="h2h-bar-wrap">
+          <div class="h2h-bar-labels">
+            <span style="color: #30d158;">${p1} (50%)</span>
+            <span style="color: #ff453a;">${p2} (50%)</span>
+          </div>
+          <div class="h2h-bar-bg">
+            <div class="h2h-bar-fill-left" style="width: 50%;"></div>
+          </div>
         </div>
-        <div class="h2h-fighter fighter-2">
-          <img src="${safeAvatar(p2)}" class="h2h-fighter-avatar" onerror="this.style.display='none'">
-          <div class="h2h-fighter-name">${p2}</div>
-          <div class="h2h-fighter-elo">${Math.round(elo2)} ELO</div>
-        </div>
-      </div>
-      <div class="h2h-prog-bar">
-        <div class="h2h-prog-fill" style="width: 50%;"></div>
-      </div>
-      <div class="h2h-stat-matrix">
-        <div class="h2h-matrix-item">
-          <div class="h2h-matrix-val">0</div>
-          <div class="h2h-matrix-label">${duelLabel}</div>
-        </div>
-        <div class="h2h-matrix-item">
-          <div class="h2h-matrix-val">-</div>
-          <div class="h2h-matrix-label">Siegquote</div>
-        </div>
-        <div class="h2h-matrix-item">
-          <div class="h2h-matrix-val">-</div>
-          <div class="h2h-matrix-label">${eloLabel}</div>
+        <div class="h2h-insights-grid">
+          <div class="h2h-insight-box">
+            <div class="h2h-insight-title">${duelLabel}</div>
+            <div class="h2h-insight-val">0</div>
+          </div>
+          <div class="h2h-insight-box">
+            <div class="h2h-insight-title">Siegquote</div>
+            <div class="h2h-insight-val">-</div>
+          </div>
+          <div class="h2h-insight-box">
+            <div class="h2h-insight-title">${eloLabel}</div>
+            <div class="h2h-insight-val">-</div>
+          </div>
         </div>
       </div>
     `;
@@ -3854,97 +4245,71 @@ window.updateInteractiveH2H = function () {
       : "-";
 
   outputEl.innerHTML = `
-    <div class="h2h-battle-row">
-      <div class="h2h-fighter fighter-1">
-        <img src="${safeAvatar(p1)}" class="h2h-fighter-avatar" onerror="this.style.display='none'">
-        <div class="h2h-fighter-name">${p1}</div>
-        <div class="h2h-fighter-elo">${Math.round(elo1)} ELO</div>
-      </div>
-      <div class="h2h-center-score">
-        <div class="h2h-score-text">${p1Wins} : ${p2Wins}</div>
-        <div class="h2h-score-lead">${leadText}</div>
-      </div>
-      <div class="h2h-fighter fighter-2">
-        <img src="${safeAvatar(p2)}" class="h2h-fighter-avatar" onerror="this.style.display='none'">
-        <div class="h2h-fighter-name">${p2}</div>
-        <div class="h2h-fighter-elo">${Math.round(elo2)} ELO</div>
-      </div>
-    </div>
-
-    <!-- Dual-Tone Progress Bar -->
-    <div style="position: relative; height: 10px; background: linear-gradient(90deg, #0288d1 0%, #4fc3f7 100%); border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), 0 0 8px rgba(79,195,247,0.25); border: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px;">
-      <div style="height: 100%; width: ${p1Rate}%; background: linear-gradient(90deg, #ffcc00 0%, #ff9500 100%); border-radius: 6px 0 0 6px; box-shadow: 0 0 10px rgba(255,204,0,0.4); transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);"></div>
-    </div>
-
-    <!-- Formkurve der letzten Duelle -->
-    <div class="h2h-form-container">
-      <span class="h2h-form-label">🔥 Formkurve (${streakLabel})</span>
-      <div class="h2h-form-dots">
-        ${formDotsHtml}
-      </div>
-    </div>
-
-    <!-- Haupt-Statistik Matrix -->
-    <div class="h2h-stat-matrix">
-      <div class="h2h-matrix-item">
-        <div class="h2h-matrix-val">${total}</div>
-        <div class="h2h-matrix-label">${duelLabel}</div>
-      </div>
-      <div class="h2h-matrix-item">
-        <div class="h2h-matrix-val" style="color:${p1Rate >= 50 ? "#ffcc00" : "#4fc3f7"};">${p1Rate}% : ${p2Rate}%</div>
-        <div class="h2h-matrix-label">Siegquote</div>
-      </div>
-      <div class="h2h-matrix-item">
-        <div class="h2h-matrix-val" style="font-size:11px; color:#34c759;">${eloTransferText}</div>
-        <div class="h2h-matrix-label">${eloLabel}</div>
-      </div>
-    </div>
-
-    <!-- Erweiterte Head-to-Head Bento-Analyse -->
-    <div class="h2h-details-grid">
-      <!-- 1. Break-Effizienz -->
-      <div class="h2h-detail-tile">
-        <div class="h2h-tile-title">⚡ Anstoß-Vorteil</div>
-        <div class="h2h-tile-val">
-          <span style="color:#ffcc00;">${p1BreakRate}</span> : <span style="color:#4fc3f7;">${p2BreakRate}</span>
+    <div class="h2h-radar-card">
+      <div class="h2h-fighters-row">
+        <div class="h2h-fighter">
+          <img src="${safeAvatar(p1)}" class="h2h-fighter-avatar" onerror="this.style.display='none'">
+          <div>
+            <div class="h2h-fighter-name">${p1}</div>
+            <div class="h2h-fighter-elo">${Math.round(elo1)} ELO</div>
+          </div>
         </div>
-        <div class="h2h-tile-sub">Siegquote bei eigenem Break</div>
+        <div style="text-align: center;">
+          <div style="font-size: 1.4rem; font-weight: 900; color: #fff; letter-spacing: 1px;">${p1Wins} : ${p2Wins}</div>
+          <div style="font-size: 0.72rem; font-weight: 700; color: var(--accent);">${leadText}</div>
+        </div>
+        <div class="h2h-fighter right">
+          <img src="${safeAvatar(p2)}" class="h2h-fighter-avatar" onerror="this.style.display='none'">
+          <div style="text-align: right;">
+            <div class="h2h-fighter-name">${p2}</div>
+            <div class="h2h-fighter-elo">${Math.round(elo2)} ELO</div>
+          </div>
+        </div>
       </div>
 
-      <!-- 2. Kugel-Waffen (Voll vs. Halb) -->
-      <div class="h2h-detail-tile">
-        <div class="h2h-tile-title">🎱 Kugel-Siege (🟡 / 🔵)</div>
-        <div class="h2h-tile-val">
-          <span style="color:#ffcc00;">${p1VollWins} / ${p1HalbWins}</span> | <span style="color:#4fc3f7;">${p2VollWins} / ${p2HalbWins}</span>
+      <!-- Dual-Tone Progress Bar -->
+      <div class="h2h-bar-wrap">
+        <div class="h2h-bar-labels">
+          <span style="color: #30d158;">${p1} (${p1Rate}%)</span>
+          <span style="color: #ff453a;">${p2} (${p2Rate}%)</span>
         </div>
-        <div class="h2h-tile-sub">Siege nach Kugeltyp</div>
+        <div class="h2h-bar-bg">
+          <div class="h2h-bar-fill-left" style="width: ${p1Rate}%;"></div>
+        </div>
       </div>
 
-      <!-- 3. Match-Finish & Siegart -->
-      <div class="h2h-detail-tile">
-        <div class="h2h-tile-title">🎯 Match-Finish</div>
-        <div class="h2h-tile-val">
-          <span style="color:#34c759;">${regPct}%</span> / <span style="color:#ff3b30;">${errPct}%</span>
+      <!-- Formkurve der letzten Duelle -->
+      <div class="h2h-form-container" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 10px; margin-bottom: 12px;">
+        <span class="h2h-form-label" style="font-size: 0.78rem; font-weight: 700; color: #94a3b8;">${streakLabel}</span>
+        <div class="h2h-form-dots">
+          ${formDotsHtml}
         </div>
-        <div class="h2h-tile-sub">Regulär vs. Gegner-Fehler</div>
       </div>
 
-      <!-- 4. Spielzeiten -->
-      <div class="h2h-detail-tile">
-        <div class="h2h-tile-title">⏱️ Duell-Speed</div>
-        <div class="h2h-tile-val" style="color:var(--accent);">
-          ${fastestStr}
+      <!-- Bento-Insight-Matrix -->
+      <div class="h2h-insights-grid">
+        <div class="h2h-insight-box">
+          <div class="h2h-insight-title">⚖️ ELO-Saldo</div>
+          <div class="h2h-insight-val" style="color: ${t1 > t2 ? "#30d158" : t2 > t1 ? "#ff453a" : "#fff"};">${eloTransferText}</div>
         </div>
-        <div class="h2h-tile-sub">Kürzeste / Ø ${avgDurStr}</div>
-      </div>
-
-      <!-- 5. Zähigkeit (Ø Restkugeln bei Niederlage) -->
-      <div class="h2h-detail-tile" style="grid-column: span 2;">
-        <div class="h2h-tile-title">🛡️ Tisch-Widerstand (Ø Restkugeln bei Niederlage)</div>
-        <div class="h2h-tile-val">
-          <span style="color:#ffcc00;">${p1}: ${p1AvgRest}</span> &nbsp;—&nbsp; <span style="color:#4fc3f7;">${p2}: ${p2AvgRest}</span>
+        <div class="h2h-insight-box">
+          <div class="h2h-insight-title">⚡ Anstoß-Vorteil</div>
+          <div class="h2h-insight-val"><span style="color: #30d158;">${p1BreakRate}</span> : <span style="color: #ff453a;">${p2BreakRate}</span></div>
         </div>
-        <div class="h2h-tile-sub">Wenigere Restkugeln = zäherer Kampf bis zur 8</div>
+        <div class="h2h-insight-box">
+          <div class="h2h-insight-title">🎯 Regulär gelocht</div>
+          <div class="h2h-insight-val" style="color: #30d158;">${regPct}% <span style="font-size: 0.72rem; color: #94a3b8; font-weight: normal;">(${errPct}% Fehler)</span></div>
+        </div>
+        <div class="h2h-insight-box">
+          <div class="h2h-insight-title">⏱️ Duell-Speed</div>
+          <div class="h2h-insight-val" style="color: var(--accent);">${fastestStr} <span style="font-size: 0.72rem; color: #94a3b8; font-weight: normal;">(Ø ${avgDurStr})</span></div>
+        </div>
+        <div class="h2h-insight-box" style="grid-column: 1 / -1;">
+          <div class="h2h-insight-title">🛡️ Tisch-Widerstand (Ø Restkugeln bei Niederlage)</div>
+          <div class="h2h-insight-val" style="font-size: 0.88rem;">
+            <span style="color: #30d158;">${p1}: ${p1AvgRest}</span> &nbsp;—&nbsp; <span style="color: #ff453a;">${p2}: ${p2AvgRest}</span>
+          </div>
+        </div>
       </div>
     </div>
   `;

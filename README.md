@@ -6,6 +6,43 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### 🎨 Einheitliches Kachel-Design in der gesamten App (v20.0)
+
+- **ELO-Rangliste modernisiert:** Jeder Spieler-Eintrag in der ELO-Rangliste hat jetzt das neue Split-Card-Layout: Rang-Abzeichen, Avatar und Name links – ELO-Wert als farbige Hero-Pille rechts. Aktive Streak-Badges (🔥) bleiben sichtbar.
+- **Direkte Duelle Matrix neu gestaltet:** Alle 1:1-Matchup-Karten zeigen die beiden Kontrahenten klar links und rechts, mit Avatar-Chips, Siegquoten und einem kompakten Fortschrittsbalken.
+- **Partner-Power (Duo-Ranking) überarbeitet:** Die Duo-Rangliste nutzt jetzt Avatar-Stacks für überlagernde Spieler-Bilder und eine klare Siegquoten-Pille rechts.
+- **Kugel-Spezis aufgeteilt:** Die „Beste Siegrate pro Kugeltyp"-Kachel ist jetzt in zwei separate Kacheln aufgeteilt – eine für den 🟡 Voll-Profi und eine für das 🔵 Halbe-As.
+- **Anstoß-Statistik & Tagessieg-Statistik:** Beide Ranglisten nutzen jetzt ebenfalls das konsistente Split-Card-Design mit Avatar und Hero-Pille.
+- **Offline-Cache (v20.0):** Aktualisierung des Offline-Speichers auf Version 20.0 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 💎 App-weites Modern Stat-Card Design (v19.9)
+
+- **Modernes Kachel-Layout für alle Spezialstatistiken:** Das aufgeräumte Split-Grid-Design der Fun-Kacheln wurde nun konsequent auf alle Kacheln ausgeweitet. Voll- & Halb-Kugelspezialisten, Anstoß-Vorteil, Service-Dieb und Foul-Siege erstrahlen jetzt mit prominenten Hero-Pillen und klaren Spieler-Chips.
+- **Kugel-Verteilung mit Live-Balken:** Die Kugel-Verteilung (Voll vs. Halb) bietet nun zwei separate Kennzahl-Pillen sowie einen dynamischen, zweifarbigen Fortschrittsbalken für das prozentuale Verhältnis.
+- **Angstgegner-Versus-Chip:** Der absolute Angstgegner wird jetzt als übersichtlicher Duell-Chip mit beiden Spieler-Avataren (`[Sieger] ⚔️ [Verlierer]`) und roter Sieg-Pille dargestellt – ohne unschönen Klammer- oder Schrägstrich-Salat.
+- **Offline-Cache (v19.9):** Aktualisierung des Offline-Speichers auf Version 19.9 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 💎 Modern Stat-Cards, Rivalen-Radar & Sieges-Pulse (v19.8)
+
+- **Modern Stat-Cards & sauberes Kachel-Layout:** Die Fun- und Spezial-Statistikkacheln wurden komplett neu gestaltet. Zahlen und Quoten stehen ab sofort aufgeräumt als farbige Hero-Pillen auf der rechten Seite, Spielernamen und Profilbilder links. Bei Gleichstand zweier oder dreier Spieler werden echte Bildstapel angezeigt – unübersichtliche Klammertexte und Schrägstriche gehören der Vergangenheit an.
+- **Head-to-Head Rivalen-Radar:** Der direkte 1:1-Vergleich im Statistik-Tab erstrahlt als modernes Kontrahenten-Radar mit zwei Spielerkarten, animiertem zweifarbigem Siegesbalken, ELO-Saldo, Anstoß-Vorteil und Durchmarsch-Zähler.
+- **Live Match-Pulse & Sieges-Feier:** Nach dem Speichern eines Spiels feiert die App den Sieger mit einem neuen Sieges-Banner: dynamischer Spruch, ELO-Gewinn, Spielzeit, Restkugeln und ein feierlicher akustischer Sieges-Klang.
+- **Offline-Cache (v19.8):** Aktualisierung des Offline-Speichers auf Version 19.8 für sofortige Verfügbarkeit aller neuen Features auf Smartphones und PCs.
+
+### 🔥 Formkurve & Streak-Tracker (v19.7)
+
+- **Profisport-Formkurve der letzten 5 Spiele:** Im Statistik-Tab unter „Rangliste & Trends“ zeigt eine neue Formkurven-Kachel die letzten 5 Match-Ergebnisse jedes Spielers übersichtlich mit grünen Sieges- (`S`) und roten Niederlagen-Badges (`N`).
+- **Interaktive Match-Details per Klick:** Ein Tippen oder Klick auf ein Form-Badge öffnet direkt eine kompakte Schnellansicht mit Datum und Gegner des jeweiligen Spiels.
+- **Dynamische Streak-Badges & Erfolgsquote:** Automatische Erkennung und Auszeichnung von Siegesserien (`🔥 Win-Streak`, `⚡ Siege in Folge`) oder Formtiefs inklusive prozentualer Erfolgsquote der jüngsten Partien.
+- **Offline-Cache (v19.7):** Aktualisierung des Offline-Speichers auf Version 19.7 für sofortige Verfügbarkeit aller neuen Features auf Smartphones und PCs.
+
+### ✨ Design-Upgrade: Floating Glass Island & 3D-Billardkugeln (v19.6)
+
+- **Freischwebende Glas-Navigationsleiste (iOS 18 Style):** Die untere Navigationsleiste schwebt jetzt modern und elegant als zentrierte Glas-Insel mit edlem Umgebungsglanz über dem Inhalt. Der aktive Menüpunkt wird durch einen sanft mitgleitenden Leucht-Indikator hervorgehoben.
+- **3D-Billardtuch & Kugeln bei der Match-Erfassung:** Bei der Ergebniserfassung und Spielbearbeitung werden Restkugeln nun auf einem echten grünen Billardtuch mit fotorealistischen 3D-Kugeln (Turnierfarben 1–7 und Kugel 0 für volles Abräumen) ausgewählt.
+- **Live-Auswahlanzeige:** Direkt unter dem Billardtuch wird die aktuell gewählte Restkugelanzahl sofort im Klartext angezeigt.
+- **Offline-Cache (v19.6):** Automatische Aktualisierung des Speichers auf Version 19.6 für sofortige Verfügbarkeit aller neuen Designs auf Smartphones und PCs.
+
 ### 📲 Schnellzugriff & App-Info (v19.5)
 
 - **Header-Schnellzugriff:** Rechts oben im App-Kopf stehen ab sofort zwei Schnellzugriffs-Buttons bereit: Ein Info-Button (`ℹ️`) und ein Aktualisierungs-Button (`🔄`).

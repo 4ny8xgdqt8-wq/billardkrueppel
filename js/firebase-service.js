@@ -391,6 +391,7 @@ window.doSave = async () => {
     }
 
     const winnerName = window.winnerNum === 1 ? p1 : p2;
+    const loserName = window.winnerNum === 1 ? p2 : p1;
     const prevMode = m;
 
     window.winnerNum = 0;
@@ -438,7 +439,17 @@ window.doSave = async () => {
     window.matchDurationInMinutes = 0;
     if (typeof window.updateUI === "function") window.updateUI();
 
-    if (window.openSuccessModal) window.openSuccessModal();
+    const durFormatted = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")} min`;
+    if (window.openSuccessModal) {
+      window.openSuccessModal({
+        winner: winnerName,
+        loser: loserName,
+        rest: parseInt(lo, 10) || 0,
+        winType: wt,
+        mode: prevMode,
+        durationFormatted: durFormatted,
+      });
+    }
 
     if (typeof confetti === "function") {
       setTimeout(() => {

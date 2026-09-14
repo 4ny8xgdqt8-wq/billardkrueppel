@@ -76,8 +76,94 @@ window.stopMatchTimer = () => {
   window.matchStartTime = null;
 };
 
-window.openSuccessModal = () => {
-  document.getElementById("successModal").style.display = "flex";
+window.openSuccessModal = (info = {}) => {
+  const modal = document.getElementById("successModal");
+  if (!modal) return;
+
+  const iconEl = document.getElementById("pulse-modal-icon");
+  const headEl = document.getElementById("pulse-modal-headline");
+  const quoteEl = document.getElementById("pulse-modal-quote");
+  const eloEl = document.getElementById("pulse-modal-elo");
+  const modeEl = document.getElementById("pulse-modal-mode");
+  const restEl = document.getElementById("pulse-modal-rest");
+  const durEl = document.getElementById("pulse-modal-duration");
+
+  const winner = info.winner || "Gewinner";
+  const loser = info.loser || "Gegner";
+  const rest = typeof info.rest === "number" ? info.rest : 0;
+  const isSweep = rest >= 7;
+  const isClutch = rest === 0;
+
+  // Sound Chime via Web Audio API (feierlicher Dreiklang)
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      const ctx = new AudioCtx();
+      const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.09, ctx.currentTime + idx * 0.08);
+        gain.gain.exponentialRampToValueAtTime(
+          0.001,
+          ctx.currentTime + idx * 0.08 + 0.32,
+        );
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + idx * 0.08);
+        osc.stop(ctx.currentTime + idx * 0.08 + 0.34);
+      });
+    }
+  } catch (e) {
+    // Autoplay-Richtlinie oder Audio nicht verfügbar
+  }
+
+  const quotes = [
+    `„Eiskalt abgeräumt – ${loser} hatte heute keine Chance!“`,
+    `„Gnadenlos versenkt! ${winner} demonstriert absolute Dominanz.“`,
+    `„Präzision wie ein Uhrwerk! Ein meisterhaftes Finish von ${winner}.“`,
+    `„Der Tisch brennt! Da bleibt ${loser} nur noch staunendes Zuschauen.“`,
+    `„Schlag auf Schlag ins Eckloch – so spielt nur ein Champion!“`,
+  ];
+
+  if (isSweep) {
+    if (iconEl) iconEl.innerText = "🧹";
+    if (headEl) headEl.innerText = `${winner} feiert einen Zu-Null-Sweep!`;
+    if (quoteEl)
+      quoteEl.innerText = `„Keine einzige Kugel gelocht! ${loser} komplett vom Tisch gefegt!“`;
+  } else if (isClutch) {
+    if (iconEl) iconEl.innerText = "⚡";
+    if (headEl) headEl.innerText = `Nervenkrimi für ${winner}!`;
+    if (quoteEl)
+      quoteEl.innerText = `„Auf Messers Schneide bei 0 Restkugeln – eiskalt die 8 verwandelt!“`;
+  } else if (info.winType && info.winType.includes("Fehler")) {
+    if (iconEl) iconEl.innerText = "💀";
+    if (headEl) headEl.innerText = `Schwarze 8 verpatzt!`;
+    if (quoteEl)
+      quoteEl.innerText = `„Bitterer Fehlstoß von ${loser} schenkt ${winner} den Sieg!“`;
+  } else if (info.winner) {
+    if (iconEl) iconEl.innerText = "👑";
+    if (headEl) headEl.innerText = `${winner} holt sich den Sieg!`;
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    if (quoteEl) quoteEl.innerText = randomQuote;
+  } else {
+    if (iconEl) iconEl.innerText = "👑";
+    if (headEl) headEl.innerText = `Match erfolgreich gespeichert!`;
+    if (quoteEl)
+      quoteEl.innerText = `„Eiskalt abgeräumt – keine Chance am Tisch gelassen!“`;
+  }
+
+  if (eloEl) {
+    eloEl.innerText = info.eloText ? info.eloText : "+16 ELO 🔥";
+  }
+
+  if (modeEl) modeEl.innerText = info.mode || "1:1";
+  if (restEl) restEl.innerText = `${rest} Restkugeln`;
+  if (durEl) durEl.innerText = info.durationFormatted || "-";
+
+  modal.style.display = "flex";
 };
 
 window.closeSuccessModal = () => {
@@ -904,7 +990,7 @@ const clearResultModalSelections = () => {
     .querySelectorAll("#modal-winType-chips .win-type-chip")
     .forEach((chip) => chip.classList.remove("selected"));
   document
-    .querySelectorAll("#modal-leftover-grid .leftover-btn")
+    .querySelectorAll("#modal-leftover-grid .billiard-ball")
     .forEach((btn) => btn.classList.remove("selected"));
 };
 
@@ -919,7 +1005,7 @@ window.clearResultModalCategory = (category) => {
       .forEach((chip) => chip.classList.remove("selected"));
   } else if (category === "leftover") {
     document
-      .querySelectorAll("#modal-leftover-grid .leftover-btn")
+      .querySelectorAll("#modal-leftover-grid .billiard-ball")
       .forEach((btn) => btn.classList.remove("selected"));
   }
 };
@@ -957,43 +1043,45 @@ window.selectLeftoverInModal = (num) => {
   document.getElementById("leftover").value = num;
   window.clearResultModalCategory("leftover");
   document
-    .querySelectorAll("#modal-leftover-grid .rack-ball")
+    .querySelectorAll("#modal-leftover-grid .billiard-ball")
     .forEach((btn, idx) => {
       btn.classList.toggle("selected", idx === num);
     });
+  const label = document.getElementById("modal-leftover-grid-selection-label");
+  if (label) {
+    label.textContent =
+      num === 0
+        ? "Aktuell gewählt: 0 Restkugeln (Volles Abräumen)"
+        : `Aktuell gewählt: ${num} Restkugel${num > 1 ? "n" : ""} auf dem Tisch`;
+  }
 };
 
 window.renderBilliardRack = (container, onSelectFnName) => {
   if (!container) return;
-  const ballColors = {
-    0: { bg: "rgba(255,255,255,0.08)", text: "#8e8e93" },
-    1: { bg: "#ffd700", text: "#000" },
-    2: { bg: "#0066cc", text: "#fff" },
-    3: { bg: "#e60000", text: "#fff" },
-    4: { bg: "#800080", text: "#fff" },
-    5: { bg: "#ff6600", text: "#fff" },
-    6: { bg: "#008000", text: "#fff" },
-    7: { bg: "#8b4513", text: "#fff" },
-  };
+  const containerId = container.id || "rack";
+  const labelId = `${containerId}-selection-label`;
 
-  container.className = "billiard-rack";
-  container.innerHTML = [0, 1, 2, 3, 4, 5, 6, 7]
-    .map((n) => {
-      const b = ballColors[n];
-      if (n === 0) {
-        return `<button type="button" class="rack-ball" onclick="${onSelectFnName}(0)">
-                <div style="font-size:16px;">🧹</div>
-                <div style="font-size:9px; font-weight:800; color:#8e8e93; margin-top:2px;">0 Rest</div>
-              </button>`;
-      }
-      return `<button type="button" class="rack-ball" onclick="${onSelectFnName}(${n})">
-              <div class="rack-ball-sphere" style="background: radial-gradient(circle at 35% 30%, #ffffff 0%, ${b.bg} 40%, rgba(0,0,0,0.7) 100%); color: ${b.text};">
-                ${n}
-              </div>
-              <div style="font-size:8px; font-weight:800; color:#8e8e93; margin-top:3px;">${n} Kugel${n > 1 ? "n" : ""}</div>
-            </button>`;
-    })
-    .join("");
+  container.innerHTML = `
+    <div class="rack-felt-table">
+      <div class="rack-felt-title">🟢 Tisch-Restkugeln des Verlierers beim Lochstoß der 8</div>
+      <div class="billiard-rack">
+        <button type="button" class="billiard-ball ball-0 selected" onclick="${onSelectFnName}(0)" title="0 Restkugeln">
+          0
+        </button>
+        ${[1, 2, 3, 4, 5, 6, 7]
+          .map(
+            (n) => `
+          <button type="button" class="billiard-ball ball-${n}" onclick="${onSelectFnName}(${n})" title="${n} Restkugeln">
+            <div class="number-circle">${n}</div>
+          </button>`,
+          )
+          .join("")}
+      </div>
+      <div id="${labelId}" class="rack-selection-label">
+        Aktuell gewählt: 0 Restkugeln (Volles Abräumen)
+      </div>
+    </div>
+  `;
 };
 
 window.saveMatchFromModal = async () => {
@@ -1289,10 +1377,17 @@ window.selectEditLeftover = (num) => {
   const input = document.getElementById("edit-leftover");
   if (input) input.value = num;
   document
-    .querySelectorAll("#edit-leftover-grid .leftover-btn")
-    .forEach((btn) => {
-      btn.classList.toggle("selected", btn.textContent.trim() === String(num));
+    .querySelectorAll("#edit-leftover-grid .billiard-ball")
+    .forEach((btn, idx) => {
+      btn.classList.toggle("selected", idx === num);
     });
+  const label = document.getElementById("edit-leftover-grid-selection-label");
+  if (label) {
+    label.textContent =
+      num === 0
+        ? "Aktuell gewählt: 0 Restkugeln (Volles Abräumen)"
+        : `Aktuell gewählt: ${num} Restkugel${num > 1 ? "n" : ""} auf dem Tisch`;
+  }
 };
 
 window.saveEditedMatch = async () => {

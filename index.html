@@ -817,27 +817,84 @@
           <div id="stat-content-wrapper">
             <!-- SUBTAB 1: 🏆 RANGLISTE & ELO -->
             <div id="stat-subtab-ranking" class="stat-subtab-content active">
+              <!-- ELO-Rangliste Wrapper (JS steuert Sichtbarkeit via display:none) -->
               <div
-                class="card cinematic-entry"
+                class="cinematic-entry"
                 id="eloTrendCard"
-                style="animation-delay: 0.1s; margin-bottom: 16px"
+                style="display: none; animation-delay: 0.1s; margin-bottom: 4px"
               >
+                <!-- ELO Ranking Cards (werden per JS als .stat-card-modern eingefügt) -->
                 <div id="eloRanking"></div>
-                <div id="trendHeader"></div>
+
+                <!-- ELO Chart + Trending Players als moderne Kachel -->
                 <div
+                  class="stat-card-modern cinematic-entry"
                   id="eloHistoryContainer"
-                  style="height: 180px; margin: 15px 0 20px 0"
+                  style="
+                    --card-accent: #30d158;
+                    flex-direction: column;
+                    align-items: stretch;
+                    gap: 10px;
+                    display: none;
+                    margin-top: 10px;
+                  "
                 >
+                  <div class="stat-card-badge-top">📈 ELO-Verlauf</div>
                   <div style="height: 180px">
                     <canvas id="eloHistoryChart"></canvas>
                   </div>
+                  <div id="trendHeader"></div>
+                  <div id="trendPlayers"></div>
                 </div>
-                <div id="trendPlayers" style="margin-top: 12px"></div>
               </div>
 
-              <div class="card cinematic-entry" style="animation-delay: 0.25s">
-                <label style="color: var(--accent)">Siegquote %</label>
-                <div style="height: 160px"><canvas id="winChart"></canvas></div>
+              <!-- FORMKURVE & STREAK-TRACKER -->
+              <div
+                class="stat-card-modern cinematic-entry"
+                id="formCurveCard"
+                style="
+                  --card-accent: #ff9500;
+                  flex-direction: column;
+                  align-items: stretch;
+                  gap: 10px;
+                  display: none;
+                  animation-delay: 0.18s;
+                  margin-bottom: 14px;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  "
+                >
+                  <div class="stat-card-badge-top" style="margin: 0">
+                    🔥 Formkurve & Streaks (Letzte 5 Matches)
+                  </div>
+                  <span
+                    style="font-size: 0.72rem; color: #94a3b8; font-weight: 700"
+                    >Live-Trend</span
+                  >
+                </div>
+                <div id="formCurveContainer" class="form-board"></div>
+              </div>
+
+              <!-- Siegquote Chart -->
+              <div
+                class="stat-card-modern cinematic-entry"
+                style="
+                  --card-accent: #4fc3f7;
+                  flex-direction: column;
+                  align-items: stretch;
+                  gap: 10px;
+                  animation-delay: 0.25s;
+                "
+              >
+                <div class="stat-card-badge-top">📊 Siegquote %</div>
+                <div style="height: 160px">
+                  <canvas id="winChart"></canvas>
+                </div>
               </div>
             </div>
 
@@ -894,36 +951,24 @@
 
               <div class="stat-grid">
                 <div
-                  class="card cinematic-entry"
-                  style="grid-column: span 2; animation-delay: 0.1s"
+                  class="stat-card-modern span-2 cinematic-entry"
+                  style="--card-accent: #ff453a; animation-delay: 0.1s"
                 >
-                  <label>Absoluter Angstgegner</label>
-                  <div
-                    id="stat-angst"
-                    style="
-                      font-weight: 900;
-                      font-size: 14px;
-                      color: #ff9500;
-                      text-shadow: 0 0 8px rgba(255, 149, 0, 0.3);
-                    "
-                  >
-                    -
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">
+                      🥊 Absoluter Angstgegner
+                    </div>
+                    <div id="stat-angst" class="stat-card-holder-row">-</div>
+                    <div class="stat-card-sublabel">
+                      Größte historische Dominanz im direkten 1:1 Duell
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-angst-val">
+                    <div class="stat-hero-pill pill-red">-</div>
                   </div>
                 </div>
-                <div
-                  class="card cinematic-entry"
-                  style="grid-column: span 2; animation-delay: 0.15s"
-                >
-                  <label>Partner-Power (Top Duos %)</label>
-                  <div id="stat-duo-ranking"></div>
-                </div>
-                <div
-                  class="card cinematic-entry"
-                  style="grid-column: span 2; animation-delay: 0.2s"
-                >
-                  <label>Direkte Duelle Matrix</label>
-                  <div id="stat-head-to-head"></div>
-                </div>
+                <div id="stat-duo-ranking" style="display: contents"></div>
+                <div id="stat-head-to-head" style="display: contents"></div>
               </div>
             </div>
 
@@ -992,255 +1037,247 @@
               </div>
 
               <div class="section-label">🔬 Spielstil & Fun-Stats</div>
-              <div class="stat-grid">
+              <div
+                class="stat-cards-grid"
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                  gap: 12px;
+                "
+              >
+                <!-- 1. Spiele gesamt -->
                 <div
-                  class="card cinematic-entry card-hud"
-                  style="grid-column: span 2; text-align: center"
+                  class="stat-card-modern span-2 cinematic-entry"
+                  style="--card-accent: #ffcc00"
                 >
-                  <label>🎲 Spiele gesamt</label>
-                  <div
-                    id="stat-total"
-                    style="
-                      font-size: 16px;
-                      font-weight: 900;
-                      color: var(--accent);
-                      text-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
-                    "
-                  >
-                    0
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🎲 Gesamte Partien</div>
+                    <div class="stat-card-player-label">
+                      Gespielte Matches der Gruppe
+                    </div>
+                    <div class="stat-card-sublabel">
+                      Alle erfassten Spiele im gewählten Zeitraum
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero">
+                    <div class="stat-hero-pill pill-gold">
+                      <span id="stat-total">0</span>
+                      <span class="unit">Spiele</span>
+                    </div>
                   </div>
                 </div>
-                <div class="card cinematic-entry card-hud">
-                  <label>🔪 Killer-Instinkt</label>
-                  <div
-                    id="stat-killer"
-                    style="font-size: 14px; font-weight: 900; color: #ff3b30"
-                  >
-                    -
-                  </div>
-                  <div
-                    style="
-                      font-size: 7px;
-                      color: #8e8e93;
-                      margin-top: 2px;
-                      font-weight: 800;
-                      text-transform: uppercase;
-                    "
-                  >
-                    Höchste Ø Restkugeln beim Gegner
-                  </div>
-                </div>
-                <div class="card cinematic-entry card-hud">
-                  <label>🎯 Reguläre Siege</label>
-                  <div
-                    id="stat-regular-wins"
-                    style="font-size: 14px; font-weight: 900; color: #34c759"
-                  >
-                    0%
-                  </div>
-                  <div
-                    style="
-                      font-size: 7px;
-                      color: #8e8e93;
-                      margin-top: 2px;
-                      font-weight: 800;
-                      text-transform: uppercase;
-                    "
-                  >
-                    Regulär 8er gelocht
-                  </div>
-                </div>
-                <div class="card cinematic-entry card-hud">
-                  <label>🥶 Nervenstärke</label>
-                  <div
-                    id="stat-clutch"
-                    style="font-size: 14px; font-weight: 900; color: #4fc3f7"
-                  >
-                    -
-                  </div>
-                  <div
-                    style="
-                      font-size: 7px;
-                      color: #8e8e93;
-                      margin-top: 2px;
-                      font-weight: 800;
-                      text-transform: uppercase;
-                    "
-                  >
-                    Siege bei gegnerischer 8 (Clutch)
-                  </div>
-                </div>
-                <div class="card cinematic-entry card-hud">
-                  <label>🛡️ Die Mauer</label>
-                  <div
-                    id="stat-mauer"
-                    style="font-size: 14px; font-weight: 900; color: #4fc3f7"
-                  >
-                    -
-                  </div>
-                  <div
-                    style="
-                      font-size: 7px;
-                      color: #8e8e93;
-                      margin-top: 2px;
-                      font-weight: 800;
-                      text-transform: uppercase;
-                    "
-                  >
-                    Wenigste Ø Reste bei Niederlage
-                  </div>
-                </div>
-                <div class="card cinematic-entry card-hud">
-                  <label>🫠 Pechvogel</label>
-                  <div
-                    id="stat-pechvogel"
-                    style="font-size: 14px; font-weight: 900; color: #fff"
-                  >
-                    -
-                  </div>
-                  <div
-                    style="
-                      font-size: 7px;
-                      color: #8e8e93;
-                      margin-top: 2px;
-                      font-weight: 800;
-                      text-transform: uppercase;
-                    "
-                  >
-                    Höchste Ø Reste bei Niederlage
-                  </div>
-                </div>
-                <div class="card cinematic-entry card-hud">
-                  <label>🤦‍♂️ 8er-Fehler-Quote</label>
-                  <div
-                    id="stat-lost-by-8error"
-                    style="font-size: 14px; font-weight: 900; color: #ff3b30"
-                  >
-                    0%
-                  </div>
-                  <div
-                    style="
-                      font-size: 7px;
-                      color: #8e8e93;
-                      margin-top: 2px;
-                      font-weight: 800;
-                      text-transform: uppercase;
-                    "
-                  >
-                    Niederlagen durch eigenen 8er-Fehler
-                  </div>
-                </div>
-                <div class="card cinematic-entry card-hud">
-                  <label>🪤 Nutznießer</label>
-                  <div
-                    id="stat-nutzniesser"
-                    style="
-                      font-size: 14px;
-                      font-weight: 900;
-                      color: var(--accent);
-                    "
-                  >
-                    -
-                  </div>
-                  <div
-                    style="
-                      font-size: 7px;
-                      color: #8e8e93;
-                      margin-top: 2px;
-                      font-weight: 800;
-                      text-transform: uppercase;
-                    "
-                  >
-                    Siege durch Fehler des Gegners
-                  </div>
-                </div>
-                <div class="card cinematic-entry card-hud">
-                  <label>🧛 ELO-Vampir</label>
-                  <div
-                    id="stat-vampire"
-                    style="font-size: 14px; font-weight: 900; color: #fff"
-                  >
-                    -
-                  </div>
-                  <div
-                    style="
-                      font-size: 7px;
-                      color: #8e8e93;
-                      margin-top: 2px;
-                      font-weight: 800;
-                      text-transform: uppercase;
-                    "
-                  >
-                    Größter ELO-Abzieher
-                  </div>
-                </div>
-                <div class="card cinematic-entry card-hud">
-                  <label>😈 Foul-Spezialist</label>
-                  <div
-                    id="stat-foul8-wins"
-                    style="
-                      font-size: 14px;
-                      font-weight: 900;
-                      color: var(--accent);
-                    "
-                  >
-                    0%
-                  </div>
-                  <div
-                    style="
-                      font-size: 7px;
-                      color: #8e8e93;
-                      margin-top: 2px;
-                      font-weight: 800;
-                      text-transform: uppercase;
-                    "
-                  >
-                    Siege durch Gegner-Foul an der 8
-                  </div>
-                </div>
-                <div class="card cinematic-entry card-hud">
-                  <label>⏱️ Ø Siegesdauer</label>
-                  <div
-                    id="stat-avg-win-duration"
-                    style="font-size: 14px; font-weight: 900; color: #34c759"
-                  >
-                    -
-                  </div>
-                  <div
-                    id="stat-avg-win-duration-subtitle"
-                    style="
-                      font-size: 7px;
-                      color: #8e8e93;
-                      margin-top: 2px;
-                      font-weight: 800;
-                      text-transform: uppercase;
-                    "
-                  >
-                    Effizientester Sieger
-                  </div>
-                </div>
+
+                <!-- 2. Killer-Instinkt -->
                 <div
-                  class="card cinematic-entry card-hud"
-                  style="grid-column: span 2"
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #ff453a"
                 >
-                  <label>🐢 Längste Ø Spieldauer</label>
-                  <div
-                    id="stat-avg-match-duration"
-                    style="font-size: 14px; font-weight: 900; color: #ff9500"
-                  >
-                    -
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🔪 Killer-Instinkt</div>
+                    <div id="stat-killer" class="stat-card-holder-row">-</div>
+                    <div class="stat-card-sublabel">
+                      Höchste Ø Restkugeln beim Gegner
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-killer-val">
+                    <div class="stat-hero-pill pill-red">-</div>
+                  </div>
+                </div>
+
+                <!-- 3. Reguläre Siege -->
+                <div
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #30d158"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🎯 Reguläre Siege</div>
+                    <div id="stat-regular-wins" class="stat-card-holder-row">
+                      -
+                    </div>
+                    <div class="stat-card-sublabel">Regulär die 8 gelocht</div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-regular-wins-val">
+                    <div class="stat-hero-pill pill-green">-</div>
+                  </div>
+                </div>
+
+                <!-- 4. Nervenstärke (Clutch) -->
+                <div
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #0a84ff"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🥶 Nervenstärke</div>
+                    <div id="stat-clutch" class="stat-card-holder-row">-</div>
+                    <div class="stat-card-sublabel">
+                      Siege bei gegnerischer 8 (Clutch)
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-clutch-val">
+                    <div class="stat-hero-pill pill-blue">-</div>
+                  </div>
+                </div>
+
+                <!-- 5. Die Mauer -->
+                <div
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #64d2ff"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🛡️ Die Mauer</div>
+                    <div id="stat-mauer" class="stat-card-holder-row">-</div>
+                    <div class="stat-card-sublabel">
+                      Wenigste Ø Reste bei Niederlage
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-mauer-val">
+                    <div class="stat-hero-pill pill-cyan">-</div>
+                  </div>
+                </div>
+
+                <!-- 6. Pechvogel -->
+                <div
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #ffd60a"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🫠 Pechvogel</div>
+                    <div id="stat-pechvogel" class="stat-card-holder-row">
+                      -
+                    </div>
+                    <div class="stat-card-sublabel">
+                      Höchste Ø Reste bei Niederlage
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-pechvogel-val">
+                    <div class="stat-hero-pill pill-gold">-</div>
+                  </div>
+                </div>
+
+                <!-- 7. 8er-Fehler-Quote -->
+                <div
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #ff453a"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🤦‍♂️ 8er-Fehler-Quote</div>
+                    <div id="stat-lost-by-8error" class="stat-card-holder-row">
+                      -
+                    </div>
+                    <div class="stat-card-sublabel">
+                      Niederlagen durch eigenen 8er-Fehler
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-lost-by-8error-val">
+                    <div class="stat-hero-pill pill-red">-</div>
+                  </div>
+                </div>
+
+                <!-- 8. Nutznießer -->
+                <div
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #ffd60a"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🪤 Nutznießer</div>
+                    <div id="stat-nutzniesser" class="stat-card-holder-row">
+                      -
+                    </div>
+                    <div class="stat-card-sublabel">
+                      Siege durch Fehler des Gegners
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-nutzniesser-val">
+                    <div class="stat-hero-pill pill-gold">-</div>
+                  </div>
+                </div>
+
+                <!-- 9. ELO-Vampir -->
+                <div
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #30d158"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🧛 ELO-Vampir</div>
+                    <div id="stat-vampire" class="stat-card-holder-row">-</div>
+                    <div class="stat-card-sublabel">
+                      Größter direkter ELO-Abzieher
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-vampire-val">
+                    <div class="stat-hero-pill pill-green">-</div>
+                  </div>
+                </div>
+
+                <!-- 10. Foul-Spezialist -->
+                <div
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #bf5af2"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">😈 Foul-Spezialist</div>
+                    <div id="stat-foul8-wins" class="stat-card-holder-row">
+                      -
+                    </div>
+                    <div class="stat-card-sublabel">
+                      Siege durch Gegner-Foul an der 8
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-foul8-wins-val">
+                    <div class="stat-hero-pill pill-purple">-</div>
+                  </div>
+                </div>
+
+                <!-- 11. Ø Siegesdauer -->
+                <div
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #30d158"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">⏱️ Ø Siegesdauer</div>
+                    <div
+                      id="stat-avg-win-duration"
+                      class="stat-card-holder-row"
+                    >
+                      -
+                    </div>
+                    <div
+                      id="stat-avg-win-duration-subtitle"
+                      class="stat-card-sublabel"
+                    >
+                      Effizientester Sieger
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-avg-win-duration-val">
+                    <div class="stat-hero-pill pill-green">-</div>
+                  </div>
+                </div>
+
+                <!-- 12. Längste Ø Spieldauer -->
+                <div
+                  class="stat-card-modern span-2 cinematic-entry"
+                  style="--card-accent: #ff9500"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🐢 Längste Spieldauer</div>
+                    <div
+                      id="stat-avg-match-duration"
+                      class="stat-card-holder-row"
+                    >
+                      -
+                    </div>
+                    <div
+                      id="stat-avg-match-duration-subtitle"
+                      class="stat-card-sublabel"
+                    >
+                      Der Taktiker
+                    </div>
                   </div>
                   <div
-                    id="stat-avg-match-duration-subtitle"
-                    style="
-                      font-size: 7px;
-                      color: #8e8e93;
-                      margin-top: 2px;
-                      font-weight: 800;
-                      text-transform: uppercase;
-                    "
+                    class="stat-metric-hero"
+                    id="stat-avg-match-duration-val"
                   >
-                    Der Taktiker
+                    <div class="stat-hero-pill pill-gold">-</div>
                   </div>
                 </div>
               </div>
@@ -1259,257 +1296,185 @@
 
             <!-- SUBTAB 4: 🎱 KUGELN & BREAK -->
             <div id="stat-subtab-balls" class="stat-subtab-content">
-              <div class="stat-grid">
-                <div class="card cinematic-entry" style="grid-column: span 2">
-                  <label>Kugel-Verteilung (Siege)</label>
-                  <div
-                    style="
-                      display: flex;
-                      justify-content: space-around;
-                      align-items: center;
-                      padding: 10px 0;
-                    "
-                  >
-                    <div style="text-align: center">
-                      <div
-                        style="
-                          font-size: 11px;
-                          color: #ffcc00;
-                          font-weight: 900;
-                          text-transform: uppercase;
-                          margin-bottom: 4px;
-                          display: flex;
-                          align-items: center;
-                          justify-content: center;
-                          gap: 4px;
-                        "
-                      >
-                        🟡 Voll
-                      </div>
-                      <div
-                        id="stat-balls-voll"
-                        style="
-                          font-size: 20px;
-                          font-weight: 900;
-                          color: #ffcc00;
-                          text-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
-                        "
-                      >
-                        0%
-                      </div>
-                    </div>
-                    <div
-                      style="
-                        height: 40px;
-                        width: 1px;
-                        background: rgba(255, 255, 255, 0.12);
-                      "
-                    ></div>
-                    <div style="text-align: center">
-                      <div
-                        style="
-                          font-size: 11px;
-                          color: #4fc3f7;
-                          font-weight: 900;
-                          text-transform: uppercase;
-                          margin-bottom: 4px;
-                          display: flex;
-                          align-items: center;
-                          justify-content: center;
-                          gap: 4px;
-                        "
-                      >
-                        🔵 Halb
-                      </div>
-                      <div
-                        id="stat-balls-halb"
-                        style="
-                          font-size: 20px;
-                          font-weight: 900;
-                          color: #4fc3f7;
-                          text-shadow: 0 0 10px rgba(79, 195, 247, 0.4);
-                        "
-                      >
-                        0%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
+              <div
+                class="stat-cards-grid"
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                  gap: 12px;
+                "
+              >
+                <!-- 1. Kugel-Verteilung (Siege) -->
                 <div
-                  class="card cinematic-entry card-hud"
-                  style="grid-column: span 2"
+                  class="stat-card-modern span-2 cinematic-entry"
+                  style="
+                    --card-accent: #ffcc00;
+                    flex-direction: column;
+                    align-items: stretch;
+                    gap: 12px;
+                  "
                 >
                   <div
                     style="
                       display: flex;
                       justify-content: space-between;
                       align-items: center;
-                      margin-bottom: 8px;
+                      flex-wrap: wrap;
+                      gap: 8px;
                     "
                   >
-                    <label style="margin: 0">Kugel-Favoriten</label>
-                    <div
-                      style="
-                        font-size: 8px;
-                        color: #8e8e93;
-                        font-weight: 900;
-                        text-transform: uppercase;
-                      "
-                    >
-                      Meiste Siege pro Typ
+                    <div>
+                      <div class="stat-card-badge-top">🎱 Kugel-Verteilung</div>
+                      <div class="stat-card-sublabel">
+                        Siege nach gelochtem Kugeltyp
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 8px">
+                      <div
+                        class="stat-hero-pill pill-gold"
+                        id="stat-balls-voll-pill"
+                      >
+                        🟡 <span id="stat-balls-voll">0%</span>
+                      </div>
+                      <div
+                        class="stat-hero-pill pill-cyan"
+                        id="stat-balls-halb-pill"
+                      >
+                        🔵 <span id="stat-balls-halb">0%</span>
+                      </div>
                     </div>
                   </div>
                   <div
                     style="
+                      height: 8px;
+                      background: rgba(79, 195, 247, 0.3);
+                      border-radius: 4px;
+                      overflow: hidden;
                       display: flex;
-                      justify-content: space-around;
-                      align-items: center;
-                      padding: 5px 0;
                     "
                   >
-                    <div style="text-align: center">
-                      <div
-                        style="
-                          font-size: 10px;
-                          color: #8e8e93;
-                          font-weight: 800;
-                          text-transform: uppercase;
-                          margin-bottom: 4px;
-                        "
-                      >
-                        Voll-Spezialist
-                      </div>
-                      <div
-                        id="stat-top-voll"
-                        style="
-                          font-size: 14px;
-                          font-weight: 900;
-                          color: #ffcc00;
-                          text-shadow: 0 0 8px rgba(255, 204, 0, 0.3);
-                        "
-                      >
-                        -
-                      </div>
-                    </div>
                     <div
+                      id="stat-balls-bar-voll"
                       style="
-                        height: 30px;
-                        width: 1px;
-                        background: rgba(255, 255, 255, 0.1);
+                        width: 50%;
+                        background: linear-gradient(90deg, #ffcc00, #ff9500);
+                        transition: width 0.5s ease;
                       "
                     ></div>
-                    <div style="text-align: center">
-                      <div
-                        style="
-                          font-size: 10px;
-                          color: #8e8e93;
-                          font-weight: 800;
-                          text-transform: uppercase;
-                          margin-bottom: 4px;
-                        "
-                      >
-                        Halb-Spezialist
-                      </div>
-                      <div
-                        id="stat-top-halb"
-                        style="
-                          font-size: 14px;
-                          font-weight: 900;
-                          color: #4fc3f7;
-                          text-shadow: 0 0 8px rgba(79, 195, 247, 0.3);
-                        "
-                      >
-                        -
-                      </div>
+                  </div>
+                </div>
+
+                <!-- 2. 🟡 Voll-Spezialist -->
+                <div
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #ffcc00"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🟡 Voll-Spezialist</div>
+                    <div id="stat-top-voll" class="stat-card-holder-row">-</div>
+                    <div class="stat-card-sublabel">
+                      Meiste Siege mit vollen Kugeln
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-top-voll-val">
+                    <div class="stat-hero-pill pill-gold">-</div>
+                  </div>
+                </div>
+
+                <!-- 3. 🔵 Halb-Spezialist -->
+                <div
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #4fc3f7"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🔵 Halb-Spezialist</div>
+                    <div id="stat-top-halb" class="stat-card-holder-row">-</div>
+                    <div class="stat-card-sublabel">
+                      Meiste Siege mit halben Kugeln
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-top-halb-val">
+                    <div class="stat-hero-pill pill-cyan">-</div>
+                  </div>
+                </div>
+
+                <!-- 4. Kugel-Spezis (Beste Siegrate pro Kugeltyp) -->
+                <div id="stat-ball-spez" style="display: contents"></div>
+
+                <!-- 5. Anstoß-Vorteil -->
+                <div
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #30d158"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">⚡ Anstoß-Vorteil</div>
+                    <div class="stat-card-player-label">Eigenes Break</div>
+                    <div class="stat-card-sublabel">
+                      Siegquote nach eigenem Anstoß
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-break-adv-val">
+                    <div class="stat-hero-pill pill-green">
+                      <span id="stat-break-adv">0%</span>
                     </div>
                   </div>
                 </div>
 
-                <div class="card cinematic-entry" style="grid-column: span 2">
-                  <label>Kugel-Spezis (Beste Siegrate pro Kugeltyp)</label>
-                  <div id="stat-ball-spez"></div>
-                </div>
-
-                <div class="card cinematic-entry card-hud">
-                  <label>⚡ Anstoß-Vorteil</label>
-                  <div
-                    id="stat-break-adv"
-                    style="
-                      font-size: 16px;
-                      font-weight: 900;
-                      color: #34c759;
-                      text-shadow: 0 0 15px rgba(52, 199, 89, 0.4);
-                    "
-                  >
-                    0%
-                  </div>
-                  <div
-                    style="
-                      font-size: 7px;
-                      color: #8e8e93;
-                      margin-top: 2px;
-                      font-weight: 800;
-                      text-transform: uppercase;
-                    "
-                  >
-                    Siegquote nach eigenem Break
-                  </div>
-                </div>
-
-                <div class="card cinematic-entry card-hud">
-                  <label>🕵️ Service-Dieb</label>
-                  <div
-                    id="stat-service-thief"
-                    style="
-                      font-size: 16px;
-                      font-weight: 900;
-                      color: #4fc3f7;
-                      text-shadow: 0 0 8px rgba(79, 195, 247, 0.3);
-                    "
-                  >
-                    0%
-                  </div>
-                  <div
-                    style="
-                      font-size: 7px;
-                      color: #8e8e93;
-                      margin-top: 2px;
-                      font-weight: 800;
-                      text-transform: uppercase;
-                    "
-                  >
-                    Siegquote bei gegnerischem Break
-                  </div>
-                </div>
-
+                <!-- 6. Service-Dieb -->
                 <div
-                  class="card cinematic-entry card-hud"
-                  style="grid-column: span 2"
+                  class="stat-card-modern cinematic-entry"
+                  style="--card-accent: #ffd60a"
                 >
-                  <label>🐀 Sieg durch Foul</label>
-                  <div
-                    id="stat-black"
-                    style="
-                      font-size: 14px;
-                      font-weight: 900;
-                      color: #ff3b30;
-                      text-shadow: 0 0 15px rgba(255, 59, 48, 0.4);
-                    "
-                  >
-                    0%
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🕵️ Service-Dieb</div>
+                    <div id="stat-service-thief" class="stat-card-holder-row">
+                      -
+                    </div>
+                    <div class="stat-card-sublabel">
+                      Siegquote bei gegnerischem Break
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-service-thief-val">
+                    <div class="stat-hero-pill pill-gold">-</div>
                   </div>
                 </div>
 
-                <div class="card cinematic-entry" style="grid-column: span 2">
-                  <label>Anstoß-Statistik</label>
-                  <div id="stat-break-counts" style="margin-top: 5px"></div>
+                <!-- 7. Sieg durch Foul -->
+                <div
+                  class="stat-card-modern span-2 cinematic-entry"
+                  style="--card-accent: #ff453a"
+                >
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top">🐀 Sieg durch Foul</div>
+                    <div class="stat-card-player-label">Fehler an der 8</div>
+                    <div class="stat-card-sublabel">
+                      Quote gewonnener Spiele durch gegnerischen 8er-Fehler
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" id="stat-black-val">
+                    <div class="stat-hero-pill pill-red">
+                      <span id="stat-black">0%</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div class="card cinematic-entry" style="grid-column: span 2">
-                  <label>Tagessieg-Statistik</label>
-                  <div id="stat-daily-wins"></div>
+                <!-- Anstoß-Statistik Section -->
+                <div
+                  class="section-label"
+                  style="grid-column: 1 / -1; margin: 12px 0 4px"
+                >
+                  📊 Anstoß-Statistik
                 </div>
+                <div id="stat-break-counts" style="display: contents"></div>
+
+                <!-- Tagessieg-Statistik Section -->
+                <div
+                  class="section-label"
+                  style="grid-column: 1 / -1; margin: 12px 0 4px"
+                >
+                  🏆 Tagessieg-Statistik
+                </div>
+                <div id="stat-daily-wins" style="display: contents"></div>
               </div>
             </div>
           </div>
@@ -2744,40 +2709,46 @@
 
     <div id="successModal" class="modal">
       <div class="modal-backdrop" onclick="window.closeSuccessModal()"></div>
-      <div class="modal-card" style="max-width: 320px">
-        <div style="padding: 30px 20px; text-align: center">
-          <div style="font-size: 40px; margin-bottom: 15px">✅</div>
-          <div
-            style="
-              font-weight: 900;
-              color: #34c759;
-              font-size: 16px;
-              text-transform: uppercase;
-              margin-bottom: 10px;
-            "
+      <div class="modal-card pulse-modal-card">
+        <div class="pulse-banner-icon" id="pulse-modal-icon">👑</div>
+        <div class="pulse-banner-headline" id="pulse-modal-headline">
+          Match erfolgreich gespeichert!
+        </div>
+        <div class="pulse-banner-quote" id="pulse-modal-quote">
+          „Eiskalt abgeräumt – keine Chance am Tisch gelassen!“
+        </div>
+        <div>
+          <div class="pulse-elo-badge" id="pulse-modal-elo">+16 ELO 🔥</div>
+        </div>
+        <div class="pulse-meta-row" id="pulse-modal-meta">
+          <span class="pulse-meta-chip" id="pulse-modal-mode">1:1</span>
+          <span class="pulse-meta-chip" id="pulse-modal-rest"
+            >0 Restkugeln</span
           >
-            Gespeichert!
-          </div>
-          <div
-            style="
-              color: #8e8e93;
-              font-size: 13px;
-              line-height: 1.5;
-              font-weight: 600;
-            "
+          <span class="pulse-meta-chip" id="pulse-modal-duration"
+            >08:45 min</span
           >
-            Match & Erfolge wurden erfolgreich gesichert.
-          </div>
         </div>
         <div
-          style="padding: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05)"
+          style="
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+          "
         >
           <button
+            type="button"
             class="btn-save"
-            style="margin-top: 0"
+            style="
+              margin-top: 0;
+              padding: 12px 24px;
+              font-weight: 800;
+              border-radius: 14px;
+            "
             onclick="window.closeSuccessModal()"
           >
-            OK
+            Weiteres Match erfassen
           </button>
         </div>
       </div>
