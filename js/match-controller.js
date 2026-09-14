@@ -20,7 +20,7 @@ window.updateAvatarPreviews = () => {
 
     const val = sel.value;
     const names = val ? val.split(" & ").map((n) => n.trim()) : [null];
-    const size = id.startsWith("t") ? 36 : 40; // 36px für Teams, 40px für 1v1 & Anstoß
+    const size = id.startsWith("t") ? 28 : 32; // 28px für Teams, 32px für 1v1 & Anstoß
 
     preview.innerHTML = names
       .map((n, idx) => {

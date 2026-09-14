@@ -6,6 +6,13 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### ⚡ Kompakte Match-Ansicht ohne Scrollen (v22.9)
+
+- **Alles im direkten Blickfeld (No-Scroll):** Die Match-Erfassungsseite wurde in ihren Abständen und Kartenhöhen ergonomisch gestrafft, sodass die gesamte Seite auf Smartphones und MacBooks vollständig auf einen Bildschirm passt, ohne scrollen zu müssen.
+- **Volles Siegerpodest bleibt erhalten:** Die beliebte 3D-Siegerehrung der Live-Tagessiegplatzierung (1. Platz Gold mit Krone, 2. Platz Silber, 3. Platz Bronze) bleibt in voller Pracht erhalten und kommt durch die eingesparten oberen Abstände nun optimal zur Geltung.
+- **Alle Funktionen gewohnt greifbar:** Spielmodus-Auswahl (1:1 und 2:2), Zufallsteams, Spieler-Avatare mit Siegesserien-Effekten, Anstoß-Würfeln, Live-Timer, Gewinner-Auswahl und ELO-Prognose bleiben uneingeschränkt aktiv.
+- **Offline-Cache (v22.9):** Aktualisierung des Offline-Speichers auf Version 22.9 für sofortige Verfügbarkeit auf allen Geräten.
+
 ### 🏛️ VIP Trophäenkammer & sauberes App-Logo (v22.8)
 
 - **VIP Trophäenkammer im neuen Look:** Das Nachschlagewerk aller Trophäen und Meilensteine erstrahlt im edlen Glassmorphism-Design (`.ach-vip-card`) – vollständig abgestimmt auf die Session- und Spieler-Erfolge:
