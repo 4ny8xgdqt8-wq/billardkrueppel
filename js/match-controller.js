@@ -165,6 +165,17 @@ window.openSuccessModal = (info = {}) => {
 
   modal.style.display = "flex";
 
+  // Siri Audio-Kommentator für Spielende
+  if (typeof window.playSiriComment === "function") {
+    if (isSweep) {
+      window.playSiriComment("sweep");
+    } else if (info.winType && info.winType.includes("Fehler")) {
+      window.playSiriComment("foul");
+    } else if (info.streak && info.streak >= 3) {
+      window.playSiriComment("streak");
+    }
+  }
+
   if (typeof window.triggerVictoryFx === "function") {
     setTimeout(() => {
       window.triggerVictoryFx();
@@ -921,6 +932,11 @@ window.calcBreak = () => {
   // Würfelsound starten
   playDiceSound(false);
 
+  // Audio-Berechtigung direkt beim Nutzerklick vorbereiten (verhindert Browser-Autoplay Block)
+  if (typeof window.prepareSiriCommentator === "function") {
+    window.prepareSiriCommentator();
+  }
+
   // Kryptografisch fairer 50:50 Münzwurf
   const cryptoBuf = new Uint32Array(1);
   window.crypto.getRandomValues(cryptoBuf);
@@ -970,6 +986,11 @@ window.calcBreak = () => {
     if (banner) {
       banner.style.opacity = "1";
       banner.style.transform = "translateY(0)";
+    }
+
+    // Siri Audio-Kommentator für den Anstoß-Sieger
+    if (typeof window.playSiriComment === "function") {
+      window.playSiriComment(winner);
     }
   }, 1250);
 };

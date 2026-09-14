@@ -1,4 +1,4 @@
-const CACHE_NAME = "billard-v24.5";
+const CACHE_NAME = "billard-v24.8";
 const ASSETS = [
   "./",
   "index.html",
@@ -15,6 +15,7 @@ const ASSETS = [
   "js/filters.js",
   "js/stats-renderer.js",
   "js/match-controller.js",
+  "js/commentator-service.js",
   "js/firebase-service.js",
   "js/app.js",
   "worker.js",
