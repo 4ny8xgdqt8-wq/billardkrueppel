@@ -4,10 +4,16 @@
 
 @keyframes particle-drift {
   0% {
-    background-position: 0% 0%, 0% 0%, 0% 0%;
+    background-position:
+      0% 0%,
+      0% 0%,
+      0% 0%;
   }
   100% {
-    background-position: 100% 100%, 200% 200%, -200% -200%;
+    background-position:
+      100% 100%,
+      200% 200%,
+      -200% -200%;
   }
 }
 
@@ -58,13 +64,16 @@
 }
 
 @keyframes modal-shake {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
-  20%, 60% {
+  20%,
+  60% {
     transform: translateX(-5px);
   }
-  40%, 80% {
+  40%,
+  80% {
     transform: translateX(5px);
   }
 }
@@ -161,7 +170,8 @@
 }
 
 @keyframes status-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.4;
   }
   50% {
@@ -246,7 +256,8 @@
 }
 
 @keyframes icon-pulse-subtle {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -292,7 +303,8 @@
 }
 
 @keyframes pulse-fire {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.4;
   }
@@ -303,7 +315,8 @@
 }
 
 @keyframes pulse-frost {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.4;
   }
@@ -314,7 +327,8 @@
 }
 
 @keyframes streak-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     filter: brightness(1);
   }
@@ -342,44 +356,222 @@
   }
 }
 
-@keyframes cup-shake {
-  0%, 100% {
-    transform: rotate(0) translateX(0);
-  }
-  25% {
-    transform: rotate(-15deg) translateX(-5px);
-  }
-  75% {
-    transform: rotate(15deg) translateX(5px);
-  }
+/* =======================================================================
+   ECHTE 3D-DUELL-WÜRFEL ANIMATION & OVERLAY (v23.0)
+   ======================================================================= */
+#diceDuelOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(5, 8, 15, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 100000;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.dice-duel-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin: 30px 0 20px 0;
+}
+.dice-fighter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.dice-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  object-fit: cover;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+.dice-name {
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  max-width: 140px;
+  word-break: break-word;
 }
 
-@keyframes cup-pour {
-  0% {
-    transform: rotate(0) translateY(0);
-  }
+/* 3D Dice Scene & Cube */
+.dice-scene {
+  width: 64px;
+  height: 64px;
+  perspective: 800px;
+  margin-top: 6px;
+}
+.dice-cube {
+  width: 64px;
+  height: 64px;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(0deg) rotateY(0deg);
+  transition: transform 1.2s cubic-bezier(0.15, 0.9, 0.25, 1.15);
+}
+.dice-cube.rolling {
+  animation: dice-tumble-shake 0.2s infinite ease-in-out;
+}
+@keyframes dice-tumble-shake {
+  0%,
   100% {
-    transform: rotate(150deg) translateY(20px) translateX(40px);
+    transform: translateY(0) rotateZ(0deg);
+  }
+  50% {
+    transform: translateY(-16px) rotateZ(10deg);
   }
 }
 
-.cup-shake {
-  display: inline-block;
-  animation: cup-shake 0.1s infinite;
+.dice-face {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(145deg, #ffffff 0%, #e2e8f0 100%);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  box-shadow:
+    inset 0 0 10px rgba(0, 0, 0, 0.1),
+    0 6px 16px rgba(0, 0, 0, 0.5);
+  display: grid;
+  padding: 9px;
+  box-sizing: border-box;
 }
 
-.cup-pour {
-  display: inline-block;
-  animation: cup-pour 0.4s ease-in forwards;
+/* 3D Cube Faces Positioning (translateZ = 32px for 64px cube) */
+.face-1 {
+  transform: rotateY(0deg) translateZ(32px);
+}
+.face-2 {
+  transform: rotateY(90deg) translateZ(32px);
+}
+.face-3 {
+  transform: rotateY(180deg) translateZ(32px);
+}
+.face-4 {
+  transform: rotateY(-90deg) translateZ(32px);
+}
+.face-5 {
+  transform: rotateX(90deg) translateZ(32px);
+}
+.face-6 {
+  transform: rotateX(-90deg) translateZ(32px);
+}
+
+/* Dice Dots / Pips */
+.pip {
+  width: 10px;
+  height: 10px;
+  background: #0f172a;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.8),
+    0 1px 1px rgba(255, 255, 255, 0.8);
+}
+.pip.red {
+  background: #dc2626;
+}
+
+/* Face Grid Dot Layouts */
+.face-1 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.face-1 .pip {
+  width: 14px;
+  height: 14px;
+}
+
+.face-2 {
+  display: flex;
+  justify-content: space-between;
+}
+.face-2 .pip:nth-child(2) {
+  align-self: flex-end;
+}
+
+.face-3 {
+  display: flex;
+  justify-content: space-between;
+}
+.face-3 .pip:nth-child(2) {
+  align-self: center;
+}
+.face-3 .pip:nth-child(3) {
+  align-self: flex-end;
+}
+
+.face-4 {
+  display: flex;
+  justify-content: space-between;
+}
+.face-4 .col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.face-5 {
+  display: flex;
+  justify-content: space-between;
+}
+.face-5 .col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.face-5 .center-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.face-6 {
+  display: flex;
+  justify-content: space-between;
+}
+.face-6 .col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Glow on Winner */
+.dice-fighter.winner .dice-cube .dice-face {
+  background: linear-gradient(145deg, #fffbeb 0%, #fef3c7 100%);
+  box-shadow:
+    0 0 25px rgba(255, 204, 0, 0.8),
+    inset 0 0 8px rgba(255, 204, 0, 0.4);
+  border-color: #ffd60a;
+}
+.dice-fighter.winner .dice-avatar {
+  border-color: #ffd60a;
+  box-shadow: 0 0 20px rgba(255, 204, 0, 0.6);
 }
 
 @keyframes diamond-pulse {
   0% {
-    box-shadow: 0 4px 20px rgba(79, 195, 247, 0.25), inset 0 0 10px rgba(79, 195, 247, 0.1);
+    box-shadow:
+      0 4px 20px rgba(79, 195, 247, 0.25),
+      inset 0 0 10px rgba(79, 195, 247, 0.1);
     border-color: rgba(79, 195, 247, 0.6) !important;
   }
   100% {
-    box-shadow: 0 8px 35px rgba(79, 195, 247, 0.55), 0 0 15px rgba(186, 104, 200, 0.4), inset 0 0 20px rgba(79, 195, 247, 0.25);
+    box-shadow:
+      0 8px 35px rgba(79, 195, 247, 0.55),
+      0 0 15px rgba(186, 104, 200, 0.4),
+      inset 0 0 20px rgba(79, 195, 247, 0.25);
     border-color: rgba(79, 195, 247, 0.95) !important;
   }
 }
@@ -392,5 +584,3 @@
     transform: translateX(150%) rotate(30deg);
   }
 }
-
-

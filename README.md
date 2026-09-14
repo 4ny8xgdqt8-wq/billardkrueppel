@@ -6,6 +6,21 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### 📱 Header-Bereinigung & Mobile-Notch-Korrektur (v23.1)
+
+- **Keine störenden Farbbalken mehr:** Der Header erstrahlt nun auf allen Seiten in einem sauberen, tiefschwarzen Dark-Glass-Look ohne verwaschene Farbschlieren oder sichtbare Übergangskanten im Hintergrund.
+- **Perfekter Sitz auf Smartphones (Notch & Dynamic Island):** Die oberen Abstände wurden gezielt an die Notch und Dynamic Island angepasst, sodass der Titel und die Icons auf dem Handy vollkommen frei und übersichtlich darunter liegen.
+- **Bündige Seitenränder:** Logo auf der linken Seite und Aktions-Buttons auf der rechten Seite schließen nun auf allen Mobilgeräten mit genau 16px Abstand sauber und bündig mit den Match-Karten ab, ohne an den Bildschirmrand zu stoßen oder darüber hinaus zu ragen.
+- **Offline-Cache (v23.1):** Aktualisierung des Offline-Speichers auf Version 23.1 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 🎲 Spektakuläres 3D-Duell-Würfeln um den Anstoß (v23.0)
+
+- **Echtes 3D-Duell wie am Billardtisch:** Beim Auswürfeln des Anstoßes treten beide Kontrahenten (bzw. Teams im 2:2-Modus) nun in einem echten 3D-Würfelduell gegeneinander an.
+- **Physikalische 3D-Würfel mit echten Augen:** Statt einfacher Symbole rollen und wirbeln zwei detailreiche, weiße 3D-Würfel mit abgerundeten Kanten und echten Dots physikalisch über den Tisch.
+- **Akustisches Holzwürfel-Klackern:** Ein authentischer Würfelsound begleitet das Rollen und sorgt für echte Billardtisch-Atmosphäre.
+- **Automatische Sieger-Ehrung & Anstoß-Übernahme:** Der höhere Wurf leuchtet in Gold auf und krönt den Anstoß-Sieger. Mit einem Klick auf _„Anstoß übernehmen ✅“_ wird der Gewinner direkt in das Match eingetragen und der Match-Timer gestartet.
+- **Offline-Cache (v23.0):** Aktualisierung des Offline-Speichers auf Version 23.0 für sofortige Verfügbarkeit auf allen Geräten.
+
 ### ⚡ Kompakte Match-Ansicht ohne Scrollen (v22.9)
 
 - **Alles im direkten Blickfeld (No-Scroll):** Die Match-Erfassungsseite wurde in ihren Abständen und Kartenhöhen ergonomisch gestrafft, sodass die gesamte Seite auf Smartphones und MacBooks vollständig auf einen Bildschirm passt, ohne scrollen zu müssen.

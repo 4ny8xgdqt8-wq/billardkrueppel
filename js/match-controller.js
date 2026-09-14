@@ -614,102 +614,240 @@ window.syncBallTypes = (n) => {
   if (typeof window.updateUI === "function") window.updateUI();
 };
 
+// Sound Synthese via Web Audio API (authentisches Holzwürfel-Klackern)
+function playDiceSound() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    // Mehrere kurze Impulse für das Klackern der rollenden Würfel
+    const times = [0, 0.08, 0.18, 0.32, 0.48, 0.68, 0.85, 1.05];
+    times.forEach((t, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      // Frequenz variieren (hölzernes Geräusch)
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(
+        450 + Math.random() * 350,
+        ctx.currentTime + t,
+      );
+
+      filter.type = "bandpass";
+      filter.frequency.setValueAtTime(600, ctx.currentTime + t);
+      filter.Q.setValueAtTime(3, ctx.currentTime + t);
+
+      const vol = ((times.length - i) / times.length) * 0.12;
+      gain.gain.setValueAtTime(vol, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.04);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.045);
+    });
+  } catch (e) {}
+}
+
+const faceRotations = {
+  1: { x: 0, y: 0 },
+  2: { x: 0, y: -90 },
+  3: { x: 0, y: -180 },
+  4: { x: 0, y: 90 },
+  5: { x: -90, y: 0 },
+  6: { x: 90, y: 0 },
+};
+
+let duelLastWinner = "";
+
 window.calcBreak = () => {
   const m = document.getElementById("mode").value;
-  const c =
-    m === "1:1"
-      ? [
-          document.getElementById("p1").value,
-          document.getElementById("p2").value,
-        ]
-      : [
-          document.getElementById("t1p1").value,
-          document.getElementById("t1p2").value,
-          document.getElementById("t2p1").value,
-          document.getElementById("t2p2").value,
-        ];
-  const picked =
-    c.filter(Boolean)[Math.floor(Math.random() * c.filter(Boolean).length)];
-  if (!picked) return;
-  let res = picked;
-  if (m === "2:2") {
-    if (
-      picked === document.getElementById("t1p1").value ||
-      picked === document.getElementById("t1p2").value
-    )
-      res =
-        document.getElementById("t1p1").value +
-        " & " +
-        document.getElementById("t1p2").value;
-    else
-      res =
-        document.getElementById("t2p1").value +
-        " & " +
-        document.getElementById("t2p2").value;
-  }
-  document.getElementById("breakPlayer").value = res;
-  window.removeHighlight("breakPlayer");
-  window.startMatchTimer();
-  window.breakLocked = true;
+  let p1Name = "";
+  let p2Name = "";
+  let p1Avatars = [];
+  let p2Avatars = [];
 
-  // Deaktivieren nach dem Würfeln
-  const diceBtn = document.getElementById("btn-breakcalc");
-  const breakSel = document.getElementById("breakPlayer");
-  if (diceBtn) {
-    diceBtn.disabled = true;
-    diceBtn.style.opacity = "0.3";
-  }
-  if (breakSel) {
-    breakSel.disabled = false; // Kurz aktivieren, um den Wert zu setzen
-    breakSel.value = res;
-    breakSel.disabled = true; // Sofort wieder deaktivieren
+  if (m === "1:1") {
+    p1Name = document.getElementById("p1").value;
+    p2Name = document.getElementById("p2").value;
+    if (!p1Name || !p2Name) {
+      if (typeof window.openErrorModal === "function") {
+        window.openErrorModal(
+          "Bitte wähle beide Spieler aus, bevor gewürfelt wird!",
+          ["p1", "p2"],
+        );
+      } else {
+        alert("Bitte wähle beide Spieler aus, bevor gewürfelt wird!");
+      }
+      return;
+    }
+    p1Avatars = [p1Name];
+    p2Avatars = [p2Name];
+  } else {
+    const t1p1 = document.getElementById("t1p1").value;
+    const t1p2 = document.getElementById("t1p2").value;
+    const t2p1 = document.getElementById("t2p1").value;
+    const t2p2 = document.getElementById("t2p2").value;
+    if (!t1p1 || !t1p2 || !t2p1 || !t2p2) {
+      if (typeof window.openErrorModal === "function") {
+        window.openErrorModal(
+          "Bitte wähle alle 4 Team-Spieler aus, bevor gewürfelt wird!",
+          ["t1p1", "t1p2", "t2p1", "t2p2"],
+        );
+      } else {
+        alert("Bitte wähle alle 4 Team-Spieler aus, bevor gewürfelt wird!");
+      }
+      return;
+    }
+    p1Name = `${t1p1} & ${t1p2}`;
+    p2Name = `${t2p1} & ${t2p2}`;
+    p1Avatars = [t1p1, t1p2];
+    p2Avatars = [t2p1, t2p2];
   }
 
-  document.getElementById("diceResultName").innerText = res;
-  const names = res.split(" & ").map((n) => n.trim());
-  const avatarContainer = document.getElementById("diceResultAvatar");
-  if (avatarContainer) {
-    const size = names.length > 1 ? 44 : 64; // This was causing an error as 'names' was not defined
-    avatarContainer.innerHTML = names
-      .map((n) => {
-        const silhouette = `<div style="width:${size}px; height:${size}px; border-radius:15px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:${size * 0.5}px; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.2);">👤</div>`;
-        const src =
-          window.getAvatarUrl && typeof window.getAvatarUrl === "function"
-            ? window.getAvatarUrl(n)
-            : `avatars/${n}.webp`;
-        return `
-                        <div style="position:relative; width:${size}px; height:${size}px;">
-                            <img loading="lazy" src="${src}" onerror="this.style.display='none'" style="position:absolute; top:0; left:0; width:${size}px; height:${size}px; border-radius:15px; object-fit:cover; border:2px solid var(--accent); z-index:2; background:transparent;">
-                            ${silhouette}
-                        </div>`;
-      })
+  const getAvSrc = (n) => {
+    return typeof window.safeGetAvatarUrl === "function"
+      ? window.safeGetAvatarUrl(n)
+      : typeof window.getAvatarUrl === "function"
+        ? window.getAvatarUrl(n)
+        : `avatars/${n}.webp`;
+  };
+
+  const renderAvatars = (containerId, names) => {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const size = names.length > 1 ? 40 : 52;
+    el.innerHTML = names
+      .map(
+        (n) => `
+      <img src="${getAvSrc(n)}" class="dice-avatar" style="width:${size}px; height:${size}px;" onerror="this.style.display='none'" alt="${n}" />
+    `,
+      )
       .join("");
+  };
+
+  renderAvatars("duelAvatarWrap1", p1Avatars);
+  renderAvatars("duelAvatarWrap2", p2Avatars);
+
+  const nameEl1 = document.getElementById("duelName1");
+  const nameEl2 = document.getElementById("duelName2");
+  if (nameEl1) nameEl1.textContent = p1Name;
+  if (nameEl2) nameEl2.textContent = p2Name;
+
+  const overlay = document.getElementById("diceDuelOverlay");
+  const banner = document.getElementById("duelResultBanner");
+  const subtitle = document.getElementById("duelSubtitle");
+  const f1 = document.getElementById("fighter1");
+  const f2 = document.getElementById("fighter2");
+  const c1 = document.getElementById("cube1");
+  const c2 = document.getElementById("cube2");
+  const s1 = document.getElementById("score1");
+  const s2 = document.getElementById("score2");
+
+  if (!overlay) return;
+
+  overlay.style.display = "flex";
+  if (banner) {
+    banner.style.opacity = "0";
+    banner.style.transform = "translateY(10px)";
+  }
+  if (subtitle) subtitle.textContent = "Würfel rollen auf dem Tisch...";
+  if (f1) f1.classList.remove("winner");
+  if (f2) f2.classList.remove("winner");
+  if (s1) {
+    s1.textContent = "-";
+    s1.style.color = "#fff";
+  }
+  if (s2) {
+    s2.textContent = "-";
+    s2.style.color = "#fff";
   }
 
-  if (typeof window.updateAvatarPreviews === "function")
-    window.updateAvatarPreviews();
+  // Würfelergebnisse ermitteln (kein Unentschieden)
+  let roll1 = Math.floor(Math.random() * 6) + 1;
+  let roll2 = Math.floor(Math.random() * 6) + 1;
+  while (roll1 === roll2) {
+    roll2 = Math.floor(Math.random() * 6) + 1;
+  }
 
-  // Cinematic Animation starten
-  const animOverlay = document.getElementById("diceAnimationOverlay");
-  const animCup = document.getElementById("animCup");
-  const animText = document.getElementById("animText");
+  if (c1) c1.classList.add("rolling");
+  if (c2) c2.classList.add("rolling");
+  playDiceSound();
 
-  animCup.className = "cup-shake";
-  if (animText) animText.innerText = "Mische Würfel...";
-  animOverlay.style.display = "flex";
+  const rot1 = faceRotations[roll1];
+  const rot2 = faceRotations[roll2];
+  const extraSpins1 = 720;
+  const extraSpins2 = 1080;
+
+  if (c1)
+    c1.style.transform = `rotateX(${extraSpins1 + rot1.x}deg) rotateY(${extraSpins1 + rot1.y}deg) rotateZ(360deg)`;
+  if (c2)
+    c2.style.transform = `rotateX(${extraSpins2 + rot2.x}deg) rotateY(${extraSpins2 + rot2.y}deg) rotateZ(-360deg)`;
 
   setTimeout(() => {
-    animCup.className = "cup-pour";
-    if (animText) animText.innerText = "Auswertung...";
+    if (c1) c1.classList.remove("rolling");
+    if (c2) c2.classList.remove("rolling");
 
-    setTimeout(() => {
-      animOverlay.style.display = "none";
-      animCup.className = "";
-      // Jetzt erst das echte Ergebnis-Fenster anzeigen
-      document.getElementById("diceModal").style.display = "flex";
-    }, 1000);
-  }, 1000);
+    if (s1) s1.textContent = roll1;
+    if (s2) s2.textContent = roll2;
+
+    const winner = roll1 > roll2 ? p1Name : p2Name;
+    duelLastWinner = winner;
+
+    if (roll1 > roll2) {
+      if (f1) f1.classList.add("winner");
+      if (s1) s1.style.color = "#ffd60a";
+      if (s2) s2.style.color = "#8e8e93";
+    } else {
+      if (f2) f2.classList.add("winner");
+      if (s2) s2.style.color = "#ffd60a";
+      if (s1) s1.style.color = "#8e8e93";
+    }
+
+    if (subtitle)
+      subtitle.textContent = `Ergebnis: ${p1Name} (${roll1}) vs. ${p2Name} (${roll2})`;
+    const winTextEl = document.getElementById("duelWinnerText");
+    if (winTextEl)
+      winTextEl.textContent = `👑 ${winner} sichert sich den Anstoß!`;
+
+    if (banner) {
+      banner.style.opacity = "1";
+      banner.style.transform = "translateY(0)";
+    }
+  }, 1250);
 };
+
+window.closeDuelOverlay = () => {
+  const overlay = document.getElementById("diceDuelOverlay");
+  if (overlay) overlay.style.display = "none";
+  if (duelLastWinner) {
+    const breakSel = document.getElementById("breakPlayer");
+    if (breakSel) {
+      breakSel.disabled = false;
+      breakSel.value = duelLastWinner;
+      breakSel.disabled = true;
+    }
+    window.removeHighlight("breakPlayer");
+    window.startMatchTimer();
+    window.breakLocked = true;
+
+    // Deaktivieren nach dem Würfeln
+    const diceBtn = document.getElementById("btn-breakcalc");
+    if (diceBtn) {
+      diceBtn.disabled = true;
+      diceBtn.style.opacity = "0.3";
+    }
+
+    if (typeof window.updateAvatarPreviews === "function") {
+      window.updateAvatarPreviews();
+    }
+  }
+};
+window.closeDiceModal = window.closeDuelOverlay;
 
 window.requestDelete = (i) => {
   window.openDeleteConfirmModal(i);

@@ -135,10 +135,7 @@
       <div class="main-content" id="scroll-area">
         <!-- Ansicht: Aufzeichnen -->
         <div id="view-aufzeichnen" class="view active">
-          <div
-            class="header-container"
-            style="margin-bottom: 8px; padding: 2px 0 6px 0"
-          >
+          <div class="header-container">
             <div class="header-side">
               <img
                 loading="lazy"
@@ -2715,53 +2712,257 @@
       </div>
     </div>
 
-    <!-- Cinematic Animation Overlay -->
-    <div
-      id="diceAnimationOverlay"
-      class="modal"
-      style="background: rgba(0, 0, 0, 0.95); z-index: 35000"
-    >
-      <div
-        style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          width: 100%;
-          height: 100%;
-        "
-      >
+    <!-- 3D-Duell-Würfel Overlay (v23.0) -->
+    <div id="diceDuelOverlay">
+      <div style="text-align: center; margin-bottom: 10px">
         <div
           style="
-            position: relative;
+            color: var(--accent);
+            font-size: 16px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          "
+        >
+          ⚔️ Anstoß-Duell
+        </div>
+        <div
+          id="duelSubtitle"
+          style="
+            color: #8e8e93;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 4px;
+          "
+        >
+          Würfel rollen auf dem Tisch...
+        </div>
+      </div>
+
+      <!-- Duell Arena mit 2 echten 3D-Würfeln -->
+      <div class="dice-duel-container">
+        <!-- Kontrahent 1 -->
+        <div class="dice-fighter" id="fighter1">
+          <div
+            id="duelAvatarWrap1"
+            style="
+              display: flex;
+              gap: 6px;
+              justify-content: center;
+              align-items: center;
+              min-height: 52px;
+            "
+          >
+            <img
+              src="avatars/Thorsten.webp"
+              id="duelAvatar1"
+              class="dice-avatar"
+              alt="Fighter 1"
+              onerror="this.style.display = 'none'"
+            />
+          </div>
+          <div class="dice-name" id="duelName1">Spieler 1</div>
+          <div class="dice-scene">
+            <div class="dice-cube" id="cube1">
+              <div class="dice-face face-1"><div class="pip red"></div></div>
+              <div class="dice-face face-2">
+                <div class="pip"></div>
+                <div class="pip"></div>
+              </div>
+              <div class="dice-face face-3">
+                <div class="pip"></div>
+                <div class="pip"></div>
+                <div class="pip"></div>
+              </div>
+              <div class="dice-face face-4">
+                <div class="col">
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                </div>
+                <div class="col">
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                </div>
+              </div>
+              <div class="dice-face face-5">
+                <div class="col">
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                </div>
+                <div class="center-col"><div class="pip"></div></div>
+                <div class="col">
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                </div>
+              </div>
+              <div class="dice-face face-6">
+                <div class="col">
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                </div>
+                <div class="col">
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            id="score1"
+            style="
+              font-size: 24px;
+              font-weight: 900;
+              color: #fff;
+              min-height: 32px;
+              margin-top: 4px;
+            "
+          >
+            -
+          </div>
+        </div>
+
+        <!-- VS Badge -->
+        <div
+          style="
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            width: 100%;
+            gap: 4px;
           "
         >
           <div
-            id="animCup"
-            style="font-size: 120px; z-index: 5; position: relative"
+            style="
+              width: 36px;
+              height: 36px;
+              border-radius: 50%;
+              background: rgba(255, 204, 0, 0.2);
+              border: 1px solid rgba(255, 204, 0, 0.5);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 11px;
+              font-weight: 900;
+              color: #ffd60a;
+            "
           >
-            🗑️
+            VS
           </div>
         </div>
+
+        <!-- Kontrahent 2 -->
+        <div class="dice-fighter" id="fighter2">
+          <div
+            id="duelAvatarWrap2"
+            style="
+              display: flex;
+              gap: 6px;
+              justify-content: center;
+              align-items: center;
+              min-height: 52px;
+            "
+          >
+            <img
+              src="avatars/Daniel.webp"
+              id="duelAvatar2"
+              class="dice-avatar"
+              alt="Fighter 2"
+              onerror="this.style.display = 'none'"
+            />
+          </div>
+          <div class="dice-name" id="duelName2">Spieler 2</div>
+          <div class="dice-scene">
+            <div class="dice-cube" id="cube2">
+              <div class="dice-face face-1"><div class="pip red"></div></div>
+              <div class="dice-face face-2">
+                <div class="pip"></div>
+                <div class="pip"></div>
+              </div>
+              <div class="dice-face face-3">
+                <div class="pip"></div>
+                <div class="pip"></div>
+                <div class="pip"></div>
+              </div>
+              <div class="dice-face face-4">
+                <div class="col">
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                </div>
+                <div class="col">
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                </div>
+              </div>
+              <div class="dice-face face-5">
+                <div class="col">
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                </div>
+                <div class="center-col"><div class="pip"></div></div>
+                <div class="col">
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                </div>
+              </div>
+              <div class="dice-face face-6">
+                <div class="col">
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                </div>
+                <div class="col">
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                  <div class="pip"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            id="score2"
+            style="
+              font-size: 24px;
+              font-weight: 900;
+              color: #fff;
+              min-height: 32px;
+              margin-top: 4px;
+            "
+          >
+            -
+          </div>
+        </div>
+      </div>
+
+      <!-- Sieger Banner -->
+      <div
+        id="duelResultBanner"
+        style="
+          opacity: 0;
+          transform: translateY(10px);
+          transition: all 0.4s ease;
+          text-align: center;
+          margin-top: 15px;
+        "
+      >
         <div
-          id="animText"
+          id="duelWinnerText"
           style="
-            margin-top: 100px;
-            color: var(--accent);
+            font-size: 16px;
             font-weight: 900;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            font-size: 12px;
-            animation: status-pulse 1s infinite;
+            color: #34c759;
+            margin-bottom: 15px;
           "
         >
-          Mische Würfel...
+          👑 Spieler sichert sich den Anstoß!
         </div>
+        <button
+          class="btn-save"
+          style="margin: 0 auto; max-width: 220px; font-size: 13px"
+          onclick="window.closeDuelOverlay()"
+        >
+          Anstoß übernehmen ✅
+        </button>
       </div>
     </div>
 
