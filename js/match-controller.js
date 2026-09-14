@@ -421,7 +421,15 @@ window.generateRandomMatch = () => {
 };
 
 window.updateUI = () => {
-  const currentMode = document.getElementById("mode").value;
+  const currentMode = document.getElementById("mode")?.value || "1:1";
+
+  // Segmented Pills synchronisieren
+  const pill1v1 = document.getElementById("match-pill-1v1");
+  const pill2v2 = document.getElementById("match-pill-2v2");
+  if (pill1v1 && pill2v2) {
+    pill1v1.classList.toggle("active", currentMode === "1:1");
+    pill2v2.classList.toggle("active", currentMode === "2:2");
+  }
 
   // Reset state only when mode changes
   if (window.lastMode !== currentMode) {
@@ -953,12 +961,9 @@ window.updateMatchProbability = () => {
 
   const getBallIcon = (type) => {
     if (type === "Voll")
-      return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="#ffcc00"/><circle cx="12" cy="12" r="11" fill="url(#gradV)"/><defs><radialGradient id="gradV" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.3"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
-    return `<svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:4px; display:block;"><circle cx="12" cy="12" r="11" fill="white"/><path d="M1.5 8.5 A 11 11 0 0 0 1.5 15.5 L 22.5 15.5 A 11 11 0 0 0 22.5 8.5 Z" fill="#4FC3F7"/><circle cx="12" cy="12" r="11" fill="url(#gradH)"/><defs><radialGradient id="gradH" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.2"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
+      return `<svg width="12" height="12" viewBox="0 0 24 24" style="margin-right:3px; display:inline-block; vertical-align:middle;"><circle cx="12" cy="12" r="11" fill="#ffcc00"/><circle cx="12" cy="12" r="11" fill="url(#gradV)"/><defs><radialGradient id="gradV" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.3"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
+    return `<svg width="12" height="12" viewBox="0 0 24 24" style="margin-right:3px; display:inline-block; vertical-align:middle;"><circle cx="12" cy="12" r="11" fill="white"/><path d="M1.5 8.5 A 11 11 0 0 0 1.5 15.5 L 22.5 15.5 A 11 11 0 0 0 22.5 8.5 Z" fill="#4FC3F7"/><circle cx="12" cy="12" r="11" fill="url(#gradH)"/><defs><radialGradient id="gradH" cx="30%" cy="30%" r="50%"><stop offset="0%" stop-color="white" stop-opacity="0.2"/><stop offset="100%" stop-color="black" stop-opacity="0.2"/></defs></svg>`;
   };
-
-  const c1 = prob1 > 50 ? "#34c759" : prob1 < 50 ? "#ff3b30" : "#ffffff";
-  const c2 = prob2 > 50 ? "#34c759" : prob2 < 50 ? "#ff3b30" : "#ffffff";
 
   const av1 = window.getAvatarUrl
     ? window.getAvatarUrl(n1)
@@ -968,52 +973,85 @@ window.updateMatchProbability = () => {
     : `avatars/${n2}.webp`;
   const is1v1 = m === "1:1";
 
+  const p1Tag = prob1 >= 50 ? "Favorit" : "Challenger";
+  const p2Tag = prob2 >= 50 ? "Favorit" : "Challenger";
+
   b.className = "card vs-arena-card";
   b.innerHTML = `
-                ${
-                  is1v1
-                    ? `
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.08);">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <img loading="lazy" src="${av1}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid #ffcc00; box-shadow:0 0 10px rgba(255,204,0,0.4);" onerror="this.style.display='none'">
-                        <div>
-                            <div style="font-weight:900; font-size:12px; color:#fff;">${n1}</div>
-                            <div style="font-size:9px; font-weight:800; color:#ffcc00;">${Math.round(r1)} ELO</div>
-                        </div>
-                    </div>
-                    <div class="vs-badge-glow">VS</div>
-                    <div style="display:flex; align-items:center; gap:10px; flex-direction:row-reverse; text-align:right;">
-                        <img loading="lazy" src="${av2}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid #4fc3f7; box-shadow:0 0 10px rgba(79,195,247,0.4);" onerror="this.style.display='none'">
-                        <div>
-                            <div style="font-weight:900; font-size:12px; color:#fff;">${n2}</div>
-                            <div style="font-size:9px; font-weight:800; color:#4fc3f7;">${Math.round(r2)} ELO</div>
-                        </div>
-                    </div>
-                </div>`
-                    : ""
-                }
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <span style="color:var(--accent); font-weight:900; font-size:9px; text-transform:uppercase; letter-spacing:1.5px; display:flex; align-items:center; gap:6px;"><div class="live-dot"></div> LIVE ANALYSE</span>
-                    <span style="font-size:10px; color:#fff; font-weight:900; opacity: 0.7;">${prob1}% <span style="color:var(--accent); opacity:1;">:</span> ${prob2}%</span>
-                </div>
-                <div class="prob-bar" style="margin-bottom:6px;">
-                    <div style="width:${prob1}%">
-                        <!-- Liquid Glow Tip -->
-                        <div style="position:absolute; right:-6px; top:-30%; bottom:-30%; width:12px; background: radial-gradient(circle, #fff 0%, transparent 70%); opacity:0.7; animation: tip-pulse 1s infinite alternate; z-index:3;"></div>
-                    </div>
-                    <div style="position:absolute; left:50%; top:-4px; bottom:-4px; width:2px; background:rgba(255,255,255,0.4); z-index:4; transform:translateX(-50%);"></div>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-size:12px; font-weight:900; color:${c1}; flex:1; display:flex; align-items:center;">
-                        <span style="white-space:nowrap;">${l1}: ${prob1}%</span>
-                        ${pref1 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref1.c}; opacity:0.8; margin-left:6px;">${window.getBallIcon(pref1.t, 12)}${pref1.t}</span>` : ""}
-                    </div>
-                    <div style="font-size:12px; font-weight:900; color:${c2}; flex:1; display:flex; align-items:center; justify-content:flex-end; gap:6px;">
-                        ${pref2 ? `<span style="display:inline-flex; align-items:center; font-size:10px; font-weight:900; color:${pref2.c}; opacity:0.8; margin-right:6px;">${window.getBallIcon(pref2.t, 12)}${pref2.t}</span>` : ""}
-                        <span style="white-space:nowrap;">${l2}: ${prob2}%</span>
-                    </div>
-                </div>
-                `;
+    <!-- Oberer 2px Duell-Glanzstreifen (Gold zu Cyan) -->
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #ffcc00 0%, transparent 50%, #64d2ff 100%);"></div>
+
+    <!-- Top Meta Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <span style="color: #ffd60a; font-weight: 900; font-size: 9.5px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 5px;">
+        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ffcc00; box-shadow: 0 0 8px #ffcc00;"></span>
+        LIVE ANALYSE
+      </span>
+      <span style="font-size: 10px; font-weight: 900; color: #fff; background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 6px;">
+        <span style="color: #ffcc00">${prob1}%</span> : <span style="color: #64d2ff">${prob2}%</span>
+      </span>
+    </div>
+
+    <!-- Spieler Duell Zeile -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+      <!-- Spieler 1 -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        ${
+          is1v1
+            ? `<img src="${av1}" style="width: 34px; height: 34px; border-radius: 9px; object-fit: cover; border: 2px solid #ffcc00; box-shadow: 0 0 10px rgba(255, 204, 0, 0.35);" alt="${n1}" onerror="this.style.display='none'" />`
+            : ""
+        }
+        <div>
+          <div style="font-weight: 900; font-size: 12.5px; color: #fff; line-height: 1.1;">${l1}</div>
+          <div style="font-size: 9.5px; font-weight: 800; color: #ffcc00; margin-top: 1px; display: flex; align-items: center; gap: 4px;">
+            ${Math.round(r1)} ELO ${pref1 ? `· <span style="color:${pref1.c}; display: inline-flex; align-items: center;">${getBallIcon(pref1.t)}${pref1.t}</span>` : ""}
+          </div>
+        </div>
+      </div>
+
+      <!-- VS Badge -->
+      <div style="padding: 3px 8px; border-radius: 8px; font-size: 9.5px; font-weight: 900; background: linear-gradient(90deg, rgba(255,204,0,0.2) 0%, rgba(100,210,255,0.2) 100%), #121622; border: 1px solid rgba(255, 255, 255, 0.2); color: #ffd60a; letter-spacing: 0.5px;">
+        VS
+      </div>
+
+      <!-- Spieler 2 -->
+      <div style="display: flex; align-items: center; gap: 8px; flex-direction: row-reverse; text-align: right;">
+        ${
+          is1v1
+            ? `<img src="${av2}" style="width: 34px; height: 34px; border-radius: 9px; object-fit: cover; border: 2px solid #64d2ff; box-shadow: 0 0 10px rgba(100, 210, 255, 0.35);" alt="${n2}" onerror="this.style.display='none'" />`
+            : ""
+        }
+        <div>
+          <div style="font-weight: 900; font-size: 12.5px; color: #fff; line-height: 1.1;">${l2}</div>
+          <div style="font-size: 9.5px; font-weight: 800; color: #64d2ff; margin-top: 1px; display: flex; align-items: center; gap: 4px; justify-content: flex-end;">
+            ${Math.round(r2)} ELO ${pref2 ? `· <span style="color:${pref2.c}; display: inline-flex; align-items: center;">${getBallIcon(pref2.t)}${pref2.t}</span>` : ""}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dual-Energy Duell-Balken -->
+    <div style="height: 10px; border-radius: 6px; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.12); position: relative; overflow: hidden; display: flex; margin-bottom: 6px;">
+      <!-- P1 Gold Energy -->
+      <div style="width: ${prob1}%; height: 100%; background: linear-gradient(90deg, #ff9500 0%, #ffd60a 100%); box-shadow: 0 0 12px rgba(255, 214, 10, 0.4); position: relative; transition: width 0.6s ease;"></div>
+      <!-- Laser Clash Divider -->
+      <div style="position: absolute; left: ${prob1}%; top: 0; bottom: 0; width: 2px; background: #fff; box-shadow: 0 0 8px #fff, 0 0 14px #ffd60a; transform: translateX(-50%); z-index: 5;"></div>
+      <!-- P2 Cyan Energy -->
+      <div style="width: ${prob2}%; height: 100%; background: linear-gradient(90deg, #0a84ff 0%, #64d2ff 100%); box-shadow: 0 0 12px rgba(100, 210, 255, 0.4); transition: width 0.6s ease;"></div>
+    </div>
+
+    <!-- Quoten / Textzeile unten -->
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="font-size: 11px; font-weight: 900; color: #ffcc00; display: flex; align-items: center; gap: 4px;">
+        <span>${prob1 >= 50 ? "👑 " : ""}${l1}: ${prob1}%</span>
+        <span style="font-size: 8.5px; opacity: 0.8; font-weight: 700; background: rgba(255,204,0,0.15); padding: 1px 5px; border-radius: 4px;">${p1Tag}</span>
+      </div>
+      <div style="font-size: 11px; font-weight: 900; color: #64d2ff; display: flex; align-items: center; gap: 4px;">
+        <span style="font-size: 8.5px; opacity: 0.8; font-weight: 700; background: rgba(100,210,255,0.15); padding: 1px 5px; border-radius: 4px;">${p2Tag}</span>
+        <span>${prob2 >= 50 ? "👑 " : ""}${l2}: ${prob2}%</span>
+      </div>
+    </div>
+  `;
 };
 
 window.openConfirmationModal = () => {

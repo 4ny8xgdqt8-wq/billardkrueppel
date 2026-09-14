@@ -100,11 +100,11 @@ body {
 }
 
 .view.slide-right {
-  animation: view-enter-right 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: view-enter-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .view.slide-left {
-  animation: view-enter-left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: view-enter-left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .view.exit-right {
@@ -145,8 +145,10 @@ body {
 
 .cinematic-entry,
 .card.cinematic-entry {
-  animation: ach-card-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-  opacity: 0;
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
 }
 
 .card-hud {
@@ -167,7 +169,7 @@ body {
     inset 0 0 15px rgba(255, 204, 0, 0.05);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  animation: hud-reveal 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: none !important;
 }
 
 /* Header */
@@ -1292,9 +1294,7 @@ select option {
 }
 
 .rank-1-card {
-  animation:
-    ach-card-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards,
-    pulse-gold 2s infinite alternate ease-in-out 0.6s !important;
+  animation: pulse-gold 2s infinite alternate ease-in-out !important;
 }
 
 /* Dynamic Avatar Effects */
@@ -1367,7 +1367,8 @@ select option {
    ========================================================================== */
 .tagessieger-pulse,
 #stat-daily-winner-card {
-  animation: ach-card-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: none !important;
+  opacity: 1 !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -1918,15 +1919,15 @@ select option {
 .vs-arena-card {
   position: relative;
   background: linear-gradient(
-    135deg,
-    rgba(255, 204, 0, 0.08) 0%,
-    rgba(20, 20, 24, 0.85) 50%,
-    rgba(79, 195, 247, 0.08) 100%
+    145deg,
+    rgba(26, 31, 46, 0.95) 0%,
+    rgba(15, 19, 30, 0.95) 100%
   );
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
-  padding: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 204, 0, 0.3) !important;
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 7px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   overflow: hidden;
 }
 
@@ -1937,25 +1938,7 @@ select option {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, #ffcc00 0%, transparent 50%, #4fc3f7 100%);
-}
-
-.vs-badge-glow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ffcc00 0%, #ff9500 100%);
-  color: #000;
-  font-weight: 900;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  box-shadow:
-    0 0 20px rgba(255, 204, 0, 0.5),
-    0 0 6px rgba(255, 255, 255, 0.8);
-  animation: pulse-gold 2.5s infinite alternate ease-in-out;
+  background: linear-gradient(90deg, #ffcc00 0%, transparent 50%, #64d2ff 100%);
 }
 
 /* ==========================================================================
@@ -3986,4 +3969,310 @@ select option {
   padding: 16px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ==========================================================================
+   CYBER-DUEL HUD (MATCHAUFZEICHNUNG REDESIGN)
+   ========================================================================== */
+.match-mode-card {
+  position: relative;
+  background: linear-gradient(
+    145deg,
+    rgba(26, 31, 46, 0.95) 0%,
+    rgba(15, 19, 30, 0.95) 100%
+  );
+  border: 1px solid rgba(255, 204, 0, 0.3);
+  border-radius: 14px;
+  padding: 8px 12px;
+  margin-bottom: 7px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.match-mode-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #ffcc00 50%,
+    transparent 100%
+  );
+}
+
+.match-pill-group {
+  display: flex;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 9px;
+  padding: 2.5px;
+  gap: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: 36px;
+  box-sizing: border-box;
+}
+
+.match-pill-btn {
+  flex: 1;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #8e8e93;
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.match-pill-btn.active {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 204, 0, 0.25) 0%,
+    rgba(255, 204, 0, 0.1) 100%
+  );
+  color: #ffd60a;
+  border: 1px solid rgba(255, 204, 0, 0.4);
+  box-shadow: 0 0 10px rgba(255, 204, 0, 0.2);
+}
+
+.match-dice-hud {
+  height: 36px;
+  width: 36px;
+  flex-shrink: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 204, 0, 0.18) 0%,
+    rgba(255, 204, 0, 0.05) 100%
+  );
+  border: 1px solid rgba(255, 204, 0, 0.45);
+  border-radius: 9px;
+  color: #ffd60a;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(255, 204, 0, 0.15);
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.match-dice-hud:hover,
+.match-dice-hud:active {
+  transform: scale(0.96);
+  box-shadow: 0 0 16px rgba(255, 204, 0, 0.35);
+}
+
+.match-p1-card {
+  position: relative;
+  background: linear-gradient(
+    145deg,
+    rgba(32, 28, 16, 0.95) 0%,
+    rgba(18, 16, 12, 0.95) 100%
+  );
+  border: 1px solid rgba(255, 204, 0, 0.35);
+  border-radius: 14px;
+  padding: 7px 12px;
+  overflow: hidden;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 204, 0, 0.2);
+  margin-bottom: 0;
+}
+
+.match-p1-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #ffcc00 50%,
+    transparent 100%
+  );
+}
+
+.match-p1-card label {
+  color: #ffcc00 !important;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.match-p1-card .player-sel {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 204, 0, 0.25);
+}
+
+.match-p2-card {
+  position: relative;
+  background: linear-gradient(
+    145deg,
+    rgba(16, 26, 36, 0.95) 0%,
+    rgba(12, 17, 24, 0.95) 100%
+  );
+  border: 1px solid rgba(100, 210, 255, 0.35);
+  border-radius: 14px;
+  padding: 7px 12px;
+  overflow: hidden;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(100, 210, 255, 0.2);
+  margin-bottom: 0;
+}
+
+.match-p2-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #64d2ff 50%,
+    transparent 100%
+  );
+}
+
+.match-p2-card label {
+  color: #64d2ff !important;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.match-p2-card .player-sel {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(100, 210, 255, 0.25);
+}
+
+.match-vs-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: -4px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.match-vs-pill {
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 204, 0, 0.2) 0%,
+      rgba(100, 210, 255, 0.2) 100%
+    ),
+    #111622;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffd60a;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.match-live-hud {
+  position: relative;
+  background: linear-gradient(
+    145deg,
+    rgba(22, 27, 40, 0.95) 0%,
+    rgba(14, 18, 28, 0.95) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 14px;
+  padding: 8px 12px;
+  margin-bottom: 7px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.match-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 204, 0, 0.4);
+  border-radius: 10px;
+  padding: 3px 18px;
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.8),
+    0 0 16px rgba(255, 204, 0, 0.2);
+}
+
+.match-live-timer {
+  font-size: 26px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #ffd60a;
+  text-shadow:
+    0 0 16px rgba(255, 204, 0, 0.6),
+    0 0 3px rgba(255, 255, 255, 0.6);
+  letter-spacing: 2px;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.match-btn-win-p1 {
+  flex: 1;
+  padding: 8px 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  border-radius: 9px;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(255, 204, 0, 0.08);
+  border: 1px solid rgba(255, 204, 0, 0.3);
+  color: #ffcc00;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.match-btn-win-p1.selected {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 204, 0, 0.32) 0%,
+    rgba(255, 204, 0, 0.12) 100%
+  ) !important;
+  border-color: #ffd60a !important;
+  box-shadow: 0 0 16px rgba(255, 204, 0, 0.35);
+  color: #ffd60a !important;
+}
+
+.match-btn-win-p2 {
+  flex: 1;
+  padding: 8px 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  border-radius: 9px;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(100, 210, 255, 0.08);
+  border: 1px solid rgba(100, 210, 255, 0.3);
+  color: #64d2ff;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.match-btn-win-p2.selected {
+  background: linear-gradient(
+    135deg,
+    rgba(100, 210, 255, 0.32) 0%,
+    rgba(100, 210, 255, 0.12) 100%
+  ) !important;
+  border-color: #64d2ff !important;
+  box-shadow: 0 0 16px rgba(100, 210, 255, 0.35);
+  color: #ffffff !important;
 }

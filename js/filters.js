@@ -282,30 +282,11 @@ window.populateDateFilter = () => {
   });
 };
 
-window.updateErfolgeMask = () => {
-  const wrapper = document.getElementById("erfolge-header-wrapper");
-  const header = wrapper?.querySelector(".header-container");
-  if (!wrapper || !header) return;
-
-  if (header.classList.contains("filter-active")) {
-    wrapper.style.background = "rgba(0, 0, 0, 0.98)";
-    wrapper.style.maskImage = "none";
-    wrapper.style.webkitMaskImage = "none";
-  } else {
-    wrapper.style.background =
-      "linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 80%, rgba(0, 0, 0, 0) 100%)";
-    wrapper.style.maskImage =
-      "linear-gradient(to bottom, black 0%, black 85%, transparent 100%)";
-    wrapper.style.webkitMaskImage =
-      "linear-gradient(to bottom, black 0%, black 85%, transparent 100%)";
-  }
-};
-
 window.toggleHeaderFilter = (trigger) => {
   const header = trigger.closest(".header-container");
   if (!header) return;
   const isActive = header.classList.toggle("filter-active");
-  if (isActive) window.populateDateFilter();
-  window.updateErfolgeMask();
+  if (isActive && typeof window.populateDateFilter === "function") {
+    window.populateDateFilter();
+  }
 };
-

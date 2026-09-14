@@ -149,16 +149,7 @@
               <div class="main-title">Billardkrüppel</div>
               <div class="sub-title" id="dynamic-greeting">Match erfassen</div>
             </div>
-            <div class="header-side right" style="gap: 6px">
-              <button
-                type="button"
-                class="btn-header-action"
-                onclick="window.openAppInfoModal()"
-                title="App-Info & Changelog"
-                aria-label="App-Info & Changelog"
-              >
-                ℹ️
-              </button>
+            <div class="header-side right">
               <button
                 type="button"
                 class="btn-header-action"
@@ -171,47 +162,52 @@
             </div>
           </div>
           <div
-            class="card cinematic-entry"
-            style="
-              animation-delay: 0.1s;
-              margin-bottom: 7px;
-              padding: 8px 12px;
-              border-radius: 14px;
-            "
+            class="match-mode-card cinematic-entry"
+            style="animation-delay: 0.1s"
           >
             <div style="display: flex; align-items: flex-end; gap: 8px">
               <div style="flex: 1">
-                <label style="font-size: 10px; margin-bottom: 3px"
+                <label
+                  style="
+                    font-size: 9.5px;
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    color: #8e8e93;
+                    display: block;
+                    margin-bottom: 3px;
+                  "
                   >Spielmodus</label
                 >
-                <select
-                  id="mode"
-                  onchange="updateUI()"
-                  style="
-                    margin-bottom: 0;
-                    height: 36px;
-                    padding: 4px 8px;
-                    font-size: 12.5px;
-                  "
-                >
-                  <option value="1:1">1 gegen 1</option>
+                <!-- Verstecktes Original-Select für 100% JS-Kompatibilität -->
+                <select id="mode" onchange="updateUI()" style="display: none">
+                  <option value="1:1" selected>1 gegen 1</option>
                   <option value="2:2">2 gegen 2</option>
                 </select>
+                <!-- Moderne Segmented Pills -->
+                <div class="match-pill-group">
+                  <button
+                    type="button"
+                    class="match-pill-btn active"
+                    id="match-pill-1v1"
+                    onclick="window.setMatchMode('1:1')"
+                  >
+                    1 gegen 1
+                  </button>
+                  <button
+                    type="button"
+                    class="match-pill-btn"
+                    id="match-pill-2v2"
+                    onclick="window.setMatchMode('2:2')"
+                  >
+                    2 gegen 2
+                  </button>
+                </div>
               </div>
               <button
                 id="btn-random-teams"
+                class="match-dice-hud"
                 onclick="window.openTeamModal()"
-                style="
-                  height: 36px;
-                  width: 36px;
-                  flex-shrink: 0;
-                  background: rgba(255, 255, 255, 0.05);
-                  border: 1px solid rgba(255, 255, 255, 0.1);
-                  border-radius: 9px;
-                  color: var(--accent);
-                  font-size: 16px;
-                  padding: 0;
-                "
+                title="Zufallsteams auslosen"
               >
                 🎲
               </button>
@@ -225,25 +221,23 @@
               animation-delay: 0.2s;
               display: flex;
               flex-direction: column;
-              gap: 5px;
+              gap: 4px;
               margin-bottom: 7px;
             "
           >
-            <div
-              class="card"
-              style="
-                background: rgba(255, 255, 255, 0.08);
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
-                border-radius: 14px;
-                padding: 8px 12px;
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                margin-bottom: 0;
-              "
-            >
-              <label style="font-size: 10px; margin-bottom: 3px"
-                >Spieler 1</label
+            <div class="card match-p1-card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  margin-bottom: 2px;
+                "
               >
+                <label style="font-size: 9.5px; margin-bottom: 0"
+                  >Spieler 1 (Heim)</label
+                >
+              </div>
               <div style="display: flex; align-items: center; gap: 8px">
                 <div
                   id="p1-avatar-preview"
@@ -263,21 +257,25 @@
                 ></select>
               </div>
             </div>
-            <div
-              class="card"
-              style="
-                background: rgba(255, 255, 255, 0.08);
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
-                border-radius: 14px;
-                padding: 8px 12px;
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                margin-bottom: 0;
-              "
-            >
-              <label style="font-size: 10px; margin-bottom: 3px"
-                >Spieler 2</label
+
+            <!-- VS Divider -->
+            <div class="match-vs-divider">
+              <span class="match-vs-pill">VS</span>
+            </div>
+
+            <div class="card match-p2-card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  margin-bottom: 2px;
+                "
               >
+                <label style="font-size: 9.5px; margin-bottom: 0"
+                  >Spieler 2 (Gast)</label
+                >
+              </div>
               <div style="display: flex; align-items: center; gap: 8px">
                 <div
                   id="p2-avatar-preview"
@@ -305,23 +303,23 @@
               animation-delay: 0.2s;
               display: none;
               flex-direction: column;
-              gap: 5px;
+              gap: 4px;
               margin-bottom: 7px;
             "
           >
-            <div
-              class="card"
-              style="
-                background: rgba(255, 255, 255, 0.08);
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
-                border-radius: 14px;
-                padding: 8px 12px;
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                margin-bottom: 0;
-              "
-            >
-              <label style="font-size: 10px; margin-bottom: 3px">Team 1</label>
+            <div class="card match-p1-card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  margin-bottom: 2px;
+                "
+              >
+                <label style="font-size: 9.5px; margin-bottom: 0"
+                  >Team 1 (Heim)</label
+                >
+              </div>
               <div
                 style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px"
               >
@@ -357,19 +355,25 @@
                 </div>
               </div>
             </div>
-            <div
-              class="card"
-              style="
-                background: rgba(255, 255, 255, 0.08);
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
-                border-radius: 14px;
-                padding: 8px 12px;
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                margin-bottom: 0;
-              "
-            >
-              <label style="font-size: 10px; margin-bottom: 3px">Team 2</label>
+
+            <!-- VS Divider -->
+            <div class="match-vs-divider">
+              <span class="match-vs-pill">VS</span>
+            </div>
+
+            <div class="card match-p2-card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  margin-bottom: 2px;
+                "
+              >
+                <label style="font-size: 9.5px; margin-bottom: 0"
+                  >Team 2 (Gast)</label
+                >
+              </div>
               <div
                 style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px"
               >
@@ -410,13 +414,8 @@
           <!-- PHASE 2: Spielstart (Anstoß & Gewinner) - Wird per JS eingeblendet -->
           <div
             id="phase-2-gamestart"
-            class="card"
-            style="
-              display: none;
-              padding: 8px 12px;
-              margin-bottom: 7px;
-              border-radius: 14px;
-            "
+            class="card match-live-hud"
+            style="display: none"
           >
             <div
               style="
@@ -425,7 +424,17 @@
                 border-bottom: 1px solid rgba(255, 255, 255, 0.08);
               "
             >
-              <label style="font-size: 10px; margin-bottom: 3px">Anstoß</label>
+              <label
+                style="
+                  font-size: 9.5px;
+                  font-weight: 800;
+                  text-transform: uppercase;
+                  color: #8e8e93;
+                  margin-bottom: 3px;
+                  display: block;
+                "
+                >Anstoß</label
+              >
               <div style="display: flex; gap: 8px">
                 <button
                   id="btn-breakcalc"
@@ -435,8 +444,10 @@
                     height: 34px;
                     padding: 4px 6px;
                     font-size: 11.5px;
-                    background: rgba(255, 204, 0, 0.1);
+                    background: rgba(255, 204, 0, 0.15);
                     color: var(--accent);
+                    border: 1px solid rgba(255, 204, 0, 0.4);
+                    border-radius: 9px;
                   "
                   onclick="window.calcBreak()"
                 >
@@ -472,50 +483,59 @@
             </div>
             <div
               style="
-                padding-bottom: 4px;
-                margin-bottom: 4px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 4px 0 6px 0;
+                margin-bottom: 5px;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.08);
               "
             >
               <div
                 style="
-                  position: relative;
+                  font-size: 8.5px;
+                  font-weight: 800;
+                  text-transform: uppercase;
+                  color: #8e8e93;
+                  letter-spacing: 1px;
+                  margin-bottom: 3px;
                   display: flex;
                   align-items: center;
-                  justify-content: center;
-                  padding: 2px 0;
+                  gap: 4px;
                 "
               >
-                <div
-                  id="matchDurationDisplay"
-                  style="
-                    font-size: 18px;
-                    font-weight: 900;
-                    color: var(--accent);
-                    text-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
-                  "
-                >
+                <span>⏱️ SPIELZEIT</span>
+              </div>
+              <div class="match-timer-badge">
+                <div id="matchDurationDisplay" class="match-live-timer">
                   00:00
                 </div>
               </div>
             </div>
             <div>
-              <label style="font-size: 10px; margin-bottom: 3px"
+              <label
+                style="
+                  font-size: 9.5px;
+                  font-weight: 800;
+                  text-transform: uppercase;
+                  color: #8e8e93;
+                  margin-bottom: 4px;
+                  display: block;
+                "
                 >Gewinner wählen</label
               >
               <div style="display: flex; gap: 8px">
                 <div
                   id="btn-win1"
-                  class="win-btn"
-                  style="padding: 8px 6px; font-size: 12.5px"
+                  class="win-btn match-btn-win-p1"
                   onclick="window.selectWinner(1)"
                 >
                   Team 1
                 </div>
                 <div
                   id="btn-win2"
-                  class="win-btn"
-                  style="padding: 8px 6px; font-size: 12.5px"
+                  class="win-btn match-btn-win-p2"
                   onclick="window.selectWinner(2)"
                 >
                   Team 2
@@ -637,16 +657,7 @@
                 Zeitraum filtern <span class="filter-chevron">▼</span>
               </div>
             </div>
-            <div class="header-side right" style="gap: 6px">
-              <button
-                type="button"
-                class="btn-header-action"
-                onclick="window.openAppInfoModal()"
-                title="App-Info & Changelog"
-                aria-label="App-Info & Changelog"
-              >
-                ℹ️
-              </button>
+            <div class="header-side right">
               <button
                 type="button"
                 class="btn-header-action"
@@ -741,16 +752,7 @@
                 Zeitraum filtern <span class="filter-chevron">▼</span>
               </div>
             </div>
-            <div class="header-side right" style="gap: 6px">
-              <button
-                type="button"
-                class="btn-header-action"
-                onclick="window.openAppInfoModal()"
-                title="App-Info & Changelog"
-                aria-label="App-Info & Changelog"
-              >
-                ℹ️
-              </button>
+            <div class="header-side right">
               <button
                 type="button"
                 class="btn-header-action"
@@ -1593,188 +1595,130 @@
         </div>
 
         <div id="view-erfolge" class="view">
-          <div
-            id="erfolge-header-wrapper"
-            style="
-              position: sticky;
-              top: 0;
-              z-index: 1000;
-              background: linear-gradient(
-                to bottom,
-                rgba(0, 0, 0, 0.95) 0%,
-                rgba(0, 0, 0, 0.8) 80%,
-                rgba(0, 0, 0, 0) 100%
-              );
-              backdrop-filter: blur(25px) saturate(210%) brightness(1.2);
-              -webkit-backdrop-filter: blur(25px) saturate(210%) brightness(1.2);
-              margin: 0 -16px 15px -16px;
-              border-bottom: none;
-              padding-top: calc(var(--safe-top) + 10px);
-              width: 100vw;
-              mask-image: linear-gradient(
-                to bottom,
-                black 0%,
-                black 85%,
-                transparent 100%
-              );
-              -webkit-mask-image: linear-gradient(
-                to bottom,
-                black 0%,
-                black 85%,
-                transparent 100%
-              );
-            "
-          >
+          <div class="header-container">
+            <div class="header-side">
+              <img
+                loading="lazy"
+                src="logo.png"
+                class="logo-img"
+                alt="Billardkrüppel Logo"
+                onerror="this.style.display = 'none'"
+              />
+            </div>
             <div
-              class="header-container"
-              style="
-                position: relative;
-                background: transparent;
-                backdrop-filter: none;
-                border-bottom: none;
-                margin: 0;
-                padding-top: 0;
-              "
+              class="title-stack"
+              onclick="window.toggleHeaderFilter(this)"
+              style="cursor: pointer"
             >
-              <div class="header-side">
-                <img
-                  loading="lazy"
-                  src="logo.png"
-                  class="logo-img"
-                  alt="Billardkrüppel Logo"
-                  onerror="this.style.display = 'none'"
-                />
+              <div class="main-title">Hall of Fame & Shame</div>
+              <div class="sub-title">Bestenliste</div>
+              <div class="filter-toggle-bar">
+                Zeitraum filtern <span class="filter-chevron">▼</span>
               </div>
-              <div
-                class="title-stack"
-                onclick="window.toggleHeaderFilter(this)"
-                style="cursor: pointer"
+            </div>
+            <div class="header-side right">
+              <button
+                type="button"
+                class="btn-header-action"
+                onclick="window.forceUpdate()"
+                title="App aktualisieren"
+                aria-label="App aktualisieren"
               >
-                <div class="main-title">Hall of Fame & Shame</div>
-                <div class="sub-title">Bestenliste</div>
-                <div class="filter-toggle-bar">
-                  Zeitraum filtern <span class="filter-chevron">▼</span>
-                </div>
-              </div>
-              <div class="header-side right" style="gap: 6px">
-                <button
-                  type="button"
-                  class="btn-header-action"
-                  onclick="window.openAppInfoModal()"
-                  title="App-Info & Changelog"
-                  aria-label="App-Info & Changelog"
-                >
-                  ℹ️
-                </button>
-                <button
-                  type="button"
-                  class="btn-header-action"
-                  onclick="window.forceUpdate()"
-                  title="App aktualisieren"
-                  aria-label="App aktualisieren"
-                >
-                  🔄
-                </button>
-              </div>
-              <div class="filter-row">
-                <button
-                  class="filter-reset-btn"
-                  onclick="window.handleFilterChange('all')"
-                >
-                  RESET
-                </button>
-                <div class="filter-controls-stack">
-                  <div style="display: flex; gap: 8px">
-                    <div class="filter-dropdown-col" style="flex: 1">
-                      <label>Zeitraum</label>
-                      <select
-                        class="time-filter-select"
-                        onchange="window.handleFilterChange(this.value)"
-                      >
-                        <option value="all">Gesamt</option>
-                        <option value="month">Aktueller Monat</option>
-                        <option value="quarter">Aktuelles Quartal</option>
-                        <option value="year">Aktuelles Jahr</option>
-                        <option value="30days">Letzte 30 Tage</option>
-                        <option value="60days">Letzte 60 Tage</option>
-                        <option value="90days">Letzte 90 Tage</option>
-                        <option value="lastMonth">Letzter Monat</option>
-                        <option value="lastQuarter">Letztes Quartal</option>
-                        <option value="lastYear">Letztes Jahr</option>
-                      </select>
-                    </div>
-                    <div class="filter-dropdown-col" style="flex: 1">
-                      <label>Spieleabend</label>
-                      <select
-                        class="extra-filter-select"
-                        onchange="window.handleExtraFilterChange(this.value)"
-                      >
-                        <option value="all">Alle Tage</option>
-                      </select>
-                    </div>
+                🔄
+              </button>
+            </div>
+            <div class="filter-row">
+              <button
+                class="filter-reset-btn"
+                onclick="window.handleFilterChange('all')"
+              >
+                RESET
+              </button>
+              <div class="filter-controls-stack">
+                <div style="display: flex; gap: 8px">
+                  <div class="filter-dropdown-col" style="flex: 1">
+                    <label>Zeitraum</label>
+                    <select
+                      class="time-filter-select"
+                      onchange="window.handleFilterChange(this.value)"
+                    >
+                      <option value="all">Gesamt</option>
+                      <option value="month">Aktueller Monat</option>
+                      <option value="quarter">Aktuelles Quartal</option>
+                      <option value="year">Aktuelles Jahr</option>
+                      <option value="30days">Letzte 30 Tage</option>
+                      <option value="60days">Letzte 60 Tage</option>
+                      <option value="90days">Letzte 90 Tage</option>
+                      <option value="lastMonth">Letzter Monat</option>
+                      <option value="lastQuarter">Letztes Quartal</option>
+                      <option value="lastYear">Letztes Jahr</option>
+                    </select>
                   </div>
-                  <div class="filter-date-col">
-                    <label>Von - Bis</label>
-                    <div style="display: flex; gap: 4px">
-                      <input
-                        type="date"
-                        id="date-start-erfolge"
-                        class="custom-date-input custom-date-start"
-                        onchange="window.handleCustomDateChange()"
-                        onclick="this.showPicker?.()"
-                      />
-                      <input
-                        type="date"
-                        id="date-end-erfolge"
-                        class="custom-date-input custom-date-end"
-                        onchange="window.handleCustomDateChange()"
-                        onclick="this.showPicker?.()"
-                      />
-                    </div>
+                  <div class="filter-dropdown-col" style="flex: 1">
+                    <label>Spieleabend</label>
+                    <select
+                      class="extra-filter-select"
+                      onchange="window.handleExtraFilterChange(this.value)"
+                    >
+                      <option value="all">Alle Tage</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="filter-date-col">
+                  <label>Von - Bis</label>
+                  <div style="display: flex; gap: 4px">
+                    <input
+                      type="date"
+                      id="date-start-erfolge"
+                      class="custom-date-input custom-date-start"
+                      onchange="window.handleCustomDateChange()"
+                      onclick="this.showPicker?.()"
+                    />
+                    <input
+                      type="date"
+                      id="date-end-erfolge"
+                      class="custom-date-input custom-date-end"
+                      onchange="window.handleCustomDateChange()"
+                      onclick="this.showPicker?.()"
+                    />
                   </div>
                 </div>
               </div>
             </div>
-            <div style="padding: 0 16px 8px 16px">
-              <div
-                class="trophy-room-banner"
-                onclick="window.openAchListModal()"
-              >
-                <div style="display: flex; align-items: center; gap: 10px">
-                  <span
-                    style="
-                      font-size: 20px;
-                      filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.5));
-                    "
-                    >🏛️</span
-                  >
-                  <div>
-                    <div
-                      style="
-                        font-size: 12px;
-                        font-weight: 900;
-                        color: #fff;
-                        letter-spacing: 0.3px;
-                      "
-                    >
-                      Trophäenkammer
-                    </div>
-                    <div
-                      style="font-size: 9.5px; color: #8e8e93; font-weight: 600"
-                    >
-                      Alle freischaltbaren Erfolge im Spiel ansehen
-                    </div>
-                  </div>
-                </div>
+          </div>
+
+          <div style="margin-bottom: 12px">
+            <div class="trophy-room-banner" onclick="window.openAchListModal()">
+              <div style="display: flex; align-items: center; gap: 10px">
                 <span
                   style="
-                    color: var(--accent);
-                    font-weight: 900;
-                    font-size: 14px;
+                    font-size: 20px;
+                    filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.5));
                   "
-                  >➔</span
+                  >🏛️</span
                 >
+                <div>
+                  <div
+                    style="
+                      font-size: 12px;
+                      font-weight: 900;
+                      color: #fff;
+                      letter-spacing: 0.3px;
+                    "
+                  >
+                    Trophäenkammer
+                  </div>
+                  <div
+                    style="font-size: 9.5px; color: #8e8e93; font-weight: 600"
+                  >
+                    Alle freischaltbaren Erfolge im Spiel ansehen
+                  </div>
+                </div>
               </div>
+              <span
+                style="color: var(--accent); font-weight: 900; font-size: 14px"
+                >➔</span
+              >
             </div>
           </div>
           <div
@@ -1801,16 +1745,7 @@
               <div class="main-title">Regeln</div>
               <div class="sub-title">Handbuch & Aufbau</div>
             </div>
-            <div class="header-side right" style="gap: 6px">
-              <button
-                type="button"
-                class="btn-header-action"
-                onclick="window.openAppInfoModal()"
-                title="App-Info & Changelog"
-                aria-label="App-Info & Changelog"
-              >
-                ℹ️
-              </button>
+            <div class="header-side right">
               <button
                 type="button"
                 class="btn-header-action"
@@ -4165,153 +4100,6 @@
         >
           Schließen
         </button>
-      </div>
-    </div>
-
-    <!-- App-Info & Changelog Modal -->
-    <div id="appInfoModal" class="modal" style="display: none">
-      <div class="modal-backdrop" onclick="window.closeAppInfoModal()"></div>
-      <div
-        class="modal-card"
-        style="
-          max-width: 500px;
-          width: 92%;
-          max-height: 82vh;
-          display: flex;
-          flex-direction: column;
-          padding: 20px;
-          text-align: left;
-          border-radius: 20px;
-        "
-        onclick="event.stopPropagation()"
-      >
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 12px;
-            margin-bottom: 12px;
-            flex-shrink: 0;
-          "
-        >
-          <div style="display: flex; align-items: center; gap: 10px">
-            <img
-              src="logo.png"
-              style="width: 32px; height: 32px; object-fit: contain"
-              alt="Logo"
-            />
-            <div>
-              <div style="font-weight: 900; font-size: 1.1rem; color: #ffffff">
-                Billardkrüppel
-              </div>
-              <span
-                id="app-info-version"
-                style="
-                  font-size: 0.75rem;
-                  color: var(--accent);
-                  font-weight: 700;
-                  background: rgba(255, 204, 0, 0.12);
-                  padding: 2px 8px;
-                  border-radius: 6px;
-                  border: 1px solid rgba(255, 204, 0, 0.3);
-                "
-              >
-                v19.5
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            onclick="window.closeAppInfoModal()"
-            title="Schließen"
-            style="
-              width: 30px;
-              height: 30px;
-              border-radius: 8px;
-              background: rgba(255, 255, 255, 0.08);
-              border: 1px solid rgba(255, 255, 255, 0.15);
-              color: #e2e8f0;
-              cursor: pointer;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 1rem;
-            "
-          >
-            ✕
-          </button>
-        </div>
-
-        <div
-          id="app-info-body"
-          style="
-            overflow-y: auto;
-            flex: 1;
-            padding-right: 6px;
-            font-size: 0.88rem;
-            line-height: 1.6;
-            color: #d1d5db;
-          "
-        >
-          <div style="text-align: center; padding: 24px; color: #94a3b8">
-            Lade Changelog & Anleitung...
-          </div>
-        </div>
-
-        <div
-          style="
-            margin-top: 14px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex;
-            gap: 10px;
-            flex-shrink: 0;
-          "
-        >
-          <button
-            type="button"
-            onclick="
-              window.closeAppInfoModal();
-              window.forceUpdate();
-            "
-            style="
-              flex: 1;
-              padding: 10px 14px;
-              background: rgba(255, 204, 0, 0.15);
-              border: 1px solid var(--accent);
-              border-radius: 12px;
-              color: var(--accent);
-              font-weight: 700;
-              cursor: pointer;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 6px;
-              font-size: 13px;
-              transition: all 0.2s ease;
-            "
-          >
-            🔄 App aktualisieren
-          </button>
-          <button
-            type="button"
-            onclick="window.closeAppInfoModal()"
-            style="
-              padding: 10px 18px;
-              background: rgba(255, 255, 255, 0.08);
-              border: 1px solid rgba(255, 255, 255, 0.15);
-              border-radius: 12px;
-              color: #8e8e93;
-              font-weight: 600;
-              cursor: pointer;
-              font-size: 13px;
-            "
-          >
-            Schließen
-          </button>
-        </div>
       </div>
     </div>
   </body>
