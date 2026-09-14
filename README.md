@@ -6,6 +6,70 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### ⚔️ Session-Matches exklusiv unter Duelle (v21.3)
+
+- **Saubere Rubrik-Trennung:** Die gespielten Session-Matches werden nun ausschließlich in der Rubrik „Duelle“ angezeigt.
+- **Aufgeräumte Rangliste:** In der ELO-Rangliste (sowie unter Rekorde und Kugeln) tauchen die einzelnen Session-Matches nicht mehr auf, sodass die Rangliste übersichtlich und fokussiert bleibt.
+- **Platzierung in Duelle:** Im Duelle-Bereich schließen die gespielten Session-Matches die Seite ganz unten (unterhalb der Head-to-Head-Übersicht) ab.
+- **Offline-Cache (v21.3):** Aktualisierung des Offline-Speichers auf Version 21.3 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 🟠 Markante Farbgebung für nicht-reguläre Siege (v21.2)
+
+- **Farbliche Differenzierung:** Alle Session-Matches, die durch gegnerische Fehler entschieden wurden (z. B. 8er zu früh versenkt, 8er ins falsche Loch oder Foul bei der 8), heben sich nun unmissverständlich in leuchtendem Warm-Orange / Bernstein von den regulären Siegen (Grün) ab.
+- **Fehler-Hinweis & warmer Kachel-Look:** Betroffene Karten erhalten einen warm getönten Hintergrund, einen orangen Leuchtrahmen sowie eine klare Kennzeichnung des konkreten Fehlergrunds (`⚠️ 8er zu früh`, `⚠️ 8er falsches Loch` etc.).
+- **Präzise Sieger-Würdigung:** In der Fußzeile wird transparent ausgewiesen, durch welchen gegnerischen Fehler das Match gewonnen wurde, inklusive passender oranger ELO-Pille.
+- **Offline-Cache (v21.2):** Aktualisierung des Offline-Speichers auf Version 21.2 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 📍 Session-Matches am Seitenende (v21.1)
+
+- **Optimierte Seitenstruktur:** Die Liste der gespielten Session-Matches wurde an das Ende der Seite verschoben.
+- **Aufgeräumter Duell-Bereich:** Der interaktive Duell-Rechner geht nun nahtlos und ohne Unterbrechung direkt in die direkten Duelle und den Angstgegner über.
+- **Perfekter Session-Rahmen:** Oben bildet das 3D-Tagessieger-Podium den Auftakt, in der Mitte stehen Ranglisten und Details, und am Fuß der Seite schließen die gespielten Session-Matches den Spieltag übersichtlich ab.
+- **Offline-Cache (v21.1):** Aktualisierung des Offline-Speichers auf Version 21.1 für sofortige Verfügbarkeit auf allen Geräten.
+
+### ⚡ Modernes Session-Match Kachel-Design (v21.0)
+
+- **Hall-of-Records Match-Kacheln:** Die Liste der gespielten Matches einer Session erstrahlt im edlen Design der Hall of Records – mit dynamischem Leuchtrahmen, oberem Glanzstreifen und sanfter Farbaura (Grün bei regulärem Sieg, Orange bei Siegen durch gegnerisches Foul).
+- **Klarer Sieger-Fokus:** Der Gewinner eines Matches wird sofort ins Auge gefasst durch leuchtenden Avatar, Sieger-Krone (👑) und fette Typografie. Der unterlegene Spieler tritt dezent in den Hintergrund.
+- **Kompakte Spieldetails:** Jede Karte zeigt nun übersichtlich Match-Nummer, Uhrzeit, Spieldauer (⏱️), Kugeltyp (🟡 Volle / 🔵 Halbe), Anstoß-Indikator (⚡) sowie die verbleibenden Restkugeln.
+- **Sieg-Callout & ELO-Pille:** In der Fußzeile wird der Sieger inklusive Siegtyp (z. B. Foul-Sieg) mit einem feierlichen Callout gewürdigt, flankiert von den gewonnenen ELO-Punkten in einer hervorgehobenen ELO-Pille.
+- **Offline-Cache (v21.0):** Aktualisierung des Offline-Speichers auf Version 21.0 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 🏆 Kompaktes 3D-Tagessieger-Podium (v20.9)
+
+- **Platzsparendes Treppchen-Design:** Das Tagessieger-Podium auf der Session- und Match-Erfassungsseite wurde um mehr als 50% in der Höhe gestrafft. Es wirkt deutlich aufgeräumter und lässt darunterliegenden Inhalten mehr Raum.
+- **Match-Bilanz & ELO-Plus:** Unter jedem Treppchen-Spieler werden nun direkt die heutige Session-Bilanz (z. B. `5S · 0N`) sowie die erspielten ELO-Punkte (`+28 ELO`) angezeigt.
+- **Integrierte MVP-Punkte:** Die Leistungspunkte sitzen nun bündig und direkt auf den 3D-Glassockeln.
+- **Offline-Cache (v20.9):** Aktualisierung des Offline-Speichers auf Version 20.9 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 🥇 Olympia-Hero Tagessieger-Kacheln (v20.8)
+
+- **Gold-Hero Pille & Medaillenspiegel:** Die Tagessieg-Statistik zeigt die Anzahl der 🥇 Tagessiege nun als auffällige, leuchtende Hero-Pille (`5× 🥇`). Darunter sind die 🥈 Silber- und 🥉 Bronze-Plätze kompakt und übersichtlich dargestellt.
+- **Podest-Leuchtrahmen:** Die Kacheln heben die Platzierungen farblich hervor – Platz 1 strahlt mit goldenem Leuchtrahmen (`👑 #1 · Tagessieger-König`), Platz 2 in edlem Silber und Platz 3 in Bronze.
+- **Podiumsbilanz im Untertitel:** Zeigt sofort die Gesamtzahl aller Treppchen-Erfolge (`10× auf dem Podium`).
+- **Offline-Cache (v20.8):** Aktualisierung des Offline-Speichers auf Version 20.8 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 💎 Perfekt symmetrisches Kacheldesign (v20.7)
+
+- **Symmetrische Kacheln:** Der zusätzliche linke Randstreifen wurde an allen Statistikkarten entfernt. Die Kacheln wirken nun vollkommen harmonisch und symmetrisch – der umlaufende Leuchtrahmen und der obere Glanzstreifen der Hall of Records kommen dadurch noch besser zur Geltung.
+- **Offline-Cache (v20.7):** Aktualisierung des Offline-Speichers auf Version 20.7 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 🌟 Hall-of-Records Kachel-Design mit farbigem Leuchtrahmen (v20.6)
+
+- **Farbiger Leuchtrahmen für alle Kacheln:** Alle Statistikkarten in der gesamten App (Ranglisten, Formkurve, Duell-Karten, Kugel-Spezis, Fun-Kacheln) besitzen jetzt den edlen Look der Hall of Records – mit farblich perfekt abgestimmtem Leuchtrahmen, feinem Glanzstreifen an der Oberkante und sanfter Farbaura.
+- **Edler Tiefeneffekt:** Sanfter Farbverlauf und plastischer Lichtschimmer lassen die Kacheln auf allen Bildschirmen lebendig und hochwertig wirken.
+- **Offline-Cache (v20.6):** Aktualisierung des Offline-Speichers auf Version 20.6 für sofortige Verfügbarkeit auf allen Geräten.
+
+### ✨ Kachel-Optimierungen & Bereinigung (v20.5)
+
+- **Aufgeräumte ELO-Rangliste:** Kompaktere ELO-Pillen, klare Rang-Abzeichen (`👑 #1 · ELO-Rangliste`) und platzsparend integrierte Siegserien-Badges.
+- **Optimierte Formanzeige:** Formrang und aktuelle Streak (z. B. `🔥3 Serie`) sind nun direkt in der Kopfzeile kombiniert. Die Match-Bilanz zeigt Siege und Niederlagen eindeutig (`2S · 1N`).
+- **Informativ Partner-Power:** Die Team-Rangliste zeigt nun präzise die Gesamtzahl an Siegen und Team-Spielen ohne unnötige Fülltexte.
+- **Kompakte Kugel-Spezis:** Klare, auf den Punkt gebrachte Titel und Beschreibungen für Voll- und Halbe-Kugelspezialisten.
+- **Schlankere Duell-Karten (H2H):** Die Spielanzahl sitzt nun platzsparend direkt im zentralen VS-Badge. Redundante Fußzeilen wurden entfernt, sodass die Duelle kompakter wirken.
+- **Ehrenabzeichen für Anstoß & Tagessiege:** Neue dynamische Badges (wie `⚡ Anstoß-König` und `👑 #1 · Tagessieger`) sowie konkrete Tagessieger-Zähler statt generischer Bezeichnungen.
+- **Offline-Cache (v20.5):** Aktualisierung des Offline-Speichers auf Version 20.5 für sofortige Verfügbarkeit auf allen Geräten.
+
 ### 🎨 Einheitliches Kachel-Design in der gesamten App (v20.0)
 
 - **ELO-Rangliste modernisiert:** Jeder Spieler-Eintrag in der ELO-Rangliste hat jetzt das neue Split-Card-Layout: Rang-Abzeichen, Avatar und Name links – ELO-Wert als farbige Hero-Pille rechts. Aktive Streak-Badges (🔥) bleiben sichtbar.

@@ -1083,23 +1083,35 @@ window.renderBillardStats = function (
       .reverse()
       .map((g, idx) => {
         const i = window.stats.indexOf(g);
-        const time = (g.d || "").includes(", ") ? g.d.split(", ")[1] : "";
+        const time = (g.d || "").includes(", ")
+          ? g.d.split(", ")[1]
+          : g.d || "";
         const isWin1 = g.w == 1;
         const isWin2 = g.w == 2;
         const dData = deltas[i] || { eloDelta: 0 };
         const delta = typeof dData === "object" ? dData.eloDelta || 0 : dData;
         const hasBreak1 = g.a === g.p1;
         const hasBreak2 = g.a === g.p2;
+        const winTypeStr = String(g.t || "").trim();
+        const isRegular =
+          !winTypeStr ||
+          winTypeStr.includes("Regulär") ||
+          winTypeStr.includes("gelocht") ||
+          winTypeStr.toLowerCase().includes("normal");
+        const isNonRegular = !isRegular;
+        const cardAccent = isNonRegular ? "#ff9500" : "#30d158";
+        const winnerName = isWin1 ? g.p1 : g.p2;
+        const matchNum = statsToday.length - idx;
 
-        const getAv = (pName, size = 22) => {
+        const getAv = (pName, isWinner = false, size = 32) => {
           if (!pName) return "";
           const names = pName.split(" & ").map((s) => s.trim());
           return names
             .map((n, pIdx) => {
               const src = safeGetAvatarUrl(n);
-              const margin = pIdx === names.length - 1 ? "0" : "-8px";
-              return `<img src="${src}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; border-radius:8px; object-fit:cover; border:1.5px solid rgba(255,255,255,0.2); margin-right:${margin}; position:relative; z-index:${names.length - pIdx};">
-                            <div style="display:none; width:${size}px; height:${size}px; border-radius:8px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:${size * 0.6}px; border:1px solid rgba(255,255,255,0.1); margin-right:${margin}; position:relative; z-index:${names.length - pIdx};">👤</div>`;
+              const margin = pIdx === names.length - 1 ? "0" : "-10px";
+              return `<img src="${src}" class="match-avatar-chip" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'" style="width:${size}px; height:${size}px; margin-right:${margin}; position:relative; z-index:${names.length - pIdx};">
+                      <div class="match-avatar-chip" style="display:none; width:${size}px; height:${size}px; background:#1e293b; align-items:center; justify-content:center; font-size:${Math.round(size * 0.55)}px; margin-right:${margin}; position:relative; z-index:${names.length - pIdx};">👤</div>`;
             })
             .join("");
         };
@@ -1117,30 +1129,73 @@ window.renderBillardStats = function (
           durationDisplay = `${pad(g.duration)}:00`;
         }
 
+        const ballBadge1 = g.bt1
+          ? g.bt1 === "Voll"
+            ? "🟡 Volle"
+            : "🔵 Halbe"
+          : "";
+        const ballBadge2 = g.bt2
+          ? g.bt2 === "Voll"
+            ? "🟡 Volle"
+            : "🔵 Halbe"
+          : "";
+
+        const sub1Parts = [];
+        if (ballBadge1) sub1Parts.push(`<span>${ballBadge1}</span>`);
+        if (hasBreak1)
+          sub1Parts.push(`<span style="color:#ffcc00;">⚡ Anstoß</span>`);
+        if (!isWin1 && typeof g.l !== "undefined")
+          sub1Parts.push(`<span>Rest: ${g.l}</span>`);
+
+        const sub2Parts = [];
+        if (!isWin2 && typeof g.l !== "undefined")
+          sub2Parts.push(`<span>Rest: ${g.l}</span>`);
+        if (hasBreak2)
+          sub2Parts.push(`<span style="color:#ffcc00;">⚡ Anstoß</span>`);
+        if (ballBadge2) sub2Parts.push(`<span>${ballBadge2}</span>`);
+
+        const cleanWinType = winTypeStr.replace(/^Gegner-Fehler:\s*/i, "");
+        const modeWinText = isNonRegular
+          ? `<span style="color:#ff9500; font-weight:800;">⚠️ ${cleanWinType || "Gegner-Fehler"}</span>`
+          : `${g.m || "1:1"} · ${winTypeStr || "Regulärer Sieg"}`;
+        const calloutReason = isNonRegular
+          ? ` (${cleanWinType || "Gegner-Fehler"})`
+          : "";
+
         return `
-            <div onclick="window.openMatchDetails(${i})" class="card-modern" style="padding: 12px; border-radius: 18px; margin-bottom: 12px; cursor:pointer; background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05); transition: transform 0.2s; -webkit-tap-highlight-color: transparent;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <div style="display:flex; align-items:center; gap:8px; flex:1; overflow:hidden;">
-                        <div style="display:flex; flex-shrink:0;">${getAv(g.p1)}</div>
-                        <div style="font-size:13px; font-weight:900; color:${isWin1 ? "#34c759" : "#fff"}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${g.p1} ${hasBreak1 ? '<span style="color:var(--accent); font-size:10px;">⚡</span>' : ""}</div>
+            <div onclick="window.openMatchDetails(${i})" class="match-card-modern cinematic-entry ${isNonRegular ? "non-regular" : ""}" style="--card-accent: ${cardAccent}; animation-delay: ${idx * 0.04}s;">
+                <div class="match-card-header">
+                    <div class="match-card-header-left">
+                        <span class="match-num-tag">Match #${matchNum}</span>
+                        <span>•</span>
+                        <span>${time ? `${time} Uhr` : ""}</span>
+                        ${time ? "<span>•</span>" : ""}
+                        <span class="match-duration-tag">⏱️ ${durationDisplay}</span>
                     </div>
-                    <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: rgba(255,255,255,0.03); border-radius: 50%; font-size: 8px; font-weight: 900; color: #555; margin: 0 10px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.06); letter-spacing: 0.5px;">VS</div>
-                    <div style="display:flex; align-items:center; gap:8px; flex:1; justify-content:flex-end; overflow:hidden; text-align:right;">
-                        <div style="font-size:13px; font-weight:900; color:${isWin2 ? "#34c759" : "#fff"}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${hasBreak2 ? '<span style="color:var(--accent); font-size:10px;">⚡</span>' : ""} ${g.p2}</div>
-                        <div style="display:flex; flex-shrink:0;">${getAv(g.p2)}</div>
+                    <div>${modeWinText}</div>
+                </div>
+                <div class="match-duel-arena">
+                    <div class="match-team ${isWin1 ? "winner" : "loser"}">
+                        <div style="display:flex; flex-shrink:0;">${getAv(g.p1, isWin1, 32)}</div>
+                        <div style="min-width:0; overflow:hidden;">
+                            <div class="match-player-name">${g.p1} ${isWin1 ? "👑" : ""}</div>
+                            <div class="match-team-sub">${sub1Parts.join(" <span>•</span> ")}</div>
+                        </div>
+                    </div>
+                    <div class="match-vs-badge">VS</div>
+                    <div class="match-team right ${isWin2 ? "winner" : "loser"}">
+                        <div style="min-width:0; overflow:hidden;">
+                            <div class="match-player-name">${isWin2 ? "👑 " : ""}${g.p2}</div>
+                            <div class="match-team-sub">${sub2Parts.join(" <span>•</span> ")}</div>
+                        </div>
+                        <div style="display:flex; flex-shrink:0;">${getAv(g.p2, isWin2, 32)}</div>
                     </div>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);">
-                    <div style="font-size:10px; color:#8e8e93; font-weight:600; display:flex; align-items:center; gap:6px;">
-                        <span style="color:var(--accent); font-weight:900;">${time}</span>
-                        <span style="opacity:0.4;">•</span>
-                        <span style="color:#7fc9ff; font-weight:800;">${durationDisplay}</span>
-                        <span style="opacity:0.4;">•</span>
-                        <span>${g.t || "Match"}</span>
-                        <span style="opacity:0.4;">•</span>
-                        <span>Rest: ${g.l}</span>
+                <div class="match-card-footer">
+                    <div class="match-winner-callout">
+                        <span>🏆 Sieger: ${winnerName}${calloutReason}</span>
                     </div>
-                    <div class="stat-value-badge ${delta > 0 ? "green" : delta < 0 ? "red" : ""}" style="font-size:9px; padding:2px 6px;">${delta > 0 ? "+" : ""}${delta} ELO</div>
+                    <div class="match-elo-pill">${delta > 0 ? "+" : ""}${delta} ELO</div>
                 </div>
             </div>`;
       })
@@ -1224,7 +1279,18 @@ window.renderBillardStats = function (
         };
 
         const score = computeDailyWinnerScore(d, dAllPlayer, dBeforePlayer);
-        playerScores.push({ player: p, score: score });
+        const wins = d.todayWins || 0;
+        const losses = Math.max(0, (d.todayGames || 0) - wins);
+        const eloGain =
+          res.aggregates?.sessionEloGains?.[p] ??
+          window.careerStats?.aggregates?.sessionEloGains?.[p];
+        playerScores.push({
+          player: p,
+          score: score,
+          wins: wins,
+          losses: losses,
+          eloGain: typeof eloGain === "number" ? Math.round(eloGain) : null,
+        });
       });
 
       // Sort players by score (descending)
@@ -1253,24 +1319,30 @@ window.renderBillardStats = function (
 
         if (uniqueScores.length > 0) {
           const score = uniqueScores[0];
-          const players = playerScores
-            .filter((ps) => ps.score === score)
-            .map((p) => p.player);
-          places[1] = { players, score };
+          const matched = playerScores.filter((ps) => ps.score === score);
+          places[1] = {
+            players: matched.map((p) => p.player),
+            details: matched,
+            score,
+          };
         }
         if (uniqueScores.length > 1) {
           const score = uniqueScores[1];
-          const players = playerScores
-            .filter((ps) => ps.score === score)
-            .map((p) => p.player);
-          places[2] = { players, score };
+          const matched = playerScores.filter((ps) => ps.score === score);
+          places[2] = {
+            players: matched.map((p) => p.player),
+            details: matched,
+            score,
+          };
         }
         if (uniqueScores.length > 2) {
           const score = uniqueScores[2];
-          const players = playerScores
-            .filter((ps) => ps.score === score)
-            .map((p) => p.player);
-          places[3] = { players, score };
+          const matched = playerScores.filter((ps) => ps.score === score);
+          places[3] = {
+            players: matched.map((p) => p.player),
+            details: matched,
+            score,
+          };
         }
 
         const getAvatarPodiumHtml = (players) => {
@@ -1282,6 +1354,22 @@ window.renderBillardStats = function (
             .join("");
         };
 
+        const getPodiumStatsSubHtml = (placeObj) => {
+          if (!placeObj || !placeObj.details || placeObj.details.length === 0)
+            return "";
+          const m = placeObj.details[0];
+          const eloText =
+            m.eloGain !== null
+              ? m.eloGain > 0
+                ? `<span class="elo">+${m.eloGain}</span>`
+                : m.eloGain < 0
+                  ? `<span class="elo" style="color:#ff453a;">${m.eloGain}</span>`
+                  : `<span class="elo">±0</span>`
+              : "";
+          const eloPart = eloText ? ` · ${eloText}` : "";
+          return `<div class="podium-stats-sub"><span class="win">${m.wins}S · ${m.losses}N</span>${eloPart}</div>`;
+        };
+
         let podiumPlacesHtml = "";
         if (places[2]) {
           podiumPlacesHtml += `
@@ -1290,10 +1378,10 @@ window.renderBillardStats = function (
                 <div class="podium-medal-badge">🥈</div>
                 <div class="podium-avatar-wrap">${getAvatarPodiumHtml(places[2].players)}</div>
                 <div class="podium-name">${places[2].players.join(" / ")}</div>
-                ${getStyledScore(places[2].score)}
+                ${getPodiumStatsSubHtml(places[2])}
               </div>
               <div class="podium-pedestal pedestal-2">
-                <span class="pedestal-num">2</span>
+                ${getStyledScore(places[2].score)}
               </div>
             </div>`;
         }
@@ -1304,11 +1392,10 @@ window.renderBillardStats = function (
                 <div class="podium-crown-badge">👑</div>
                 <div class="podium-avatar-wrap">${getAvatarPodiumHtml(places[1].players)}</div>
                 <div class="podium-name">${places[1].players.join(" / ")}</div>
-                ${getStyledScore(places[1].score)}
+                ${getPodiumStatsSubHtml(places[1])}
               </div>
               <div class="podium-pedestal pedestal-1">
-                <div class="pedestal-gold-accent"></div>
-                <span class="pedestal-num">1</span>
+                ${getStyledScore(places[1].score)}
               </div>
             </div>`;
         }
@@ -1319,10 +1406,10 @@ window.renderBillardStats = function (
                 <div class="podium-medal-badge">🥉</div>
                 <div class="podium-avatar-wrap">${getAvatarPodiumHtml(places[3].players)}</div>
                 <div class="podium-name">${places[3].players.join(" / ")}</div>
-                ${getStyledScore(places[3].score)}
+                ${getPodiumStatsSubHtml(places[3])}
               </div>
               <div class="podium-pedestal pedestal-3">
-                <span class="pedestal-num">3</span>
+                ${getStyledScore(places[3].score)}
               </div>
             </div>`;
         }
@@ -2045,26 +2132,36 @@ window.renderBillardStats = function (
       const dailyWinsHtml =
         sortedPlayers.length > 0
           ? sortedPlayers
-              .map(
-                (p, idx) => `
-                <div class="stat-card-modern cinematic-entry" style="--card-accent: #ffcc00; margin-bottom:8px; animation-delay: ${1.27 + idx * 0.05}s;">
+              .map((p, idx) => {
+                const accents = ["#ffcc00", "#d1d5db", "#cd7f32"];
+                const cardAccent = accents[idx] || "#64748b";
+                const totalPodium = (p[1] || 0) + (p[2] || 0) + (p[3] || 0);
+                const badgeLabel =
+                  idx === 0
+                    ? "👑 #1 · Tagessieger-König"
+                    : idx === 1
+                      ? "🥈 #2 · Tagessieger"
+                      : idx === 2
+                        ? "🥉 #3 · Tagessieger"
+                        : `#${idx + 1} · Tagessieger`;
+                return `
+                <div class="stat-card-modern cinematic-entry" style="--card-accent: ${cardAccent}; margin-bottom:8px; animation-delay: ${1.27 + idx * 0.05}s;">
                   <div class="stat-card-main">
-                    <div class="stat-card-badge-top">${idx + 1}. Platz</div>
+                    <div class="stat-card-badge-top" style="color:${cardAccent};">${badgeLabel}</div>
                     <div class="stat-card-holder-row">
-                      <img src="${safeGetAvatarUrl(p.name)}" class="stat-card-avatar" onerror="this.style.display='none'">
+                      <img src="${safeGetAvatarUrl(p.name)}" class="stat-card-avatar" style="border-color:${cardAccent};" onerror="this.style.display='none'">
                       <span class="stat-card-player-label">${p.name}</span>
                     </div>
-                    <div class="stat-card-sublabel">Tagessieg-Bilanz</div>
+                    <div class="stat-card-sublabel">${totalPodium}× auf dem Podium</div>
                   </div>
-                  <div class="stat-metric-hero" style="flex-direction:column; gap:4px; align-items:flex-end;">
-                    <div style="display:flex; gap:6px; font-size:11px; font-weight:900;">
-                      <span title="1. Plätze" style="color:#ffcc00;">🥇 ${p[1]}</span>
-                      <span title="2. Plätze" style="color:#d1d1d6;">🥈 ${p[2]}</span>
-                      <span title="3. Plätze" style="color:#cd7f32;">🥉 ${p[3]}</span>
+                  <div class="stat-metric-hero" style="flex-direction:column; gap:3px; align-items:flex-end;">
+                    <div class="stat-hero-pill pill-gold">${p[1]}× 🥇</div>
+                    <div style="font-size:10px; color:#94a3b8; font-weight:800; margin-top:2px;">
+                      <span style="color:#d1d5db;" title="2. Plätze">🥈${p[2]}</span> · <span style="color:#cd7f32;" title="3. Plätze">🥉${p[3]}</span>
                     </div>
                   </div>
-                </div>`,
-              )
+                </div>`;
+              })
               .join("")
           : '<div style="font-size:10px; color:#8e8e93; text-align:center; padding:5px;">Noch keine Tagessieger ermittelt.</div>';
 
@@ -2108,15 +2205,18 @@ window.renderBillardStats = function (
                   )
                   .join("");
                 const medals = ["👑", "🥈", "🥉"];
+                const duoRankLabel = medals[idx]
+                  ? `${medals[idx]} #${idx + 1} · Bestes Team-Duo`
+                  : `#${idx + 1} · Team-Duo`;
                 return `
                 <div class="stat-card-modern cinematic-entry" style="--card-accent: #30d158; margin-bottom:10px; animation-delay: ${1.1 + idx * 0.05}s;">
                   <div class="stat-card-main">
-                    <div class="stat-card-badge-top">${medals[idx] || idx + 1 + "."} Partner-Duo</div>
+                    <div class="stat-card-badge-top">${duoRankLabel}</div>
                     <div class="stat-card-holder-row">
                       <div class="stat-avatar-stack">${avatarStack}</div>
                       <span class="stat-card-player-label">${t.name}</span>
                     </div>
-                    <div class="stat-card-sublabel">${t.wins}S / ${t.games}G · Elite Duo Synergy</div>
+                    <div class="stat-card-sublabel">${t.wins} Siege · ${t.games} Spiele als Team</div>
                   </div>
                   <div class="stat-metric-hero">
                     <div class="stat-hero-pill pill-green">${t.wr}%</div>
@@ -2154,12 +2254,12 @@ window.renderBillardStats = function (
       spezEl.innerHTML = `
         <div class="stat-card-modern cinematic-entry" style="--card-accent: #ffcc00; animation-delay: 1.15s;">
           <div class="stat-card-main">
-            <div class="stat-card-badge-top">🟡 Voll-Profi</div>
+            <div class="stat-card-badge-top">🟡 Voll-Kugeln · Top-Siegrate</div>
             <div class="stat-card-holder-row">
               <img src="${safeGetAvatarUrl(topVollarbeiter.n)}" class="stat-card-avatar" onerror="this.style.display='none'" style="border:2px solid #ffcc00;">
               <span class="stat-card-player-label">${topVollarbeiter.n}</span>
             </div>
-            <div class="stat-card-sublabel">Beste Siegrate mit vollen Kugeln</div>
+            <div class="stat-card-sublabel">Beste Winrate · Volle Kugeln</div>
           </div>
           <div class="stat-metric-hero">
             <div class="stat-hero-pill pill-gold">${vollVal}</div>
@@ -2167,12 +2267,12 @@ window.renderBillardStats = function (
         </div>
         <div class="stat-card-modern cinematic-entry" style="--card-accent: #4fc3f7; animation-delay: 1.2s;">
           <div class="stat-card-main">
-            <div class="stat-card-badge-top">🔵 Halbe-As</div>
+            <div class="stat-card-badge-top">🔵 Halb-Kugeln · Top-Siegrate</div>
             <div class="stat-card-holder-row">
               <img src="${safeGetAvatarUrl(topHalbeExperte.n)}" class="stat-card-avatar" onerror="this.style.display='none'" style="border:2px solid #4fc3f7;">
               <span class="stat-card-player-label">${topHalbeExperte.n}</span>
             </div>
-            <div class="stat-card-sublabel">Beste Siegrate mit halben Kugeln</div>
+            <div class="stat-card-sublabel">Beste Winrate · Halbe Kugeln</div>
           </div>
           <div class="stat-metric-hero">
             <div class="stat-hero-pill pill-cyan">${halbVal}</div>
@@ -2252,23 +2352,24 @@ window.renderBillardStats = function (
 
       if (breakCounts.some((item) => item.count > 0)) {
         breakCountsEl.innerHTML = breakCounts
-          .map(
-            (item, idx) => `
+          .map((item, idx) => {
+            const badgeLabel = idx === 0 ? "⚡ Anstoß-König" : `⚡ #${idx + 1}`;
+            return `
                 <div class="stat-card-modern cinematic-entry" style="--card-accent: #ffcc00; margin-bottom:8px; animation-delay: ${1.22 + idx * 0.05}s;">
                   <div class="stat-card-main">
-                    <div class="stat-card-badge-top">${idx + 1}. Platz</div>
+                    <div class="stat-card-badge-top">${badgeLabel}</div>
                     <div class="stat-card-holder-row">
                       <img src="${safeGetAvatarUrl(item.p)}" class="stat-card-avatar" onerror="this.style.display='none'">
                       <span class="stat-card-player-label">${item.p}</span>
                     </div>
-                    <div class="stat-card-sublabel">Eigene Anstöße</div>
+                    <div class="stat-card-sublabel">Meiste eigene Anstöße</div>
                   </div>
                   <div class="stat-metric-hero">
                     <div class="stat-hero-pill pill-gold">${item.count}×</div>
                   </div>
                 </div>
-            `,
-          )
+            `;
+          })
           .join("");
       } else {
         breakCountsEl.innerHTML =
@@ -2294,10 +2395,8 @@ window.renderBillardStats = function (
         dominantMatchups.length > 0
           ? dominantMatchups
               .map((m, idx) => {
-                const winner = m.wr1 >= m.wr2 ? m.p1 : m.p2;
-                const winnerWr = Math.max(m.wr1, m.wr2);
                 return `
-                <div class="stat-card-modern span-2 cinematic-entry" style="--card-accent: #ffcc00; flex-direction:column; align-items:stretch; gap:10px; margin-bottom:10px; animation-delay: ${1.32 + idx * 0.05}s;">
+                <div class="stat-card-modern span-2 cinematic-entry" style="--card-accent: #ffcc00; flex-direction:column; align-items:stretch; gap:8px; margin-bottom:10px; animation-delay: ${1.32 + idx * 0.05}s;">
                   <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
                     <!-- Spieler 1 -->
                     <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
@@ -2307,8 +2406,11 @@ window.renderBillardStats = function (
                         <div class="stat-card-sublabel">${m.p1_wins}S · ${m.wr1}%</div>
                       </div>
                     </div>
-                    <!-- VS-Badge -->
-                    <div class="h2h-vs-badge" style="flex-shrink:0;">VS</div>
+                    <!-- VS-Badge & Partien -->
+                    <div style="text-align:center; flex-shrink:0;">
+                      <div class="h2h-vs-badge">VS</div>
+                      <div class="stat-card-sublabel" style="margin-top:3px;">${m.games} Sp.</div>
+                    </div>
                     <!-- Spieler 2 -->
                     <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0; justify-content:flex-end; text-align:right;">
                       <div style="min-width:0;">
@@ -2322,7 +2424,6 @@ window.renderBillardStats = function (
                   <div style="height:6px; background:rgba(79,195,247,0.25); border-radius:4px; overflow:hidden;">
                     <div style="height:100%; width:${m.wr1}%; background:linear-gradient(90deg,#ffcc00,#ff9500); border-radius:4px; transition:width 0.6s ease;"></div>
                   </div>
-                  <div class="stat-card-badge-top" style="justify-content:center;">${m.games} Partien · ⚡ Dominiert: ${winner} (${winnerWr}%)</div>
                 </div>`;
               })
               .join("")
@@ -2714,20 +2815,23 @@ window.renderBillardStats = function (
       rows.forEach((r, i) => {
         const badge = medal(i);
         const isFirst = i === 0;
+        const rankLabel = badge
+          ? `${badge} #${i + 1} · ELO-Rangliste`
+          : `${i + 1}. · ELO-Rangliste`;
         const streakClass =
           r.streak >= 1
             ? "streak-fire"
             : r.loseStreak >= 3
               ? "streak-frost"
               : "";
-        const streakEmoji =
+        const streakBadge =
           r.streak >= 1
-            ? ` <span style="display:inline-flex; align-items:center; gap:2px; color:var(--accent); text-shadow: 0 0 8px rgba(255,204,0,0.4); animation: streak-pulse 1.5s infinite ease-in-out; vertical-align: middle;"><span style="font-size:14px;">🔥</span><span style="font-size:11px; font-weight:900;">${r.streak}</span></span>`
+            ? ` <span style="display:inline-flex;align-items:center;gap:2px;color:#ffcc00;font-size:11px;font-weight:900;animation:streak-pulse 1.5s infinite ease-in-out;vertical-align:middle;">🔥${r.streak}</span>`
             : "";
 
         const matchesSubtitle = isToday
-          ? `Heute: ${r.sessionGames} Spiele`
-          : `Matches: ${r.games}`;
+          ? `${r.sessionGames} Spiele heute`
+          : `${r.games} Matches gespielt`;
 
         let deltaHtml = "";
         if (isToday && r.sessionGames > 0) {
@@ -2743,26 +2847,26 @@ window.renderBillardStats = function (
               : r.sessionDelta < 0
                 ? "#ff453a"
                 : "#8e8e93";
-          deltaHtml = `<div style="font-size:9px; font-weight:800; color:${deltaColor}; margin-top:3px;">${deltaSign} heute</div>`;
+          deltaHtml = `<div style="font-size:9px; font-weight:700; color:${deltaColor}; margin-top:2px;">${deltaSign} heute</div>`;
         }
 
         const pillClass = isFirst ? "pill-green" : "pill-gold";
         const cardAccent = isFirst ? "#30d158" : "#ffcc00";
 
         html += `
-              <div onclick="window.openPlayerProfile('${r.name}')" class="stat-card-modern cinematic-entry ${isFirst ? "rank-1-card" : ""}" style="--card-accent: ${cardAccent}; margin-bottom:10px; cursor:pointer; animation-delay: ${0.5 + i * 0.05}s; ${isFirst ? "border-color: rgba(48,209,88,0.3);" : ""}">
+              <div onclick="window.openPlayerProfile('${r.name}')" class="stat-card-modern cinematic-entry ${isFirst ? "rank-1-card" : ""}" style="--card-accent: ${cardAccent}; margin-bottom:10px; cursor:pointer; animation-delay: ${0.5 + i * 0.05}s;">
                 <div class="stat-card-main">
-                  <div class="stat-card-badge-top">${badge ? badge + " Platz" : i + 1 + ". Platz"}</div>
+                  <div class="stat-card-badge-top">${rankLabel}</div>
                   <div class="stat-card-holder-row">
                     <div class="avatar-frame ${streakClass}">
                       <img src="${safeGetAvatarUrl(r.name)}" onerror="this.style.display='none'" class="stat-card-avatar" style="border-radius:10px; width:30px; height:30px;">
                     </div>
-                    <span class="stat-card-player-label" style="color:${getPlayerColor(r.name)};">${r.name}${streakEmoji}</span>
+                    <span class="stat-card-player-label" style="color:${getPlayerColor(r.name)};">${r.name}${streakBadge}</span>
                   </div>
                   <div class="stat-card-sublabel">${matchesSubtitle}</div>
                 </div>
                 <div class="stat-metric-hero">
-                  <div class="stat-hero-pill ${pillClass}" id="rank-elo-${i}">—</div>
+                  <div class="stat-hero-pill ${pillClass}" id="rank-elo-${i}" style="font-size:1.1rem;">—</div>
                   ${deltaHtml}
                 </div>
               </div>
@@ -3009,17 +3113,19 @@ window.renderBillardStats = function (
               ? "streak-frost"
               : "";
         const labelGames = isToday
-          ? `Session: ${r.w}-${r.l} (${r.wr}%)`
-          : `Letzte ${r.g}: ${r.w}-${r.l} (${r.wr}%)`;
-        const streakBadge =
-          r.streak >= 1
-            ? `<span style="font-size:12px; animation: streak-pulse 1.5s infinite ease-in-out;">🔥</span><span style="font-size:10px; font-weight:900; color:var(--accent);">${r.streak}</span>`
-            : r.loseStreak >= 3
-              ? `<span style="font-size:12px;">❄️</span><span style="font-size:10px; font-weight:900; color:#4fc3f7;">${r.loseStreak}</span>`
-              : "";
+          ? `Session: ${r.w}S · ${r.l}N · ${r.wr}%`
+          : `Letzte ${r.g}: ${r.w}S · ${r.l}N · ${r.wr}%`;
 
+        const streakPart =
+          r.streak >= 1
+            ? ` · 🔥${r.streak} Serie`
+            : r.loseStreak >= 3
+              ? ` · ❄️${r.loseStreak} Losing`
+              : "";
         const rankEmoji =
-          i === 0 ? "🔥" : i === 1 ? "✨" : i === 2 ? "📈" : i + 1 + ".";
+          i === 0 ? "🏆" : i === 1 ? "✨" : i === 2 ? "📈" : i + 1 + ".";
+        const badgeLabel = `${rankEmoji} #${i + 1} Form${streakPart}`;
+
         const pillClass =
           r.eloDelta > 0
             ? "pill-green"
@@ -3034,21 +3140,20 @@ window.renderBillardStats = function (
         const deltaSign = r.eloDelta > 0 ? `+${r.eloDelta}` : `${r.eloDelta}`;
 
         listHtml += `
-              <div onclick="window.openPlayerProfile('${r.name}')" class="stat-card-modern cinematic-entry" style="--card-accent: ${cardAccent}; margin-bottom:10px; cursor:pointer; animation-delay: ${0.5 + i * 0.05}s; ${isTopForm ? "border-color: rgba(48,209,88,0.3);" : ""}">
+              <div onclick="window.openPlayerProfile('${r.name}')" class="stat-card-modern cinematic-entry" style="--card-accent: ${cardAccent}; margin-bottom:10px; cursor:pointer; animation-delay: ${0.5 + i * 0.05}s;">
                 <div class="stat-card-main">
-                  <div class="stat-card-badge-top">${rankEmoji} Form-Ranking</div>
+                  <div class="stat-card-badge-top">${badgeLabel}</div>
                   <div class="stat-card-holder-row">
                     <div class="avatar-frame ${streakClass}">
                       <img src="${safeGetAvatarUrl(r.name)}" onerror="this.style.display='none'" class="stat-card-avatar" style="border-radius:10px; width:30px; height:30px;">
                     </div>
                     <span class="stat-card-player-label" style="color:${getPlayerColor(r.name)};">${r.name}</span>
-                    ${streakBadge ? `<span style="display:inline-flex; gap:2px; align-items:center; margin-left:4px;">${streakBadge}</span>` : ""}
                   </div>
                   <div class="stat-card-sublabel">${labelGames}</div>
                 </div>
                 <div class="stat-metric-hero">
-                  <div class="stat-hero-pill ${pillClass}">${deltaSign}</div>
-                  <div style="font-size:9px; color:#8e8e93; text-transform:uppercase; font-weight:800; margin-top:3px; text-align:center;">ELO Δ</div>
+                  <div class="stat-hero-pill ${pillClass}" style="font-size:1.1rem;">${deltaSign}</div>
+                  <div style="font-size:9px; color:#64748b; font-weight:700; margin-top:2px; text-align:center;">ELO Δ</div>
                 </div>
               </div>
             `;

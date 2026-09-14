@@ -934,21 +934,6 @@
                 <div id="h2h-interactive-output"></div>
               </div>
 
-              <!-- Matches der aktuellen Session direkt unter dem Duell-Rechner -->
-              <div
-                id="today-matches-card"
-                class="card cinematic-entry"
-                style="
-                  display: none;
-                  animation-delay: 0.1s;
-                  margin-top: 10px;
-                  margin-bottom: 14px;
-                "
-              >
-                <label>Session Matches</label>
-                <div id="today-match-list" style="margin-top: 8px"></div>
-              </div>
-
               <div class="stat-grid">
                 <div
                   class="stat-card-modern span-2 cinematic-entry"
@@ -969,6 +954,23 @@
                 </div>
                 <div id="stat-duo-ranking" style="display: contents"></div>
                 <div id="stat-head-to-head" style="display: contents"></div>
+              </div>
+
+              <!-- Matches der aktuellen Session am Ende des Duelle-Subtabs -->
+              <div
+                id="today-matches-card"
+                class="cinematic-entry"
+                style="
+                  display: none;
+                  animation-delay: 0.1s;
+                  margin-top: 20px;
+                  margin-bottom: 24px;
+                "
+              >
+                <div class="section-label" style="margin-bottom: 8px">
+                  ⚡ Gespielte Session-Matches
+                </div>
+                <div id="today-match-list"></div>
               </div>
             </div>
 
