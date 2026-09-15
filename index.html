@@ -69,60 +69,59 @@
   </head>
   <body>
     <div id="loading-overlay" class="loading-overlay">
-      <div class="loader-grid"></div>
-      <div
-        id="loader-content"
-        style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          z-index: 2;
-          transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-          width: 100%;
-        "
-      >
-        <img
-          loading="lazy"
-          src="logo.png"
-          class="loader-logo"
-          onerror="this.style.display = 'none'"
-        />
-        <div class="loader-title">Billardkrüppel</div>
-        <div id="loader-avatars" class="loader-avatar-row"></div>
+      <div class="felt-weave-grid"></div>
+      <div class="champions-ambient-beam"></div>
+
+      <div id="loader-content" class="loader-content-wrap">
+        <!-- Crest & Logo -->
+        <div class="champions-crest-box">
+          <div class="gold-orbit-ring"></div>
+          <img
+            src="logo.png"
+            class="floating-logo"
+            alt="Billardkrüppel Logo"
+            onerror="this.style.display = 'none'"
+          />
+        </div>
+
+        <div class="brand-title">Billardkrüppel</div>
+        <div class="league-badge">★ Champions Arena ★</div>
+
+        <!-- Billardtisch-Break Arena -->
+        <div class="break-arena" id="breakArena">
+          <div class="rack-triangle" id="rackTriangle">
+            <div class="ball ball-y b10" style="top: 0px; left: 52px"></div>
+            <div class="ball ball-b b7" style="top: 18px; left: 41px"></div>
+            <div class="ball ball-r b9" style="top: 18px; left: 63px"></div>
+            <div class="ball ball-p b3" style="top: 36px; left: 30px"></div>
+            <div class="ball ball-8 b8" style="top: 36px; left: 52px"></div>
+            <div class="ball ball-g b4" style="top: 36px; left: 74px"></div>
+            <div class="ball ball-o b1" style="top: 54px; left: 19px"></div>
+            <div class="ball ball-r b5" style="top: 54px; left: 41px"></div>
+            <div class="ball ball-y b6" style="top: 54px; left: 63px"></div>
+            <div class="ball ball-b b2" style="top: 54px; left: 85px"></div>
+          </div>
+          <div class="shockwave" id="shockwaveRing"></div>
+          <div class="cue-ball" id="cueBall"></div>
+        </div>
+
+        <!-- Avatare -->
+        <div id="loader-avatars" class="avatars-gold-row"></div>
+
+        <!-- Champions-Ladebalken -->
         <div class="loader-progress-container">
           <div id="loader-progress" class="loader-progress-bar"></div>
         </div>
-        <div
-          id="loader-status"
-          style="
-            margin-top: 20px;
-            font-weight: 900;
-            font-size: 11px;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            animation: status-pulse 1.5s infinite ease-in-out;
-          "
-        ></div>
-        <div
-          id="loader-tip"
-          style="
-            margin-top: 30px;
-            color: #8e8e93;
-            font-size: 12px;
-            font-style: italic;
-            width: 85%;
-            max-width: 800px;
-            text-align: center;
-            line-height: 1.4;
-            opacity: 0.7;
-            font-weight: 500;
-          "
-        ></div>
+
+        <!-- Status & Tipps -->
+        <div id="loader-status" class="status-caption">
+          Tuch wird vorbereitet...
+        </div>
+        <div id="loader-tip" class="pro-tip-box"></div>
         <div
           id="loader-version"
           style="
-            margin-top: 8px;
+            margin-top: 6px;
             font-size: 10px;
             color: #8e8e93;
             font-weight: 600;

@@ -297,18 +297,57 @@ fetch("sw.js?t=" + Date.now())
     updateVersionUI("v16.2");
   });
 
-// -- 5. Loader Controls --
+// -- 5. Loader Controls & Champions Break Arena --
+let breakTriggered = false;
+let crackPlayed = false;
+
+function playLoaderBallCrack() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    if (ctx.state === "suspended") ctx.resume();
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(1900, now);
+    osc.frequency.exponentialRampToValueAtTime(260, now + 0.045);
+
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.08);
+
+    const subOsc = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    subOsc.type = "sine";
+    subOsc.frequency.setValueAtTime(140, now);
+    subOsc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+    subGain.gain.setValueAtTime(0.4, now);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    subOsc.connect(subGain);
+    subGain.connect(ctx.destination);
+    subOsc.start(now);
+    subOsc.stop(now + 0.13);
+  } catch (e) {}
+}
+
 window.hideLoader = () => {
   const l = document.getElementById("loading-overlay");
   const content = document.getElementById("loader-content");
   if (l && l.style.display !== "none") {
     if (content) {
-      content.style.transform = "scale(1.05)";
+      content.style.transform = "scale(1.06)";
       content.style.opacity = "0";
     }
     l.style.opacity = "0";
     l.style.filter = "blur(10px)";
-    setTimeout(() => (l.style.display = "none"), 300);
+    setTimeout(() => (l.style.display = "none"), 500);
   }
 };
 
@@ -317,21 +356,53 @@ window.resetLoaderState = () => {
   firebaseDataReady = false;
   workerFinished = false;
   isCalculating = false;
+  breakTriggered = false;
+  crackPlayed = false;
 };
 
 window.checkAllReadyAndHideLoader = () => {
   if (!firebaseDataReady || !workerFinished || isHiding) return;
   isHiding = true;
-  window.updateLoaderStatus("Bereit", 100);
-  setTimeout(() => window.hideLoader(), 200);
+
+  const arena = document.getElementById("breakArena");
+  const triangle = document.getElementById("rackTriangle");
+
+  if (!breakTriggered && arena) {
+    breakTriggered = true;
+    arena.classList.add("break-active");
+  }
+
+  window.updateLoaderStatus("BREAK! Bereit für die Arena!", 100);
+
+  setTimeout(() => {
+    if (!crackPlayed && triangle) {
+      crackPlayed = true;
+      playLoaderBallCrack();
+      triangle.classList.add("break-exploded");
+    }
+    setTimeout(() => window.hideLoader(), 450);
+  }, 250);
 };
 
 window.updateLoaderStatus = (msg, percent) => {
   if (isHiding && percent < 100) return;
   const el = document.getElementById("loader-status");
   const bar = document.getElementById("loader-progress");
-  if (el) el.innerText = msg + "...";
+  if (el) el.innerText = msg;
   if (bar && percent !== undefined) bar.style.width = percent + "%";
+
+  const arena = document.getElementById("breakArena");
+  const triangle = document.getElementById("rackTriangle");
+
+  if (percent >= 65 && !breakTriggered && arena) {
+    breakTriggered = true;
+    arena.classList.add("break-active");
+  }
+  if (percent >= 95 && !crackPlayed && triangle) {
+    crackPlayed = true;
+    playLoaderBallCrack();
+    triangle.classList.add("break-exploded");
+  }
 };
 
 // Fallback Timeout für Loader
@@ -375,23 +446,23 @@ const tips = [
 const tipEl = document.getElementById("loader-tip");
 if (tipEl) {
   tipEl.innerText = "» " + tips[Math.floor(Math.random() * tips.length)] + " «";
-  tipEl.style.animation = "tip-fade 1.2s ease-out forwards";
 }
 
 // Dynamische Status-Botschaften
 const statusEl = document.getElementById("loader-status");
 if (statusEl) {
   const statuses = [
-    "Kreide Queues",
-    "Mische Kugeln",
-    "Poliere Filz",
-    "Bereite Arena vor",
+    "Tuch wird gebürstet & Queues eingekreidet...",
+    "ELO-Historie & Rangliste synchronisieren...",
+    "Die Weiße nimmt Maß...",
+    "Bereite Arena vor...",
   ];
   let sIdx = 0;
-  statusEl.innerText = statuses[sIdx] + "...";
+  statusEl.innerText = statuses[sIdx];
   setInterval(() => {
+    if (isHiding) return;
     sIdx = (sIdx + 1) % statuses.length;
-    statusEl.innerText = statuses[sIdx] + "...";
+    statusEl.innerText = statuses[sIdx];
   }, 900);
 }
 
@@ -405,9 +476,9 @@ if (loaderAvatars) {
         ? window.getAvatarUrl(p)
         : `avatars/${p}.webp`;
       return `
-        <div class="loader-avatar-container" style="animation-delay: ${i * 0.2}s">
-          <img loading="lazy" src="${src}" class="loader-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-          <div style="display:none; width:100%; height:100%; border-radius:50%; background:rgba(255,255,255,0.05); align-items:center; justify-content:center; font-size:24px; border:1px solid var(--accent); color:rgba(255,255,255,0.2);">👤</div>
+        <div class="gold-avatar-frame" style="animation-delay: ${i * 0.15}s">
+          <img loading="lazy" src="${src}" alt="${p}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+          <div style="display:none; width:100%; height:100%; border-radius:50%; background:rgba(255,255,255,0.05); align-items:center; justify-content:center; font-size:18px; color:rgba(255,255,255,0.4);">👤</div>
         </div>`;
     })
     .join("");

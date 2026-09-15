@@ -173,109 +173,440 @@
   font-weight: 700;
 }
 
-/* Loading Overlay */
+/* ==========================================================================
+   Champions Break Arena Loader
+   ========================================================================== */
 .loading-overlay {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at center, #1c1c1e 0%, #000000 100%);
+  background: radial-gradient(
+    ellipse 90% 65% at 50% 40%,
+    rgba(16, 52, 32, 0.98) 0%,
+    rgba(7, 24, 15, 0.98) 55%,
+    #030805 100%
+  );
   overflow: hidden;
-  perspective: 1000px;
   z-index: 30000;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px
+    calc(env(safe-area-inset-bottom, 0px) + 16px) 16px;
   transition:
-    opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-    filter 0.8s ease-out;
-  padding: 20px;
+    opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.7s ease-out;
 }
 
-.loader-grid {
+.felt-weave-grid {
   position: absolute;
-  inset: -100%;
+  inset: 0;
   background-image:
-    linear-gradient(rgba(255, 204, 0, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 204, 0, 0.03) 1px, transparent 1px);
-  background-size: 50px 50px;
-  transform: rotateX(60deg);
+    radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    radial-gradient(rgba(255, 214, 10, 0.03) 1px, transparent 1px);
+  background-size:
+    16px 16px,
+    32px 32px;
+  background-position:
+    0 0,
+    8px 8px;
+  opacity: 0.7;
   pointer-events: none;
-  z-index: 0;
 }
 
-.loader-logo {
-  height: 70px;
-  width: auto;
-  margin-bottom: 15px;
-  filter: drop-shadow(0 0 20px rgba(255, 204, 0, 0.4));
-  animation: logo-pulse 2s infinite alternate ease-in-out;
+.champions-ambient-beam {
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 380px;
+  height: 320px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 214, 10, 0.14) 0%,
+    rgba(255, 149, 0, 0.06) 45%,
+    transparent 70%
+  );
+  filter: blur(40px);
+  pointer-events: none;
 }
 
-.loader-title {
-  font-weight: 900;
-  font-size: 20px;
-  color: var(--accent);
-  text-transform: uppercase;
-  margin-bottom: 25px;
-  text-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
-  letter-spacing: 1.5px;
+.loader-content-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 360px;
+  z-index: 2;
+  transform-origin: center center;
+  transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.loader-progress-container {
-  width: 200px;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-  margin-top: 15px;
-  overflow: hidden;
+/* Logo & Orbit Ring */
+.champions-crest-box {
   position: relative;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  width: clamp(84px, 12vh, 104px);
+  height: clamp(84px, 12vh, 104px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: clamp(6px, 1.2vh, 12px);
+}
+
+.gold-orbit-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 214, 10, 0.4);
+  box-shadow:
+    0 0 25px rgba(255, 214, 10, 0.3),
+    inset 0 0 20px rgba(255, 214, 10, 0.15);
+  animation: spinOrbit 10s linear infinite;
+}
+
+.gold-orbit-ring::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 18px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 10px #ffd60a,
+    0 0 16px #fff;
+}
+
+@keyframes spinOrbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.floating-logo {
+  width: clamp(64px, 9vh, 78px);
+  height: auto;
+  filter: drop-shadow(0 0 18px rgba(255, 214, 10, 0.65))
+    drop-shadow(0 6px 14px rgba(0, 0, 0, 0.8));
+  animation: logoLevitate 3s ease-in-out infinite alternate;
+  z-index: 2;
+}
+
+@keyframes logoLevitate {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    transform: translateY(-4px) scale(1.04);
+  }
+}
+
+.brand-title {
+  font-size: clamp(18px, 2.8vh, 22px);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-shadow:
+    0 0 20px rgba(255, 214, 10, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+  margin-bottom: 2px;
+  text-align: center;
+}
+
+.league-badge {
+  font-size: clamp(9.5px, 1.3vh, 10.5px);
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ff9500;
+  background: rgba(255, 149, 0, 0.12);
+  border: 1px solid rgba(255, 149, 0, 0.3);
+  border-radius: 20px;
+  padding: 2px 10px;
+  margin-bottom: clamp(10px, 1.8vh, 18px);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Billard-Break Arena */
+.break-arena {
+  position: relative;
+  width: 190px;
+  height: clamp(140px, 20vh, 175px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: clamp(8px, 1.5vh, 14px);
+}
+
+.rack-triangle {
+  position: absolute;
+  width: 124px;
+  height: 108px;
+  top: 10px;
+  transition: transform 0.4s ease;
+}
+
+.ball {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.75),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.65),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.45);
+  transition:
+    transform 0.6s cubic-bezier(0.15, 0.9, 0.3, 1.2),
+    opacity 0.5s ease;
+}
+
+.ball-8 {
+  background: radial-gradient(circle at 35% 35%, #444, #000 80%);
+}
+.ball-y {
+  background: radial-gradient(
+    circle at 35% 35%,
+    #fff,
+    #ffd60a 70%,
+    #996515 100%
+  );
+}
+.ball-b {
+  background: radial-gradient(
+    circle at 35% 35%,
+    #fff,
+    #007aff 70%,
+    #003366 100%
+  );
+}
+.ball-r {
+  background: radial-gradient(
+    circle at 35% 35%,
+    #fff,
+    #ff3b30 70%,
+    #800000 100%
+  );
+}
+.ball-o {
+  background: radial-gradient(
+    circle at 35% 35%,
+    #fff,
+    #ff9500 70%,
+    #804000 100%
+  );
+}
+.ball-g {
+  background: radial-gradient(
+    circle at 35% 35%,
+    #fff,
+    #30d158 70%,
+    #155024 100%
+  );
+}
+.ball-p {
+  background: radial-gradient(
+    circle at 35% 35%,
+    #fff,
+    #af52de 70%,
+    #4a1566 100%
+  );
+}
+
+.cue-ball {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 35%,
+    #ffffff,
+    #f2f2f7 50%,
+    #8e8e93 100%
+  );
+  bottom: 6px;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.85),
+    0 0 18px rgba(255, 255, 255, 0.8);
+  transition: transform 0.65s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.break-active .cue-ball {
+  transform: translateY(-68px);
+}
+
+.break-exploded .b10 {
+  transform: translate(0px, -52px) rotate(15deg);
+}
+.break-exploded .b7 {
+  transform: translate(-36px, -42px) rotate(45deg);
+}
+.break-exploded .b9 {
+  transform: translate(38px, -38px) rotate(-40deg);
+}
+.break-exploded .b3 {
+  transform: translate(-55px, 8px) rotate(70deg);
+}
+.break-exploded .b8 {
+  transform: translate(6px, 8px) rotate(10deg);
+}
+.break-exploded .b4 {
+  transform: translate(52px, 14px) rotate(-65deg);
+}
+.break-exploded .b1 {
+  transform: translate(-42px, 48px) rotate(25deg);
+}
+.break-exploded .b5 {
+  transform: translate(-14px, 52px) rotate(-20deg);
+}
+.break-exploded .b6 {
+  transform: translate(18px, 50px) rotate(30deg);
+}
+.break-exploded .b2 {
+  transform: translate(46px, 46px) rotate(-35deg);
+}
+
+.shockwave {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  top: 55px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.break-exploded .shockwave {
+  animation: shockwaveBlast 0.6s ease-out forwards;
+}
+
+@keyframes shockwaveBlast {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    border-width: 4px;
+    box-shadow: 0 0 15px var(--accent);
+  }
+  100% {
+    transform: scale(10);
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+/* Avatare */
+.avatars-gold-row {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 2vw, 12px);
+  margin-bottom: clamp(10px, 1.6vh, 16px);
+}
+
+.gold-avatar-frame {
+  position: relative;
+  width: clamp(34px, 5vh, 40px);
+  height: clamp(34px, 5vh, 40px);
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--accent), #ff9500);
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(255, 214, 10, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.gold-avatar-frame img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #111;
+  display: block;
+}
+
+/* Champions Ladebalken */
+.loader-progress-container {
+  width: clamp(210px, 60vw, 250px);
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 214, 10, 0.2);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .loader-progress-bar {
   width: 0%;
   height: 100%;
-  background: var(--accent);
-  box-shadow: 0 0 20px var(--accent);
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
+  background: linear-gradient(
+    90deg,
+    var(--accent) 0%,
+    #ffffff 50%,
+    #ff9500 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 6px;
+  box-shadow:
+    0 0 14px var(--accent),
+    0 0 24px rgba(255, 149, 0, 0.6);
+  animation: shimmerSweep 2s infinite linear;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.loader-progress-bar::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 30px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6));
-  filter: blur(2px);
+@keyframes shimmerSweep {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 
-.loader-avatar-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 25px;
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: 300px;
+/* Status & Tipps */
+.status-caption {
+  font-size: clamp(10.5px, 1.4vh, 12px);
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-top: clamp(8px, 1.3vh, 12px);
+  text-shadow: 0 0 10px rgba(255, 214, 10, 0.3);
+  min-height: 16px;
+  text-align: center;
 }
 
-.loader-avatar-container {
-  position: relative;
-  width: 42px;
-  height: 42px;
-  opacity: 0;
-  animation: avatar-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+.pro-tip-box {
+  font-size: clamp(11px, 1.4vh, 12.5px);
+  font-style: italic;
+  color: #98989f;
+  margin-top: clamp(8px, 1.4vh, 14px);
+  text-align: center;
+  max-width: 290px;
+  line-height: 1.35;
+  min-height: 32px;
 }
 
-.loader-avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 12px;
-  object-fit: cover;
-  border: 2px solid var(--accent);
-  box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
-  background: rgba(255, 255, 255, 0.05);
+@media (max-height: 680px) {
+  .loader-content-wrap {
+    transform: scale(0.92);
+  }
+  .pro-tip-box {
+    display: none;
+  }
+}
+
+@media (max-height: 580px) {
+  .loader-content-wrap {
+    transform: scale(0.82);
+  }
 }

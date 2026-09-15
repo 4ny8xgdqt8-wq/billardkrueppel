@@ -6,6 +6,14 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### 🎱 Spektakulärer Champions-Break Ladebildschirm (v25.0)
+
+- **Cineastischer Billardtisch-Break:** Der Ladebildschirm wurde von Grund auf neu inszeniert. Ein plastisches 10-Kugeln-Dreieck mit echtem Lichtglanz und die weiße Spielkugel eröffnen jede App-Sitzung.
+- **Dynamischer Anstoß mit Kugel-Klack-Sound:** Kurz vor Abschluss des Ladevorgangs nimmt die weiße Kugel Fahrt auf und bricht das Kugeldreieck mit einem satten Kugelaufprall-Sound und einer goldenen Schockwelle auf.
+- **Champions Arena & rotierender Himmelsring:** Das Billardkrüppel-Logo schwebt erhaben in einem rotierenden Gold-Ring, begleitet von edel gerahmten Spieler-Avataren (Thorsten, Daniel, Peter) und dem goldenen Champions-Ladebalken.
+- **Perfekt für Mobilgeräte & iPhones:** Die Höhen und Abstände passen sich flüssig an jedes Smartphone (inklusive Dynamic Island, Notch und Home-Indikator) an.
+- **Offline-Cache (v25.0):** Aktualisierung des Offline-Speichers auf Version 25.0 für sofortige Auslieferung auf allen Geräten.
+
 ### 📱 Header-Bereinigung & Mobile-Notch-Korrektur (v23.1)
 
 - **Keine störenden Farbbalken mehr:** Der Header erstrahlt nun auf allen Seiten in einem sauberen, tiefschwarzen Dark-Glass-Look ohne verwaschene Farbschlieren oder sichtbare Übergangskanten im Hintergrund.
