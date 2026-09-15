@@ -562,6 +562,186 @@ window.generateRandomMatch = () => {
   window.closeTeamModal();
 };
 
+window.shuffleMode = "random"; // 'random' | 'balanced'
+
+window.setShuffleMode = (mode) => {
+  window.shuffleMode = mode;
+  const btnR = document.getElementById("shuffle-mode-random");
+  const btnB = document.getElementById("shuffle-mode-balanced");
+  if (btnR && btnB) {
+    if (mode === "random") {
+      btnR.classList.add("active");
+      btnR.style.background = "#0a84ff";
+      btnR.style.color = "#ffffff";
+      btnB.classList.remove("active");
+      btnB.style.background = "transparent";
+      btnB.style.color = "rgba(255, 255, 255, 0.65)";
+    } else {
+      btnB.classList.add("active");
+      btnB.style.background = "#30d158";
+      btnB.style.color = "#ffffff";
+      btnR.classList.remove("active");
+      btnR.style.background = "transparent";
+      btnR.style.color = "rgba(255, 255, 255, 0.65)";
+    }
+  }
+};
+
+window.shuffleCurrentTeams = () => {
+  const elT1p1 = document.getElementById("t1p1");
+  const elT1p2 = document.getElementById("t1p2");
+  const elT2p1 = document.getElementById("t2p1");
+  const elT2p2 = document.getElementById("t2p2");
+  if (!elT1p1 || !elT1p2 || !elT2p1 || !elT2p2) return;
+
+  let current = [
+    elT1p1.value ? elT1p1.value.trim() : "",
+    elT1p2.value ? elT1p2.value.trim() : "",
+    elT2p1.value ? elT2p1.value.trim() : "",
+    elT2p2.value ? elT2p2.value.trim() : "",
+  ].filter(Boolean);
+
+  // Eindeutige Spieler ermitteln
+  current = [...new Set(current)];
+
+  // Wenn weniger als 4 Spieler gewählt sind, mit Spielern aus window.spieler auffüllen
+  if (current.length < 4) {
+    const allPlayers = Array.isArray(window.spieler) ? window.spieler : [];
+    for (const p of allPlayers) {
+      const trimmed = String(p).trim();
+      if (trimmed && !current.includes(trimmed)) {
+        current.push(trimmed);
+      }
+      if (current.length === 4) break;
+    }
+  }
+
+  if (current.length < 4) {
+    if (typeof window.showAppToast === "function") {
+      window.showAppToast("Mindestens 4 Spieler für 2:2 nötig!");
+    } else {
+      alert("Mindestens 4 Spieler für 2:2 nötig!");
+    }
+    return;
+  }
+
+  const [p0, p1, p2, p3] = current;
+
+  // Mathematisch exakt 3 Paarungsmöglichkeiten aus 4 Spielern:
+  const configs = [
+    { t1: [p0, p1], t2: [p2, p3] },
+    { t1: [p0, p2], t2: [p1, p3] },
+    { t1: [p0, p3], t2: [p1, p2] },
+  ];
+
+  // Aktuelle Konfiguration prüfen
+  const curT1 = [
+    elT1p1.value ? elT1p1.value.trim() : "",
+    elT1p2.value ? elT1p2.value.trim() : "",
+  ]
+    .sort()
+    .join(" & ");
+  const curT2 = [
+    elT2p1.value ? elT2p1.value.trim() : "",
+    elT2p2.value ? elT2p2.value.trim() : "",
+  ]
+    .sort()
+    .join(" & ");
+
+  const isCurrent = (cfg) => {
+    const s1 = [...cfg.t1].sort().join(" & ");
+    const s2 = [...cfg.t2].sort().join(" & ");
+    return (s1 === curT1 && s2 === curT2) || (s1 === curT2 && s2 === curT1);
+  };
+
+  let chosenConfig = null;
+
+  if (window.shuffleMode === "balanced") {
+    // ELO-Ratings ermitteln
+    const elo =
+      typeof window.computeEloRatings === "function"
+        ? window.computeEloRatings(window.stats)
+        : {};
+    const getE = (p) => (elo[p] ? elo[p].elo : 1000);
+
+    const scoredConfigs = configs.map((cfg) => {
+      const avg1 = (getE(cfg.t1[0]) + getE(cfg.t1[1])) / 2;
+      const avg2 = (getE(cfg.t2[0]) + getE(cfg.t2[1])) / 2;
+      const diff = Math.round(Math.abs(avg1 - avg2));
+      return {
+        t1: [...cfg.t1],
+        t2: [...cfg.t2],
+        diff,
+        isCurrent: isCurrent(cfg),
+      };
+    });
+
+    // Nach kleinster Differenz sortieren
+    scoredConfigs.sort((a, b) => a.diff - b.diff);
+
+    // Wenn die beste Paarung bereits aktiv ist, nimm die zweitbeste (oder beste falls solo)
+    if (scoredConfigs[0].isCurrent && scoredConfigs.length > 1) {
+      chosenConfig = scoredConfigs[1];
+    } else {
+      chosenConfig = scoredConfigs[0];
+    }
+
+    if (typeof window.showAppToast === "function") {
+      window.showAppToast(
+        `⚖️ Fair-Play: Teams ausgeglichen (Diff: ${chosenConfig.diff} ELO)`,
+      );
+    }
+  } else {
+    // Reiner Zufall: Eine der alternativen Konfigurationen wählen
+    const alternatives = configs.filter((cfg) => !isCurrent(cfg));
+    const pool = alternatives.length > 0 ? alternatives : configs;
+    const picked = pool[Math.floor(Math.random() * pool.length)];
+    chosenConfig = { t1: [...picked.t1], t2: [...picked.t2] };
+
+    // Zufällig Plätze innerhalb der Teams oder Heim/Gast tauschen
+    if (Math.random() > 0.5) chosenConfig.t1.reverse();
+    if (Math.random() > 0.5) chosenConfig.t2.reverse();
+    if (Math.random() > 0.5) {
+      const tmp = chosenConfig.t1;
+      chosenConfig.t1 = chosenConfig.t2;
+      chosenConfig.t2 = tmp;
+    }
+
+    if (typeof window.showAppToast === "function") {
+      window.showAppToast("🔀 Teams zufällig durchgemischt!");
+    }
+  }
+
+  // Werte in Dropdowns schreiben
+  elT1p1.value = chosenConfig.t1[0];
+  elT1p2.value = chosenConfig.t1[1];
+  elT2p1.value = chosenConfig.t2[0];
+  elT2p2.value = chosenConfig.t2[1];
+
+  // Prognose und Avatare aktualisieren
+  if (typeof window.updateMatchProbability === "function") {
+    window.updateMatchProbability();
+  }
+  if (typeof window.updateUI === "function") {
+    window.updateUI();
+  }
+
+  // Sanfte Haptik & Highlight-Animation
+  const shuffleBtn = document.getElementById("btn-shuffle-teams");
+  if (shuffleBtn) {
+    shuffleBtn.style.transform = "scale(0.92)";
+    setTimeout(() => {
+      shuffleBtn.style.transform = "scale(1)";
+    }, 150);
+  }
+  const ui22 = document.getElementById("ui-2-2");
+  if (ui22) {
+    ui22.classList.remove("cinematic-entry");
+    void ui22.offsetWidth;
+    ui22.classList.add("cinematic-entry");
+  }
+};
+
 window.updateUI = () => {
   const currentMode = document.getElementById("mode")?.value || "1:1";
 

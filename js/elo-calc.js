@@ -152,6 +152,17 @@ window.processData = function (dataArray, todayStr) {
         todayFoul8Wins: 0,
         todayLostBy8BallError: 0, // New today versions
         todayCloseLosses: 0,
+        teamWins: 0,
+        teamGames: 0,
+        teamMaxStreak: 0,
+        teamCurrentStreak: 0,
+        teamCleanWins: 0,
+        teamClutchWins: 0,
+        teamWinRate: 0,
+        todayTeamWins: 0,
+        todayTeamGames: 0,
+        todayTeamLoseStreak: 0,
+        todayTeamMaxLoseStreak: 0,
       };
   };
 
@@ -253,6 +264,39 @@ window.processData = function (dataArray, todayStr) {
       winners.forEach((p) => {
         if (p) pData[p].clutchWins++;
       });
+
+    if (isTeam) {
+      [...p1Arr, ...p2Arr].forEach((p) => {
+        if (!p || !pData[p]) return;
+        const d = pData[p];
+        const isW = winners.includes(p);
+        d.teamGames = (d.teamGames || 0) + 1;
+        if (isTodayMatch) d.todayTeamGames = (d.todayTeamGames || 0) + 1;
+        if (isW) {
+          d.teamWins = (d.teamWins || 0) + 1;
+          d.teamCurrentStreak = (d.teamCurrentStreak || 0) + 1;
+          if (d.teamCurrentStreak > (d.teamMaxStreak || 0))
+            d.teamMaxStreak = d.teamCurrentStreak;
+          if (isTodayMatch) {
+            d.todayTeamWins = (d.todayTeamWins || 0) + 1;
+            d.todayTeamLoseStreak = 0;
+          }
+          if (rest >= 5) d.teamCleanWins = (d.teamCleanWins || 0) + 1;
+          if (rest === 1) d.teamClutchWins = (d.teamClutchWins || 0) + 1;
+        } else {
+          d.teamCurrentStreak = 0;
+          if (isTodayMatch) {
+            d.todayTeamLoseStreak = (d.todayTeamLoseStreak || 0) + 1;
+            if (d.todayTeamLoseStreak > (d.todayTeamMaxLoseStreak || 0)) {
+              d.todayTeamMaxLoseStreak = d.todayTeamLoseStreak;
+            }
+          }
+        }
+        d.teamWinRate =
+          d.teamGames > 0 ? Math.round((d.teamWins / d.teamGames) * 100) : 0;
+      });
+    }
+
     if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler")))
       blackWins++;
     if (breaker && winners.includes(breaker)) breakWinsCount++;
@@ -489,6 +533,17 @@ window.enrichStatsWithAchievements = function (
         todayFoul8Wins: 0,
         todayLostBy8BallError: 0,
         todayCloseLosses: 0, // Missing Inits
+        teamWins: 0,
+        teamGames: 0,
+        teamMaxStreak: 0,
+        teamCurrentStreak: 0,
+        teamCleanWins: 0,
+        teamClutchWins: 0,
+        teamWinRate: 0,
+        todayTeamWins: 0,
+        todayTeamGames: 0,
+        todayTeamLoseStreak: 0,
+        todayTeamMaxLoseStreak: 0,
         maxWinRate: 0,
         winsVsTopElo: 0,
         vsNemesisWins: 0,
@@ -626,6 +681,33 @@ window.enrichStatsWithAchievements = function (
       d.longestMatch = Math.max(d.longestMatch, duration);
       d.totalMatchDuration = (d.totalMatchDuration || 0) + duration;
       if (duration > 0) d.gamesWithDuration = (d.gamesWithDuration || 0) + 1;
+
+      if (isTeam) {
+        d.teamGames = (d.teamGames || 0) + 1;
+        if (isMatchFromToday) d.todayTeamGames = (d.todayTeamGames || 0) + 1;
+        if (isW) {
+          d.teamWins = (d.teamWins || 0) + 1;
+          d.teamCurrentStreak = (d.teamCurrentStreak || 0) + 1;
+          if (d.teamCurrentStreak > (d.teamMaxStreak || 0))
+            d.teamMaxStreak = d.teamCurrentStreak;
+          if (isMatchFromToday) {
+            d.todayTeamWins = (d.todayTeamWins || 0) + 1;
+            d.todayTeamLoseStreak = 0;
+          }
+          if (rest >= 5) d.teamCleanWins = (d.teamCleanWins || 0) + 1;
+          if (rest === 1) d.teamClutchWins = (d.teamClutchWins || 0) + 1;
+        } else {
+          d.teamCurrentStreak = 0;
+          if (isMatchFromToday) {
+            d.todayTeamLoseStreak = (d.todayTeamLoseStreak || 0) + 1;
+            if (d.todayTeamLoseStreak > (d.todayTeamMaxLoseStreak || 0)) {
+              d.todayTeamMaxLoseStreak = d.todayTeamLoseStreak;
+            }
+          }
+        }
+        d.teamWinRate =
+          d.teamGames > 0 ? Math.round((d.teamWins / d.teamGames) * 100) : 0;
+      }
 
       d.gameResultsHistory.push(isW ? 1 : 0);
       d.last30Games.push(isW ? 1 : 0);
@@ -1123,6 +1205,17 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
         todayRegularWins: 0,
         todayFoul8Wins: 0,
         todayLostBy8BallError: 0,
+        teamWins: 0,
+        teamGames: 0,
+        teamMaxStreak: 0,
+        teamCurrentStreak: 0,
+        teamCleanWins: 0,
+        teamClutchWins: 0,
+        teamWinRate: 0,
+        todayTeamWins: 0,
+        todayTeamGames: 0,
+        todayTeamLoseStreak: 0,
+        todayTeamMaxLoseStreak: 0,
         stolenServiceWins: 0,
         opponentStartedGames: 0,
         todayStolenServiceWins: 0,
@@ -1295,6 +1388,34 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
       if (duration > 0) {
         d.gamesWithDuration = (d.gamesWithDuration || 0) + 1;
       }
+
+      if (isTeam) {
+        d.teamGames = (d.teamGames || 0) + 1;
+        if (isTodayMatch) d.todayTeamGames = (d.todayTeamGames || 0) + 1;
+        if (isW) {
+          d.teamWins = (d.teamWins || 0) + 1;
+          d.teamCurrentStreak = (d.teamCurrentStreak || 0) + 1;
+          if (d.teamCurrentStreak > (d.teamMaxStreak || 0))
+            d.teamMaxStreak = d.teamCurrentStreak;
+          if (isTodayMatch) {
+            d.todayTeamWins = (d.todayTeamWins || 0) + 1;
+            d.todayTeamLoseStreak = 0;
+          }
+          if (rest >= 5) d.teamCleanWins = (d.teamCleanWins || 0) + 1;
+          if (rest === 1) d.teamClutchWins = (d.teamClutchWins || 0) + 1;
+        } else {
+          d.teamCurrentStreak = 0;
+          if (isTodayMatch) {
+            d.todayTeamLoseStreak = (d.todayTeamLoseStreak || 0) + 1;
+            if (d.todayTeamLoseStreak > (d.todayTeamMaxLoseStreak || 0)) {
+              d.todayTeamMaxLoseStreak = d.todayTeamLoseStreak;
+            }
+          }
+        }
+        d.teamWinRate =
+          d.teamGames > 0 ? Math.round((d.teamWins / d.teamGames) * 100) : 0;
+      }
+
       d.gameResultsHistory.push(isW ? 1 : 0);
 
       if (isTodayMatch) {
@@ -1431,14 +1552,52 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
     if (isTeam && p1A.length === 2 && p2A.length === 2) {
       const t1 = [...p1A].sort().join(" & "),
         t2 = [...p2A].sort().join(" & ");
-      if (!aggregates.teamResults[t1])
-        aggregates.teamResults[t1] = { w: 0, g: 0 };
-      if (!aggregates.teamResults[t2])
-        aggregates.teamResults[t2] = { w: 0, g: 0 };
+      const initTeam = (t) => {
+        if (!aggregates.teamResults[t])
+          aggregates.teamResults[t] = {
+            w: 0,
+            l: 0,
+            g: 0,
+            restGiven: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+          };
+      };
+      initTeam(t1);
+      initTeam(t2);
+
       aggregates.teamResults[t1].g++;
       aggregates.teamResults[t2].g++;
-      if (g.w == 1) aggregates.teamResults[t1].w++;
-      else aggregates.teamResults[t2].w++;
+
+      if (g.w == 1) {
+        aggregates.teamResults[t1].w++;
+        aggregates.teamResults[t2].l++;
+        aggregates.teamResults[t1].currentStreak =
+          (aggregates.teamResults[t1].currentStreak || 0) + 1;
+        if (
+          aggregates.teamResults[t1].currentStreak >
+          aggregates.teamResults[t1].maxStreak
+        ) {
+          aggregates.teamResults[t1].maxStreak =
+            aggregates.teamResults[t1].currentStreak;
+        }
+        aggregates.teamResults[t2].currentStreak = 0;
+        aggregates.teamResults[t1].restGiven += rest;
+      } else {
+        aggregates.teamResults[t2].w++;
+        aggregates.teamResults[t1].l++;
+        aggregates.teamResults[t2].currentStreak =
+          (aggregates.teamResults[t2].currentStreak || 0) + 1;
+        if (
+          aggregates.teamResults[t2].currentStreak >
+          aggregates.teamResults[t2].maxStreak
+        ) {
+          aggregates.teamResults[t2].maxStreak =
+            aggregates.teamResults[t2].currentStreak;
+        }
+        aggregates.teamResults[t1].currentStreak = 0;
+        aggregates.teamResults[t2].restGiven += rest;
+      }
     }
 
     if (!isTeam && p1A.length === 1 && p2A.length === 1) {

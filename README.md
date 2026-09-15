@@ -6,6 +6,46 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### 🔀 2:2 Smart-Shuffle Bar: Teams mischen & Fair-Play Balance (v25.3)
+
+- **1-Klick „Teams mischen“ direkt auf der Matchseite:**
+  - Im 2:2-Modus gibt es nun zwischen den Team-Karten die neue **Smart-Shuffle Bar**: Ein einziger Klick auf `🔀 Teams mischen` würfelt die 4 gewählten Spieler sofort in eine neue Team-Konstellation durch – ganz ohne lästiges Modal oder Häkchen-Setzen.
+- **Zwei intelligente Misch-Modi wählbar:**
+  - **🎲 Zufall:** Mischt die 4 Spieler per Zufall durch und garantiert bei jedem Klick einen frischen Teamwechsel.
+  - **⚖️ Fair-Play (ELO-Balance):** Berechnet die aktuellen ELO-Spielstärken aller 4 Kontrahenten und wählt automatisch die Teamaufstellung mit der höchsten Chancengleichheit (nächste an 50:50). Ein Infohinweis zeigt die verbleibende ELO-Differenz an.
+- **Haptisches Feedback & Live-Aktualisierung:**
+  - Sanfte Klick-Animation beim Mischen sowie sofortige Live-Aktualisierung der Spieler-Avatare und der ELO-Gewinnprognose.
+- **Offline-Cache (v25.3):** Aktualisierung des Offline-Speichers auf Version 25.3 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 👥 2:2-Team-Historie, Duo-Power-Ranking & Exklusive Team-Trophäen (v25.2)
+
+- **Modus-Schnellfilter im Historie-Tab:**
+  - Mit den neuen Umschaltern `Alle Matches`, `1:1 Einzel` und `👥 2:2 Team` lässt sich der Matchverlauf nun blitzschnell auf reine Einzelduelle oder Teamspiele eingrenzen.
+- **Interaktives Duo-Power-Ranking:**
+  - Bei Auswahl des 2:2-Modus öffnet sich direkt über dem Spielverlauf das neue **Duo-Power-Ranking**:
+  - Die besten Duos aller Zeiten im direkten Vergleich – gekrönt mit der 👑 **Spitzenreiter-Krone**, Doppel-Avataren der Partner, Siegquoten, Siegesserien und Match-Bilanzen.
+- **Veredelte 2:2-Matchkarten:**
+  - 2:2-Matches im Verlauf sind nun mit einem markanten `👥 TEAM`-Badge gekennzeichnet, heben die Gespanne visuell hervor und zeigen beide Partner mit überlappenden Spieler-Avataren.
+- **Exklusive 2:2-Team-Trophäen & Filter in der VIP-Trophäenkammer:**
+  - Die VIP-Trophäenkammer bietet nun einen eigenen Filter-Pill **`👥 Team`** für alle Doppelspiel-Erfolge.
+  - **Neue Karriere-Trophäen:**
+    - 👥 _Brüder im Geiste I–III:_ Feiere 5, 15 und 30 Siege im 2:2-Team (bis zur Meisterstufe).
+    - 💥 _Duo-Dominanz:_ Gewinne ein Teamspiel mit 5+ Restkugeln beim Gegner.
+    - 🦾 _Team-Nervenstärke:_ Gewinne 2 Herzschlag-Teammatches bei nur 1 Restkugel.
+    - 🏆 _Doppelter Champion:_ Über 65% Siegquote bei mindestens 10 Teamspielen.
+  - **Neue Tages-Erfolge:**
+    - 🏰 _Die Festung (Tages-Ruhm):_ Ungeschlagen als Team am heutigen Tag (mind. 3 Teamspiele).
+    - 🌪️ _Team-Blackout (Tages-Schande):_ 3 Team-Niederlagen in Serie ohne Sieg am Spieltag.
+- **Offline-Cache (v25.2):** Aktualisierung des Offline-Speichers auf Version 25.2 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 👥 2:2-Duo-Chemie & Spieler-Avatar für Sascha (v25.1)
+
+- **Interaktive 2:2-Duo-Chemie & Team-Synergien:** Im Statistik-Tab unter „⚔️ Duelle & H2H“ werden nun alle jemals gespielten 2:2-Teams erfasst und detailliert analysiert:
+  - **Synergie-Index & Auszeichnung:** Jedes Duo erhält ein klares Barometer – von 🌟 _Traum-Duo_ über 🤝 _Harmonische Partnerschaft_ bis hin zu ⚡ _Krisen-Duo_ – basierend auf der Team-Performance im Vergleich zu den Einzel-Siegquoten.
+  - **Umfassende Kennzahlen:** Anzeige der Siege, Matches, Winrate, Restkugel-Durchschnitte sowie der persönlichen Rekord-Siegesserien als Team.
+- **Vollwertige Avatar-Integration für Sascha:** Das Profilbild von Sascha (`Sascha.webp`) ist nun nahtlos im gesamten System integriert (Match-Erfassung, Avatare, Statistiken und Ladebildschirm).
+- **Offline-Cache (v25.1):** Aktualisierung des Offline-Speichers auf Version 25.1 für sofortige Verfügbarkeit auf allen Geräten.
+
 ### 🎱 Spektakulärer Champions-Break Ladebildschirm (v25.0)
 
 - **Cineastischer Billardtisch-Break:** Der Ladebildschirm wurde von Grund auf neu inszeniert. Ein plastisches 10-Kugeln-Dreieck mit echtem Lichtglanz und die weiße Spielkugel eröffnen jede App-Sitzung.

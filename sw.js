@@ -1,4 +1,4 @@
-const CACHE_NAME = "billard-v25.0";
+const CACHE_NAME = "billard-v25.3";
 const ASSETS = [
   "./",
   "index.html",
@@ -22,6 +22,7 @@ const ASSETS = [
   "avatars/Daniel.webp",
   "avatars/Thorsten.webp",
   "avatars/Peter.webp",
+  "avatars/Sascha.webp",
 ];
 
 // Installation: Dateien in den Cache laden

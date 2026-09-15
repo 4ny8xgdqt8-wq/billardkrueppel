@@ -21,6 +21,22 @@ window.dailyFamePool = [
   },
   {
     k: "fame",
+    team: true,
+    cond: (d) =>
+      (d.todayTeamWins || 0) >= 3 &&
+      (d.todayTeamGames || 0) === (d.todayTeamWins || 0),
+    i: "🏰",
+    t: "Die Festung",
+    d: [
+      "Ungeschlagen als Team am heutigen Tag.",
+      "Kein Durchkommen für die Gegner.",
+      "Das Bollwerk hielt jedem Ansturm stand.",
+      "Dominanz im Doppelpack!",
+    ],
+    h: "Heute mindestens 3 Matches im 2:2 gespielt und alle gewonnen",
+  },
+  {
+    k: "fame",
     cond: (d) => d.todayMaxStreak >= 3,
     i: "🔥",
     t: "Tagesserie",
@@ -242,6 +258,23 @@ window.dailyFamePool = [
 window.dailyShamePool = [
   {
     k: "shame",
+    team: true,
+    cond: (d) =>
+      ((d.todayTeamLoseStreak || 0) >= 3 ||
+        (d.todayTeamMaxLoseStreak || 0) >= 3) &&
+      (d.todayTeamWins || 0) === 0,
+    i: "🌪️",
+    t: "Team-Blackout",
+    d: [
+      "Funkstille am Tisch.",
+      "Kein Sieg im Doppel heute nach 3 Niederlagen in Folge.",
+      "Das Missverständnis des Tages.",
+      "Völlige Abstimmungsprobleme.",
+    ],
+    h: "Heute 3 Team-Niederlagen in Serie und noch kein Sieg",
+  },
+  {
+    k: "shame",
     cond: (d) => d.todayGames >= 4 && d.todayWins === 0,
     i: "💀",
     t: "Friedhofswärter",
@@ -401,6 +434,92 @@ window.dailyShamePool = [
 
 // All-Time Pools (global verfügbar für die Übersicht)
 window.famePool = [
+  // --- 2:2 TEAM-ERFOLGE ---
+  {
+    cond: (d) => (d.teamWins || 0) >= 5,
+    i: "👥",
+    t: "Brüder im Geiste I",
+    d: [
+      "Gemeinsam sind wir stark.",
+      "Erste Siege im Doppel eingefahren.",
+      "Zwei Queues, ein Wille.",
+    ],
+    h: "Feiere mindestens 5 Siege im 2:2-Team",
+    g: "Brüder im Geiste",
+    tier: 1,
+    team: true,
+    k: "fame",
+  },
+  {
+    cond: (d) => (d.teamWins || 0) >= 15,
+    i: "👥",
+    t: "Brüder im Geiste II",
+    d: [
+      "Ein eingespieltes Gespann.",
+      "Zusammen eine echte Macht.",
+      "Blinde Harmonie am Billardtisch.",
+    ],
+    h: "Feiere mindestens 15 Siege im 2:2-Team",
+    g: "Brüder im Geiste",
+    tier: 2,
+    team: true,
+    k: "fame",
+  },
+  {
+    cond: (d) => (d.teamWins || 0) >= 30,
+    i: "👥",
+    t: "Brüder im Geiste III",
+    d: [
+      "Legenden des Doppelspiels!",
+      "Perfekt aufeinander abgestimmt.",
+      "Unüberwindbare Duo-Stärke.",
+    ],
+    h: "Feiere mindestens 30 Siege im 2:2-Team",
+    g: "Brüder im Geiste",
+    tier: 3,
+    max: true,
+    team: true,
+    k: "fame",
+  },
+  {
+    cond: (d) => (d.teamCleanWins || 0) >= 1,
+    i: "💥",
+    t: "Duo-Dominanz",
+    d: [
+      "Verbrannte Erde im Doppel.",
+      "Den Gegnern keine Chance gelassen.",
+      "Ein lupenreiner Durchmarsch zu zweit.",
+    ],
+    h: "Gewinne ein 2:2-Match und lasse dem gegnerischen Team mind. 5 Restkugeln",
+    team: true,
+    k: "fame",
+  },
+  {
+    cond: (d) => (d.teamClutchWins || 0) >= 2,
+    i: "🦾",
+    t: "Team-Nervenstärke",
+    d: [
+      "Eiswasser im Doppelpack.",
+      "Im Nervenkrimi eiskalt zugestochen.",
+      "Den finalen Matchball gemeinsam versenkt.",
+    ],
+    h: "Entscheide 2 Team-Matches bei nur 1 verbleibenden Restkugel für euch",
+    team: true,
+    k: "fame",
+  },
+  {
+    cond: (d) => (d.teamWinRate || 0) >= 65 && (d.teamGames || 0) >= 10,
+    i: "🏆",
+    t: "Doppelter Champion",
+    d: [
+      "Eine Macht im Teamspiel!",
+      "Über 65% Siegquote bei mind. 10 Teamspielen.",
+      "Wer mit ihm spielt, gewinnt fast immer.",
+    ],
+    h: "Halte mindestens 65% Siegquote bei mindestens 10 2:2-Teamspielen",
+    team: true,
+    k: "fame",
+  },
   {
     cond: (d) => d.maxStreak >= 3,
     i: "🔥",
@@ -2119,7 +2238,10 @@ window.famePool = [
       d.wins >= 10,
     i: "🔪",
     t: "Effizienz-Schlächter",
-    d: ["Gewinnt schnell und lässt nichts übrig.", "Eine tödliche Kombination aus Tempo und Dominanz."],
+    d: [
+      "Gewinnt schnell und lässt nichts übrig.",
+      "Eine tödliche Kombination aus Tempo und Dominanz.",
+    ],
     h: "Erreiche eine Ø Siegesdauer von unter 4 Min bei Ø 6+ Restkugeln (mind. 10 Siege)",
     k: "fame",
   },

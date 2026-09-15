@@ -29,6 +29,7 @@
         Daniel: "avatars/Daniel.webp",
         Thorsten: "avatars/Thorsten.webp",
         Peter: "avatars/Peter.webp",
+        Sascha: "avatars/Sascha.webp",
       };
       window.getAvatarUrl = (name) => {
         return window.playerAvatars[name] || `avatars/${name}.webp`;
@@ -356,9 +357,94 @@
               </div>
             </div>
 
-            <!-- VS Divider -->
-            <div class="match-vs-divider">
-              <span class="match-vs-pill">VS</span>
+            <!-- VS Divider & 2:2 Smart-Shuffle Bar -->
+            <div
+              class="match-vs-divider team-shuffle-wrapper"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 6px;
+                margin: 4px 0;
+              "
+            >
+              <button
+                type="button"
+                id="btn-shuffle-teams"
+                class="btn-team-shuffle"
+                onclick="window.shuffleCurrentTeams()"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 5px;
+                  background: rgba(10, 132, 255, 0.18);
+                  border: 1px solid rgba(10, 132, 255, 0.4);
+                  color: #64d2ff;
+                  padding: 4px 10px;
+                  border-radius: 12px;
+                  font-size: 11px;
+                  font-weight: 700;
+                  cursor: pointer;
+                  transition: all 0.2s ease;
+                "
+              >
+                <span style="font-size: 13px">🔀</span>
+                <span>Teams mischen</span>
+              </button>
+
+              <span class="match-vs-pill" style="margin: 0">VS</span>
+
+              <div
+                class="shuffle-mode-toggle"
+                style="
+                  display: inline-flex;
+                  background: rgba(255, 255, 255, 0.05);
+                  border: 1px solid rgba(255, 255, 255, 0.1);
+                  border-radius: 10px;
+                  padding: 2px;
+                "
+              >
+                <button
+                  type="button"
+                  class="shuffle-mode-btn active"
+                  id="shuffle-mode-random"
+                  onclick="window.setShuffleMode('random')"
+                  title="Zufällige Teams"
+                  style="
+                    padding: 3px 8px;
+                    border: none;
+                    border-radius: 8px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    background: #0a84ff;
+                    color: #fff;
+                    transition: all 0.2s ease;
+                  "
+                >
+                  🎲 Zufall
+                </button>
+                <button
+                  type="button"
+                  class="shuffle-mode-btn"
+                  id="shuffle-mode-balanced"
+                  onclick="window.setShuffleMode('balanced')"
+                  title="Ausgeglichene Teams nach ELO"
+                  style="
+                    padding: 3px 8px;
+                    border: none;
+                    border-radius: 8px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    background: transparent;
+                    color: rgba(255, 255, 255, 0.65);
+                    transition: all 0.2s ease;
+                  "
+                >
+                  ⚖️ Fair-Play
+                </button>
+              </div>
             </div>
 
             <div class="card match-p2-card">
@@ -727,6 +813,84 @@
               </div>
             </div>
           </div>
+          <!-- 2:2 Modus-Schnellfilter & Duo-Power-Ranking Container -->
+          <div
+            class="history-mode-filter-bar"
+            style="
+              display: flex;
+              gap: 6px;
+              margin: 0 16px 12px 16px;
+              background: rgba(255, 255, 255, 0.04);
+              padding: 4px;
+              border-radius: 12px;
+              border: 1px solid rgba(255, 255, 255, 0.08);
+            "
+          >
+            <button
+              type="button"
+              class="btn-mode-filter active"
+              data-mode="all"
+              onclick="window.handleModeFilter('all')"
+              style="
+                flex: 1;
+                padding: 7px 10px;
+                border-radius: 8px;
+                border: none;
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+                background: #0a84ff;
+                color: #ffffff;
+                transition: all 0.2s ease;
+              "
+            >
+              Alle Matches
+            </button>
+            <button
+              type="button"
+              class="btn-mode-filter"
+              data-mode="1:1"
+              onclick="window.handleModeFilter('1:1')"
+              style="
+                flex: 1;
+                padding: 7px 10px;
+                border-radius: 8px;
+                border: none;
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+                background: transparent;
+                color: rgba(255, 255, 255, 0.65);
+                transition: all 0.2s ease;
+              "
+            >
+              1:1 Einzel
+            </button>
+            <button
+              type="button"
+              class="btn-mode-filter"
+              data-mode="2:2"
+              onclick="window.handleModeFilter('2:2')"
+              style="
+                flex: 1;
+                padding: 7px 10px;
+                border-radius: 8px;
+                border: none;
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+                background: transparent;
+                color: rgba(255, 255, 255, 0.65);
+                transition: all 0.2s ease;
+              "
+            >
+              👥 2:2 Team
+            </button>
+          </div>
+          <div
+            id="history-duo-ranking"
+            style="display: none; margin: 0 16px 14px 16px"
+          ></div>
           <div id="history-list"></div>
         </div>
 
@@ -3643,6 +3807,9 @@
             </div>
             <div class="filter-pill" onclick="renderAchList('daily')">
               👑 Daily
+            </div>
+            <div class="filter-pill" onclick="renderAchList('team')">
+              👥 Team
             </div>
           </div>
           <div style="margin-bottom: 10px; position: relative">

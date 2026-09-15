@@ -3,6 +3,7 @@
    ========================================================================== */
 
 window.timeFilter = "all";
+window.modeFilter = "all";
 window.customStartDate = null;
 window.customEndDate = null;
 window.currentSessionDate = window.currentSessionDate || "all";
@@ -22,6 +23,12 @@ window.getFilteredStats = () => {
   let baseSet = window.stats || [];
   if (dayFilter !== "all") {
     baseSet = baseSet.filter((g) => g.d && g.d.startsWith(dayFilter));
+  }
+
+  if (window.modeFilter === "1:1") {
+    baseSet = baseSet.filter((g) => g.m !== "2:2");
+  } else if (window.modeFilter === "2:2") {
+    baseSet = baseSet.filter((g) => g.m === "2:2");
   }
 
   if (window.timeFilter === "custom") {
@@ -288,5 +295,28 @@ window.toggleHeaderFilter = (trigger) => {
   const isActive = header.classList.toggle("filter-active");
   if (isActive && typeof window.populateDateFilter === "function") {
     window.populateDateFilter();
+  }
+};
+
+window.handleModeFilter = (mode) => {
+  window.modeFilter = mode;
+  document.querySelectorAll(".btn-mode-filter").forEach((btn) => {
+    if (btn.getAttribute("data-mode") === mode) {
+      btn.classList.add("active");
+      btn.style.background = "#0a84ff";
+      btn.style.color = "#ffffff";
+    } else {
+      btn.classList.remove("active");
+      btn.style.background = "transparent";
+      btn.style.color = "rgba(255, 255, 255, 0.65)";
+    }
+  });
+
+  const filtered =
+    typeof window.getFilteredStats === "function"
+      ? window.getFilteredStats()
+      : window.stats;
+  if (typeof window.renderHistory === "function") {
+    window.renderHistory(filtered);
   }
 };

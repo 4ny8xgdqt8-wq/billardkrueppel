@@ -469,7 +469,7 @@ if (statusEl) {
 // Avatare im Loader
 const loaderAvatars = document.getElementById("loader-avatars");
 if (loaderAvatars) {
-  const playersToShow = ["Daniel", "Thorsten", "Peter"];
+  const playersToShow = ["Daniel", "Thorsten", "Peter", "Sascha"];
   loaderAvatars.innerHTML = playersToShow
     .map((p, i) => {
       const src = window.getAvatarUrl

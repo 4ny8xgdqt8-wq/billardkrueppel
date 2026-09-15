@@ -6,6 +6,7 @@ window.playerAvatars = window.playerAvatars || {
   Daniel: "avatars/Daniel.webp",
   Thorsten: "avatars/Thorsten.webp",
   Peter: "avatars/Peter.webp",
+  Sascha: "avatars/Sascha.webp",
 };
 window.getAvatarUrl =
   window.getAvatarUrl ||
@@ -2322,7 +2323,7 @@ window.renderBillardStats = function (
       dailyWinsEl.innerHTML = dailyWinsHtml;
     }
 
-    // --- TEAM-AUSWERTUNG ---
+    // --- TEAM-AUSWERTUNG & DUO-CHEMIE ---
     const normTeamKey = (teamStr) => {
       const parts = String(teamStr || "")
         .split(" & ")
@@ -2332,53 +2333,118 @@ window.renderBillardStats = function (
       return parts.length ? parts.join(" & ") : "";
     };
 
-    // Render Partner-Power
+    // Render Partner-Power & Duo-Chemie
     const teamResults = agg.teamResults || {};
     const duoRanking = Object.entries(teamResults)
-      .map(([name, s]) => ({
-        name,
-        wr: Math.round((s.w / s.g) * 100),
-        games: s.g,
-        wins: s.w,
-      }))
-      .filter((t) => t.games >= 3)
-      .sort((a, b) => b.wr - a.wr || b.games - a.games)
-      .slice(0, 3);
+      .map(([name, s]) => {
+        const pNames = name.split(" & ");
+        const p1 = pNames[0] || "";
+        const p2 = pNames[1] || "";
+        const d1 = res.pData[p1] || {};
+        const d2 = res.pData[p2] || {};
+        const wr1 = d1.games ? (d1.wins / d1.games) * 100 : 50;
+        const wr2 = d2.games ? (d2.wins / d2.games) * 100 : 50;
+        const soloAvgWr = (wr1 + wr2) / 2;
+        const duoWr = s.g ? Math.round((s.w / s.g) * 100) : 0;
+        const synergy = Math.round(duoWr - soloAvgWr);
+        const avgRest = s.w ? (s.restGiven / s.w).toFixed(1) : "0.0";
+
+        let synergyBadge = "🤝 Harmonisch";
+        let synergyColor = "#34c759";
+        let synergyClass = "pill-green";
+        if (synergy >= 6 || duoWr >= 65) {
+          synergyBadge = "🌟 Traum-Duo";
+          synergyColor = "#ffd60a";
+          synergyClass = "pill-gold";
+        } else if (synergy <= -6 || duoWr < 40) {
+          synergyBadge = "⚡ Krisen-Duo";
+          synergyColor = "#ff453a";
+          synergyClass = "pill-red";
+        }
+
+        return {
+          name,
+          p1,
+          p2,
+          wr: duoWr,
+          games: s.g,
+          wins: s.w,
+          losses: s.l || s.g - s.w,
+          synergy,
+          synergyBadge,
+          synergyColor,
+          synergyClass,
+          avgRest,
+          maxStreak: s.maxStreak || 0,
+          currentStreak: s.currentStreak || 0,
+        };
+      })
+      .filter((t) => t.games >= 2)
+      .sort(
+        (a, b) => b.wr - a.wr || b.games - a.games || b.synergy - a.synergy,
+      );
 
     const duoEl = byId("stat-duo-ranking");
     if (duoEl) {
-      duoEl.innerHTML =
-        duoRanking.length > 0
-          ? duoRanking
-              .map((t, idx) => {
-                const pNames = t.name.split(" & ");
-                const avatarStack = pNames
-                  .map(
-                    (p, pi) =>
-                      `<img src="${safeGetAvatarUrl(p)}" class="stat-card-avatar" onerror="this.style.display='none'" style="border-radius:8px; margin-left:${pi > 0 ? "-8px" : "0"}; z-index:${2 - pi};">`,
-                  )
-                  .join("");
-                const medals = ["👑", "🥈", "🥉"];
-                const duoRankLabel = medals[idx]
-                  ? `${medals[idx]} #${idx + 1} · Bestes Team-Duo`
-                  : `#${idx + 1} · Team-Duo`;
-                return `
-                <div class="stat-card-modern cinematic-entry" style="--card-accent: #30d158; margin-bottom:10px; animation-delay: ${1.1 + idx * 0.05}s;">
-                  <div class="stat-card-main">
-                    <div class="stat-card-badge-top">${duoRankLabel}</div>
-                    <div class="stat-card-holder-row">
-                      <div class="stat-avatar-stack">${avatarStack}</div>
-                      <span class="stat-card-player-label">${t.name}</span>
-                    </div>
-                    <div class="stat-card-sublabel">${t.wins} Siege · ${t.games} Spiele als Team</div>
-                  </div>
-                  <div class="stat-metric-hero">
-                    <div class="stat-hero-pill pill-green">${t.wr}%</div>
-                  </div>
-                </div>`;
-              })
-              .join("")
-          : '<div style="font-size:10px; color:#8e8e93; text-align:center; padding:5px;">Mindestens 3 Spiele als Team nötig</div>';
+      if (duoRanking.length > 0) {
+        const medals = ["👑", "🥈", "🥉"];
+        const cardsHtml = duoRanking
+          .map((t, idx) => {
+            const avatarStack = [t.p1, t.p2]
+              .map(
+                (p, pi) =>
+                  `<img src="${safeGetAvatarUrl(p)}" class="stat-card-avatar" alt="${p}" onerror="this.style.display='none'" style="border-radius:10px; border:2px solid ${t.synergyColor}; margin-left:${pi > 0 ? "-10px" : "0"}; z-index:${2 - pi}; width:32px; height:32px;">`,
+              )
+              .join("");
+            const rankBadge = medals[idx]
+              ? `${medals[idx]} #${idx + 1} · ${t.synergyBadge}`
+              : `#${idx + 1} · ${t.synergyBadge}`;
+            const streakText =
+              t.maxStreak > 1
+                ? `🔥 Rekord-Streak: ${t.maxStreak} Siege`
+                : `${t.losses} Niederlagen`;
+            const synergySign =
+              t.synergy > 0 ? `+${t.synergy}%` : `${t.synergy}%`;
+
+            return `
+            <div class="stat-card-modern span-2 cinematic-entry" style="--card-accent: ${t.synergyColor}; margin-bottom:10px; animation-delay: ${0.8 + idx * 0.04}s;">
+              <div class="stat-card-main">
+                <div class="stat-card-badge-top" style="display:flex; justify-content:space-between; align-items:center;">
+                  <span>${rankBadge}</span>
+                  <span style="font-size:9.5px; opacity:0.85;">Synergie: ${synergySign}</span>
+                </div>
+                <div class="stat-card-holder-row" style="margin-top:6px; gap:8px;">
+                  <div class="stat-avatar-stack" style="display:flex; align-items:center;">${avatarStack}</div>
+                  <span class="stat-card-player-label" style="font-size:14px; font-weight:900;">${t.name}</span>
+                </div>
+                <div class="stat-card-sublabel" style="margin-top:4px;">
+                  ${t.wins} Siege / ${t.games} Spiele · ${streakText} · Ø ${t.avgRest} Restkugeln
+                </div>
+              </div>
+              <div class="stat-metric-hero" style="display:flex; flex-direction:column; align-items:flex-end; gap:3px;">
+                <div class="stat-hero-pill ${t.synergyClass}" style="font-size:14px; padding:4px 10px;">${t.wr}%</div>
+                <span style="font-size:9px; color:#8e8e93; font-weight:800; text-transform:uppercase;">Winrate</span>
+              </div>
+            </div>`;
+          })
+          .join("");
+
+        duoEl.innerHTML = `
+          <div style="grid-column: 1 / -1; margin-top: 14px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+            <div class="section-label" style="margin: 0; display: flex; align-items: center; gap: 6px;">
+              <span>👥 2:2 Duo-Chemie & Team-Synergien</span>
+            </div>
+            <span style="font-size: 10px; color: var(--accent); font-weight: 800; letter-spacing: 0.5px;">TEAM POWER</span>
+          </div>
+          ${cardsHtml}
+        `;
+      } else {
+        duoEl.innerHTML = `
+          <div style="grid-column: 1 / -1; margin-top: 10px; padding: 12px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; font-size:11px; color:#8e8e93; text-align:center;">
+            👥 2:2 Duo-Chemie: Mindestens 2 Matches mit demselben Teampartner für eine Synergie-Analyse erforderlich.
+          </div>
+        `;
+      }
     }
 
     // Render Kugel-Spezis
@@ -3861,6 +3927,104 @@ window.renderHistory = function renderHistory(statsToRender) {
 
   const sortedList = list.slice().reverse();
 
+  // Duo-Power-Ranking im Historie-Tab einblenden wenn 2:2 Filter aktiv
+  const duoRankingEl = document.getElementById("history-duo-ranking");
+  if (duoRankingEl) {
+    if (window.modeFilter === "2:2") {
+      duoRankingEl.style.display = "block";
+      const teamResults =
+        (processed.aggregates && processed.aggregates.teamResults) || {};
+      const duos = Object.entries(teamResults)
+        .map(([name, s]) => {
+          const pNames = name.split(" & ");
+          const p1 = pNames[0] || "";
+          const p2 = pNames[1] || "";
+          const duoWr = s.g ? Math.round((s.w / s.g) * 100) : 0;
+          return {
+            name,
+            p1,
+            p2,
+            games: s.g,
+            wins: s.w,
+            losses: s.l || s.g - s.w,
+            wr: duoWr,
+            maxStreak: s.maxStreak || 0,
+            currentStreak: s.currentStreak || 0,
+          };
+        })
+        .filter((t) => t.games >= 2)
+        .sort((a, b) => b.wr - a.wr || b.games - a.games || b.wins - a.wins);
+
+      if (duos.length === 0) {
+        duoRankingEl.innerHTML = `
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 14px; padding: 14px; text-align: center; color: #8e8e93; font-size: 12px;">
+            👥 <strong>Duo-Power-Ranking</strong><br>
+            <span style="font-size: 11px; opacity: 0.8;">Noch keine eingespielten Teams mit mindestens 2 Matches gefunden.</span>
+          </div>`;
+      } else {
+        const medals = ["👑", "🥈", "🥉"];
+        const rankCards = duos
+          .map((d, idx) => {
+            const medal = medals[idx] || `#${idx + 1}`;
+            const isTop1 = idx === 0;
+            const av1 =
+              typeof safeGetAvatarUrl === "function"
+                ? safeGetAvatarUrl(d.p1)
+                : `avatars/${d.p1}.webp`;
+            const av2 =
+              typeof safeGetAvatarUrl === "function"
+                ? safeGetAvatarUrl(d.p2)
+                : `avatars/${d.p2}.webp`;
+            return `
+            <div style="background: ${
+              isTop1
+                ? "linear-gradient(135deg, rgba(255, 214, 10, 0.12), rgba(255, 255, 255, 0.03))"
+                : "rgba(255, 255, 255, 0.04)"
+            }; border: 1px solid ${
+              isTop1 ? "rgba(255, 214, 10, 0.35)" : "rgba(255, 255, 255, 0.08)"
+            }; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                <span style="font-size: ${
+                  isTop1 ? "18px" : "14px"
+                }; font-weight: 800; min-width: 24px; text-align: center;">${medal}</span>
+                <div style="display: flex; position: relative; margin-right: 4px;">
+                  <img src="${av1}" style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid #0a84ff; position: relative; z-index: 2;" onerror="this.style.display='none'">
+                  <img src="${av2}" style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid #30d158; position: relative; margin-left: -10px; z-index: 1;" onerror="this.style.display='none'">
+                </div>
+                <div style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  <div style="font-size: 13px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis;">${d.name}</div>
+                  <div style="font-size: 10.5px; color: rgba(255, 255, 255, 0.6);">${d.wins}S / ${d.losses}N · ${d.games} Matches</div>
+                </div>
+              </div>
+              <div style="text-align: right; flex-shrink: 0;">
+                <div style="font-size: 14px; font-weight: 800; color: ${
+                  d.wr >= 60 ? "#30d158" : d.wr >= 45 ? "#ffd60a" : "#ff453a"
+                };">${d.wr}%</div>
+                <div style="font-size: 10px; color: #ff9f0a; font-weight: 600;">🔥 ${d.maxStreak} max</div>
+              </div>
+            </div>`;
+          })
+          .join("");
+
+        duoRankingEl.innerHTML = `
+          <div style="background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.2); border-radius: 14px; padding: 12px; margin-bottom: 4px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 16px;">👑</span>
+                <span style="font-size: 12px; font-weight: 800; color: #64d2ff; text-transform: uppercase; letter-spacing: 0.5px;">Duo-Power-Ranking (2:2)</span>
+              </div>
+              <span style="font-size: 10.5px; color: rgba(255, 255, 255, 0.5);">${duos.length} Gespanne</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              ${rankCards}
+            </div>
+          </div>`;
+      }
+    } else {
+      duoRankingEl.style.display = "none";
+    }
+  }
+
   if (sortedList.length === 0) {
     container.innerHTML =
       '<div style="text-align:center;color:#8e8e93;padding:40px;">Keine Spiele vorhanden.</div>';
@@ -3950,10 +4114,14 @@ window.renderHistory = function renderHistory(statsToRender) {
       sub2Parts.push(`<span style="color:#ffcc00;">⚡ Anstoß</span>`);
     if (ballBadge2) sub2Parts.push(`<span>${ballBadge2}</span>`);
 
+    const isTeamMatch = g.m === "2:2";
+    const teamBadge = isTeamMatch
+      ? `<span style="background: rgba(10, 132, 255, 0.2); color: #64d2ff; border: 1px solid rgba(10, 132, 255, 0.35); padding: 1px 6px; border-radius: 6px; font-size: 9.5px; font-weight: 800; margin-right: 6px;">👥 TEAM</span>`
+      : "";
     const cleanWinType = winTypeStr.replace(/^Gegner-Fehler:\s*/i, "");
     const modeWinText = isNonRegular
-      ? `<span style="color:#ff9500; font-weight:800;">⚠️ ${cleanWinType || "Gegner-Fehler"}</span>`
-      : `${g.m || "1:1"} · ${winTypeStr || "Regulärer Sieg"}`;
+      ? `<div style="display:flex; align-items:center; gap:4px;">${teamBadge}<span style="color:#ff9500; font-weight:800;">⚠️ ${cleanWinType || "Gegner-Fehler"}</span></div>`
+      : `<div style="display:flex; align-items:center; gap:4px;">${teamBadge}<span>${isTeamMatch ? "2:2" : g.m || "1:1"} · ${winTypeStr || "Regulärer Sieg"}</span></div>`;
     const calloutReason = isNonRegular
       ? ` (${cleanWinType || "Gegner-Fehler"})`
       : "";
@@ -4051,7 +4219,7 @@ window.renderAchList = (filter) => {
   const c = document.getElementById("achListContainer");
   if (c) c.scrollTop = 0;
   const pills = document.querySelectorAll("#achListModal .filter-pill");
-  const fNames = ["all", "fame", "shame", "diamond", "daily"];
+  const fNames = ["all", "fame", "shame", "diamond", "daily", "team"];
   pills.forEach((p, idx) =>
     p.classList.toggle("active", fNames[idx] === filter),
   );
@@ -4096,6 +4264,30 @@ window.renderAchList = (filter) => {
   } else if (filter === "diamond") {
     pool = pool.filter(
       (a) => a.k === "fame" && (a.max === true || (a.tier && a.tier >= 10)),
+    );
+  } else if (filter === "team") {
+    const allPoolWithDaily = [
+      ...pool,
+      ...(window.dailyFamePool || []).map((a) => ({
+        ...a,
+        k: "fame",
+        isDaily: true,
+      })),
+      ...(window.dailyShamePool || []).map((a) => ({
+        ...a,
+        k: "shame",
+        isDaily: true,
+      })),
+    ];
+    pool = allPoolWithDaily.filter(
+      (a) =>
+        a.team === true ||
+        (a.g && a.g === "Brüder im Geiste") ||
+        (a.t &&
+          (a.t.includes("Team") ||
+            a.t.includes("Duo") ||
+            a.t.includes("Brüder") ||
+            a.t.includes("Festung"))),
     );
   } else {
     // 'daily' filter
@@ -4206,6 +4398,12 @@ window.renderAchList = (filter) => {
         tierBadge = `<span class="ach-vip-badge gold">🏆 Erfolg</span>`;
         footerText = "Dauerhafter Karriere-Meilenstein";
         footerTag = `<span style="color:#30d158; font-weight:800; font-size:0.68rem;">ERFOLG</span>`;
+      }
+
+      if (a.team) {
+        tierBadge =
+          `<span class="ach-vip-badge team" style="background: rgba(10, 132, 255, 0.15); border: 1px solid rgba(10, 132, 255, 0.35); color: #64d2ff;">👥 2:2 Team</span> ` +
+          tierBadge;
       }
 
       return `

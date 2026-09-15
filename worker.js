@@ -68,17 +68,39 @@ self.onmessage = function (e) {
           last20Losses: [],
           last20WinsKiller: [],
           gameResultsHistory: [],
-        fastestWin: Infinity,
-        longestMatch: 0,
-        totalWinDuration: 0,
-        totalMatchDuration: 0,
-        gamesWithDuration: 0,
-        winsWithDuration: 0,
-        breakGames: 0,
+          fastestWin: Infinity,
+          longestMatch: 0,
+          totalWinDuration: 0,
+          totalMatchDuration: 0,
+          gamesWithDuration: 0,
+          winsWithDuration: 0,
+          breakGames: 0,
+          teamWins: 0,
+          teamGames: 0,
+          teamMaxStreak: 0,
+          teamCurrentStreak: 0,
+          teamCleanWins: 0,
+          teamClutchWins: 0,
+          teamWinRate: 0,
+          todayTeamWins: 0,
+          todayTeamGames: 0,
+          todayTeamLoseStreak: 0,
+          todayTeamMaxLoseStreak: 0,
         };
     };
 
     const matchDeltas = {};
+
+    const now = new Date();
+    const checkToday = (dateStr) => {
+      const m = String(dateStr || "").match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+      if (!m) return false;
+      return (
+        parseInt(m[1], 10) === now.getDate() &&
+        parseInt(m[2], 10) === now.getMonth() + 1 &&
+        parseInt(m[3], 10) === now.getFullYear()
+      );
+    };
 
     allMatches.forEach(({ g, i: originalIndex }) => {
       const dateStr = g.d.split(",")[0].trim();
@@ -114,7 +136,11 @@ self.onmessage = function (e) {
       const loserStr = String(g.w == 1 ? g.p2 : g.p1 || "").trim();
       const breakerString = String(g.a || "").trim();
       const rest = parseInt(g.l || 0);
-      const duration = g.durationSeconds ? Number(g.durationSeconds) : (g.duration ? Number(g.duration) * 60 : 0);
+      const duration = g.durationSeconds
+        ? Number(g.durationSeconds)
+        : g.duration
+          ? Number(g.duration) * 60
+          : 0;
 
       if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler")))
         blackWins++;
@@ -122,11 +148,11 @@ self.onmessage = function (e) {
       // Track break games per player
       if (breakerString) {
         if (p1A.includes(breakerString)) {
-          p1A.forEach(p => {
+          p1A.forEach((p) => {
             if (pData[p]) pData[p].breakGames++;
           });
         } else if (p2A.includes(breakerString)) {
-          p2A.forEach(p => {
+          p2A.forEach((p) => {
             if (pData[p]) pData[p].breakGames++;
           });
         }
@@ -208,7 +234,8 @@ self.onmessage = function (e) {
         if (duration > 0) {
           pData[p].fastestWin = Math.min(pData[p].fastestWin, duration);
         }
-        if (duration > 0) pData[p].winsWithDuration = (pData[p].winsWithDuration || 0) + 1;
+        if (duration > 0)
+          pData[p].winsWithDuration = (pData[p].winsWithDuration || 0) + 1;
         pData[p].totalWinDuration += duration;
       });
 
@@ -228,6 +255,8 @@ self.onmessage = function (e) {
           pData[p].vsWorstOpponentLosses++;
       });
 
+      const isTodayMatch = checkToday(g.d);
+
       playersInMatch.forEach((p) => {
         const isW = winners.includes(p);
         const d = pData[p];
@@ -235,6 +264,33 @@ self.onmessage = function (e) {
         d.longestMatch = Math.max(d.longestMatch, duration);
         d.totalMatchDuration += duration;
         if (duration > 0) d.gamesWithDuration = (d.gamesWithDuration || 0) + 1;
+
+        if (isTeam) {
+          d.teamGames = (d.teamGames || 0) + 1;
+          if (isTodayMatch) d.todayTeamGames = (d.todayTeamGames || 0) + 1;
+          if (isW) {
+            d.teamWins = (d.teamWins || 0) + 1;
+            d.teamCurrentStreak = (d.teamCurrentStreak || 0) + 1;
+            if (d.teamCurrentStreak > (d.teamMaxStreak || 0))
+              d.teamMaxStreak = d.teamCurrentStreak;
+            if (isTodayMatch) {
+              d.todayTeamWins = (d.todayTeamWins || 0) + 1;
+              d.todayTeamLoseStreak = 0;
+            }
+            if (rest >= 5) d.teamCleanWins = (d.teamCleanWins || 0) + 1;
+            if (rest === 1) d.teamClutchWins = (d.teamClutchWins || 0) + 1;
+          } else {
+            d.teamCurrentStreak = 0;
+            if (isTodayMatch) {
+              d.todayTeamLoseStreak = (d.todayTeamLoseStreak || 0) + 1;
+              if (d.todayTeamLoseStreak > (d.todayTeamMaxLoseStreak || 0)) {
+                d.todayTeamMaxLoseStreak = d.todayTeamLoseStreak;
+              }
+            }
+          }
+          d.teamWinRate =
+            d.teamGames > 0 ? Math.round((d.teamWins / d.teamGames) * 100) : 0;
+        }
 
         // Historie für Trends pflegen
         d.gameResultsHistory.push(isW ? 1 : 0);
@@ -342,14 +398,52 @@ self.onmessage = function (e) {
         if (isTeam && p1A.length === 2 && p2A.length === 2) {
           const t1 = [...p1A].sort().join(" & "),
             t2 = [...p2A].sort().join(" & ");
-          if (!aggregates.teamResults[t1])
-            aggregates.teamResults[t1] = { w: 0, g: 0 };
-          if (!aggregates.teamResults[t2])
-            aggregates.teamResults[t2] = { w: 0, g: 0 };
+          const initTeam = (t) => {
+            if (!aggregates.teamResults[t])
+              aggregates.teamResults[t] = {
+                w: 0,
+                l: 0,
+                g: 0,
+                restGiven: 0,
+                currentStreak: 0,
+                maxStreak: 0,
+              };
+          };
+          initTeam(t1);
+          initTeam(t2);
+
           aggregates.teamResults[t1].g++;
           aggregates.teamResults[t2].g++;
-          if (g.w == 1) aggregates.teamResults[t1].w++;
-          else aggregates.teamResults[t2].w++;
+
+          if (g.w == 1) {
+            aggregates.teamResults[t1].w++;
+            aggregates.teamResults[t2].l++;
+            aggregates.teamResults[t1].currentStreak =
+              (aggregates.teamResults[t1].currentStreak || 0) + 1;
+            if (
+              aggregates.teamResults[t1].currentStreak >
+              aggregates.teamResults[t1].maxStreak
+            ) {
+              aggregates.teamResults[t1].maxStreak =
+                aggregates.teamResults[t1].currentStreak;
+            }
+            aggregates.teamResults[t2].currentStreak = 0;
+            aggregates.teamResults[t1].restGiven += rest;
+          } else {
+            aggregates.teamResults[t2].w++;
+            aggregates.teamResults[t1].l++;
+            aggregates.teamResults[t2].currentStreak =
+              (aggregates.teamResults[t2].currentStreak || 0) + 1;
+            if (
+              aggregates.teamResults[t2].currentStreak >
+              aggregates.teamResults[t2].maxStreak
+            ) {
+              aggregates.teamResults[t2].maxStreak =
+                aggregates.teamResults[t2].currentStreak;
+            }
+            aggregates.teamResults[t1].currentStreak = 0;
+            aggregates.teamResults[t2].restGiven += rest;
+          }
         }
 
         // 3. Duelle & Angstgegner (1:1)
@@ -390,8 +484,12 @@ self.onmessage = function (e) {
       d.maxWinRate = Math.max(d.maxWinRate || 0, d.winRate);
       d.avgKiller = d.wins > 0 ? d.killerPoints / d.wins : 0;
       d.avgRest = d.games - d.wins > 0 ? d.rest / (d.games - d.wins) : 0;
-      d.avgWinDuration = d.winsWithDuration > 0 ? d.totalWinDuration / d.winsWithDuration : 0;
-      d.avgMatchDuration = d.gamesWithDuration > 0 ? d.totalMatchDuration / d.gamesWithDuration : 0;
+      d.avgWinDuration =
+        d.winsWithDuration > 0 ? d.totalWinDuration / d.winsWithDuration : 0;
+      d.avgMatchDuration =
+        d.gamesWithDuration > 0
+          ? d.totalMatchDuration / d.gamesWithDuration
+          : 0;
       // Reset if no wins, to avoid Infinity being passed around
       if (d.fastestWin === Infinity) d.fastestWin = 0;
 
