@@ -6,6 +6,83 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### 🎖️ Einheitliche Benennung: Sub-Tab „Erfolge“ in der Statistik (v26.3)
+
+- **Umbenennung von „Rekorde“ zu „Erfolge“:**
+  - Der dritte Reiter in der Statistik-Unterleiste (sowohl unter **📅 Session** als auch unter **♾️ Gesamt**) wurde in **`🎖️ Erfolge`** (zuvor _Rekorde_) umbenannt, passend zu den darin enthaltenen Rekorden, Fun-Stats und Filter-Erfolgen.
+- **Offline-Cache (v26.3):** Aktualisierung des Service-Worker-Caches auf Version 26.3.
+
+### 🛠️ Stabilitäts-Update für die Erfolge-Übersicht (v26.2)
+
+- **Reibungslose Anzeige aller Trophäen & Teams:**
+  - Behebt ein Anzeigeproblem, durch das die Erfolge-Seite und die Team-Karten in Einzelfällen nicht korrekt geladen wurden.
+  - Sowohl die Einzelspieler als auch die 2:2 Teams & Duos werden nun unter „Alle Matches“ zuverlässig und fehlerfrei gerendert.
+- **Offline-Cache (v26.2):** Aktualisierung des Service-Worker-Caches auf Version 26.2.
+
+### 🎱 Kombinierte Gesamtansicht für Einzelspieler & Duos (v26.1)
+
+- **Gemeinsame Anzeige bei „Alle Matches“:**
+  - Ist in der oberen Leiste **`🎱 Alle Matches`** ausgewählt, präsentiert der Tab **Erfolge** nun die vollständige Übersicht:
+    1. **`👤 Einzelspieler`**: Rangliste aller Einzelspieler mit Trophäen-Level und Siegen.
+    2. **`👥 2:2 Teams & Duos`**: Sämtliche festen Duos mit Doppel-Avataren, Synergie-Status und aufklappbaren gemeinsamen Erfolgen.
+- **Spezifische Modus-Filterung:**
+  - **`👤 1:1 Einzel`**: Filtert gezielt auf die Einzelspieler-Wertungen.
+  - **`👥 2:2 Team`**: Filtert gezielt auf die Teams & Duos.
+- **Offline-Cache (v26.1):** Aktualisierung des Service-Worker-Caches auf Version 26.1.
+
+### 🧹 Bereinigte Modus-Filterung & Nahtlose 2:2-Koppelung (v26.0)
+
+- **Beseitigung der doppelten Filterleiste:**
+  - Der redundante Sub-Toggle `[Einzelspieler / Teams & Duos]` wurde entfernt.
+  - Die Anzeige koppelt nun direkt an die globale Modus-Leiste ganz oben:
+    - Klick auf **`👥 2:2 Team`**: Öffnet automatisch den vollständigen **Team-Kader** mit allen Duos, Doppel-Avataren, Synergie-Status und gemeinsamen 2:2-Erfolgen.
+    - Klick auf **`🎱 Alle Matches`** oder **`👤 1:1 Einzel`**: Zeigt wie gewohnt die **Einzelspieler** (`Alle Spieler`, `Daniel`, `Peter`, `Thorsten`).
+- **Verlässliche Duo-Erkennung:**
+  - Auch Spiele mit historischem Namensformat werden nun lückenlos in die Team-Wertungen einbezogen.
+- **Offline-Cache (v26.0):** Aktualisierung des Service-Worker-Caches auf Version 26.0.
+
+### 🎯 Direkte Profil-Filterung im Erfolge-Tab (v25.9)
+
+- **Schnellwechsel in die VIP-Showcase-Ansicht:**
+  - In der Übersicht **„Alle Spieler“** klappt ein Klick auf eine Spielerkarte nicht mehr inline auf, sondern setzt direkt den Filter auf diesen Spieler (`window.setAchPlayerFilter`).
+  - Dadurch öffnet sich sofort das detaillierte **VIP-Showcase-Profil** des jeweiligen Spielers inklusive aller KPIs, Meilensteine und Kategorie-Filter.
+  - Ein Klick auf **„Alle Spieler“** in der oberen Segment-Leiste führt jederzeit direkt zurück zur Gesamtübersicht.
+- **Offline-Cache (v25.9):** Aktualisierung des Service-Worker-Caches auf Version 25.9.
+
+### 👥 Team-Kader & Duo-Erfolge im Erfolge-Tab (v25.8)
+
+- **Neuer Team-Kader-Umschalter im Tab „Erfolge“:**
+  - Im Hauptmenü **Erfolge** gibt es nun direkt oberhalb der Spielerliste einen schnellen Umschalter: **`👤 Einzelspieler`** ⟷ **`👥 Teams & Duos`**.
+- **Eigene Trophäenkarten für feste Teams (Duos):**
+  - Bei Auswahl von **Teams & Duos** wird jedes feste Duo (z. B. _Daniel & Thorsten_, _Thorsten & Peter_, _Daniel & Peter_) mit eigener Karte dargestellt:
+    - Doppel-Avatar mit farbigem Synergie-Rahmen.
+    - Synergie-Status (_🌟 Traum-Duo_, _🤝 Harmonisch_, _⚡ Krisen-Duo_) und gemeinsame Winrate.
+    - Gesamte Team-Siege (`TEAM WINS`) und gemeinsamer Level-Fortschrittsbalken.
+- **Gemeinsam errungene 2:2 Team-Erfolge:**
+  - Klickt man auf eine Team-Karte, klappt die Trophäenliste auf und zeigt exklusiv alle 2:2 Team-Erfolge (Fame & Shame mit Tier-Stufen, Zitaten und Kriterien), die dieses Duo **gemeinsam am Tisch erspielt hat**.
+- **Offline-Cache (v25.8):** Aktualisierung des Service-Worker-Caches auf Version 25.8.
+
+### 👥 Massives 2:2 Fame- & Shame-System & 10er-Tiers (v25.7)
+
+- **10er-Tier-Erweiterung für 2:2 Team-Erfolge:**
+  - Sämtliche 2:2 Team-Meilensteine wurden zu vollwertigen **10-Stufen-Tracks (Stufe I bis Stufe X ⭐)** ausgebaut:
+    - **`Brüder im Geiste I–X`**: Team-Siege von Stufe I (5 Siege) bis Stufe X (250 Siege).
+    - **`Duo-Dominanz I–X`**: Kantersiege im Team (Gegner Rest 5+) von Stufe I (1 Sieg) bis Stufe X (75 Siege).
+    - **`Team-Nervenstärke I–X`**: Matchball-Krimis im Team (Sieg bei Rest 1) von Stufe I (2 Siege) bis Stufe X (80 Siege).
+    - **`Team-Serientäter I–X`**: Ungeschlagene Serien im Doppelpack von Stufe I (2 Siege in Folge) bis Stufe X (12 Siege in Folge).
+    - **`Doppelter Champion I–X`**: Höchste Siegquoten im Doppel von Stufe I (52%) bis Stufe X (85%).
+    - **`Team-Veteran I–X`**: Absolute Treue zum Doppelspiel von Stufe I (10 Spiele) bis Stufe X (500 Spiele).
+- **Neue 2:2 All-Time Schande (Shame-Katalog):**
+  - **`Team-Klotz am Bein I–X`**: Zehnstufiger Schande-Track für gemeinsame Niederlagen (5 bis 250 Pleiten).
+  - **`Synchroner Absturz I–X`**: Zehnstufiger Schande-Track für Niederlagenserien am Stück im Team (2 bis 12 Pleiten in Folge).
+  - **`Duo-Schwarzseher`**: Schande für verfrüht versenkte schwarze Kugeln im Team.
+  - **`Duo-Abstauber`**: Schande für Siege, die ausschließlich durch gegnerische Schwarz-Fehler geerbt wurden.
+  - **`Team-Sackgasse`**: Schande bei dauerhaft unter 40% Siegquote im Doppel.
+- **Neue 2:2 Session-Erfolge (Daily Fame & Daily Shame):**
+  - **Daily Fame**: `Doppel-Hattrick`, `Duo-Express`, `Team-Feuerwalze`, `Kollaborative Abräumer`, `Duo-Nervenstärke`, `Unschlagbares Duo`, `Team-Dauerbrenner`.
+  - **Daily Shame**: `Duo-Totalausfall`, `Doppelter Tiefflug`, `Pech im Doppel`, `Team-Schwarzbrenner`.
+- **Offline-Cache (v25.7):** Aktualisierung des Service-Worker-Caches auf Version 25.7.
+
 ### 🏆 Optimiertes Session-Layout & Verlässliche Filter-Aktivierung (v25.6)
 
 - **Optimierte Bereichs-Reihenfolge auf der Session-Seite:**

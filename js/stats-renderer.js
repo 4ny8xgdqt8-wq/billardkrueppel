@@ -1105,13 +1105,12 @@ window.renderBillardStats = function (
               ${achHtmlContent}
             </div>`;
       } else {
-        // "Alle Spieler" Übersicht
+        // "Alle Spieler" Übersicht: Klick filtert direkt auf den Spieler und öffnet den VIP Showcase
         playerBoxHtml = `
-            <div class="ach-vip-all-box cinematic-entry" style="animation-delay: ${idx * 0.06}s;">
-              <div class="ach-vip-all-header" onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'flex' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);">
+            <div class="ach-vip-all-box cinematic-entry" style="animation-delay: ${idx * 0.06}s; cursor:pointer;" onclick="window.setAchPlayerFilter('${p}')">
+              <div class="ach-vip-all-header" style="cursor:pointer;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                   <div style="display:flex; align-items:center; gap:12px;">
-                    <div class="ach-chevron collapsed"></div>
                     <div class="ach-vip-avatar-wrap">
                       <img src="${safeGetAvatarUrl(p)}" class="ach-vip-avatar" style="width:44px; height:44px; border-radius:14px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'">
                       <div style="display:none; width:44px; height:44px; border-radius:14px; background:rgba(255,255,255,0.1); align-items:center; justify-content:center; font-size:20px; border:1px solid rgba(255,255,255,0.1);">👤</div>
@@ -1122,9 +1121,12 @@ window.renderBillardStats = function (
                       <div class="ach-vip-rank" style="font-size:0.7rem;">RANG ${currentLvlIndex} • ${currentLvl.title}</div>
                     </div>
                   </div>
-                  <div class="ach-vip-wins" style="padding:4px 10px; font-size:0.88rem;">
-                    ${dLvl.wins}
-                    <small>WINS</small>
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="ach-vip-wins" style="padding:4px 10px; font-size:0.88rem;">
+                      ${dLvl.wins}
+                      <small>WINS</small>
+                    </div>
+                    <span style="color:var(--accent); font-weight:900; font-size:14px;">➔</span>
                   </div>
                 </div>
 
@@ -1137,19 +1139,336 @@ window.renderBillardStats = function (
                   <span style="font-weight:900; color:#ffd60a;">${progressPercent}%</span>
                 </div>
               </div>
-
-              <div class="ach-vip-trophy-list" style="padding:0 14px 14px 14px; display:none;">
-                ${achHtmlContent}
-              </div>
             </div>`;
       }
 
       achHtml += playerBoxHtml;
     });
 
-    if (!isTodayTab && labels.length > 0) {
+    const getTeamCardsHtml = () => {
+      // Team-Ergebnisse ermitteln
+      const teamResults =
+        (proc.aggregates && proc.aggregates.teamResults) ||
+        (dataAll.aggregates && dataAll.aggregates.teamResults) ||
+        (window.careerStats &&
+          window.careerStats.aggregates &&
+          window.careerStats.aggregates.teamResults) ||
+        (window.lastProcessedStats &&
+          window.lastProcessedStats.aggregates &&
+          window.lastProcessedStats.aggregates.teamResults) ||
+        {};
+
+      // Robuster Fallback: falls noch nicht in aggregates, direkt aus window.stats ableiten
+      let effectiveTeamResults = { ...teamResults };
+      if (
+        Object.keys(effectiveTeamResults).length === 0 &&
+        Array.isArray(window.stats)
+      ) {
+        window.stats.forEach((g) => {
+          if (!g) return;
+          const isTeam =
+            g.m === "2:2" || (g.p1 && String(g.p1).includes(" & "));
+          if (isTeam) {
+            const p1A = (g.p1 ? String(g.p1).split(" & ") : [])
+              .map((s) => s.trim())
+              .filter(Boolean);
+            const p2A = (g.p2 ? String(g.p2).split(" & ") : [])
+              .map((s) => s.trim())
+              .filter(Boolean);
+            if (p1A.length === 2 && p2A.length === 2) {
+              const t1 = [...p1A].sort().join(" & ");
+              const t2 = [...p2A].sort().join(" & ");
+              if (!effectiveTeamResults[t1])
+                effectiveTeamResults[t1] = {
+                  w: 0,
+                  l: 0,
+                  g: 0,
+                  currentStreak: 0,
+                  maxStreak: 0,
+                  cleanWins: 0,
+                  clutchWins: 0,
+                  blackWins: 0,
+                  lostBy8BallError: 0,
+                  comebackWins: 0,
+                };
+              if (!effectiveTeamResults[t2])
+                effectiveTeamResults[t2] = {
+                  w: 0,
+                  l: 0,
+                  g: 0,
+                  currentStreak: 0,
+                  maxStreak: 0,
+                  cleanWins: 0,
+                  clutchWins: 0,
+                  blackWins: 0,
+                  lostBy8BallError: 0,
+                  comebackWins: 0,
+                };
+              effectiveTeamResults[t1].g++;
+              effectiveTeamResults[t2].g++;
+              const winTeam = g.w == 1 ? t1 : t2;
+              const loseTeam = g.w == 1 ? t2 : t1;
+              effectiveTeamResults[winTeam].w++;
+              effectiveTeamResults[loseTeam].l++;
+              effectiveTeamResults[winTeam].currentStreak++;
+              if (
+                effectiveTeamResults[winTeam].currentStreak >
+                effectiveTeamResults[winTeam].maxStreak
+              )
+                effectiveTeamResults[winTeam].maxStreak =
+                  effectiveTeamResults[winTeam].currentStreak;
+              effectiveTeamResults[loseTeam].currentStreak = 0;
+              const rest = typeof g.r === "number" ? g.r : 0;
+              if (rest === 7) effectiveTeamResults[winTeam].cleanWins++;
+              if (rest === 1) effectiveTeamResults[winTeam].clutchWins++;
+              if (g.b) {
+                effectiveTeamResults[winTeam].blackWins++;
+                effectiveTeamResults[loseTeam].lostBy8BallError++;
+              }
+              if (g.cb) effectiveTeamResults[winTeam].comebackWins++;
+            }
+          }
+        });
+      }
+
+      const duos = Object.entries(effectiveTeamResults)
+        .map(([tKey, s]) => {
+          const pNames = tKey.split(" & ").map((p) => p.trim());
+          const p1 = pNames[0] || "";
+          const p2 = pNames[1] || "";
+          const d1 =
+            (proc.pData && proc.pData[p1]) ||
+            (dataAll.pData && dataAll.pData[p1]) ||
+            {};
+          const d2 =
+            (proc.pData && proc.pData[p2]) ||
+            (dataAll.pData && dataAll.pData[p2]) ||
+            {};
+          const wr1 = d1.games ? (d1.wins / d1.games) * 100 : 50;
+          const wr2 = d2.games ? (d2.wins / d2.games) * 100 : 50;
+          const soloAvgWr = (wr1 + wr2) / 2;
+          const g = s.g || 0;
+          const w = s.w || 0;
+          const l = typeof s.l !== "undefined" ? s.l : Math.max(0, g - w);
+          const duoWr = g ? Math.round((w / g) * 100) : 0;
+          const synergy = Math.round(duoWr - soloAvgWr);
+
+          let synergyBadge = "🤝 Harmonisch";
+          let synergyClass = "synergy-green";
+          let synergyBorder = "#34c759";
+          if (synergy >= 6 || duoWr >= 65) {
+            synergyBadge = "🌟 Traum-Duo";
+            synergyClass = "synergy-gold";
+            synergyBorder = "#ffd60a";
+          } else if (synergy <= -6 || duoWr < 40) {
+            synergyBadge = "⚡ Krisen-Duo";
+            synergyClass = "synergy-red";
+            synergyBorder = "#ff453a";
+          }
+
+          const teamLevelSystem = [
+            { min: 0, title: "Wackel-Duo", icon: "🦯" },
+            { min: 2, title: "Kneipen-Zweier", icon: "🍺" },
+            { min: 5, title: "Banden-Zweier", icon: "🏦" },
+            { min: 9, title: "Duo-Strategen", icon: "📐" },
+            { min: 14, title: "Synchron-Könner", icon: "🎱" },
+            { min: 20, title: "Doppel-Macht", icon: "🦾" },
+            { min: 28, title: "Synchron-Meister", icon: "⚡" },
+            { min: 38, title: "Filz-Dynastie", icon: "👑" },
+            { min: 50, title: "Unbesiegbares Duo", icon: "🌌" },
+          ];
+
+          let currentLvl = teamLevelSystem[0];
+          let currentLvlIndex = 1;
+          let nextLvl = null;
+          for (let i = 0; i < teamLevelSystem.length; i++) {
+            if (w >= teamLevelSystem[i].min) {
+              currentLvl = teamLevelSystem[i];
+              currentLvlIndex = i + 1;
+              nextLvl = teamLevelSystem[i + 1] || null;
+            }
+          }
+          const progressPercent = nextLvl
+            ? Math.min(
+                100,
+                Math.round(
+                  ((w - currentLvl.min) / (nextLvl.min - currentLvl.min)) * 100,
+                ),
+              )
+            : 100;
+          const infoText = nextLvl
+            ? `Noch ${nextLvl.min - w} Siege bis ${nextLvl.title}`
+            : "Höchste Stufe erreicht!";
+
+          const teamStats = {
+            wins: w,
+            games: g,
+            losses: l,
+            teamWins: w,
+            teamLosses: l,
+            teamStreak: s.currentStreak || 0,
+            teamMaxStreak: s.maxStreak || 0,
+            teamLoseStreak: s.loseStreak || 0,
+            teamMaxLoseStreak: s.maxLoseStreak || 0,
+            teamCleanWins: s.cleanWins || 0,
+            teamClutchWins: s.clutchWins || 0,
+            teamBlackWins: s.blackWins || 0,
+            teamLostBy8BallError: s.lostBy8BallError || 0,
+            teamComebackWins: s.comebackWins || 0,
+            todayTeamGames: g,
+            todayTeamWins: w,
+            todayTeamLosses: l,
+            todayTeamStreak: s.currentStreak || 0,
+            todayTeamCleanWins: s.cleanWins || 0,
+            todayTeamClutchWins: s.clutchWins || 0,
+            todayTeamLostBy8BallError: s.lostBy8BallError || 0,
+          };
+
+          const teamAchs = [];
+          (window.famePool || []).forEach((ach) => {
+            if (ach.team && ach.cond && ach.cond(teamStats)) {
+              teamAchs.push({ ...ach, k: "fame" });
+            }
+          });
+          (window.shamePool || []).forEach((ach) => {
+            if (ach.team && ach.cond && ach.cond(teamStats)) {
+              teamAchs.push({ ...ach, k: "shame" });
+            }
+          });
+
+          return {
+            tKey,
+            p1,
+            p2,
+            g,
+            w,
+            l,
+            duoWr,
+            synergy,
+            synergyBadge,
+            synergyClass,
+            synergyBorder,
+            currentLvl,
+            currentLvlIndex,
+            progressPercent,
+            infoText,
+            teamAchs,
+          };
+        })
+        .filter((t) => t.g >= 1)
+        .sort((a, b) => b.w - a.w || b.duoWr - a.duoWr || b.g - a.g);
+
+      if (duos.length === 0) {
+        return '<div style="color:#8e8e93; text-align:center; padding:24px; font-size:12px;">Noch keine 2:2 Team-Matches in den ausgewählten Daten registriert.</div>';
+      }
+
+      return duos
+        .map((team, idx) => {
+          const isInitiallyOpen = idx === 0;
+          const trophyCardsHtml =
+            team.teamAchs.length > 0
+              ? team.teamAchs
+                  .map((ach) => {
+                    const phraseIndex = window.getFixedIndex
+                      ? window.getFixedIndex(
+                          team.tKey + ach.t,
+                          ach.d ? ach.d.length : 1,
+                        )
+                      : 0;
+                    const phrase = ach.d ? ach.d[phraseIndex] || "" : "";
+                    const isShame = ach.k === "shame";
+                    const isMaxTier = ach.tier >= 10 || ach.max;
+                    const howIcon = isShame ? "💀" : "🏆";
+                    let cardClass = isShame
+                      ? "shame"
+                      : isMaxTier
+                        ? "diamond"
+                        : ach.tier > 6
+                          ? "gold"
+                          : ach.tier > 3
+                            ? "silver"
+                            : "bronze";
+                    let tierBadge = isShame
+                      ? `<span class="ach-vip-badge shame">💀 Schande</span>`
+                      : `<span class="ach-vip-badge ${cardClass}">Tier ${ach.tier || 1}</span>`;
+
+                    return `
+                      <div class="ach-vip-card ${cardClass}" style="margin-bottom:8px;">
+                        <div class="ach-vip-icon-box">${ach.i || (isShame ? "💀" : "🏆")}</div>
+                        <div class="ach-vip-body">
+                          <div class="ach-vip-top">
+                            <span class="ach-vip-title">${ach.t || ""}${isMaxTier && !isShame ? " ⭐" : ""}</span>
+                            <div style="display:flex; align-items:center; gap:4px;">
+                              <span style="font-size:9.5px; font-weight:800; background:rgba(100,210,255,0.15); border:1px solid #64d2ff; color:#64d2ff; padding:2px 6px; border-radius:6px;">👥 Team</span>
+                              ${tierBadge}
+                            </div>
+                          </div>
+                          ${phrase ? `<div class="ach-vip-quote">„${phrase}“</div>` : ""}
+                          <div class="ach-vip-how">${howIcon} ${ach.h || ""}</div>
+                        </div>
+                      </div>
+                    `;
+                  })
+                  .join("")
+              : '<div style="color:#8e8e93; font-size:11px; text-align:center; padding:14px; font-style:italic;">Dieses Team hat noch keine 2:2 Team-Erfolge freigeschaltet.</div>';
+
+          return `
+            <div class="ach-vip-all-box cinematic-entry" style="margin-bottom:14px; animation-delay: ${idx * 0.06}s; border:1px solid rgba(255,255,255,0.08);">
+              <div class="ach-vip-all-header" style="cursor:pointer;" onclick="const content = this.nextElementSibling; const chevron = this.querySelector('.ach-chevron'); const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'flex' : 'none'; chevron.classList.toggle('expanded', isHidden); chevron.classList.toggle('collapsed', !isHidden);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="ach-chevron ${isInitiallyOpen ? "expanded" : "collapsed"}"></div>
+                    <div class="avatar-stack-wrap">
+                      <img src="${safeGetAvatarUrl(team.p1)}" class="avatar-stack-item" style="border:2px solid ${team.synergyBorder};" onerror="this.style.display='none'">
+                      <img src="${safeGetAvatarUrl(team.p2)}" class="avatar-stack-item" style="border:2px solid ${team.synergyBorder};" onerror="this.style.display='none'">
+                    </div>
+                    <div>
+                      <div class="ach-vip-name" style="font-size:1.1rem; display:flex; align-items:center; gap:6px;">
+                        ${team.tKey}
+                      </div>
+                      <div style="display:flex; align-items:center; gap:6px; margin-top:2px;">
+                        <span class="synergy-pill ${team.synergyClass}">${team.synergyBadge}</span>
+                        <span style="font-size:10px; color:#8e8e93; font-weight:700;">${team.duoWr}% Winrate</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ach-vip-wins" style="padding:5px 12px; font-size:0.9rem;">
+                    ${team.w}
+                    <small>TEAM WINS</small>
+                  </div>
+                </div>
+
+                <div class="ach-vip-progress-bar" style="margin-bottom:6px; height:6px;">
+                  <div class="ach-vip-progress-fill" style="width:${team.progressPercent}%; background:${team.synergyBorder};"></div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; color:#8e8e93;">
+                  <span>${team.infoText}</span>
+                  <span style="font-weight:900; color:#ffd60a;">${team.progressPercent}%</span>
+                </div>
+              </div>
+
+              <!-- Aufklappbare Team-Trophäenliste -->
+              <div class="ach-vip-trophy-list" style="padding:0 14px 14px 14px; display:${isInitiallyOpen ? "flex" : "none"}; flex-direction:column;">
+                <div style="font-size:10px; font-weight:800; color:#64d2ff; text-transform:uppercase; letter-spacing:1px; margin: 8px 0 10px 0;">
+                  👥 Gemeinsam erspielte Team-Erfolge (${team.teamAchs.length})
+                </div>
+                ${trophyCardsHtml}
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+    };
+
+    if (!isTodayTab) {
+      const isTeamMode = window.modeFilter === "2:2";
+      const isSingleMode = window.modeFilter === "1:1";
       const activePlayer = window.activeAchPlayer || "all";
-      const segmentBarHtml = `
+
+      const segmentBarHtml =
+        labels.length > 0
+          ? `
         <div class="player-segment-bar">
           <button class="player-segment-btn ${activePlayer === "all" ? "active" : ""}" onclick="window.setAchPlayerFilter('all')">
             <span style="font-size:14px;">👑</span> <span>Alle Spieler</span>
@@ -1165,8 +1484,52 @@ window.renderBillardStats = function (
             )
             .join("")}
         </div>
+      `
+          : "";
+
+      // Fall 1: Nur 2:2 Team ausgewählt
+      if (isTeamMode) {
+        return `
+          <div class="section-label" style="margin: 6px 0 12px 0; font-size: 0.82rem; color: #64d2ff; font-weight: 900; text-transform: uppercase; letter-spacing: 0.8px;">
+            👥 2:2 Teams & Duos
+          </div>
+          ${getTeamCardsHtml()}
+        `;
+      }
+
+      // Fall 2: Nur 1:1 Einzel ausgewählt
+      if (isSingleMode) {
+        return (
+          segmentBarHtml +
+          (activePlayer === "all"
+            ? `
+            <div class="section-label" style="margin: 6px 0 10px 0; font-size: 0.82rem; color: #ffd60a; font-weight: 900; text-transform: uppercase; letter-spacing: 0.8px;">
+              👤 1:1 Einzelspieler
+            </div>
+            ${achHtml}
+          `
+            : achHtml)
+        );
+      }
+
+      // Fall 3: Alle Matches ausgewählt (Standard) -> Zeige BEIDE (1:1 und 2:2)!
+      if (activePlayer !== "all") {
+        // Spieler-Einzelauswahl (VIP Showcase)
+        return segmentBarHtml + achHtml;
+      }
+
+      // Übersicht "Alle Spieler": Zeigt sowohl die Einzelspieler als auch die Teams & Duos untereinander!
+      return `
+        ${segmentBarHtml}
+        <div class="section-label" style="margin: 10px 0 8px 0; font-size: 0.82rem; color: #ffd60a; font-weight: 900; text-transform: uppercase; letter-spacing: 0.8px;">
+          👤 Einzelspieler
+        </div>
+        ${achHtml}
+        <div class="section-label" style="margin: 22px 0 10px 0; font-size: 0.82rem; color: #64d2ff; font-weight: 900; text-transform: uppercase; letter-spacing: 0.8px;">
+          👥 2:2 Teams & Duos
+        </div>
+        ${getTeamCardsHtml()}
       `;
-      achHtml = segmentBarHtml + achHtml;
     }
 
     return (

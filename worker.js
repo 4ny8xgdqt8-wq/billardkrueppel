@@ -77,13 +77,25 @@ self.onmessage = function (e) {
           breakGames: 0,
           teamWins: 0,
           teamGames: 0,
+          teamLosses: 0,
           teamMaxStreak: 0,
           teamCurrentStreak: 0,
+          teamLoseStreak: 0,
+          teamMaxLoseStreak: 0,
           teamCleanWins: 0,
           teamClutchWins: 0,
+          teamBlackWins: 0,
+          teamLostBy8BallError: 0,
           teamWinRate: 0,
           todayTeamWins: 0,
           todayTeamGames: 0,
+          todayTeamLosses: 0,
+          todayTeamCurrentStreak: 0,
+          todayTeamMaxStreak: 0,
+          todayTeamCleanWins: 0,
+          todayTeamClutchWins: 0,
+          todayTeamBlackWins: 0,
+          todayTeamLostBy8BallError: 0,
           todayTeamLoseStreak: 0,
           todayTeamMaxLoseStreak: 0,
         };
@@ -110,7 +122,7 @@ self.onmessage = function (e) {
           ? `${dp[2]}-${dp[1].padStart(2, "0")}-${dp[0].padStart(2, "0")}`
           : "unknown";
 
-      const isTeam = g.m === "2:2";
+      const isTeam = g.m === "2:2" || (g.p1 && String(g.p1).includes(" & "));
       const p1A = (isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1])
         .map((s) => String(s || "").trim())
         .filter(Boolean); // Sicherstellen, dass Namen getrimmt und leere entfernt werden
@@ -273,21 +285,58 @@ self.onmessage = function (e) {
             d.teamCurrentStreak = (d.teamCurrentStreak || 0) + 1;
             if (d.teamCurrentStreak > (d.teamMaxStreak || 0))
               d.teamMaxStreak = d.teamCurrentStreak;
+            d.teamLoseStreak = 0;
             if (isTodayMatch) {
               d.todayTeamWins = (d.todayTeamWins || 0) + 1;
+              d.todayTeamCurrentStreak = (d.todayTeamCurrentStreak || 0) + 1;
+              if (d.todayTeamCurrentStreak > (d.todayTeamMaxStreak || 0))
+                d.todayTeamMaxStreak = d.todayTeamCurrentStreak;
               d.todayTeamLoseStreak = 0;
             }
             if (rest >= 5) d.teamCleanWins = (d.teamCleanWins || 0) + 1;
             if (rest === 1) d.teamClutchWins = (d.teamClutchWins || 0) + 1;
+            if (rest >= 5) {
+              d.teamCleanWins = (d.teamCleanWins || 0) + 1;
+              if (isTodayMatch)
+                d.todayTeamCleanWins = (d.todayTeamCleanWins || 0) + 1;
+            }
+            if (rest === 1) {
+              d.teamClutchWins = (d.teamClutchWins || 0) + 1;
+              if (isTodayMatch)
+                d.todayTeamClutchWins = (d.todayTeamClutchWins || 0) + 1;
+            }
+            if (
+              g.t &&
+              (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler"))
+            ) {
+              d.teamBlackWins = (d.teamBlackWins || 0) + 1;
+              if (isTodayMatch)
+                d.todayTeamBlackWins = (d.todayTeamBlackWins || 0) + 1;
+            }
           } else {
             d.teamCurrentStreak = 0;
+            d.teamLoseStreak = (d.teamLoseStreak || 0) + 1;
+            if (d.teamLoseStreak > (d.teamMaxLoseStreak || 0))
+              d.teamMaxLoseStreak = d.teamLoseStreak;
             if (isTodayMatch) {
+              d.todayTeamCurrentStreak = 0;
               d.todayTeamLoseStreak = (d.todayTeamLoseStreak || 0) + 1;
               if (d.todayTeamLoseStreak > (d.todayTeamMaxLoseStreak || 0)) {
                 d.todayTeamMaxLoseStreak = d.todayTeamLoseStreak;
               }
             }
+            if (g.t && g.t.includes("Schwarz")) {
+              d.teamLostBy8BallError = (d.teamLostBy8BallError || 0) + 1;
+              if (isTodayMatch)
+                d.todayTeamLostBy8BallError =
+                  (d.todayTeamLostBy8BallError || 0) + 1;
+            }
           }
+          d.teamLosses = Math.max(0, (d.teamGames || 0) - (d.teamWins || 0));
+          d.todayTeamLosses = Math.max(
+            0,
+            (d.todayTeamGames || 0) - (d.todayTeamWins || 0),
+          );
           d.teamWinRate =
             d.teamGames > 0 ? Math.round((d.teamWins / d.teamGames) * 100) : 0;
         }
@@ -407,6 +456,13 @@ self.onmessage = function (e) {
                 restGiven: 0,
                 currentStreak: 0,
                 maxStreak: 0,
+                loseStreak: 0,
+                maxLoseStreak: 0,
+                cleanWins: 0,
+                clutchWins: 0,
+                blackWins: 0,
+                lostBy8BallError: 0,
+                comebackWins: 0,
               };
           };
           initTeam(t1);
@@ -415,35 +471,42 @@ self.onmessage = function (e) {
           aggregates.teamResults[t1].g++;
           aggregates.teamResults[t2].g++;
 
-          if (g.w == 1) {
-            aggregates.teamResults[t1].w++;
-            aggregates.teamResults[t2].l++;
-            aggregates.teamResults[t1].currentStreak =
-              (aggregates.teamResults[t1].currentStreak || 0) + 1;
-            if (
-              aggregates.teamResults[t1].currentStreak >
-              aggregates.teamResults[t1].maxStreak
-            ) {
-              aggregates.teamResults[t1].maxStreak =
-                aggregates.teamResults[t1].currentStreak;
-            }
-            aggregates.teamResults[t2].currentStreak = 0;
-            aggregates.teamResults[t1].restGiven += rest;
-          } else {
-            aggregates.teamResults[t2].w++;
-            aggregates.teamResults[t1].l++;
-            aggregates.teamResults[t2].currentStreak =
-              (aggregates.teamResults[t2].currentStreak || 0) + 1;
-            if (
-              aggregates.teamResults[t2].currentStreak >
-              aggregates.teamResults[t2].maxStreak
-            ) {
-              aggregates.teamResults[t2].maxStreak =
-                aggregates.teamResults[t2].currentStreak;
-            }
-            aggregates.teamResults[t1].currentStreak = 0;
-            aggregates.teamResults[t2].restGiven += rest;
+          const winTeam = g.w == 1 ? t1 : t2;
+          const loseTeam = g.w == 1 ? t2 : t1;
+
+          aggregates.teamResults[winTeam].w++;
+          aggregates.teamResults[loseTeam].l++;
+
+          aggregates.teamResults[winTeam].currentStreak =
+            (aggregates.teamResults[winTeam].currentStreak || 0) + 1;
+          if (
+            aggregates.teamResults[winTeam].currentStreak >
+            aggregates.teamResults[winTeam].maxStreak
+          ) {
+            aggregates.teamResults[winTeam].maxStreak =
+              aggregates.teamResults[winTeam].currentStreak;
           }
+          aggregates.teamResults[winTeam].loseStreak = 0;
+          aggregates.teamResults[winTeam].restGiven += rest;
+
+          aggregates.teamResults[loseTeam].currentStreak = 0;
+          aggregates.teamResults[loseTeam].loseStreak =
+            (aggregates.teamResults[loseTeam].loseStreak || 0) + 1;
+          if (
+            aggregates.teamResults[loseTeam].loseStreak >
+            aggregates.teamResults[loseTeam].maxLoseStreak
+          ) {
+            aggregates.teamResults[loseTeam].maxLoseStreak =
+              aggregates.teamResults[loseTeam].loseStreak;
+          }
+
+          if (rest === 7) aggregates.teamResults[winTeam].cleanWins++;
+          if (rest === 1) aggregates.teamResults[winTeam].clutchWins++;
+          if (g.b) {
+            aggregates.teamResults[winTeam].blackWins++;
+            aggregates.teamResults[loseTeam].lostBy8BallError++;
+          }
+          if (g.cb) aggregates.teamResults[winTeam].comebackWins++;
         }
 
         // 3. Duelle & Angstgegner (1:1)
