@@ -4276,3 +4276,248 @@ select option {
   box-shadow: 0 0 16px rgba(100, 210, 255, 0.35);
   color: #ffffff !important;
 }
+
+/* ==========================================================================
+   Concept 2: Feste 2-Zeilen Segment-Bar (Modus & Zeit)
+   ========================================================================== */
+.segment-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 5px 6px;
+  margin: 0 0 10px 0;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.segment-row {
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 2.5px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.segment-btn {
+  flex: 1;
+  padding: 5px 6px;
+  border-radius: 7px;
+  border: none;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  cursor: pointer;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  transition: all 0.2s ease;
+  text-align: center;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.segment-btn:hover {
+  color: #ffffff;
+}
+
+.segment-btn.active {
+  background: #0a84ff !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(10, 132, 255, 0.35);
+}
+
+.segment-btn.active-gold {
+  background: var(--accent) !important;
+  color: #000000 !important;
+  box-shadow: 0 2px 10px rgba(255, 204, 0, 0.35);
+}
+
+/* Modal Dialog für 'Mehr...' Filter & Zeitbereiche */
+.segment-popunder-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+.segment-popunder-backdrop.open {
+  display: flex;
+  opacity: 1;
+}
+
+.segment-popunder-menu {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(22, 24, 31, 0.95);
+  backdrop-filter: blur(25px) saturate(150%);
+  -webkit-backdrop-filter: blur(25px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  padding: 20px 18px 24px 18px;
+  max-height: 85vh;
+  overflow-y: auto;
+  transform: scale(0.94);
+  opacity: 0;
+  transition:
+    transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
+}
+
+.segment-popunder-backdrop.open .segment-popunder-menu {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.popunder-drag-handle {
+  display: none;
+}
+
+.popunder-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.popunder-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.popunder-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popunder-section-label,
+.sheet-section-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+
+.sheet-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.sheet-chip-btn,
+.popunder-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 7px 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.sheet-chip-btn:hover,
+.popunder-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+
+.sheet-chip-btn.active {
+  background: #0a84ff !important;
+  color: #ffffff !important;
+  border-color: #0a84ff !important;
+  box-shadow: 0 2px 10px rgba(10, 132, 255, 0.35);
+}
+
+.sheet-chip-btn.active-gold,
+.popunder-btn.active {
+  background: var(--accent) !important;
+  color: #000000 !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 2px 10px rgba(255, 204, 0, 0.35);
+}
+
+.sheet-sessions-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sheet-sessions-row::-webkit-scrollbar {
+  display: none;
+}
+
+.sheet-actions-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.sheet-action-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.sheet-action-btn.btn-reset {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.sheet-action-btn.btn-reset:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.sheet-action-btn.btn-apply {
+  background: var(--accent);
+  color: #000;
+  box-shadow: 0 4px 15px rgba(255, 204, 0, 0.3);
+}
+
+.sheet-action-btn.btn-apply:hover {
+  filter: brightness(1.1);
+}

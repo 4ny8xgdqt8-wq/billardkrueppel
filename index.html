@@ -732,16 +732,9 @@
                 onerror="this.style.display = 'none'"
               />
             </div>
-            <div
-              class="title-stack"
-              onclick="window.toggleHeaderFilter(this)"
-              style="cursor: pointer"
-            >
+            <div class="title-stack">
               <div class="main-title">Historie</div>
               <div class="sub-title">Letzte Partien</div>
-              <div class="filter-toggle-bar">
-                Zeitraum filtern <span class="filter-chevron">▼</span>
-              </div>
             </div>
             <div class="header-side right">
               <button
@@ -754,138 +747,71 @@
                 🔄
               </button>
             </div>
-            <div class="filter-row">
-              <button
-                class="filter-reset-btn"
-                onclick="window.handleFilterChange('all')"
-              >
-                RESET
-              </button>
-              <div class="filter-controls-stack">
-                <div style="display: flex; gap: 8px">
-                  <div class="filter-dropdown-col" style="flex: 1">
-                    <label>Zeitraum</label>
-                    <select
-                      class="time-filter-select"
-                      onchange="window.handleFilterChange(this.value)"
-                    >
-                      <option value="all">Gesamt</option>
-                      <option value="month">Aktueller Monat</option>
-                      <option value="quarter">Aktuelles Quartal</option>
-                      <option value="year">Aktuelles Jahr</option>
-                      <option value="30days">Letzte 30 Tage</option>
-                      <option value="60days">Letzte 60 Tage</option>
-                      <option value="90days">Letzte 90 Tage</option>
-                      <option value="lastMonth">Letzter Monat</option>
-                      <option value="lastQuarter">Letztes Quartal</option>
-                      <option value="lastYear">Letztes Jahr</option>
-                    </select>
-                  </div>
-                  <div class="filter-dropdown-col" style="flex: 1">
-                    <label>Spieleabend</label>
-                    <select
-                      class="extra-filter-select"
-                      onchange="window.handleExtraFilterChange(this.value)"
-                    >
-                      <option value="all">Alle Tage</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="filter-date-col">
-                  <label>Von - Bis</label>
-                  <div style="display: flex; gap: 4px">
-                    <input
-                      type="date"
-                      id="date-start-hist"
-                      class="custom-date-input custom-date-start"
-                      onchange="window.handleCustomDateChange()"
-                      onclick="this.showPicker?.()"
-                    />
-                    <input
-                      type="date"
-                      id="date-end-hist"
-                      class="custom-date-input custom-date-end"
-                      onchange="window.handleCustomDateChange()"
-                      onclick="this.showPicker?.()"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
-          <!-- 2:2 Modus-Schnellfilter & Duo-Power-Ranking Container -->
-          <div
-            class="history-mode-filter-bar"
-            style="
-              display: flex;
-              gap: 6px;
-              margin: 0 16px 12px 16px;
-              background: rgba(255, 255, 255, 0.04);
-              padding: 4px;
-              border-radius: 12px;
-              border: 1px solid rgba(255, 255, 255, 0.08);
-            "
-          >
-            <button
-              type="button"
-              class="btn-mode-filter active"
-              data-mode="all"
-              onclick="window.handleModeFilter('all')"
-              style="
-                flex: 1;
-                padding: 7px 10px;
-                border-radius: 8px;
-                border: none;
-                font-size: 11px;
-                font-weight: 700;
-                cursor: pointer;
-                background: #0a84ff;
-                color: #ffffff;
-                transition: all 0.2s ease;
-              "
-            >
-              Alle Matches
-            </button>
-            <button
-              type="button"
-              class="btn-mode-filter"
-              data-mode="1:1"
-              onclick="window.handleModeFilter('1:1')"
-              style="
-                flex: 1;
-                padding: 7px 10px;
-                border-radius: 8px;
-                border: none;
-                font-size: 11px;
-                font-weight: 700;
-                cursor: pointer;
-                background: transparent;
-                color: rgba(255, 255, 255, 0.65);
-                transition: all 0.2s ease;
-              "
-            >
-              1:1 Einzel
-            </button>
-            <button
-              type="button"
-              class="btn-mode-filter"
-              data-mode="2:2"
-              onclick="window.handleModeFilter('2:2')"
-              style="
-                flex: 1;
-                padding: 7px 10px;
-                border-radius: 8px;
-                border: none;
-                font-size: 11px;
-                font-weight: 700;
-                cursor: pointer;
-                background: transparent;
-                color: rgba(255, 255, 255, 0.65);
-                transition: all 0.2s ease;
-              "
-            >
-              👥 2:2 Team
-            </button>
+
+          <!-- 2-Zeilen Segment-Bar (Modus & Zeit) -->
+          <div class="segment-control-group" style="margin: 0 16px 10px 16px">
+            <!-- Zeile 1: Modus -->
+            <div class="segment-row">
+              <button
+                type="button"
+                class="segment-btn segment-btn-mode active"
+                data-mode="all"
+                onclick="window.setGlobalModeFilter('all')"
+              >
+                🎱 Alle Matches
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn-mode"
+                data-mode="1:1"
+                onclick="window.setGlobalModeFilter('1:1')"
+              >
+                👤 1:1 Einzel
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn-mode"
+                data-mode="2:2"
+                onclick="window.setGlobalModeFilter('2:2')"
+              >
+                👥 2:2 Team
+              </button>
+            </div>
+            <!-- Zeile 2: Zeitraum -->
+            <div class="segment-row">
+              <button
+                type="button"
+                class="segment-btn segment-btn-time active-gold"
+                data-time="all"
+                onclick="window.setGlobalTimeFilter('all')"
+              >
+                🌐 Gesamt
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn-time"
+                data-time="today"
+                onclick="window.setGlobalTimeFilter('today')"
+              >
+                📅 Session
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn-time"
+                data-time="30days"
+                onclick="window.setGlobalTimeFilter('30days')"
+              >
+                ⏳ 30 Tage
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn-time segment-btn-time-more"
+                onclick="window.openMoreFilterMenu()"
+              >
+                ⚙️ Mehr...
+              </button>
+            </div>
           </div>
           <div
             id="history-duo-ranking"
@@ -905,16 +831,9 @@
                 onerror="this.style.display = 'none'"
               />
             </div>
-            <div
-              class="title-stack"
-              onclick="window.toggleHeaderFilter(this)"
-              style="cursor: pointer"
-            >
+            <div class="title-stack">
               <div class="main-title" id="stat-title">Statistik</div>
               <div class="sub-title">Analysen</div>
-              <div class="filter-toggle-bar">
-                Zeitraum filtern <span class="filter-chevron">▼</span>
-              </div>
             </div>
             <div class="header-side right">
               <button
@@ -927,97 +846,74 @@
                 🔄
               </button>
             </div>
-            <div class="filter-row">
+          </div>
+
+          <!-- 2-Zeilen Segment-Bar (Modus & Zeit) -->
+          <div class="segment-control-group">
+            <!-- Zeile 1: Modus -->
+            <div class="segment-row">
               <button
-                class="filter-reset-btn"
-                onclick="window.handleFilterChange('all')"
+                type="button"
+                class="segment-btn segment-btn-mode active"
+                data-mode="all"
+                onclick="window.setGlobalModeFilter('all')"
               >
-                RESET
+                🎱 Alle Matches
               </button>
-              <div class="filter-controls-stack">
-                <div style="display: flex; gap: 8px">
-                  <div class="filter-dropdown-col" style="flex: 1">
-                    <label>Zeitraum</label>
-                    <select
-                      class="time-filter-select"
-                      onchange="window.handleFilterChange(this.value)"
-                    >
-                      <option value="all">Gesamt</option>
-                      <option value="month">Aktueller Monat</option>
-                      <option value="quarter">Aktuelles Quartal</option>
-                      <option value="year">Aktuelles Jahr</option>
-                      <option value="30days">Letzte 30 Tage</option>
-                      <option value="60days">Letzte 60 Tage</option>
-                      <option value="90days">Letzte 90 Tage</option>
-                      <option value="lastMonth">Letzter Monat</option>
-                      <option value="lastQuarter">Letztes Quartal</option>
-                      <option value="lastYear">Letztes Jahr</option>
-                    </select>
-                  </div>
-                  <div class="filter-dropdown-col" style="flex: 1">
-                    <label>Spieleabend</label>
-                    <select
-                      class="extra-filter-select"
-                      onchange="window.handleExtraFilterChange(this.value)"
-                    >
-                      <option value="all">Alle Tage</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="filter-date-col">
-                  <label>Von - Bis</label>
-                  <div style="display: flex; gap: 4px">
-                    <input
-                      type="date"
-                      id="date-start-stat"
-                      class="custom-date-input custom-date-start"
-                      onchange="window.handleCustomDateChange()"
-                      onclick="this.showPicker?.()"
-                    />
-                    <input
-                      type="date"
-                      id="date-end-stat"
-                      class="custom-date-input custom-date-end"
-                      onchange="window.handleCustomDateChange()"
-                      onclick="this.showPicker?.()"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tagessieger Podium (im Session-Tab dauerhaft über den Sub-Tabs sichtbar) -->
-          <div
-            class="card cinematic-entry card-hud tagessieger-pulse"
-            style="
-              text-align: center;
-              cursor: pointer;
-              margin-bottom: 12px;
-              display: none;
-            "
-            id="stat-daily-winner-card"
-            onclick="window.showDailyWinnerInfo()"
-          >
-            <div
-              style="
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 6px;
-              "
-            >
-              <label style="margin-bottom: 0">🏆 Tagessieger</label>
-              <span style="font-size: 10px; color: rgba(255, 255, 255, 0.4)"
-                >ⓘ</span
+              <button
+                type="button"
+                class="segment-btn segment-btn-mode"
+                data-mode="1:1"
+                onclick="window.setGlobalModeFilter('1:1')"
               >
+                👤 1:1 Einzel
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn-mode"
+                data-mode="2:2"
+                onclick="window.setGlobalModeFilter('2:2')"
+              >
+                👥 2:2 Team
+              </button>
             </div>
-            <div
-              id="stat-daily-winner"
-              style="width: 100%; margin-top: 4px"
-            ></div>
+            <!-- Zeile 2: Zeitraum -->
+            <div class="segment-row" id="stat-segment-time-row">
+              <button
+                type="button"
+                class="segment-btn segment-btn-time active-gold"
+                data-time="all"
+                onclick="window.setGlobalTimeFilter('all')"
+              >
+                🌐 Gesamt
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn-time"
+                data-time="today"
+                onclick="window.setGlobalTimeFilter('today')"
+              >
+                📅 Session
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn-time"
+                data-time="30days"
+                onclick="window.setGlobalTimeFilter('30days')"
+              >
+                ⏳ 30 Tage
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn-time segment-btn-time-more"
+                onclick="window.openMoreFilterMenu()"
+              >
+                ⚙️ Mehr...
+              </button>
+            </div>
           </div>
 
+          <!-- Sub-Tab Bar (Rangliste, Duelle, Rekorde, Kugeln) -->
           <div class="stat-subtab-bar">
             <button
               class="stat-subtab-btn active"
@@ -1051,6 +947,37 @@
               <span class="subtab-icon">🎱</span>
               <span>Kugeln</span>
             </button>
+          </div>
+
+          <!-- Tagessieger Podium (im Session-Tab unter der Sub-Tab-Bar sichtbar) -->
+          <div
+            class="card cinematic-entry card-hud tagessieger-pulse"
+            style="
+              text-align: center;
+              cursor: pointer;
+              margin-bottom: 12px;
+              display: none;
+            "
+            id="stat-daily-winner-card"
+            onclick="window.showDailyWinnerInfo()"
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 6px;
+              "
+            >
+              <label style="margin-bottom: 0">🏆 Tagessieger</label>
+              <span style="font-size: 10px; color: rgba(255, 255, 255, 0.4)"
+                >ⓘ</span
+              >
+            </div>
+            <div
+              id="stat-daily-winner"
+              style="width: 100%; margin-top: 4px"
+            ></div>
           </div>
 
           <div id="stat-content-wrapper">
@@ -1551,6 +1478,81 @@
 
             <!-- SUBTAB 4: 🎱 KUGELN & BREAK -->
             <div id="stat-subtab-balls" class="stat-subtab-content">
+              <!-- Modus-Filter für Kugel-Statistiken -->
+              <div
+                id="ball-stats-mode-filter-bar"
+                style="
+                  display: flex;
+                  gap: 6px;
+                  margin-bottom: 14px;
+                  background: rgba(255, 255, 255, 0.04);
+                  padding: 4px;
+                  border-radius: 12px;
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                "
+              >
+                <button
+                  type="button"
+                  class="btn-ball-mode-filter active"
+                  data-ball-mode="all"
+                  onclick="window.setBallStatsMode('all')"
+                  style="
+                    flex: 1;
+                    padding: 7px 10px;
+                    border-radius: 8px;
+                    border: none;
+                    font-size: 11px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    background: #0a84ff;
+                    color: #ffffff;
+                    transition: all 0.2s ease;
+                  "
+                >
+                  🎱 Alle Modi
+                </button>
+                <button
+                  type="button"
+                  class="btn-ball-mode-filter"
+                  data-ball-mode="1:1"
+                  onclick="window.setBallStatsMode('1:1')"
+                  style="
+                    flex: 1;
+                    padding: 7px 10px;
+                    border-radius: 8px;
+                    border: none;
+                    font-size: 11px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    background: transparent;
+                    color: rgba(255, 255, 255, 0.65);
+                    transition: all 0.2s ease;
+                  "
+                >
+                  👤 1:1 Einzel
+                </button>
+                <button
+                  type="button"
+                  class="btn-ball-mode-filter"
+                  data-ball-mode="2:2"
+                  onclick="window.setBallStatsMode('2:2')"
+                  style="
+                    flex: 1;
+                    padding: 7px 10px;
+                    border-radius: 8px;
+                    border: none;
+                    font-size: 11px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    background: transparent;
+                    color: rgba(255, 255, 255, 0.65);
+                    transition: all 0.2s ease;
+                  "
+                >
+                  👥 2:2 Team
+                </button>
+              </div>
+
               <div
                 class="stat-cards-grid"
                 style="
@@ -1778,16 +1780,9 @@
                 onerror="this.style.display = 'none'"
               />
             </div>
-            <div
-              class="title-stack"
-              onclick="window.toggleHeaderFilter(this)"
-              style="cursor: pointer"
-            >
+            <div class="title-stack">
               <div class="main-title">Hall of Fame & Shame</div>
               <div class="sub-title">Bestenliste</div>
-              <div class="filter-toggle-bar">
-                Zeitraum filtern <span class="filter-chevron">▼</span>
-              </div>
             </div>
             <div class="header-side right">
               <button
@@ -1800,63 +1795,70 @@
                 🔄
               </button>
             </div>
-            <div class="filter-row">
+          </div>
+
+          <!-- 2-Zeilen Segment-Bar (Modus & Zeit) -->
+          <div class="segment-control-group" style="margin: 0 16px 10px 16px">
+            <!-- Zeile 1: Modus -->
+            <div class="segment-row">
               <button
-                class="filter-reset-btn"
-                onclick="window.handleFilterChange('all')"
+                type="button"
+                class="segment-btn segment-btn-mode active"
+                data-mode="all"
+                onclick="window.setGlobalModeFilter('all')"
               >
-                RESET
+                🎱 Alle Matches
               </button>
-              <div class="filter-controls-stack">
-                <div style="display: flex; gap: 8px">
-                  <div class="filter-dropdown-col" style="flex: 1">
-                    <label>Zeitraum</label>
-                    <select
-                      class="time-filter-select"
-                      onchange="window.handleFilterChange(this.value)"
-                    >
-                      <option value="all">Gesamt</option>
-                      <option value="month">Aktueller Monat</option>
-                      <option value="quarter">Aktuelles Quartal</option>
-                      <option value="year">Aktuelles Jahr</option>
-                      <option value="30days">Letzte 30 Tage</option>
-                      <option value="60days">Letzte 60 Tage</option>
-                      <option value="90days">Letzte 90 Tage</option>
-                      <option value="lastMonth">Letzter Monat</option>
-                      <option value="lastQuarter">Letztes Quartal</option>
-                      <option value="lastYear">Letztes Jahr</option>
-                    </select>
-                  </div>
-                  <div class="filter-dropdown-col" style="flex: 1">
-                    <label>Spieleabend</label>
-                    <select
-                      class="extra-filter-select"
-                      onchange="window.handleExtraFilterChange(this.value)"
-                    >
-                      <option value="all">Alle Tage</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="filter-date-col">
-                  <label>Von - Bis</label>
-                  <div style="display: flex; gap: 4px">
-                    <input
-                      type="date"
-                      id="date-start-erfolge"
-                      class="custom-date-input custom-date-start"
-                      onchange="window.handleCustomDateChange()"
-                      onclick="this.showPicker?.()"
-                    />
-                    <input
-                      type="date"
-                      id="date-end-erfolge"
-                      class="custom-date-input custom-date-end"
-                      onchange="window.handleCustomDateChange()"
-                      onclick="this.showPicker?.()"
-                    />
-                  </div>
-                </div>
-              </div>
+              <button
+                type="button"
+                class="segment-btn segment-btn-mode"
+                data-mode="1:1"
+                onclick="window.setGlobalModeFilter('1:1')"
+              >
+                👤 1:1 Einzel
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn-mode"
+                data-mode="2:2"
+                onclick="window.setGlobalModeFilter('2:2')"
+              >
+                👥 2:2 Team
+              </button>
+            </div>
+            <!-- Zeile 2: Zeitraum -->
+            <div class="segment-row">
+              <button
+                type="button"
+                class="segment-btn segment-btn-time active-gold"
+                data-time="all"
+                onclick="window.setGlobalTimeFilter('all')"
+              >
+                🌐 Gesamt
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn-time"
+                data-time="today"
+                onclick="window.setGlobalTimeFilter('today')"
+              >
+                📅 Session
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn-time"
+                data-time="30days"
+                onclick="window.setGlobalTimeFilter('30days')"
+              >
+                ⏳ 30 Tage
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn-time segment-btn-time-more"
+                onclick="window.openMoreFilterMenu()"
+              >
+                ⚙️ Mehr...
+              </button>
             </div>
           </div>
 
@@ -4170,6 +4172,149 @@
         >
           Schließen
         </button>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: SEGMENT POPUNDER ('MEHR...')
+         ======================================================== -->
+    <div
+      class="segment-popunder-backdrop"
+      id="segment-popunder-backdrop"
+      onclick="
+        if (event.target.id === 'segment-popunder-backdrop')
+          window.closeMoreFilterMenu();
+      "
+    >
+      <div class="segment-popunder-menu">
+        <div class="popunder-title-row">
+          <div class="popunder-title" id="sheet-title-text">
+            ⚙️ Filter anpassen
+          </div>
+          <button
+            type="button"
+            class="popunder-close-btn"
+            onclick="window.closeMoreFilterMenu()"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- Sektion: Zeitraum (für Gesamt-Statistik) -->
+        <div id="sheet-section-time">
+          <div class="sheet-section-label">Zeitraum auswählen</div>
+          <div class="sheet-chips-grid">
+            <button
+              type="button"
+              class="sheet-chip-btn"
+              data-sheet-time="all"
+              onclick="window.setModalChip('time', 'all')"
+            >
+              🌐 Gesamt
+            </button>
+            <button
+              type="button"
+              class="sheet-chip-btn"
+              data-sheet-time="30days"
+              onclick="window.setModalChip('time', '30days')"
+            >
+              ⏳ 30 Tage
+            </button>
+            <button
+              type="button"
+              class="sheet-chip-btn"
+              data-sheet-time="60days"
+              onclick="window.setModalChip('time', '60days')"
+            >
+              ⏳ 60 Tage
+            </button>
+            <button
+              type="button"
+              class="sheet-chip-btn"
+              data-sheet-time="90days"
+              onclick="window.setModalChip('time', '90days')"
+            >
+              ⏳ 90 Tage
+            </button>
+            <button
+              type="button"
+              class="sheet-chip-btn"
+              data-sheet-time="month"
+              onclick="window.setModalChip('time', 'month')"
+            >
+              🗓️ Dieser Monat
+            </button>
+            <button
+              type="button"
+              class="sheet-chip-btn"
+              data-sheet-time="lastMonth"
+              onclick="window.setModalChip('time', 'lastMonth')"
+            >
+              🗓️ Letzter Monat
+            </button>
+            <button
+              type="button"
+              class="sheet-chip-btn"
+              data-sheet-time="year"
+              onclick="window.setModalChip('time', 'year')"
+            >
+              📅 Dieses Jahr
+            </button>
+            <button
+              type="button"
+              class="sheet-chip-btn"
+              data-sheet-time="lastYear"
+              onclick="window.setModalChip('time', 'lastYear')"
+            >
+              📅 Letztes Jahr
+            </button>
+          </div>
+        </div>
+
+        <!-- Sektion: Konkreter Spieleabend (für Session-Seite) -->
+        <div id="sheet-section-sessions">
+          <div class="sheet-section-label" id="sheet-sessions-label">
+            Spieleabend auswählen
+          </div>
+          <div
+            id="sheet-sessions-list"
+            style="
+              max-height: 260px;
+              overflow-y: auto;
+              display: flex;
+              flex-direction: column;
+              gap: 5px;
+              padding-right: 2px;
+            "
+          ></div>
+        </div>
+
+        <!-- Sektion: Beteiligter Spieler (für Gesamt-Statistik) -->
+        <div id="sheet-section-players">
+          <div class="sheet-section-label">Spieler-Fokus</div>
+          <div
+            id="sheet-players-grid"
+            style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px"
+          ></div>
+        </div>
+
+        <!-- Aktionen -->
+        <div class="sheet-actions-row" id="sheet-actions-row">
+          <button
+            type="button"
+            class="sheet-action-btn btn-reset"
+            onclick="window.resetAllFiltersFromModal()"
+          >
+            Zurücksetzen
+          </button>
+          <button
+            type="button"
+            class="sheet-action-btn btn-apply"
+            onclick="window.applyFiltersFromModal()"
+          >
+            Filter anwenden
+          </button>
+        </div>
       </div>
     </div>
   </body>

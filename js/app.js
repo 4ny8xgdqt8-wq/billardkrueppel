@@ -70,6 +70,10 @@ window.updateAllViews = function () {
     }
   }
 
+  if (typeof window.updateSegmentBarForView === "function") {
+    window.updateSegmentBarForView(window.viewId);
+  }
+
   const statsToUse = isToday
     ? window.stats
     : typeof window.getFilteredStats === "function"
@@ -242,6 +246,11 @@ window.switchV = function (id, el, forcedDir) {
     if (typeof window.updateAllViews === "function") {
       window.updateAllViews();
     }
+    const scrollArea = document.getElementById("scroll-area");
+    if (scrollArea) {
+      scrollArea.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
   }, 260);
 };
 

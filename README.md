@@ -6,6 +6,60 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### 🏆 Optimiertes Session-Layout & Verlässliche Filter-Aktivierung (v25.6)
+
+- **Optimierte Bereichs-Reihenfolge auf der Session-Seite:**
+  - Die Sub-Tab-Bar (**`Rangliste` | `Duelle` | `Rekorde` | `Kugeln`**) befindet sich nun direkt unter der Filterleiste. Das **Tagessieger-Podium** schließt sich direkt darunter an.
+- **Präzise Session-Auswahl & Datumsanzeige:**
+  - **„📅 Aktuelle Session“** wählt stets verlässlich den aktuellen heutigen Spieltag aus.
+  - **Direkte Datumsanzeige für den vorigen Abend:** Der Filter-Button zeigt nun direkt das konkrete Datum des vorigen Spieleabends an (z. B. `📅 12.09.2024`) und wird beim Anklicken verlässlich aktiv und goldgelb hervorgehoben.
+- **Offline-Cache (v25.6):** Aktualisierung des Offline-Speichers auf Version 25.6 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 🎯 Intelligente Session-Filter & Schlankes Kontext-Menü (v25.5.5)
+
+- **Intelligente Session-Erkennung:**
+  - „📅 Aktuelle Session“ zeigt nun immer verlässlich den jüngsten dokumentierten Spieleabend an und bleibt nicht mehr leer, falls am heutigen Kalendertag noch nicht gespielt wurde.
+  - „📅 Letzter Abend“ springt mit nur einem Klick direkt auf den vorherigen Spieleabend.
+- **Einzel- & Team-Filterung auf der Session-Seite:**
+  - Die Umschaltung zwischen `👤 1:1 Einzel` und `👥 2:2 Team` wirkt sich nun auch direkt auf die Session-Ranglisten, Spielübersichten und Tages-Kacheln aus.
+- **Saubere Entkopplung von Session und Gesamt:**
+  - Das Auswählen eines Spieleabends in der Session-Ansicht blockiert nicht mehr die Gesamt-Statistiken; beim Wechsel zu „Gesamt“ wird wieder die vollständige Karriere- und Periodenübersicht angezeigt.
+- **Verschlanktes „Mehr...“-Menü (Kontextbezogen):**
+  - **Auf der Session-Seite (`⚙️ Mehr Abende...`):** Zeigt ausschließlich die übersichtliche Liste aller historischen Spieleabende inklusive Wochentag und Match-Anzahl. Ein Klick auf ein Datum wählt den Abend sofort aus und schließt das Menü.
+  - **Auf der Gesamt-Seite (`⚙️ Mehr...`):** Bietet gezielten Zugriff auf erweiterte Zeiträume (30/60/90 Tage, aktueller & letzter Monat, dieses & letztes Jahr) sowie den Spieler-Fokus.
+- **Offline-Cache (v25.5.5):** Aktualisierung des Offline-Speichers auf Version 25.5.5 für sofortige Verfügbarkeit auf allen Geräten.
+
+### ⚡ Seitenabhängige Filter-Buttons & Vertikale Session-Liste (v25.5.4)
+
+- **Seitenabhängige Filter-Buttons (Zeile 2):**
+  - **Session-Seite (`🕒 Session`):** Speziell auf Spieleabende abgestimmt: **`[ 📅 Aktuelle Session | 📅 Letzter Abend | ⚙️ Mehr Abende... ]`** – kein unpassendes `🌐 Gesamt` mehr! Ermöglicht den sofortigen 1-Klick-Wechsel zum vorherigen Spielabend.
+  - **Gesamt-Statistikseite (`📊 Gesamt`):** Fokus auf Karriere- & Zeiträume: **`[ 🌐 Gesamt | ⏳ 30 Tage | 🗓️ Dieser Monat | ⚙️ Mehr... ]`**.
+  - **Historie & Erfolge:** Bewährte universelle Leiste mit Gesamt, Session, 30 Tage und Mehr.
+- **Vertikale Spieleabend-Liste im Filter-Modal („⚙️ Mehr...“):**
+  - In Sektion 3 werden alle bisherigen Spieleabende wieder als vertikale, wischbare Liste mit Datum links und Match-Anzahl rechts dargestellt.
+- **Vollständige 4-Sektionen Filter-Zentrale:**
+  - Weiterhin voller Zugriff auf Spielmodus (Alle / 1:1 / 2:2), Zeiträume, Spieleabende und Spieler-Beteiligung (`👑 Alle Spieler`, `Thorsten`, `Daniel`, etc.).
+- **Offline-Cache (v25.5.4):** Aktualisierung des Offline-Speichers auf Version 25.5.4 für sofortige Verfügbarkeit auf allen Geräten.
+
+### 👥 2:2-Team-Akte, „Duo des Abends“ & Kugel-Modusfilter (v25.4.1)
+
+- **2:2-Team-Akte im Spieler-Profil (Steckbrief):**
+  - Beim Klick auf einen Spieler öffnet sich im Steckbrief nun der neue Bereich **„👥 2:2 Team-Akte & Partner“**:
+  - Zeigt auf einen Blick die persönlichen 2:2-Spiele, die Team-Siegquote und die Rekord-Siegesserie.
+  - **🌟 Traum-Partner:** Ermittelt automatisch den Partner, mit dem der Spieler die höchste Siegquote und Harmonie erzielt (inklusive Avatar, Siegquote und Match-Bilanz).
+  - **⚡ Wackel-Partner:** Deckt transparent auf, mit welchem Mitspieler es am Billardtisch noch hakt und die meisten Niederlagen eingesteckt wurden.
+- **👑 „Duo des Abends“ auf der Siegerehrung:**
+  - Auf dem täglichen Siegerpodest (sowohl auf der Match- als auch auf der Statistik-Seite) wird an aktiven 2:2-Spieltagen nun zusätzlich das **„Duo des Abends“** gekrönt.
+  - Das erfolgreichste Gespann des Abends erhält eine goldene Auszeichnung mit beiden Spieler-Avataren, Siegen, Matches und der Tages-Quote.
+- **🎱 Modus-Filter für Kugel-Statistiken:**
+  - Im Statistik-Subtab _„Kugeln & Break“_ steht nun eine neue Filterleiste bereit: **`🎱 Alle Modi` | `👤 1:1 Einzel` | `👥 2:2 Team`**.
+  - Die Kugel-Verteilung (Gelochte Volle vs. Halbe Kugeln) sowie die Spezialisten-Auszeichnungen (_🟡 Voll-Spezialist_ und _🔵 Halb-Spezialist_) lassen sich nun gezielt nach Einzel- oder Doppelspielen filtern.
+- **🏆 Erfolge-Tab mit Standardfilter „Alle Spieler“:**
+  - Beim Öffnen der VIP-Trophäenkammer ist nun ab sofort standardmäßig `👑 Alle Spieler` vorausgewählt.
+- **⚡ Automatischer Scroll-to-Top beim Bereichswechsel:**
+  - Beim Umschalten zwischen den Statistik-Bereichen (_Rangliste_, _Duelle_, _Rekorde_, _Kugeln_) sowie zwischen _Session_ und _Gesamt_ springt die Seite nun stets verlässlich an den Anfang.
+- **Offline-Cache (v25.4.1):** Aktualisierung des Offline-Speichers auf Version 25.4.1 für sofortige Verfügbarkeit auf allen Geräten.
+
 ### 🔀 2:2 Smart-Shuffle Bar: Teams mischen & Fair-Play Balance (v25.3)
 
 - **1-Klick „Teams mischen“ direkt auf der Matchseite:**

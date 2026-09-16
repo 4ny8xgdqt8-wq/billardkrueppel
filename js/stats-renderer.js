@@ -45,7 +45,7 @@ window.showAppToast = function (text) {
   }, 2200);
 };
 
-window.activeAchPlayer = null;
+window.activeAchPlayer = "all";
 window.activeAchCategory = "all";
 
 window.setAchPlayerFilter = function (p) {
@@ -241,116 +241,56 @@ window.renderBillardStats = function (
     return score;
   };
 
-  // --- SPIELEABEND FILTER FÜR HEUTE-TAB IM HEADER ---
-  const statHeader = document.querySelector(
-    "#view-statistik .header-container",
-  );
-  const titleStack = statHeader
-    ? statHeader.querySelector(".title-stack")
-    : null;
-  let todayHeaderFilterBox = statHeader
-    ? statHeader.querySelector(".today-header-filter-box")
-    : null;
-
-  if (filterToday) {
-    // Hide the default filter toggle bar in the "Heute" tab
-    const toggleBar = statHeader
-      ? statHeader.querySelector(".filter-toggle-bar")
-      : null;
-    if (toggleBar) toggleBar.style.display = "none";
-    if (titleStack) titleStack.style.pointerEvents = "none"; // Disable click on title to toggle filter-row
-    if (statHeader) statHeader.classList.remove("filter-active"); // Ensure main filter-row is hidden
-
-    if (!todayHeaderFilterBox && titleStack) {
-      todayHeaderFilterBox = document.createElement("div");
-      todayHeaderFilterBox.className = "today-header-filter-box";
-      todayHeaderFilterBox.style =
-        "margin-top: 5px; display: flex; align-items: center; justify-content: center; width: 100%; pointer-events: auto;";
-
-      // Verhindert, dass der Klick auf das Dropdown die normale Filterleiste öffnet
-      todayHeaderFilterBox.onclick = (e) => e.stopPropagation();
-
-      const select = document.createElement("select");
-      select.className = "extra-filter-select";
-      select.style =
-        "flex: 1; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 6px 10px; font-size: 12px; outline: none; max-width: 180px; text-align: center;";
-
-      select.onchange = (e) => {
-        window.currentSessionDate = e.target.value;
-        if (window.updateAllViews) window.updateAllViews();
-        else if (window.recalculateAndRender) window.recalculateAndRender();
+  // --- SESSION DATUM AUFLÖSEN & SEGMENT-BUTTONS SYNCHRONISIEREN ---
+  const uniqueDates = [
+    ...new Set(
+      (window.stats || []).map((g) => (g.d ? g.d.split(",")[0] : null)),
+    ),
+  ]
+    .filter(Boolean)
+    .sort((a, b) => {
+      const p = (s) => {
+        const parts = s.split(".");
+        return new Date(parts[2], parts[1] - 1, parts[0]);
       };
-      todayHeaderFilterBox.appendChild(select);
+      return p(b) - p(a);
+    });
 
-      // Insert after the sub-title within the title-stack
-      const subTitle = titleStack.querySelector(".sub-title");
-      if (subTitle)
-        subTitle.parentNode.insertBefore(
-          todayHeaderFilterBox,
-          subTitle.nextSibling,
+  const unpaddedToday = actualTodayStr
+    .split(".")
+    .map((p) => parseInt(p, 10).toString())
+    .join(".");
+  const foundTodayStr =
+    uniqueDates.find((d) => d === actualTodayStr || d === unpaddedToday) ||
+    actualTodayStr;
+
+  let currentVal = window.currentSessionDate;
+  if (!currentVal || currentVal === "all") {
+    currentVal = filterToday ? actualTodayStr : foundTodayStr;
+  }
+  todayStr = currentVal;
+
+  // Sync Segment Control Buttons (Modus & Zeit)
+  const activeMode = window.modeFilter || "all";
+  document.querySelectorAll(".segment-btn-mode").forEach((btn) => {
+    btn.classList.toggle(
+      "active",
+      btn.getAttribute("data-mode") === activeMode,
+    );
+  });
+
+  if (!filterToday) {
+    const activeTime = window.timeFilter || "all";
+    document.querySelectorAll(".segment-btn-time").forEach((btn) => {
+      if (!btn.classList.contains("segment-btn-time-more")) {
+        btn.classList.toggle(
+          "active-gold",
+          btn.getAttribute("data-time") === activeTime,
         );
-    }
-    if (todayHeaderFilterBox) {
-      todayHeaderFilterBox.style.display = "flex";
-      todayHeaderFilterBox.style.pointerEvents = "auto"; // Sicherstellen, dass Klicks durchgehen
-      todayHeaderFilterBox.style.maxWidth = "250px"; // Ensure it doesn't stretch too wide
-      const select = todayHeaderFilterBox.querySelector(".extra-filter-select");
-
-      const uniqueDates = [
-        ...new Set(
-          (window.stats || []).map((g) => (g.d ? g.d.split(",")[0] : null)),
-        ),
-      ]
-        .filter(Boolean)
-        .sort((a, b) => {
-          const p = (s) => {
-            const parts = s.split(".");
-            return new Date(parts[2], parts[1] - 1, parts[0]);
-          };
-          return p(b) - p(a);
-        });
-
-      // Robustheit gegen unterschiedliches Padding (z.B. 4.6. vs 04.06.)
-      const unpaddedToday = actualTodayStr
-        .split(".")
-        .map((p) => parseInt(p, 10).toString())
-        .join(".");
-      const foundTodayStr =
-        uniqueDates.find((d) => d === actualTodayStr || d === unpaddedToday) ||
-        actualTodayStr;
-
-      // Fix: Falls 'all' oder nicht gesetzt, auf das gefundene heutige Datum defaulten
-      let currentVal = window.currentSessionDate;
-      if (!currentVal || currentVal === "all") currentVal = foundTodayStr;
-
-      let opts = "";
-      // "Heute" Option mit dem in den Daten gefundenen Format hinzufügen
-      opts += `<option value="${foundTodayStr}" ${currentVal === foundTodayStr ? "selected" : ""}>Heute</option>`;
-
-      // Add unique dates from history, excluding the actual todayStr if already present
-      uniqueDates.forEach((ds) => {
-        if (ds !== foundTodayStr) {
-          opts += `<option value="${ds}" ${currentVal === ds ? "selected" : ""}>${ds}</option>`;
-        }
-      });
-      select.innerHTML = opts;
-      select.value = currentVal; // Wichtig: Wert explizit setzen
-
-      // Update todayStr und globalen State basierend auf der Auswahl
-      todayStr = currentVal;
-      window.currentSessionDate = currentVal;
-    }
-  } else {
-    // Revert changes for other tabs
-    if (statHeader) {
-      const toggleBar = statHeader.querySelector(".filter-toggle-bar");
-      const titleStack = statHeader.querySelector(".title-stack");
-      if (toggleBar) toggleBar.style.display = "flex"; // Show default toggle bar
-      if (titleStack) titleStack.style.pointerEvents = "auto"; // Re-enable click on title
-    }
-    if (todayHeaderFilterBox) {
-      todayHeaderFilterBox.style.display = "none"; // Hide the "Heute" tab filter
-    }
+      }
+    });
+  } else if (typeof window.updateSegmentBarForView === "function") {
+    window.updateSegmentBarForView("heute");
   }
 
   const safeStats = (stats || []).filter((m) => m && m.d);
@@ -364,9 +304,24 @@ window.renderBillardStats = function (
       .map((p) => parseInt(p, 10))
       .join(".");
   const targetDateNorm = normalizeDate(todayStr);
-  const statsToday = safeStats.filter((g) => {
+  let statsToday = safeStats.filter((g) => {
     return g && g.d && normalizeDate(g.d) === targetDateNorm;
   });
+
+  // Modus-Filter (1:1 vs. 2:2) auch auf Session-Ebene anwenden
+  if (activeMode === "1:1") {
+    statsToday = statsToday.filter((g) => g.m !== "2:2");
+  } else if (activeMode === "2:2") {
+    statsToday = statsToday.filter((g) => g.m === "2:2");
+  }
+
+  // Spieler-Filter auch auf Session-Ebene berücksichtigen
+  if (window.selectedPlayerFilter && window.selectedPlayerFilter !== "all") {
+    const pl = window.selectedPlayerFilter;
+    statsToday = statsToday.filter((g) => {
+      return g.p1 === pl || g.p2 === pl || g.p1_2 === pl || g.p2_2 === pl;
+    });
+  }
 
   // --- Daily Achievements Storage (wird von BillardPro.js in daily_achivs.json geschrieben)
   if (!window.dailyAchivs || !window.dailyAchivs.days) {
@@ -668,9 +623,7 @@ window.renderBillardStats = function (
         }
       }
 
-      const activePlayer = !isTodayTab
-        ? window.activeAchPlayer || labels[0] || "all"
-        : null;
+      const activePlayer = !isTodayTab ? window.activeAchPlayer || "all" : null;
       const activeCat = !isTodayTab ? window.activeAchCategory || "all" : "all";
 
       // Filter: Wenn ein einzelner Spieler aktiv ist, nur diesen rendern
@@ -1195,7 +1148,7 @@ window.renderBillardStats = function (
     });
 
     if (!isTodayTab && labels.length > 0) {
-      const activePlayer = window.activeAchPlayer || labels[0] || "all";
+      const activePlayer = window.activeAchPlayer || "all";
       const segmentBarHtml = `
         <div class="player-segment-bar">
           <button class="player-segment-btn ${activePlayer === "all" ? "active" : ""}" onclick="window.setAchPlayerFilter('all')">
@@ -1569,8 +1522,71 @@ window.renderBillardStats = function (
             </div>`;
         }
 
+        // --- DUO DES ABENDS (SESSION-SIEGER IM 2:2) ---
+        let bestDuoHtml = "";
+        const todayTeamMatches = (currentStats || []).filter(
+          (g) => g && g.d && g.d.startsWith(todayStr) && g.m === "2:2",
+        );
+        if (todayTeamMatches.length > 0) {
+          const normTeam = (teamStr) =>
+            (teamStr || "")
+              .split(" & ")
+              .map((s) => s.trim())
+              .filter(Boolean)
+              .sort()
+              .join(" & ");
+
+          const todayDuos = {};
+          todayTeamMatches.forEach((g) => {
+            const t1 = normTeam(g.p1);
+            const t2 = normTeam(g.p2);
+            if (!t1 || !t2) return;
+            if (!todayDuos[t1]) todayDuos[t1] = { name: t1, w: 0, l: 0, g: 0 };
+            if (!todayDuos[t2]) todayDuos[t2] = { name: t2, w: 0, l: 0, g: 0 };
+            todayDuos[t1].g++;
+            todayDuos[t2].g++;
+            if (g.w == 1) {
+              todayDuos[t1].w++;
+              todayDuos[t2].l++;
+            } else if (g.w == 2) {
+              todayDuos[t2].w++;
+              todayDuos[t1].l++;
+            }
+          });
+
+          const sortedDuos = Object.values(todayDuos)
+            .filter((d) => d.w > 0)
+            .sort((a, b) => b.w - a.w || b.w / b.g - a.w / a.g || b.g - a.g);
+
+          if (sortedDuos.length > 0) {
+            const topDuo = sortedDuos[0];
+            const pNames = topDuo.name.split(" & ");
+            const duoWr = Math.round((topDuo.w / topDuo.g) * 100);
+            bestDuoHtml = `
+              <div style="margin-top: 14px; padding: 10px 14px; background: linear-gradient(135deg, rgba(255, 204, 0, 0.12) 0%, rgba(20, 20, 22, 0.85) 100%); border: 1px solid rgba(255, 204, 0, 0.35); border-radius: 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="display: flex; position: relative;">
+                    <img src="${safeGetAvatarUrl(pNames[0])}" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid #ffd60a; object-fit: cover;" onerror="this.src='logo.png'">
+                    <img src="${safeGetAvatarUrl(pNames[1])}" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid #ffd60a; margin-left: -12px; object-fit: cover;" onerror="this.src='logo.png'">
+                  </div>
+                  <div>
+                    <div style="font-size: 9px; font-weight: 800; color: #ffd60a; text-transform: uppercase; letter-spacing: 0.8px;">🏆 Duo des Abends</div>
+                    <div style="font-size: 13px; font-weight: 900; color: #fff;">${pNames.join(" & ")}</div>
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 13px; font-weight: 900; color: #ffd60a;">${topDuo.w} ${topDuo.w === 1 ? "Sieg" : "Siege"}</div>
+                  <div style="font-size: 10px; color: #8e8e93; font-weight: 600;">${topDuo.g} Sp · ${duoWr}% Quote</div>
+                </div>
+              </div>
+            `;
+          }
+        }
+
         if (podiumPlacesHtml) {
-          winnerPodiumHtml = `<div class="podium-container">${podiumPlacesHtml}</div>`;
+          winnerPodiumHtml = `<div class="podium-container">${podiumPlacesHtml}</div>${bestDuoHtml}`;
+        } else if (bestDuoHtml) {
+          winnerPodiumHtml = bestDuoHtml;
         }
 
         dailyWinnerEls.forEach((el) => {
@@ -1586,21 +1602,73 @@ window.renderBillardStats = function (
       const statDailyWinnerCard = byId("stat-daily-winner-card");
       if (statDailyWinnerCard) statDailyWinnerCard.style.display = "none";
     }
-    // --- KUGEL-STATISTIK BERECHNEN ---
-    const agg = res.aggregates || {
-      totalBallMatches: 0,
-      vollWins: 0,
-      halbWins: 0,
-      playerBallWins: {},
-    };
-    const vRate =
-      agg.totalBallMatches > 0
-        ? Math.round((agg.vollWins / (agg.totalBallMatches || 1)) * 100)
-        : 0;
-    const hRate =
-      agg.totalBallMatches > 0
-        ? Math.round((agg.halbWins / (agg.totalBallMatches || 1)) * 100)
-        : 0;
+
+    // Aggregates für Kugeln, Duos, Matchups etc.
+    const agg = res.aggregates || {};
+
+    // --- KUGEL-STATISTIK BERECHNEN (DYNAMISCH MIT MODUS-FILTER) ---
+    window.ballStatsMode = window.ballStatsMode || "all";
+    const activeBallMode = window.ballStatsMode;
+
+    // Sync Modus-Filter UI Buttons falls vorhanden
+    document.querySelectorAll(".btn-ball-mode-filter").forEach((btn) => {
+      if (btn.getAttribute("data-ball-mode") === activeBallMode) {
+        btn.classList.add("active");
+        btn.style.background = "#0a84ff";
+        btn.style.color = "#ffffff";
+      } else {
+        btn.classList.remove("active");
+        btn.style.background = "transparent";
+        btn.style.color = "rgba(255, 255, 255, 0.65)";
+      }
+    });
+
+    let ballMatches = (currentStats || []).filter(
+      (g) => g && g.bt1 && g.bt2 && g.w,
+    );
+    if (activeBallMode === "1:1") {
+      ballMatches = ballMatches.filter((g) => !g.m || g.m === "1:1");
+    } else if (activeBallMode === "2:2") {
+      ballMatches = ballMatches.filter((g) => g.m === "2:2");
+    }
+
+    const bTotal = ballMatches.length;
+    let bVollWins = 0;
+    let bHalbWins = 0;
+    const bPlayerWins = {};
+
+    ballMatches.forEach((g) => {
+      const winType = g.w == 1 ? g.bt1 : g.bt2;
+      if (winType === "Voll") bVollWins++;
+      else if (winType === "Halb") bHalbWins++;
+
+      const isTeam = g.m === "2:2";
+      const winners =
+        g.w == 1
+          ? isTeam
+            ? (g.p1 || "")
+                .split(" & ")
+                .map((s) => s.trim())
+                .filter(Boolean)
+            : [g.p1]
+          : isTeam
+            ? (g.p2 || "")
+                .split(" & ")
+                .map((s) => s.trim())
+                .filter(Boolean)
+            : [g.p2];
+
+      winners.forEach((p) => {
+        if (!p) return;
+        if (!bPlayerWins[p]) bPlayerWins[p] = { Voll: 0, Halb: 0 };
+        if (winType === "Voll" || winType === "Halb") {
+          bPlayerWins[p][winType]++;
+        }
+      });
+    });
+
+    const vRate = bTotal > 0 ? Math.round((bVollWins / bTotal) * 100) : 0;
+    const hRate = bTotal > 0 ? Math.round((bHalbWins / bTotal) * 100) : 0;
     const vEl = byId("stat-balls-voll"),
       hEl = byId("stat-balls-halb");
     if (vEl) vEl.innerText = vRate + "%";
@@ -1609,8 +1677,7 @@ window.renderBillardStats = function (
     if (barVoll) barVoll.style.width = vRate + "%";
 
     // --- TOP KUGEL-SPIELER BERECHNEN ---
-    // Use pre-calculated aggregates from worker
-    const playerBallWins = agg.playerBallWins || {};
+    const playerBallWins = bPlayerWins;
 
     // Global-Stats berechnen (unabhängig vom Filter für Vergleichswerte sinnvoll)
     const breakRate = Math.round(
@@ -3706,6 +3773,142 @@ window.openPlayerProfile = (name) => {
     else if (h > v) favBall = "🔵 Halb";
   }
 
+  // Partner-Auswertung für 2:2 Team-Akte
+  const teamResults =
+    (stats.aggregates && stats.aggregates.teamResults) ||
+    (window.careerStats &&
+      window.careerStats.aggregates &&
+      window.careerStats.aggregates.teamResults) ||
+    (window.lastProcessedStats &&
+      window.lastProcessedStats.aggregates &&
+      window.lastProcessedStats.aggregates.teamResults) ||
+    {};
+  const partnerMap = {};
+  Object.entries(teamResults).forEach(([tKey, s]) => {
+    const parts = tKey.split(" & ").map((p) => p.trim());
+    if (parts.includes(name)) {
+      const partner = parts.find((p) => p !== name);
+      if (partner) {
+        const g = s.g || 0;
+        const w = s.w || 0;
+        const l = typeof s.l !== "undefined" ? s.l : Math.max(0, g - w);
+        const wr = g > 0 ? Math.round((w / g) * 100) : 0;
+        partnerMap[partner] = {
+          name: partner,
+          games: g,
+          wins: w,
+          losses: l,
+          wr: wr,
+          maxStreak: s.maxStreak || 0,
+        };
+      }
+    }
+  });
+
+  const partners = Object.values(partnerMap);
+  let bestPartner = null;
+  let worstPartner = null;
+
+  if (partners.length > 0) {
+    const sortedBest = [...partners].sort(
+      (a, b) => b.wr - a.wr || b.games - a.games || b.wins - a.wins,
+    );
+    bestPartner = sortedBest.find((p) => p.games >= 2) || sortedBest[0];
+
+    if (partners.length > 1) {
+      const sortedWorst = [...partners]
+        .filter((p) => p.name !== bestPartner.name)
+        .sort(
+          (a, b) => a.wr - b.wr || b.losses - a.losses || a.games - b.games,
+        );
+      if (
+        sortedWorst.length > 0 &&
+        (sortedWorst[0].wr < 50 || sortedWorst[0].wr < bestPartner.wr)
+      ) {
+        worstPartner = sortedWorst[0];
+      }
+    } else if (partners.length === 1 && partners[0].wr < 50) {
+      worstPartner = partners[0];
+    }
+  }
+
+  let teamSectionHtml = "";
+  if (d.teamGames && d.teamGames > 0) {
+    teamSectionHtml = `
+      <div class="section-label" style="margin-top:16px;">👥 2:2 Team-Akte & Partner</div>
+      <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(28, 28, 30, 0.8) 100%); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; text-align: center;">
+          <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="font-size: 9px; color: #8e8e93; font-weight: 700; text-transform: uppercase;">2:2 Spiele</div>
+            <div style="font-size: 16px; font-weight: 900; color: #fff;">${d.teamGames || 0}</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="font-size: 9px; color: #8e8e93; font-weight: 700; text-transform: uppercase;">2:2 Quote</div>
+            <div style="font-size: 16px; font-weight: 900; color: ${(d.teamWinRate || 0) >= 50 ? "#34c759" : "#ff453a"};">${d.teamWinRate || 0}%</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="font-size: 9px; color: #8e8e93; font-weight: 700; text-transform: uppercase;">Max Streak</div>
+            <div style="font-size: 16px; font-weight: 900; color: var(--accent);">🔥 ${d.teamMaxStreak || 0}</div>
+          </div>
+        </div>
+
+        ${
+          bestPartner
+            ? `
+          <div style="display:flex; align-items:center; justify-content:space-between; background: rgba(255, 204, 0, 0.07); border: 1px solid rgba(255, 204, 0, 0.25); border-radius: 12px; padding: 10px 12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="position:relative;">
+                <img src="${safeGetAvatarUrl(bestPartner.name)}" style="width:36px; height:36px; border-radius:10px; object-fit:cover; border:2px solid #ffd60a;" onerror="this.src='logo.png'">
+                <span style="position:absolute; bottom:-4px; right:-4px; font-size:12px;">🌟</span>
+              </div>
+              <div>
+                <div style="font-size:9px; color:#ffd60a; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Traum-Partner</div>
+                <div style="font-size:14px; font-weight:900; color:#fff;">${bestPartner.name}</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:14px; font-weight:900; color:#ffd60a;">${bestPartner.wr}%</div>
+              <div style="font-size:10px; color:#8e8e93; font-weight:600;">${bestPartner.wins}S / ${bestPartner.losses}N</div>
+            </div>
+          </div>
+        `
+            : ""
+        }
+
+        ${
+          worstPartner &&
+          worstPartner.name !== (bestPartner && bestPartner.name)
+            ? `
+          <div style="display:flex; align-items:center; justify-content:space-between; background: rgba(255, 69, 58, 0.07); border: 1px solid rgba(255, 69, 58, 0.25); border-radius: 12px; padding: 10px 12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="position:relative;">
+                <img src="${safeGetAvatarUrl(worstPartner.name)}" style="width:36px; height:36px; border-radius:10px; object-fit:cover; border:2px solid #ff453a;" onerror="this.src='logo.png'">
+                <span style="position:absolute; bottom:-4px; right:-4px; font-size:12px;">⚡</span>
+              </div>
+              <div>
+                <div style="font-size:9px; color:#ff453a; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Wackel-Partner</div>
+                <div style="font-size:14px; font-weight:900; color:#fff;">${worstPartner.name}</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:14px; font-weight:900; color:#ff453a;">${worstPartner.wr}%</div>
+              <div style="font-size:10px; color:#8e8e93; font-weight:600;">${worstPartner.wins}S / ${worstPartner.losses}N</div>
+            </div>
+          </div>
+        `
+            : ""
+        }
+      </div>
+    `;
+  } else {
+    teamSectionHtml = `
+      <div class="section-label" style="margin-top:16px;">👥 2:2 Team-Akte & Partner</div>
+      <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 14px; text-align: center; color: #8e8e93; font-size: 12px;">
+        Noch keine 2:2 Team-Matches absolviert.
+      </div>
+    `;
+  }
+
   content.innerHTML = `
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:20px;">
                     <div class="card" style="margin-bottom:0; padding:15px; background: linear-gradient(135deg, rgba(255, 204, 0, 0.05) 0%, rgba(28, 28, 30, 0.8) 100%); border: 1px solid rgba(255,204,0,0.25); box-shadow: inset 0 0 10px rgba(255,204,0,0.05), 0 4px 15px rgba(0,0,0,0.3); text-align:center;">
@@ -3745,6 +3948,8 @@ window.openPlayerProfile = (name) => {
                         <span style="color:#acacb0; font-weight: 600;">Achievements</span><span style="font-weight:900; color:#fff;">🏆 ${d.achCountTotal}</span>
                     </div>
                 </div>
+
+                ${teamSectionHtml}
             `;
   // Call animateNumber directly after content is set
   window.animateNumber("prof-elo", d.elo || 1000);
@@ -4429,10 +4634,40 @@ window.renderAchList = (filter) => {
 /* ==========================================================================
    Dashboard Sub-Tabs & Interactive H2H Logic
    ========================================================================== */
+window.ballStatsMode = "all";
+
+window.setBallStatsMode = function (mode) {
+  window.ballStatsMode = mode;
+  document.querySelectorAll(".btn-ball-mode-filter").forEach((btn) => {
+    if (btn.getAttribute("data-ball-mode") === mode) {
+      btn.classList.add("active");
+      btn.style.background = "#0a84ff";
+      btn.style.color = "#ffffff";
+    } else {
+      btn.classList.remove("active");
+      btn.style.background = "transparent";
+      btn.style.color = "rgba(255, 255, 255, 0.65)";
+    }
+  });
+
+  if (typeof window.updateAllViews === "function") {
+    window.updateAllViews();
+  }
+};
+
 window.currentStatSubTab = "ranking";
 
 window.setStatSubTab = function (tabName, btnEl) {
   window.currentStatSubTab = tabName;
+
+  // Scroll sofort an den Seitenanfang bei Bereichswechsel
+  const scrollArea =
+    document.getElementById("scroll-area") ||
+    document.querySelector(".main-content");
+  if (scrollArea) {
+    scrollArea.scrollTop = 0;
+  }
+  window.scrollTo(0, 0);
   document.querySelectorAll(".stat-subtab-btn").forEach((btn) => {
     if (btn.getAttribute("data-tab") === tabName) {
       btn.classList.add("active");
