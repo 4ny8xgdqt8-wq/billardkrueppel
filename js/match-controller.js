@@ -327,6 +327,7 @@ window.openErrorModal = (
   elementIdsToHighlight = [],
   title = "Etwas fehlt!",
   icon = "⚠️",
+  shake = null,
 ) => {
   const modal = document.getElementById("errorModal");
   document.getElementById("errorModalIcon").innerText = icon;
@@ -343,11 +344,20 @@ window.openErrorModal = (
   document.getElementById("errorModalText").innerText = msg;
   modal.style.display = "flex";
 
-  // Shake Animation triggern
+  // Shake Animation nur bei echten Fehlern triggern, bei reinen Info-Popups ruhig öffnen
   const card = modal.querySelector(".modal-card");
-  card.style.animation = "none";
-  card.offsetHeight; // Reflow
-  card.style.animation = "modal-shake 0.4s ease-in-out";
+  const shouldShake =
+    shake !== null
+      ? Boolean(shake)
+      : elementIdsToHighlight.length > 0 || icon === "⚠️";
+
+  if (shouldShake) {
+    card.style.animation = "none";
+    card.offsetHeight; // Reflow
+    card.style.animation = "modal-shake 0.4s ease-in-out";
+  } else {
+    card.style.animation = "none";
+  }
 
   // Clear previous highlights
   window.highlightedElements.forEach((id) => {
@@ -391,17 +401,14 @@ window.showDailyWinnerInfo = () => {
     `🕯️ Knappe Niederlage (Du Rest 1): +1\n` +
     `🔥 Längste Serie: +1 pro Sieg in Serie\n` +
     `🕵️ Service-Klau: +2 (Sieg bei Gegner-Anstoß)\n` +
-    `🪓 Dominanz: +0.5 pro Ø Restkugel (Sieg)\n` +
-    `🗡️ Nemesis besiegt: +4\n` +
-    `🏆 Tages-Erfolg (Fame): +2\n\n` +
+    `🪓 Dominanz: +0.5 pro Ø Restkugel (Sieg)\n\n` +
     `Abzüge:\n` +
     `🐀 Sieg durch Foul: -1\n` +
     `🤦 8er-Fehler: -2\n` +
-    `💀 Tages-Missgeschick (Shame): -2\n` +
     `🧟 Hoher Ø Rest bei Niederlage: -0.25 pro Ø Restkugel\n\n` +
     `🌟 Duo des Abends (2:2 Champions):\n` +
     `Score = (Siege × 3) + Netto-Frames + (Winrate% / 10)`;
-  window.openErrorModal(msg, [], "Punkte-Logik", "🏆");
+  window.openErrorModal(msg, [], "Punkte-Logik", "🏆", false);
   document.getElementById("errorModalTitle").style.color = "var(--accent)";
   document.querySelector("#errorModal .btn-save").style.background =
     "var(--accent)";
@@ -439,7 +446,7 @@ window.showDailyDuoInfo = () => {
     `3. Mehr absolvierte Spiele` +
     rankingText;
 
-  window.openErrorModal(msg, [], "Duo des Abends", "🌟");
+  window.openErrorModal(msg, [], "Duo des Abends", "🌟", false);
   document.getElementById("errorModalTitle").style.color = "#ffd60a";
   document.querySelector("#errorModal .btn-save").style.background = "#ffd60a";
   document.querySelector("#errorModal .btn-save").style.color = "#000";

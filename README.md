@@ -20,9 +20,13 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 - **🏆 Ewige 2:2 Team-Rangliste:**
   - Bei Auswahl des oberen Modus-Filters **`👥 2:2 Team`** schaltet die Rangliste automatisch auf das ewige Team-Klassement um.
   - Rangliste aller Duos sortiert nach kombiniertem Team-Rating (ELO-Mittelwert), Siegen, Winrate und Synergie-Status (_🌟 Traum-Duo_, _🤝 Harmonisch_, _⚡ Krisen-Duo_).
-- **⚖️ 100% faire Tagessieger-Wertung (Session-MVP):**
-  - Für den Tagessieger fließen bei den Errungenschaften dauerhaft ausschließlich echte Tages-Leistungen der aktuellen Session ein (`dailyFamePool` / `dailyShamePool`).
-  - All-Time-Karriere-Meilensteine verbleiben im ewigen Trophäen-Kabinett, geben aber keine Tagessieger-Punkte mehr – dadurch starten alle Spieler (egal ob Veteran oder Neuling wie Sascha) stets unter exakt identischen und fairen Bedingungen bei 0.
+- **⚖️ 100% matchbasierte Tagessieger-Wertung (Session-MVP):**
+  - Der Tagessieger wird nun dauerhaft und vollständig aus den reinen Match-Leistungen der aktuellen Session berechnet (Siege, Niederlagen, Breaks, Serien, Dominanz, Clutch, 8er-Fehler).
+  - Weder Karriere-Meilensteine, Tages-Errungenschaften noch historische Nemesis-Boni fließen in den Tagessieg ein – dadurch starten ausnahmslos alle Spieler an jedem Spielabend bei exakt 0 Punkten und mit 100% Chancengleichheit.
+- **✨ Ruhiges Öffnen der Info-Popups („Punkte-Logik“ & „Duo des Abends“):**
+  - Das Zappeln bzw. die Rüttel-Animation beim Öffnen der Punkte-Erklärung und des Duo-Modals wurde entfernt. Reine Info-Fenster öffnen sich nun ruhig und harmonisch.
+- **🏛️ Sofortige, stabile Treppchen-Darstellung:**
+  - Das zeitversetzte Aufploppen der drei Podiums-Säulen von links nach rechts wurde entfernt. Alle Säulen werden nun sofort und gleichzeitig stabil gerendert.
 - **🧹 Bereinigte Filterleiste im Subtab „Kugeln“:**
   - Die untere doppelte Modus-Leiste bei den Kugeln wurde entfernt. Die Kugel-Statistik koppelt nun direkt und reibungslos an den globalen Modus-Umschalter ganz oben.
 - **🎙️ Siri-Kommentator: 30 neue Sprüche für Sascha & 30 neue Team-Sprüche:**

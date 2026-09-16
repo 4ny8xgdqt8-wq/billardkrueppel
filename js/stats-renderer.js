@@ -193,24 +193,6 @@ window.renderBillardStats = function (
     if (d.todayWins > 0)
       score += Math.round((d.todayKillerPoints / d.todayWins) * 0.5); // +0.5 pro Ø Restkugel
 
-    let nemesis = null;
-    let maxL = 0;
-    const h2hBefore = dBeforePlayer?.headToHead || {};
-    Object.entries(h2hBefore).forEach(([opp, st]) => {
-      if (st && st.l > maxL) {
-        maxL = st.l;
-        nemesis = opp;
-      }
-    });
-    if (
-      nemesis &&
-      d.headToHead &&
-      d.headToHead[nemesis] &&
-      d.headToHead[nemesis].w > 0
-    ) {
-      score += 4;
-    }
-
     score -= (d.todayBlackWinsCount || 0) * 1;
     score -= (d.todayLostBy8BallError || 0) * 2;
     // Abzug für hohe Ø Restkugeln bei Niederlagen
@@ -218,17 +200,7 @@ window.renderBillardStats = function (
       score += Math.round(d.todayAvgRest * -0.25); // -0.25 pro Ø Restkugel
     }
 
-    let fameCount = 0,
-      shameCount = 0;
-    // Tägliche Pools prüfen (reine Tagesleistungen der aktuellen Session für 100% faire Chancengleichheit)
-    (window.dailyFamePool || []).forEach((ach) => {
-      if (ach.cond(d)) fameCount++;
-    });
-    (window.dailyShamePool || []).forEach((ach) => {
-      if (ach.cond(d)) shameCount++;
-    });
-    score += fameCount * 2 - shameCount * 2;
-
+    // Tagessieger basiert zu 100% auf reinen Match-Leistungen der aktuellen Session (frei von Errungenschaften)
     return score;
   };
 
