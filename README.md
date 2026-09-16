@@ -6,6 +6,21 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### 🌟 Duo des Abends & Erweiterter Siri-Kommentator (v26.4)
+
+- **🌟 „Duo des Abends“ Hero-Badge (2:2 Champions):**
+  - An Spieltagen mit 2:2-Matches kürt die App nun automatisch das stärkste Duo des Abends mit einer goldenen Champion-Hero-Card.
+  - Ausgezeichnet wird das Team mit der höchsten Punktzahl basierend auf Siegen, Netto-Frames und Winrate: `Score = (Siege × 3) + Netto-Frames + (Winrate% / 10)`.
+  - Sichtbar direkt in der **📅 Session-Ansicht** unterhalb des Tagessieger-Podiums sowie live auf der **🎱 Matchseite**.
+  - Präsentiert mit Doppel-Avataren, Gold-Krone 👑, Siegen, Quote, Netto-Frames und Synergie-Status.
+  - Antippen öffnet das Punkte-Modal mit genauer Formelerklärung und der aktuellen Team-Rangliste des Spieltags.
+- **🎙️ Siri-Kommentator: 30 neue Sprüche für Sascha & 30 neue Team-Sprüche:**
+  - Der integrierte Sprach-Kommentator wurde massiv ausgebaut:
+    - **Sascha**: 30 individuelle, humorvolle Siri-Audio-Kommentare für gewonnene Spiele und Match-Highlights.
+    - **2:2 Teams & Duos**: 30 dynamische Team-Kommentare für Doppel-Siege, Teamplay und Synchron-Aktionen.
+  - Funktioniert vollständig offline und direkt im Browser ohne Ladezeiten.
+- **Offline-Cache (v26.4):** Aktualisierung des Service-Worker-Caches auf Version 26.4.
+
 ### 🎖️ Einheitliche Benennung: Sub-Tab „Erfolge“ in der Statistik (v26.3)
 
 - **Umbenennung von „Rekorde“ zu „Erfolge“:**

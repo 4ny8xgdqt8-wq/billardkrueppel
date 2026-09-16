@@ -1885,15 +1885,20 @@ window.renderBillardStats = function (
             </div>`;
         }
 
-        // --- DUO DES ABENDS (SESSION-SIEGER IM 2:2) ---
-        let bestDuoHtml = "";
+        // --- DUO DES ABENDS (SESSION-SIEGER IM 2:2) ---        // 2:2 Team des Abends / Duo des Abends ermitteln
         const todayTeamMatches = (currentStats || []).filter(
-          (g) => g && g.d && g.d.startsWith(todayStr) && g.m === "2:2",
+          (g) => g && g.m === "2:2" && g.p1 && g.p2 && g.w,
         );
+        let heroDuoHtml = "";
+        const statDailyDuoCard = byId("stat-daily-duo-card");
+        const matchDailyDuoCard = document.getElementById(
+          "match-daily-duo-card",
+        );
+
         if (todayTeamMatches.length > 0) {
           const normTeam = (teamStr) =>
             (teamStr || "")
-              .split(" & ")
+              .split("&")
               .map((s) => s.trim())
               .filter(Boolean)
               .sort()
@@ -1917,39 +1922,104 @@ window.renderBillardStats = function (
             }
           });
 
-          const sortedDuos = Object.values(todayDuos)
+          const duoList = Object.values(todayDuos).map((d) => {
+            const nettoFrames = d.w - d.l;
+            const duoWr = d.g > 0 ? Math.round((d.w / d.g) * 100) : 0;
+            // Offizielle Formel: Score = (Siege * 3) + Netto-Frames + (Winrate% / 10)
+            const score = d.w * 3 + nettoFrames + duoWr / 10;
+            return {
+              ...d,
+              nettoFrames,
+              winRate: duoWr,
+              score,
+            };
+          });
+
+          const sortedDuos = duoList
             .filter((d) => d.w > 0)
-            .sort((a, b) => b.w - a.w || b.w / b.g - a.w / a.g || b.g - a.g);
+            .sort(
+              (a, b) =>
+                b.score - a.score ||
+                b.w - a.w ||
+                b.winRate - a.winRate ||
+                b.g - a.g,
+            );
+
+          window.lastDailyDuos = sortedDuos;
 
           if (sortedDuos.length > 0) {
             const topDuo = sortedDuos[0];
             const pNames = topDuo.name.split(" & ");
-            const duoWr = Math.round((topDuo.w / topDuo.g) * 100);
-            bestDuoHtml = `
-              <div style="margin-top: 14px; padding: 10px 14px; background: linear-gradient(135deg, rgba(255, 204, 0, 0.12) 0%, rgba(20, 20, 22, 0.85) 100%); border: 1px solid rgba(255, 204, 0, 0.35); border-radius: 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <div style="display: flex; position: relative;">
-                    <img src="${safeGetAvatarUrl(pNames[0])}" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid #ffd60a; object-fit: cover;" onerror="this.src='logo.png'">
-                    <img src="${safeGetAvatarUrl(pNames[1])}" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid #ffd60a; margin-left: -12px; object-fit: cover;" onerror="this.src='logo.png'">
+            const duoWr = topDuo.winRate;
+            const nettoFrames = topDuo.nettoFrames;
+            const sessionTag =
+              "Spieltag " +
+              (todayStr ? todayStr.split(".").slice(0, 2).join(".") : "");
+
+            let synergyText = "⚡ Hohe Synergie";
+            if (topDuo.l === 0 && topDuo.w >= 2) {
+              synergyText = "🌟 Ungeschlagenes Duo";
+            } else if (duoWr >= 75) {
+              synergyText = `⚡ Hohe Synergie (${duoWr}%)`;
+            } else if (duoWr >= 50) {
+              synergyText = `🤝 Starkes Gespann (${duoWr}%)`;
+            } else {
+              synergyText = `🎯 ${duoWr}% Winrate`;
+            }
+
+            heroDuoHtml = `
+              <div class="hero-card-v1 cinematic-entry" onclick="window.showDailyDuoInfo ? window.showDailyDuoInfo() : window.showDailyWinnerInfo()" style="cursor: pointer;">
+                <div class="v1-header">
+                  <span class="v1-badge">🌟 Duo des Abends · 2:2 Champion</span>
+                  <span class="v1-session-tag">${sessionTag}</span>
+                </div>
+                <div class="v1-body">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="v1-avatar-stack">
+                      <span class="v1-crown">👑</span>
+                      <img src="${safeGetAvatarUrl(pNames[0])}" class="v1-avatar" onerror="this.src='logo.png'" alt="${pNames[0]}">
+                      <img src="${safeGetAvatarUrl(pNames[1])}" class="v1-avatar v1-avatar-2" onerror="this.src='logo.png'" alt="${pNames[1]}">
+                    </div>
+                    <div>
+                      <div class="v1-names">${pNames.join(" & ")}</div>
+                      <span class="v1-synergy-pill">${synergyText}</span>
+                    </div>
                   </div>
-                  <div>
-                    <div style="font-size: 9px; font-weight: 800; color: #ffd60a; text-transform: uppercase; letter-spacing: 0.8px;">🏆 Duo des Abends</div>
-                    <div style="font-size: 13px; font-weight: 900; color: #fff;">${pNames.join(" & ")}</div>
+                  <div class="v1-stats-block">
+                    <div class="v1-wins-val">${topDuo.w} ${topDuo.w === 1 ? "Sieg" : "Siege"}</div>
+                    <div class="v1-wins-sub">${duoWr}% Quote (${topDuo.g} Sp)</div>
                   </div>
                 </div>
-                <div style="text-align: right;">
-                  <div style="font-size: 13px; font-weight: 900; color: #ffd60a;">${topDuo.w} ${topDuo.w === 1 ? "Sieg" : "Siege"}</div>
-                  <div style="font-size: 10px; color: #8e8e93; font-weight: 600;">${topDuo.g} Sp · ${duoWr}% Quote</div>
+                <div class="v1-footer-bar">
+                  <span>Netto: <strong>${nettoFrames >= 0 ? "+" + nettoFrames : nettoFrames} Frames</strong></span>
+                  <span style="color: #ffd60a; font-weight: 800">${topDuo.score >= 0 ? "+" : ""}${topDuo.score.toFixed(1)} Duo-Pkt</span>
                 </div>
               </div>
             `;
           }
         }
 
+        if (statDailyDuoCard) {
+          if (heroDuoHtml) {
+            statDailyDuoCard.innerHTML = heroDuoHtml;
+            statDailyDuoCard.style.display = "block";
+          } else {
+            statDailyDuoCard.innerHTML = "";
+            statDailyDuoCard.style.display = "none";
+          }
+        }
+        if (matchDailyDuoCard) {
+          if (heroDuoHtml) {
+            matchDailyDuoCard.innerHTML = heroDuoHtml;
+            matchDailyDuoCard.style.display = "block";
+          } else {
+            matchDailyDuoCard.innerHTML = "";
+            matchDailyDuoCard.style.display = "none";
+          }
+        }
+
         if (podiumPlacesHtml) {
-          winnerPodiumHtml = `<div class="podium-container">${podiumPlacesHtml}</div>${bestDuoHtml}`;
-        } else if (bestDuoHtml) {
-          winnerPodiumHtml = bestDuoHtml;
+          winnerPodiumHtml = `<div class="podium-container">${podiumPlacesHtml}</div>`;
         }
 
         dailyWinnerEls.forEach((el) => {
@@ -1959,11 +2029,15 @@ window.renderBillardStats = function (
         dailyWinnerEls.forEach((el) => {
           el.innerText = "-";
         });
+        if (statDailyDuoCard) statDailyDuoCard.style.display = "none";
+        if (matchDailyDuoCard) matchDailyDuoCard.style.display = "none";
       }
     } else {
       // Nur die Session-Kachel ausblenden. Die Match-Kachel behält ihren letzten Session-Stand.
       const statDailyWinnerCard = byId("stat-daily-winner-card");
       if (statDailyWinnerCard) statDailyWinnerCard.style.display = "none";
+      const statDailyDuoCard = byId("stat-daily-duo-card");
+      if (statDailyDuoCard) statDailyDuoCard.style.display = "none";
     }
 
     // Aggregates für Kugeln, Duos, Matchups etc.
@@ -4037,6 +4111,11 @@ window.renderBillardStats = function (
       const statDailyWinnerEl = document.getElementById("stat-daily-winner");
       if (statDailyWinnerCard) statDailyWinnerCard.style.display = "none";
       if (statDailyWinnerEl) statDailyWinnerEl.innerText = "";
+      const statDailyDuoCard = document.getElementById("stat-daily-duo-card");
+      if (statDailyDuoCard) {
+        statDailyDuoCard.style.display = "none";
+        statDailyDuoCard.innerHTML = "";
+      }
     }
     const h2hResetEl = document.getElementById("stat-head-to-head");
     if (h2hResetEl) h2hResetEl.innerHTML = "";

@@ -398,11 +398,50 @@ window.showDailyWinnerInfo = () => {
     `🐀 Sieg durch Foul: -1\n` +
     `🤦 8er-Fehler: -2\n` +
     `💀 Shame Achievement: -2\n` +
-    `🧟 Hoher Ø Rest bei Niederlage: -0.25 pro Ø Restkugel`;
+    `🧟 Hoher Ø Rest bei Niederlage: -0.25 pro Ø Restkugel\n\n` +
+    `🌟 Duo des Abends (2:2 Champions):\n` +
+    `Score = (Siege × 3) + Netto-Frames + (Winrate% / 10)`;
   window.openErrorModal(msg, [], "Punkte-Logik", "🏆");
   document.getElementById("errorModalTitle").style.color = "var(--accent)";
   document.querySelector("#errorModal .btn-save").style.background =
     "var(--accent)";
+  document.querySelector("#errorModal .btn-save").style.color = "#000";
+  document.querySelector("#errorModalText").style.fontSize = "12px";
+};
+
+window.showDailyDuoInfo = () => {
+  let rankingText = "";
+  if (Array.isArray(window.lastDailyDuos) && window.lastDailyDuos.length > 0) {
+    rankingText =
+      "\n\n📋 Aktuelle Duo-Rangliste heute:\n" +
+      window.lastDailyDuos
+        .map((d, i) => {
+          const medal =
+            i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
+          const scoreStr =
+            d.score >= 0 ? `+${d.score.toFixed(1)}` : d.score.toFixed(1);
+          return `${medal} ${d.name}: ${d.w} Siege (${d.winRate}%), Netto ${d.nettoFrames >= 0 ? "+" : ""}${d.nettoFrames} ➔ ${scoreStr} Pkt`;
+        })
+        .join("\n");
+  }
+
+  const msg =
+    `🌟 Duo des Abends (2:2 Session-Champions):\n\n` +
+    `Das stärkste 2:2 Team des jeweiligen Spieltages wird nach folgender Leistungsformel ermittelt:\n\n` +
+    `📊 Wertungs-Formel:\n` +
+    `Score = (Siege × 3) + Netto-Frames + (Winrate% / 10)\n\n` +
+    `• Pro Sieg: +3 Punkte\n` +
+    `• Netto-Frames: +1 pro Frame Differenz (Siege - Niederlagen)\n` +
+    `• Winrate: +1 Punkt pro 10% Siegquote\n\n` +
+    `🏆 Bei Gleichstand entscheiden:\n` +
+    `1. Höhere Anzahl an Siegen\n` +
+    `2. Höhere Winrate\n` +
+    `3. Mehr absolvierte Spiele` +
+    rankingText;
+
+  window.openErrorModal(msg, [], "Duo des Abends", "🌟");
+  document.getElementById("errorModalTitle").style.color = "#ffd60a";
+  document.querySelector("#errorModal .btn-save").style.background = "#ffd60a";
   document.querySelector("#errorModal .btn-save").style.color = "#000";
   document.querySelector("#errorModalText").style.fontSize = "12px";
 };

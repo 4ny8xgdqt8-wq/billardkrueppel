@@ -1638,6 +1638,157 @@ select option {
   opacity: 0.6;
 }
 
+/* ==========================================================================
+   🌟 Duo des Abends (Hero-Badge - Vorschlag 1 Gold Champion)
+   ========================================================================== */
+.hero-card-v1 {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 214, 10, 0.16) 0%,
+    rgba(30, 26, 10, 0.85) 50%,
+    rgba(18, 18, 22, 0.95) 100%
+  );
+  border: 1.5px solid rgba(255, 214, 10, 0.45);
+  border-radius: 18px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 6px 24px rgba(255, 214, 10, 0.14),
+    inset 0 0 20px rgba(255, 214, 10, 0.05);
+  box-sizing: border-box;
+}
+
+.hero-card-v1::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 214, 10, 0.25) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.v1-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.v1-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 214, 10, 0.18);
+  border: 1px solid rgba(255, 214, 10, 0.5);
+  color: #ffd60a;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 3px 9px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.v1-session-tag {
+  font-size: 10.5px;
+  color: #8e8e93;
+  font-weight: 700;
+}
+
+.v1-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.v1-avatar-stack {
+  display: flex;
+  position: relative;
+  padding-right: 14px;
+}
+
+.v1-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2.5px solid #ffd60a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  object-fit: cover;
+}
+
+.v1-avatar-2 {
+  margin-left: -18px;
+}
+
+.v1-crown {
+  position: absolute;
+  top: -8px;
+  left: -4px;
+  font-size: 15px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+  z-index: 2;
+}
+
+.v1-names {
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+
+.v1-synergy-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(52, 199, 89, 0.15);
+  border: 1px solid rgba(52, 199, 89, 0.4);
+  color: #34c759;
+}
+
+.v1-stats-block {
+  text-align: right;
+  min-width: 100px;
+}
+
+.v1-wins-val {
+  font-size: 17px;
+  font-weight: 900;
+  color: #ffd60a;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.v1-wins-sub {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8e8e93;
+  text-transform: uppercase;
+}
+
+.v1-footer-bar {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #8e8e93;
+}
+
 /* Responsive Media Queries */
 @media (max-width: 480px) {
   .filter-row {
