@@ -220,21 +220,12 @@ window.renderBillardStats = function (
 
     let fameCount = 0,
       shameCount = 0;
-    // Tägliche Pools prüfen
+    // Tägliche Pools prüfen (reine Tagesleistungen der aktuellen Session für 100% faire Chancengleichheit)
     (window.dailyFamePool || []).forEach((ach) => {
       if (ach.cond(d)) fameCount++;
     });
     (window.dailyShamePool || []).forEach((ach) => {
       if (ach.cond(d)) shameCount++;
-    });
-    // Neue Karriere-Meilensteine, die an diesem Spieltag geknackt wurden
-    const targetAll = dAllPlayer || d;
-    const targetBefore = dBeforePlayer || { headToHead: {} };
-    (window.famePool || []).forEach((ach) => {
-      if (ach.cond(targetAll) && !ach.cond(targetBefore)) fameCount++;
-    });
-    (window.shamePool || []).forEach((ach) => {
-      if (ach.cond(targetAll) && !ach.cond(targetBefore)) shameCount++;
     });
     score += fameCount * 2 - shameCount * 2;
 
@@ -2043,22 +2034,8 @@ window.renderBillardStats = function (
     // Aggregates für Kugeln, Duos, Matchups etc.
     const agg = res.aggregates || {};
 
-    // --- KUGEL-STATISTIK BERECHNEN (DYNAMISCH MIT MODUS-FILTER) ---
-    window.ballStatsMode = window.ballStatsMode || "all";
-    const activeBallMode = window.ballStatsMode;
-
-    // Sync Modus-Filter UI Buttons falls vorhanden
-    document.querySelectorAll(".btn-ball-mode-filter").forEach((btn) => {
-      if (btn.getAttribute("data-ball-mode") === activeBallMode) {
-        btn.classList.add("active");
-        btn.style.background = "#0a84ff";
-        btn.style.color = "#ffffff";
-      } else {
-        btn.classList.remove("active");
-        btn.style.background = "transparent";
-        btn.style.color = "rgba(255, 255, 255, 0.65)";
-      }
-    });
+    // --- KUGEL-STATISTIK BERECHNEN (KOPPELT AN DEN GLOBALEN MODUS-FILTER) ---
+    const activeBallMode = activeMode || "all";
 
     let ballMatches = (currentStats || []).filter(
       (g) => g && g.bt1 && g.bt2 && g.w,
@@ -2951,6 +2928,139 @@ window.renderBillardStats = function (
       }
     }
 
+    // --- DIREKTE 2:2 TEAM-DUELLERFASSUNG (TEAM VS. TEAM H2H) ---
+    const teamH2hEl = byId("stat-team-head-to-head");
+    if (teamH2hEl) {
+      const teamMatches = (currentStats || []).filter(
+        (g) => g && g.m === "2:2" && g.p1 && g.p2 && g.w,
+      );
+
+      const teamDuels = {};
+      teamMatches.forEach((g) => {
+        const t1 = normTeamKey(g.p1);
+        const t2 = normTeamKey(g.p2);
+        if (!t1 || !t2 || t1 === t2) return;
+
+        // Eindeutiger Paarungs-Schlüssel (alphabetisch sortiert)
+        const sortedTeams = [t1, t2].sort();
+        const duelKey = sortedTeams.join(" vs. ");
+        const isT1First = t1 === sortedTeams[0];
+
+        if (!teamDuels[duelKey]) {
+          teamDuels[duelKey] = {
+            team1: sortedTeams[0],
+            team2: sortedTeams[1],
+            p1Arr: sortedTeams[0].split(" & "),
+            p2Arr: sortedTeams[1].split(" & "),
+            wins1: 0,
+            wins2: 0,
+            games: 0,
+          };
+        }
+
+        teamDuels[duelKey].games++;
+        if (g.w == 1) {
+          if (isT1First) teamDuels[duelKey].wins1++;
+          else teamDuels[duelKey].wins2++;
+        } else if (g.w == 2) {
+          if (isT1First) teamDuels[duelKey].wins2++;
+          else teamDuels[duelKey].wins1++;
+        }
+      });
+
+      const duelList = Object.values(teamDuels).sort(
+        (a, b) =>
+          b.games - a.games ||
+          Math.abs(b.wins1 - b.wins2) - Math.abs(a.wins1 - a.wins2),
+      );
+
+      if (duelList.length > 0) {
+        const duelCardsHtml = duelList
+          .map((d, idx) => {
+            const wr1 = d.games > 0 ? Math.round((d.wins1 / d.games) * 100) : 0;
+            const wr2 = d.games > 0 ? Math.round((d.wins2 / d.games) * 100) : 0;
+
+            let statusText = "Ausgeglichen";
+            let statusColor = "#8e8e93";
+            if (d.wins1 > d.wins2) {
+              statusText = `${d.team1} führt (+${d.wins1 - d.wins2})`;
+              statusColor = "#ffd60a";
+            } else if (d.wins2 > d.wins1) {
+              statusText = `${d.team2} führt (+${d.wins2 - d.wins1})`;
+              statusColor = "#4fc3f7";
+            }
+
+            const avatarStack1 = d.p1Arr
+              .map(
+                (p, pi) =>
+                  `<img src="${safeGetAvatarUrl(p)}" class="stat-card-avatar" alt="${p}" onerror="this.style.display='none'" style="border-radius:10px; border:2px solid #ffd60a; margin-left:${pi > 0 ? "-10px" : "0"}; z-index:${2 - pi}; width:30px; height:30px;">`,
+              )
+              .join("");
+            const avatarStack2 = d.p2Arr
+              .map(
+                (p, pi) =>
+                  `<img src="${safeGetAvatarUrl(p)}" class="stat-card-avatar" alt="${p}" onerror="this.style.display='none'" style="border-radius:10px; border:2px solid #4fc3f7; margin-left:${pi > 0 ? "-10px" : "0"}; z-index:${2 - pi}; width:30px; height:30px;">`,
+              )
+              .join("");
+
+            return `
+            <div class="stat-card-modern span-2 cinematic-entry" style="--card-accent: #ffd60a; flex-direction:column; align-items:stretch; gap:10px; margin-bottom:12px; animation-delay: ${0.9 + idx * 0.05}s;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:9.5px; font-weight:800; color:${statusColor}; text-transform:uppercase; letter-spacing:0.6px;">⚡ ${statusText}</span>
+                <span style="font-size:10px; color:#8e8e93; font-weight:700;">${d.games} ${d.games === 1 ? "Duell" : "Duelle"}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <!-- Team 1 -->
+                <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+                  <div class="stat-avatar-stack" style="display:flex; align-items:center;">${avatarStack1}</div>
+                  <div style="min-width:0;">
+                    <div class="stat-card-player-label" style="font-size:13px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.team1}</div>
+                    <div class="stat-card-sublabel" style="color:#ffd60a; font-weight:800;">${d.wins1} Siege · ${wr1}%</div>
+                  </div>
+                </div>
+
+                <!-- VS Badge -->
+                <div style="text-align:center; flex-shrink:0;">
+                  <div class="h2h-vs-badge" style="background:rgba(255,214,10,0.15); border-color:rgba(255,214,10,0.4); color:#ffd60a;">VS</div>
+                </div>
+
+                <!-- Team 2 -->
+                <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0; justify-content:flex-end; text-align:right;">
+                  <div style="min-width:0;">
+                    <div class="stat-card-player-label" style="font-size:13px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.team2}</div>
+                    <div class="stat-card-sublabel" style="color:#4fc3f7; font-weight:800;">${d.wins2} Siege · ${wr2}%</div>
+                  </div>
+                  <div class="stat-avatar-stack" style="display:flex; align-items:center;">${avatarStack2}</div>
+                </div>
+              </div>
+
+              <!-- Dual-Balken -->
+              <div style="height:7px; background:rgba(79,195,247,0.3); border-radius:5px; overflow:hidden; display:flex;">
+                <div style="height:100%; width:${wr1}%; background:linear-gradient(90deg, #ff9500, #ffd60a); transition:width 0.6s ease;"></div>
+                <div style="height:100%; width:${wr2}%; background:linear-gradient(90deg, #0a84ff, #4fc3f7); transition:width 0.6s ease;"></div>
+              </div>
+            </div>`;
+          })
+          .join("");
+
+        teamH2hEl.innerHTML = `
+          <div style="grid-column: 1 / -1; margin-top: 18px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <div class="section-label" style="margin: 0; display: flex; align-items: center; gap: 6px;">
+              <span>⚔️ 2:2 Team-Klassiker (Duo vs. Duo)</span>
+            </div>
+            <span style="font-size: 10px; color: #ffd60a; font-weight: 800; letter-spacing: 0.5px;">DIREKTE DUELLE</span>
+          </div>
+          ${duelCardsHtml}
+        `;
+      } else {
+        teamH2hEl.innerHTML = `
+          <div style="grid-column: 1 / -1; margin-top: 10px; padding: 12px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; font-size:11px; color:#8e8e93; text-align:center;">
+            ⚔️ 2:2 Team-Klassiker: Noch keine direkten Duelle zwischen festen Duos erfasst.
+          </div>
+        `;
+      }
+    }
+
     // Render Kugel-Spezis
     let topVollarbeiter = { n: "-", wr: 0 };
     let topHalbeExperte = { n: "-", wr: 0 };
@@ -3435,10 +3545,150 @@ window.renderBillardStats = function (
     function renderEloRanking(pData, show = true, isToday = false) {
       const el = byId("eloRanking") || document.getElementById("eloRanking");
       if (!el) return;
+      const teamRankingEl =
+        byId("stat-team-ranking") ||
+        document.getElementById("stat-team-ranking");
+
       if (!show) {
         el.innerHTML = "";
+        if (el) el.innerHTML = "";
+        if (teamRankingEl) {
+          teamRankingEl.innerHTML = "";
+          teamRankingEl.style.display = "none";
+        }
         return;
       }
+
+      if (activeMode === "2:2") {
+        if (el) el.style.display = "none";
+        if (teamRankingEl) {
+          teamRankingEl.style.display = "block";
+          const teamResults = agg.teamResults || {};
+          const teamRows = Object.entries(teamResults)
+            .map(([name, s]) => {
+              const pNames = name.split(" & ");
+              const p1 = pNames[0] || "";
+              const p2 = pNames[1] || "";
+              const d1 = (res.pData && res.pData[p1]) || {};
+              const d2 = (res.pData && res.pData[p2]) || {};
+              const elo1 = typeof d1.elo === "number" ? d1.elo : 1000;
+              const elo2 = typeof d2.elo === "number" ? d2.elo : 1000;
+              const teamElo = Math.round((elo1 + elo2) / 2);
+              const wr = s.g > 0 ? Math.round((s.w / s.g) * 100) : 0;
+              const losses = s.l !== undefined ? s.l : Math.max(0, s.g - s.w);
+
+              let synergyBadge = "🤝 Harmonisch";
+              let synergyColor = "#34c759";
+              let synergyClass = "pill-green";
+              if (wr >= 65) {
+                synergyBadge = "🌟 Traum-Duo";
+                synergyColor = "#ffd60a";
+                synergyClass = "pill-gold";
+              } else if (wr < 40 && s.g >= 2) {
+                synergyBadge = "⚡ Krisen-Duo";
+                synergyColor = "#ff453a";
+                synergyClass = "pill-red";
+              }
+
+              return {
+                name,
+                p1,
+                p2,
+                teamElo,
+                wins: s.w || 0,
+                losses,
+                games: s.g || 0,
+                wr,
+                synergyBadge,
+                synergyColor,
+                synergyClass,
+                maxStreak: s.maxStreak || 0,
+              };
+            })
+            .filter((r) => r.games > 0);
+
+          teamRows.sort(
+            (a, b) => b.teamElo - a.teamElo || b.wins - a.wins || b.wr - a.wr,
+          );
+
+          const medal = (i) =>
+            i === 0 ? "👑" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
+          const titleText = isToday
+            ? "Session 2:2 Team-Rangliste"
+            : "Ewige 2:2 Team-Rangliste";
+          const subtitleText = isToday
+            ? "Team-Rating und Erfolge der Duos am heutigen Spieltag."
+            : "Rangliste aller 2:2-Partnerschaften nach kombiniertem Rating (ELO-Mittelwert), Siegen und Winrate.";
+
+          let teamHtml = `
+            <div style="margin-top:2px; animation: ach-card-enter 0.4s ease-out forwards; opacity: 0; animation-delay: 0.4s;">
+              <div style="color:#ffd60a; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:1px;">${titleText}</div>
+              <div style="margin-top:6px; font-size:10px; line-height:1.4; color:#8e8e93;">${subtitleText}</div>
+              <div style="height:2px; width:24px; background:#ffd60a; margin-top:6px; border-radius:2px;"></div>
+            </div>
+            <div style="margin-top:10px;">
+          `;
+
+          if (teamRows.length > 0) {
+            teamRows.forEach((r, i) => {
+              const badge = medal(i);
+              const isFirst = i === 0;
+              const rankLabel = badge
+                ? `${badge} #${i + 1} · Team-Klassement`
+                : `#${i + 1} · Team-Klassement`;
+              const pillClass = isFirst ? "pill-gold" : "pill-green";
+              const cardAccent = isFirst ? "#ffd60a" : r.synergyColor;
+
+              const avatarStack = [r.p1, r.p2]
+                .map(
+                  (p, pi) =>
+                    `<img src="${safeGetAvatarUrl(p)}" class="stat-card-avatar" alt="${p}" onerror="this.style.display='none'" style="border-radius:10px; border:2px solid ${r.synergyColor}; margin-left:${pi > 0 ? "-10px" : "0"}; z-index:${2 - pi}; width:30px; height:30px;">`,
+                )
+                .join("");
+
+              teamHtml += `
+                <div class="stat-card-modern cinematic-entry ${isFirst ? "rank-1-card" : ""}" style="--card-accent: ${cardAccent}; margin-bottom:10px; animation-delay: ${0.5 + i * 0.05}s;">
+                  <div class="stat-card-main">
+                    <div class="stat-card-badge-top" style="display:flex; justify-content:space-between; align-items:center;">
+                      <span>${rankLabel}</span>
+                      <span style="font-size:9.5px; opacity:0.85;">${r.synergyBadge}</span>
+                    </div>
+                    <div class="stat-card-holder-row" style="margin-top:6px; gap:8px;">
+                      <div class="stat-avatar-stack" style="display:flex; align-items:center;">${avatarStack}</div>
+                      <span class="stat-card-player-label" style="font-size:14px; font-weight:900;">${r.name}</span>
+                    </div>
+                    <div class="stat-card-sublabel" style="margin-top:4px;">
+                      ${r.wins} Siege / ${r.losses} Niederlagen · ${r.games} Matches (${r.wr}%)
+                    </div>
+                  </div>
+                  <div class="stat-metric-hero" style="display:flex; flex-direction:column; align-items:flex-end; gap:3px;">
+                    <div class="stat-hero-pill ${pillClass}" style="font-size:1.05rem; padding:4px 10px;">${r.teamElo} ELO</div>
+                    <span style="font-size:9px; color:#8e8e93; font-weight:800; text-transform:uppercase;">Team-Rating</span>
+                  </div>
+                </div>
+              `;
+            });
+          } else {
+            teamHtml += `
+              <div style="text-align:center; padding:16px; color:#8e8e93; font-size:11px; background:rgba(255,255,255,0.02); border:1px dashed rgba(255,255,255,0.1); border-radius:12px;">
+                Noch keine 2:2-Matches für diese Auswahl erfasst.
+              </div>
+            `;
+          }
+
+          teamHtml += `</div>`;
+          teamRankingEl.innerHTML = teamHtml;
+        }
+        return;
+      } else {
+        if (el) el.style.display = "block";
+        if (teamRankingEl) {
+          teamRankingEl.style.display = "none";
+          teamRankingEl.innerHTML = "";
+        }
+      }
+
+      if (!el) return;
 
       const rows = Object.keys(pData || {})
         .map((name) => {
@@ -4119,6 +4369,8 @@ window.renderBillardStats = function (
     }
     const h2hResetEl = document.getElementById("stat-head-to-head");
     if (h2hResetEl) h2hResetEl.innerHTML = "";
+    const teamH2hResetEl = document.getElementById("stat-team-head-to-head");
+    if (teamH2hResetEl) teamH2hResetEl.innerHTML = "";
     const duoResetEl = document.getElementById("stat-duo-ranking");
     if (duoResetEl) duoResetEl.innerHTML = "";
     const spezResetEl = document.getElementById("stat-ball-spez");
@@ -4126,6 +4378,11 @@ window.renderBillardStats = function (
 
     const eloEl = document.getElementById("eloRanking");
     if (eloEl) eloEl.innerHTML = "";
+    const teamRankResetEl = document.getElementById("stat-team-ranking");
+    if (teamRankResetEl) {
+      teamRankResetEl.innerHTML = "";
+      teamRankResetEl.style.display = "none";
+    }
     const trendEl = document.getElementById("trendPlayers");
     if (trendEl) trendEl.innerHTML = "";
 
@@ -5079,21 +5336,11 @@ window.renderAchList = (filter) => {
 window.ballStatsMode = "all";
 
 window.setBallStatsMode = function (mode) {
-  window.ballStatsMode = mode;
-  document.querySelectorAll(".btn-ball-mode-filter").forEach((btn) => {
-    if (btn.getAttribute("data-ball-mode") === mode) {
-      btn.classList.add("active");
-      btn.style.background = "#0a84ff";
-      btn.style.color = "#ffffff";
-    } else {
-      btn.classList.remove("active");
-      btn.style.background = "transparent";
-      btn.style.color = "rgba(255, 255, 255, 0.65)";
-    }
-  });
-
-  if (typeof window.updateAllViews === "function") {
-    window.updateAllViews();
+  if (typeof window.setGlobalModeFilter === "function") {
+    window.setGlobalModeFilter(mode);
+  } else {
+    window.modeFilter = mode;
+    if (typeof window.updateAllViews === "function") window.updateAllViews();
   }
 };
 

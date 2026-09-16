@@ -6,7 +6,7 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
-### 🌟 Duo des Abends & Erweiterter Siri-Kommentator (v26.4)
+### 🌟 2:2 Komplett-Paket, faire Tagessieger-Wertung & UI-Feinschliff (v26.4)
 
 - **🌟 „Duo des Abends“ Hero-Badge (2:2 Champions):**
   - An Spieltagen mit 2:2-Matches kürt die App nun automatisch das stärkste Duo des Abends mit einer goldenen Champion-Hero-Card.
@@ -14,6 +14,17 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
   - Sichtbar direkt in der **📅 Session-Ansicht** unterhalb des Tagessieger-Podiums sowie live auf der **🎱 Matchseite**.
   - Präsentiert mit Doppel-Avataren, Gold-Krone 👑, Siegen, Quote, Netto-Frames und Synergie-Status.
   - Antippen öffnet das Punkte-Modal mit genauer Formelerklärung und der aktuellen Team-Rangliste des Spieltags.
+- **⚔️ 2:2 Team-Klassiker (Duo vs. Duo Head-to-Head):**
+  - Im Statistik-Reiter **Duelle** gibt es nun den direkten Vergleich aller 2:2-Paarungen gegeneinander (z. B. _Daniel & Thorsten_ vs. _Peter & Sascha_).
+  - Inklusive Doppel-Avataren beider Teams, Siegbilanz, Gesamtspielen, direktem Kräfteverhältnis-Balken und Führungs-Status.
+- **🏆 Ewige 2:2 Team-Rangliste:**
+  - Bei Auswahl des oberen Modus-Filters **`👥 2:2 Team`** schaltet die Rangliste automatisch auf das ewige Team-Klassement um.
+  - Rangliste aller Duos sortiert nach kombiniertem Team-Rating (ELO-Mittelwert), Siegen, Winrate und Synergie-Status (_🌟 Traum-Duo_, _🤝 Harmonisch_, _⚡ Krisen-Duo_).
+- **⚖️ 100% faire Tagessieger-Wertung (Session-MVP):**
+  - Für den Tagessieger fließen bei den Errungenschaften dauerhaft ausschließlich echte Tages-Leistungen der aktuellen Session ein (`dailyFamePool` / `dailyShamePool`).
+  - All-Time-Karriere-Meilensteine verbleiben im ewigen Trophäen-Kabinett, geben aber keine Tagessieger-Punkte mehr – dadurch starten alle Spieler (egal ob Veteran oder Neuling wie Sascha) stets unter exakt identischen und fairen Bedingungen bei 0.
+- **🧹 Bereinigte Filterleiste im Subtab „Kugeln“:**
+  - Die untere doppelte Modus-Leiste bei den Kugeln wurde entfernt. Die Kugel-Statistik koppelt nun direkt und reibungslos an den globalen Modus-Umschalter ganz oben.
 - **🎙️ Siri-Kommentator: 30 neue Sprüche für Sascha & 30 neue Team-Sprüche:**
   - Der integrierte Sprach-Kommentator wurde massiv ausgebaut:
     - **Sascha**: 30 individuelle, humorvolle Siri-Audio-Kommentare für gewonnene Spiele und Match-Highlights.

@@ -1004,6 +1004,9 @@
                 <!-- ELO Ranking Cards (werden per JS als .stat-card-modern eingefügt) -->
                 <div id="eloRanking"></div>
 
+                <!-- 👥 Ewige 2:2 Team-Rangliste (wird bei 2:2-Filter aktiviert) -->
+                <div id="stat-team-ranking" style="display: none"></div>
+
                 <!-- ELO Chart + Trending Players als moderne Kachel -->
                 <div
                   class="stat-card-modern cinematic-entry"
@@ -1131,6 +1134,10 @@
                   </div>
                 </div>
                 <div id="stat-duo-ranking" style="display: contents"></div>
+                <div
+                  id="stat-team-head-to-head"
+                  style="display: contents"
+                ></div>
                 <div id="stat-head-to-head" style="display: contents"></div>
               </div>
 
@@ -1490,81 +1497,6 @@
 
             <!-- SUBTAB 4: 🎱 KUGELN & BREAK -->
             <div id="stat-subtab-balls" class="stat-subtab-content">
-              <!-- Modus-Filter für Kugel-Statistiken -->
-              <div
-                id="ball-stats-mode-filter-bar"
-                style="
-                  display: flex;
-                  gap: 6px;
-                  margin-bottom: 14px;
-                  background: rgba(255, 255, 255, 0.04);
-                  padding: 4px;
-                  border-radius: 12px;
-                  border: 1px solid rgba(255, 255, 255, 0.08);
-                "
-              >
-                <button
-                  type="button"
-                  class="btn-ball-mode-filter active"
-                  data-ball-mode="all"
-                  onclick="window.setBallStatsMode('all')"
-                  style="
-                    flex: 1;
-                    padding: 7px 10px;
-                    border-radius: 8px;
-                    border: none;
-                    font-size: 11px;
-                    font-weight: 700;
-                    cursor: pointer;
-                    background: #0a84ff;
-                    color: #ffffff;
-                    transition: all 0.2s ease;
-                  "
-                >
-                  🎱 Alle Modi
-                </button>
-                <button
-                  type="button"
-                  class="btn-ball-mode-filter"
-                  data-ball-mode="1:1"
-                  onclick="window.setBallStatsMode('1:1')"
-                  style="
-                    flex: 1;
-                    padding: 7px 10px;
-                    border-radius: 8px;
-                    border: none;
-                    font-size: 11px;
-                    font-weight: 700;
-                    cursor: pointer;
-                    background: transparent;
-                    color: rgba(255, 255, 255, 0.65);
-                    transition: all 0.2s ease;
-                  "
-                >
-                  👤 1:1 Einzel
-                </button>
-                <button
-                  type="button"
-                  class="btn-ball-mode-filter"
-                  data-ball-mode="2:2"
-                  onclick="window.setBallStatsMode('2:2')"
-                  style="
-                    flex: 1;
-                    padding: 7px 10px;
-                    border-radius: 8px;
-                    border: none;
-                    font-size: 11px;
-                    font-weight: 700;
-                    cursor: pointer;
-                    background: transparent;
-                    color: rgba(255, 255, 255, 0.65);
-                    transition: all 0.2s ease;
-                  "
-                >
-                  👥 2:2 Team
-                </button>
-              </div>
-
               <div
                 class="stat-cards-grid"
                 style="

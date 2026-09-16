@@ -393,11 +393,11 @@ window.showDailyWinnerInfo = () => {
     `🕵️ Service-Klau: +2 (Sieg bei Gegner-Anstoß)\n` +
     `🪓 Dominanz: +0.5 pro Ø Restkugel (Sieg)\n` +
     `🗡️ Nemesis besiegt: +4\n` +
-    `🏆 Fame Achievement: +2\n\n` +
+    `🏆 Tages-Erfolg (Fame): +2\n\n` +
     `Abzüge:\n` +
     `🐀 Sieg durch Foul: -1\n` +
     `🤦 8er-Fehler: -2\n` +
-    `💀 Shame Achievement: -2\n` +
+    `💀 Tages-Missgeschick (Shame): -2\n` +
     `🧟 Hoher Ø Rest bei Niederlage: -0.25 pro Ø Restkugel\n\n` +
     `🌟 Duo des Abends (2:2 Champions):\n` +
     `Score = (Siege × 3) + Netto-Frames + (Winrate% / 10)`;
