@@ -4716,3 +4716,231 @@ select option {
   border: 1px solid #ff453a;
   color: #ff453a;
 }
+
+/* ==========================================================================
+   PROFI SHOT-CLOCK STYLES
+   ========================================================================== */
+.shotclock-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #8e8e93;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.shotclock-toggle-btn.active {
+  background: rgba(48, 209, 88, 0.15);
+  border-color: rgba(48, 209, 88, 0.5);
+  color: #30d158;
+}
+
+.shotclock-toggle-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8e8e93;
+  transition: all 0.25s ease;
+}
+
+.shotclock-toggle-btn.active .shotclock-toggle-dot {
+  background: #30d158;
+  box-shadow: 0 0 6px #30d158;
+}
+
+.shot-clock-display-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px 12px 6px 12px;
+  margin-bottom: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.shot-clock-time-wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+.shot-clock-digit {
+  font-size: 44px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+  transition: color 0.3s ease;
+}
+
+.shot-clock-unit {
+  font-size: 14px;
+  font-weight: 700;
+  color: #8e8e93;
+}
+
+.shot-clock-digit.green {
+  color: #30d158;
+  text-shadow: 0 0 14px rgba(48, 209, 88, 0.45);
+}
+
+.shot-clock-digit.orange {
+  color: #ff9f0a;
+  text-shadow: 0 0 16px rgba(255, 159, 10, 0.55);
+}
+
+.shot-clock-digit.red {
+  color: #ff453a;
+  text-shadow: 0 0 18px rgba(255, 69, 58, 0.75);
+  animation: shotclock-pulse 0.6s infinite alternate;
+}
+
+.shot-clock-digit.expired {
+  color: #ff3b30;
+  text-shadow: 0 0 24px rgba(255, 59, 48, 1);
+  animation: shotclock-foul-flash 0.35s infinite;
+}
+
+.shot-clock-status {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-top: 2px;
+  transition: color 0.3s ease;
+}
+
+.shot-clock-status.green {
+  color: #30d158;
+}
+.shot-clock-status.orange {
+  color: #ff9f0a;
+}
+.shot-clock-status.red {
+  color: #ff453a;
+}
+.shot-clock-status.expired {
+  color: #ff3b30;
+}
+
+.shot-clock-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.shot-clock-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition:
+    width 0.3s linear,
+    background 0.3s ease;
+}
+
+.shot-clock-bar-fill.green {
+  background: linear-gradient(90deg, #30d158, #34c759);
+}
+.shot-clock-bar-fill.orange {
+  background: linear-gradient(90deg, #ff9f0a, #ffb340);
+}
+.shot-clock-bar-fill.red {
+  background: linear-gradient(90deg, #ff453a, #ff3b30);
+}
+.shot-clock-bar-fill.expired {
+  background: #ff3b30;
+}
+
+.shotclock-next-btn {
+  width: 100%;
+  height: 42px;
+  border-radius: 11px;
+  background: linear-gradient(
+    135deg,
+    rgba(48, 209, 88, 0.22),
+    rgba(48, 209, 88, 0.35)
+  );
+  border: 1px solid rgba(48, 209, 88, 0.5);
+  color: #30d158;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(48, 209, 88, 0.15);
+  transition:
+    transform 0.15s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+  margin-bottom: 6px;
+}
+
+.shotclock-next-btn:active {
+  transform: scale(0.97);
+  background: rgba(48, 209, 88, 0.45);
+}
+
+.shotclock-sub-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.shotclock-sub-btn {
+  flex: 1;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.shotclock-sub-btn:active {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(0.97);
+}
+
+@keyframes shotclock-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.06);
+    opacity: 0.85;
+  }
+}
+
+@keyframes shotclock-foul-flash {
+  0%,
+  100% {
+    opacity: 1;
+    background: rgba(255, 59, 48, 0.2);
+  }
+  50% {
+    opacity: 0.4;
+    background: transparent;
+  }
+}

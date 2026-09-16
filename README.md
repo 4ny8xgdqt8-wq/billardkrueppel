@@ -6,8 +6,17 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
-### 🌟 2:2 Komplett-Paket, faire Tagessieger-Wertung & UI-Feinschliff (v26.4)
+### ⏱️ Profi Shot-Clock, 2:2 Komplett-Paket & faire Tagessieger-Wertung (v26.8)
 
+- **⏱️ Profi Shot-Clock (Stoppuhr gegen Zeitspiel):**
+  - Direkt auf der **🎱 Matchseite** kann nun eine professionelle 45-Sekunden-Shot-Clock zugeschaltet werden (Umschalter `[ AUS | AN ]`).
+  - **45-Sekunden-Timer**: Dynamischer Countdown mit farblichen Warnstufen (Grün: 45–16s, Orange: 15–6s, Rot pulsierend: 5–0s).
+  - **Foul-Alarm & Buzzer**: Authentische Audio-Signaltöne bei den letzten 5 Sekunden und ein lauter Sport-Buzzer bei 0 Sekunden (_„Foul – Zeit abgelaufen!“_).
+  - **Komfort-Bedienung & Blitz-Hotkey**:
+    - Großer `🎯 Nächster Stoß`-Button – kann **blitzschnell per Leertaste** ausgelöst werden, ohne das Handy berühren zu müssen!
+    - `⏸️ Pause / Weiter` für Diskussionen oder Kugelsuche.
+    - **Dauerhafter Sound**: Akustische Beeps und der laute Buzzer sind fest aktiv, ohne versehentliches Stummschalten.
+  - Merkt sich den Aktivierungszustand dauerhaft für zukünftige Spiele.
 - **🌟 „Duo des Abends“ Hero-Badge (2:2 Champions):**
   - An Spieltagen mit 2:2-Matches kürt die App nun automatisch das stärkste Duo des Abends mit einer goldenen Champion-Hero-Card.
   - Ausgezeichnet wird das Team mit der höchsten Punktzahl basierend auf Siegen, Netto-Frames und Winrate: `Score = (Siege × 3) + Netto-Frames + (Winrate% / 10)`.
@@ -34,7 +43,7 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
     - **Sascha**: 30 individuelle, humorvolle Siri-Audio-Kommentare für gewonnene Spiele und Match-Highlights.
     - **2:2 Teams & Duos**: 30 dynamische Team-Kommentare für Doppel-Siege, Teamplay und Synchron-Aktionen.
   - Funktioniert vollständig offline und direkt im Browser ohne Ladezeiten.
-- **Offline-Cache (v26.4):** Aktualisierung des Service-Worker-Caches auf Version 26.4.
+- **Offline-Cache (v26.8):** Aktualisierung des Service-Worker-Caches auf Version 26.8.
 
 ### 🎖️ Einheitliche Benennung: Sub-Tab „Erfolge“ in der Statistik (v26.3)
 

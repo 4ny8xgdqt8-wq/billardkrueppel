@@ -599,6 +599,103 @@
                 </div>
               </div>
             </div>
+
+            <!-- PROFI SHOT-CLOCK (Optional zuschaltbar) -->
+            <div
+              id="shot-clock-container"
+              style="
+                padding: 6px 0 8px 0;
+                margin-bottom: 6px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+              "
+            >
+              <!-- Shot-Clock Header & Toggle -->
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 4px;
+                "
+              >
+                <div
+                  style="
+                    font-size: 8.5px;
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    color: #8e8e93;
+                    letter-spacing: 1px;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                  "
+                >
+                  <span>⏱️ PROFI SHOT-CLOCK</span>
+                </div>
+                <button
+                  type="button"
+                  id="btn-toggle-shotclock"
+                  class="shotclock-toggle-btn"
+                  onclick="window.toggleShotClock()"
+                  title="Shot-Clock aktivieren/deaktivieren"
+                >
+                  <span class="shotclock-toggle-dot"></span>
+                  <span id="shotclock-toggle-label">AUS</span>
+                </button>
+              </div>
+
+              <!-- Shot-Clock Active Widget -->
+              <div
+                id="shot-clock-widget"
+                style="display: none; margin-top: 6px"
+              >
+                <div class="shot-clock-display-card">
+                  <div class="shot-clock-time-wrap">
+                    <span id="shot-clock-timer" class="shot-clock-digit green"
+                      >45</span
+                    >
+                    <span class="shot-clock-unit">s</span>
+                  </div>
+                  <div id="shot-clock-status" class="shot-clock-status green">
+                    AUFNAHME LÄUFT
+                  </div>
+                </div>
+
+                <!-- Fortschrittsbalken -->
+                <div class="shot-clock-bar-bg">
+                  <div
+                    id="shot-clock-bar"
+                    class="shot-clock-bar-fill green"
+                    style="width: 100%"
+                  ></div>
+                </div>
+
+                <!-- Haupt-Aktion: Nächster Stoß (auch per Leertaste) -->
+                <button
+                  type="button"
+                  id="btn-shotclock-next"
+                  class="shotclock-next-btn"
+                  onclick="window.resetShotClock()"
+                  title="Nächster Stoß (auch per Leertaste auslösbar)"
+                >
+                  🎯 NÄCHSTER STOSS
+                  <span style="font-size: 10px; opacity: 0.85; margin-left: 4px"
+                    >[ LEERTASTE ]</span
+                  >
+                </button>
+
+                <!-- Sub-Button: Pause / Weiter -->
+                <button
+                  type="button"
+                  id="btn-shotclock-pause"
+                  class="shotclock-sub-btn"
+                  style="width: 100%; height: 32px"
+                  onclick="window.togglePauseShotClock()"
+                >
+                  ⏸️ Pause
+                </button>
+              </div>
+            </div>
             <div>
               <label
                 style="

@@ -55,6 +55,10 @@ window.startMatchTimer = () => {
   window.matchStartTime = new Date();
   const display = document.getElementById("matchDurationDisplay");
 
+  if (window.shotClockEnabled && typeof window.resetShotClock === "function") {
+    window.resetShotClock(45);
+  }
+
   window.matchTimerInterval = setInterval(() => {
     const now = new Date();
     const elapsed = Math.floor((now - window.matchStartTime) / 1000);
@@ -74,7 +78,223 @@ window.stopMatchTimer = () => {
     window.matchTimerInterval = null;
   }
   window.matchStartTime = null;
+  if (typeof window.stopShotClock === "function") window.stopShotClock();
 };
+
+/* ==========================================================================
+   PROFI SHOT-CLOCK LOGIC
+   ========================================================================== */
+window.shotClockEnabled = localStorage.getItem("shotClockEnabled") === "true";
+window.shotClockSeconds = 45;
+window.shotClockDefaultTime = 45;
+window.shotClockInterval = null;
+window.shotClockPaused = false;
+window.shotClockSound = true; // Ton ist dauerhaft aktiv
+
+window.playShotClockBeep = (freq = 800, duration = 0.08) => {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!window.shotClockAudioCtx) window.shotClockAudioCtx = new AudioCtx();
+    const ctx = window.shotClockAudioCtx;
+    if (ctx.state === "suspended") ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch (e) {
+    console.warn("Shot-Clock audio error:", e);
+  }
+};
+
+window.playShotClockBuzzer = () => {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!window.shotClockAudioCtx) window.shotClockAudioCtx = new AudioCtx();
+    const ctx = window.shotClockAudioCtx;
+    if (ctx.state === "suspended") ctx.resume();
+    [160, 240].forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0.22, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.6);
+    });
+  } catch (e) {
+    console.warn("Shot-Clock buzzer error:", e);
+  }
+};
+
+window.updateShotClockDisplay = () => {
+  const timerEl = document.getElementById("shot-clock-timer");
+  const statusEl = document.getElementById("shot-clock-status");
+  const barEl = document.getElementById("shot-clock-bar");
+  const pauseBtn = document.getElementById("btn-shotclock-pause");
+
+  if (!timerEl || !statusEl || !barEl) return;
+
+  const s = window.shotClockSeconds;
+  timerEl.textContent = s >= 0 ? String(s) : "00";
+
+  const pct = Math.max(
+    0,
+    Math.min(100, (s / (window.shotClockDefaultTime || 45)) * 100),
+  );
+  barEl.style.width = `${pct}%`;
+
+  let colorClass = "green";
+  let statusText = "AUFNAHME LÄUFT";
+
+  if (window.shotClockPaused) {
+    statusText = "PAUSIERT";
+  } else if (s <= 0) {
+    colorClass = "expired";
+    statusText = "FOUL - ZEIT ABGELAUFEN!";
+  } else if (s <= 5) {
+    colorClass = "red";
+    statusText = "LETZTE SEKUNDEN!";
+  } else if (s <= 15) {
+    colorClass = "orange";
+    statusText = "TEMPO ANZIEHEN!";
+  }
+
+  timerEl.className = `shot-clock-digit ${colorClass}`;
+  statusEl.className = `shot-clock-status ${colorClass}`;
+  statusEl.textContent = statusText;
+  barEl.className = `shot-clock-bar-fill ${colorClass}`;
+
+  if (pauseBtn) {
+    pauseBtn.textContent = window.shotClockPaused ? "▶️ Weiter" : "⏸️ Pause";
+  }
+};
+
+window.startShotClock = (seconds = 45) => {
+  if (!window.shotClockEnabled) return;
+  if (window.shotClockInterval) clearInterval(window.shotClockInterval);
+
+  window.shotClockSeconds = seconds;
+  window.shotClockDefaultTime = Math.max(seconds, 45);
+  window.shotClockPaused = false;
+  window.updateShotClockDisplay();
+
+  window.shotClockInterval = setInterval(() => {
+    if (window.shotClockPaused) return;
+
+    window.shotClockSeconds--;
+    window.updateShotClockDisplay();
+
+    if (window.shotClockSeconds === 10) {
+      window.playShotClockBeep(650, 0.12);
+    } else if (window.shotClockSeconds > 0 && window.shotClockSeconds <= 5) {
+      window.playShotClockBeep(850, 0.08);
+    } else if (window.shotClockSeconds <= 0) {
+      clearInterval(window.shotClockInterval);
+      window.shotClockInterval = null;
+      window.shotClockSeconds = 0;
+      window.updateShotClockDisplay();
+      window.playShotClockBuzzer();
+    }
+  }, 1000);
+};
+
+window.resetShotClock = (seconds = 45) => {
+  window.startShotClock(seconds);
+};
+
+window.togglePauseShotClock = () => {
+  if (!window.shotClockEnabled) return;
+  window.shotClockPaused = !window.shotClockPaused;
+  if (
+    !window.shotClockInterval &&
+    !window.shotClockPaused &&
+    window.shotClockSeconds > 0
+  ) {
+    window.startShotClock(window.shotClockSeconds);
+  } else {
+    window.updateShotClockDisplay();
+  }
+};
+
+window.stopShotClock = () => {
+  if (window.shotClockInterval) {
+    clearInterval(window.shotClockInterval);
+    window.shotClockInterval = null;
+  }
+  window.shotClockSeconds = 45;
+  window.shotClockDefaultTime = 45;
+  window.shotClockPaused = false;
+  window.updateShotClockDisplay();
+};
+
+window.toggleShotClock = () => {
+  window.shotClockEnabled = !window.shotClockEnabled;
+  localStorage.setItem("shotClockEnabled", String(window.shotClockEnabled));
+  window.updateShotClockUI();
+
+  if (window.shotClockEnabled) {
+    window.resetShotClock(45);
+  } else {
+    window.stopShotClock();
+  }
+};
+
+window.updateShotClockUI = () => {
+  const toggleBtn = document.getElementById("btn-toggle-shotclock");
+  const toggleLabel = document.getElementById("shotclock-toggle-label");
+  const widget = document.getElementById("shot-clock-widget");
+
+  if (toggleBtn) {
+    toggleBtn.classList.toggle("active", window.shotClockEnabled);
+  }
+  if (toggleLabel) {
+    toggleLabel.textContent = window.shotClockEnabled ? "AN" : "AUS";
+  }
+  if (widget) {
+    widget.style.display = window.shotClockEnabled ? "block" : "none";
+  }
+  if (window.shotClockEnabled) {
+    window.updateShotClockDisplay();
+  }
+};
+
+// Leertaste als Hotkey für "Nächster Stoß (Reset)"
+if (!window._shotClockKeydownBound) {
+  window._shotClockKeydownBound = true;
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space" || e.key === " ") {
+      // Ignoriere Leertaste in Eingabefeldern oder Select-Boxen
+      const tag = (e.target && e.target.tagName) || "";
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        (e.target && e.target.isContentEditable)
+      ) {
+        return;
+      }
+
+      // Nur ausführen, wenn Shot-Clock aktiv und Phase-2/Widget sichtbar ist
+      if (!window.shotClockEnabled) return;
+      const widget = document.getElementById("shot-clock-widget");
+      if (!widget || widget.style.display === "none") return;
+
+      e.preventDefault();
+      window.resetShotClock(45);
+    }
+  });
+}
 
 window.openSuccessModal = (info = {}) => {
   const modal = document.getElementById("successModal");
@@ -836,6 +1056,10 @@ window.updateUI = () => {
     phase2.style.animation = playersReady
       ? "ach-card-enter 0.5s ease-out forwards"
       : "none";
+
+  if (typeof window.updateShotClockUI === "function") {
+    window.updateShotClockUI();
+  }
 
   // ELO-Box nur anzeigen, wenn Spieler bereit sind
   const probBox = document.getElementById("match-prob");
@@ -2048,3 +2272,13 @@ window.saveEditedMatch = async () => {
     }
   }
 };
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    if (typeof window.updateShotClockUI === "function")
+      window.updateShotClockUI();
+  });
+} else {
+  if (typeof window.updateShotClockUI === "function")
+    window.updateShotClockUI();
+}
