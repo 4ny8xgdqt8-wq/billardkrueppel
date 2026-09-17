@@ -193,6 +193,25 @@ window.processData = function (dataArray, todayStr) {
     const loserString = g.w == 1 ? String(g.p2 || "") : String(g.p1 || "");
     const breaker = String(g.a || "").trim();
     const rest = parseInt(g.l || 0);
+    // Break-Erkennung (unterstützt 1:1 und 2:2 mit Team-Strings wie "A & B")
+    const team1HadBreak = Boolean(
+      breaker &&
+      (breaker === String(g.p1 || "").trim() ||
+        p1Arr.includes(breaker) ||
+        (breaker.includes(" & ") &&
+          breaker.split(" & ").some((b) => p1Arr.includes(String(b).trim())))),
+    );
+    const team2HadBreak = Boolean(
+      breaker &&
+      (breaker === String(g.p2 || "").trim() ||
+        p2Arr.includes(breaker) ||
+        (breaker.includes(" & ") &&
+          breaker.split(" & ").some((b) => p2Arr.includes(String(b).trim())))),
+    );
+    const winnerHadBreak =
+      (g.w == 1 && team1HadBreak) || (g.w == 2 && team2HadBreak);
+    const loserHadBreak =
+      (g.w == 1 && team2HadBreak) || (g.w == 2 && team1HadBreak);
 
     // Normalisierung für Team-Vampir (einmal pro Match berechnen, sortiert Kopien)
     const winnerKey = [...winners].sort().join(" & ");
@@ -203,6 +222,15 @@ window.processData = function (dataArray, todayStr) {
         initP(p);
         pData[p].games++;
         if (isTodayMatch) pData[p].todayGames++;
+        const pTeamHadBreak =
+          (p1Arr.includes(p) && team1HadBreak) ||
+          (p2Arr.includes(p) && team2HadBreak);
+        if (pTeamHadBreak) {
+          pData[p].breakGames = (pData[p].breakGames || 0) + 1;
+          if (isTodayMatch) {
+            pData[p].todayBreakGames = (pData[p].todayBreakGames || 0) + 1;
+          }
+        }
       }
     });
     winners.forEach((p) => {
@@ -215,7 +243,7 @@ window.processData = function (dataArray, todayStr) {
           pData[p].todayBlackWinsCount++;
         if (g.t === "Regulär (8er gelocht)") pData[p].todayRegularWins++; // New
         if (g.t === "Gegner-Fehler: Foul bei der 8") pData[p].todayFoul8Wins++; // New
-        if (breaker && winners.includes(breaker)) pData[p].todayBreakWins++;
+        if (winnerHadBreak) pData[p].todayBreakWins++;
         if (rest === 1) pData[p].todayClutchWins++;
       }
       pData[p].killerPoints += rest;
@@ -241,21 +269,14 @@ window.processData = function (dataArray, todayStr) {
       pData[p].lastWin = true;
       if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler")))
         pData[p].blackWinsCount++;
-      if (breaker && winners.includes(breaker)) pData[p].breakWins++;
+      if (winnerHadBreak) pData[p].breakWins++;
 
       // Service thief logic
-      const myTeam = winners.includes(p) ? winners : losers;
-      if (
-        breaker &&
-        !myTeam.includes(breaker) &&
-        (winners.includes(breaker) || losers.includes(breaker))
-      ) {
+      if (loserHadBreak) {
         pData[p].opponentStartedGames++;
         if (isTodayMatch) pData[p].todayOpponentStartedGames++;
-        if (winners.includes(p)) {
-          pData[p].stolenServiceWins++;
-          if (isTodayMatch) pData[p].todayStolenServiceWins++;
-        }
+        pData[p].stolenServiceWins++;
+        if (isTodayMatch) pData[p].todayStolenServiceWins++;
       }
     });
     losers.forEach((p) => {
@@ -263,6 +284,11 @@ window.processData = function (dataArray, todayStr) {
       pData[p].streak = 0;
       pData[p].currentStreak = 0;
       pData[p].lastWin = false;
+      // Service thief logic for loser (opponent started and won, or opponent started and lost)
+      if (winnerHadBreak) {
+        pData[p].opponentStartedGames++;
+        if (isTodayMatch) pData[p].todayOpponentStartedGames++;
+      }
       pData[p].rest += rest;
       if (isTodayMatch) pData[p].todayRest += rest;
       // New loss type counts
@@ -346,7 +372,7 @@ window.processData = function (dataArray, todayStr) {
 
     if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler")))
       blackWins++;
-    if (breaker && winners.includes(breaker)) breakWinsCount++;
+    if (winnerHadBreak) breakWinsCount++;
 
     // Aggregates Berechnung für Dashboard (Kugeln, Teams, Duelle)
     if (g.bt1 && g.bt2 && g.w) {
@@ -686,29 +712,50 @@ window.enrichStatsWithAchievements = function (
         : 0;
     const winnerString = String(g.w == 1 ? g.p1 : g.p2 || "").trim(); // Trimmed winner string for break check
     const breakerString = String(g.a || "").trim();
-    // ELO Berechnung für die Simulation
+
+    // Break-Erkennung (unterstützt 1:1 und 2:2 mit Team-Strings wie "A & B")
+    const team1HadBreak = Boolean(
+      breakerString &&
+      (breakerString === String(g.p1 || "").trim() ||
+        p1A.includes(breakerString) ||
+        (breakerString.includes(" & ") &&
+          breakerString
+            .split(" & ")
+            .some((b) => p1A.includes(String(b).trim())))),
+    );
+    const team2HadBreak = Boolean(
+      breakerString &&
+      (breakerString === String(g.p2 || "").trim() ||
+        p2A.includes(breakerString) ||
+        (breakerString.includes(" & ") &&
+          breakerString
+            .split(" & ")
+            .some((b) => p2A.includes(String(b).trim())))),
+    );
+    const winnerHadBreak =
+      (g.w == 1 && team1HadBreak) || (g.w == 2 && team2HadBreak);
+    const loserHadBreak =
+      (g.w == 1 && team2HadBreak) || (g.w == 2 && team1HadBreak);
 
     // Track break games
-    if (breakerString) {
-      if (p1A.includes(breakerString)) {
-        p1A.forEach((p) => {
-          if (simPData[p]) {
-            simPData[p].breakGames = (simPData[p].breakGames || 0) + 1;
-            if (isMatchFromToday)
-              simPData[p].todayBreakGames =
-                (simPData[p].todayBreakGames || 0) + 1;
-          }
-        });
-      } else if (p2A.includes(breakerString)) {
-        p2A.forEach((p) => {
-          if (simPData[p]) {
-            simPData[p].breakGames = (simPData[p].breakGames || 0) + 1;
-            if (isMatchFromToday)
-              simPData[p].todayBreakGames =
-                (simPData[p].todayBreakGames || 0) + 1;
-          }
-        });
-      }
+    if (team1HadBreak) {
+      p1A.forEach((p) => {
+        if (simPData[p]) {
+          simPData[p].breakGames = (simPData[p].breakGames || 0) + 1;
+          if (isMatchFromToday)
+            simPData[p].todayBreakGames =
+              (simPData[p].todayBreakGames || 0) + 1;
+        }
+      });
+    } else if (team2HadBreak) {
+      p2A.forEach((p) => {
+        if (simPData[p]) {
+          simPData[p].breakGames = (simPData[p].breakGames || 0) + 1;
+          if (isMatchFromToday)
+            simPData[p].todayBreakGames =
+              (simPData[p].todayBreakGames || 0) + 1;
+        }
+      });
     }
 
     const avg1 = p1A.reduce((s, p) => s + getElo(p), 0) / (p1A.length || 1);
@@ -830,7 +877,7 @@ window.enrichStatsWithAchievements = function (
           d.foul8Wins++;
         }
         // Break-Win Simulation
-        if (breakerString && winners.includes(breakerString)) {
+        if (winnerHadBreak) {
           d.breakWins++;
         }
 
@@ -889,16 +936,11 @@ window.enrichStatsWithAchievements = function (
       if (d.elo > d.maxElo) d.maxElo = Math.round(d.elo);
 
       // Service thief logic
-      const isMyTeamBreaker = isW
-        ? winners.includes(breakerString)
-        : losers.includes(breakerString);
-      if (
-        breakerString &&
-        !isMyTeamBreaker &&
-        (winners.includes(breakerString) || losers.includes(breakerString))
-      ) {
+      if (isW && loserHadBreak) {
         d.opponentStartedGames++;
-        if (isW) d.stolenServiceWins++;
+        d.stolenServiceWins++;
+      } else if (!isW && winnerHadBreak) {
+        d.opponentStartedGames++;
       }
 
       d.winRateLast30 =
@@ -1383,25 +1425,47 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
     const playersInMatch = [...p1A, ...p2A];
     playersInMatch.forEach(initP);
 
+    // Break-Erkennung (unterstützt 1:1 und 2:2 mit Team-Strings wie "A & B")
+    const team1HadBreak = Boolean(
+      breakerString &&
+      (breakerString === String(g.p1 || "").trim() ||
+        p1A.includes(breakerString) ||
+        (breakerString.includes(" & ") &&
+          breakerString
+            .split(" & ")
+            .some((b) => p1A.includes(String(b).trim())))),
+    );
+    const team2HadBreak = Boolean(
+      breakerString &&
+      (breakerString === String(g.p2 || "").trim() ||
+        p2A.includes(breakerString) ||
+        (breakerString.includes(" & ") &&
+          breakerString
+            .split(" & ")
+            .some((b) => p2A.includes(String(b).trim())))),
+    );
+    const winnerHadBreak =
+      (g.w == 1 && team1HadBreak) || (g.w == 2 && team2HadBreak);
+    const loserHadBreak =
+      (g.w == 1 && team2HadBreak) || (g.w == 2 && team1HadBreak);
+
     // Track break games
-    if (breakerString) {
-      if (p1A.includes(breakerString)) {
-        p1A.forEach((p) => {
-          if (pData[p]) {
-            pData[p].breakGames = (pData[p].breakGames || 0) + 1;
-            if (isTodayMatch)
-              pData[p].todayBreakGames = (pData[p].todayBreakGames || 0) + 1;
-          }
-        });
-      } else if (p2A.includes(breakerString)) {
-        p2A.forEach((p) => {
-          if (pData[p]) {
-            pData[p].breakGames = (pData[p].breakGames || 0) + 1;
-            if (isTodayMatch)
-              pData[p].todayBreakGames = (pData[p].todayBreakGames || 0) + 1;
-          }
-        });
-      }
+    if (team1HadBreak) {
+      p1A.forEach((p) => {
+        if (pData[p]) {
+          pData[p].breakGames = (pData[p].breakGames || 0) + 1;
+          if (isTodayMatch)
+            pData[p].todayBreakGames = (pData[p].todayBreakGames || 0) + 1;
+        }
+      });
+    } else if (team2HadBreak) {
+      p2A.forEach((p) => {
+        if (pData[p]) {
+          pData[p].breakGames = (pData[p].breakGames || 0) + 1;
+          if (isTodayMatch)
+            pData[p].todayBreakGames = (pData[p].todayBreakGames || 0) + 1;
+        }
+      });
     }
 
     const winners = g.w == 1 ? p1A : p2A;
@@ -1415,7 +1479,7 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
 
     if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler")))
       blackWins++;
-    if (breakerString && winners.includes(breakerString)) {
+    if (winnerHadBreak) {
       breakWinsCount++;
     }
 
@@ -1609,7 +1673,7 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
           if (isTodayMatch) d.todayFoul8Wins++;
         }
         // Corrected breakWins logic for individual players in fallback
-        if (breakerString && winners.includes(breakerString)) {
+        if (winnerHadBreak) {
           d.breakWins++;
           if (isTodayMatch) d.todayBreakWins++;
         }
@@ -1643,17 +1707,17 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
       const change = p1A.includes(p) ? k * eloChange : -(k * eloChange);
 
       // Service thief logic (Fallback)
-      const myTeam = winners.includes(p) ? winners : losers;
-      if (
-        breakerString &&
-        !myTeam.includes(breakerString) &&
-        (winners.includes(breakerString) || losers.includes(breakerString))
-      ) {
+      if (isW && loserHadBreak) {
         d.opponentStartedGames++;
-        if (isW) d.stolenServiceWins++;
+        d.stolenServiceWins++;
         if (isTodayMatch) {
           d.todayOpponentStartedGames++;
-          if (isW) d.todayStolenServiceWins++;
+          d.todayStolenServiceWins++;
+        }
+      } else if (!isW && winnerHadBreak) {
+        d.opponentStartedGames++;
+        if (isTodayMatch) {
+          d.todayOpponentStartedGames++;
         }
       }
 

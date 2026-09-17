@@ -297,13 +297,13 @@ fetch("sw.js?t=" + Date.now())
   })
   .then((text) => {
     const match = text.match(
-      /CACHE_NAME\s*=\s*['"][^'"]*?v?(\d+(?:\.\d+)*)['"]/,
+      /CACHE_NAME\s*=\s*['"]billard-(?:v)?([a-zA-Z0-9_.]+)['"]/,
     );
     if (match && match[1]) updateVersionUI(match[1]);
-    else updateVersionUI("v16.2");
+    else updateVersionUI("20260917_01");
   })
   .catch(() => {
-    updateVersionUI("v16.2");
+    updateVersionUI("20260917_01");
   });
 
 // -- 5. Loader Controls & Champions Break Arena --

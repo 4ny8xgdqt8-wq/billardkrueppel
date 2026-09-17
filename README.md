@@ -6,6 +6,21 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### 🏷️ Neues Versionsformat (20260917_01)
+
+- **📅 Datumsbasiertes Versionsschema:**
+  - Umstellung der Versionsanzeige und des Service-Worker-Caches auf ein transparentes Format bestehend aus Datum und Zähler (`YYYYMMDD_XX`).
+- **Offline-Cache (20260917_01):** Aktualisierung des Service-Worker-Caches auf Version `20260917_01`.
+
+### ⚡ 2:2 Anstoß-Erfassung & Break-Statistiken (v26.12)
+
+- **⚡ Vollständige Anstoß-Wertung für 2:2-Matches:**
+  - Die Anstöße aus 2:2-Doppelspielen werden nun für die beteiligten Spieler lückenlos erfasst und in allen Auswertungen berücksichtigt.
+  - **⚡ Anstoß-König & Rangliste:** Beide Spieler des anstoßenden Teams erhalten nun ihre verdienten Anstöße (`Meiste eigene Anstöße`) gutgeschrieben.
+  - **🏆 Break-Master & Break-Quote:** Siege nach eigenem Anstoß im 2:2 zählen ab sofort für die persönliche Break-Win-Statistik, die globale Anstoß-Vorteil-Quote sowie die Break-Master-Erfolge.
+  - **🕵️‍♂️ Service-Dieb:** Siege gegen das anstoßende gegnerische Team im 2:2 fließen nun präzise in die Service-Dieb-Erfolge ein.
+- **Offline-Cache (v26.12):** Aktualisierung des Service-Worker-Caches auf Version 26.12.
+
 ### 🎲 Intelligenter Anwesenheits-Pool & 3-Spieler-Turnus (v26.11)
 
 - **🎲 Fester Anwesenheits-Pool im Dialog „Anwesende Spieler & Startpartie“:**

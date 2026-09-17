@@ -154,24 +154,46 @@ self.onmessage = function (e) {
           ? Number(g.duration) * 60
           : 0;
 
+      // Break-Erkennung (unterstützt 1:1 und 2:2 mit Team-Strings wie "A & B")
+      const team1HadBreak = Boolean(
+        breakerString &&
+        (breakerString === String(g.p1 || "").trim() ||
+          p1A.includes(breakerString) ||
+          (breakerString.includes(" & ") &&
+            breakerString
+              .split(" & ")
+              .some((b) => p1A.includes(String(b).trim())))),
+      );
+      const team2HadBreak = Boolean(
+        breakerString &&
+        (breakerString === String(g.p2 || "").trim() ||
+          p2A.includes(breakerString) ||
+          (breakerString.includes(" & ") &&
+            breakerString
+              .split(" & ")
+              .some((b) => p2A.includes(String(b).trim())))),
+      );
+      const winnerHadBreak =
+        (g.w == 1 && team1HadBreak) || (g.w == 2 && team2HadBreak);
+      const loserHadBreak =
+        (g.w == 1 && team2HadBreak) || (g.w == 2 && team1HadBreak);
+
       if (g.t && (g.t.includes("Schwarz") || g.t.includes("Gegner-Fehler")))
         blackWins++;
 
       // Track break games per player
-      if (breakerString) {
-        if (p1A.includes(breakerString)) {
-          p1A.forEach((p) => {
-            if (pData[p]) pData[p].breakGames++;
-          });
-        } else if (p2A.includes(breakerString)) {
-          p2A.forEach((p) => {
-            if (pData[p]) pData[p].breakGames++;
-          });
-        }
+      if (team1HadBreak) {
+        p1A.forEach((p) => {
+          if (pData[p]) pData[p].breakGames++;
+        });
+      } else if (team2HadBreak) {
+        p2A.forEach((p) => {
+          if (pData[p]) pData[p].breakGames++;
+        });
       }
 
       // Global Break Win Check
-      if (breakerString && winners.includes(breakerString)) {
+      if (winnerHadBreak) {
         breakWinsCount++;
       }
 
@@ -369,7 +391,7 @@ self.onmessage = function (e) {
             d.foul8Wins++;
           }
           // Break-Win Prüfung
-          if (breakerString && winners.includes(breakerString)) {
+          if (winnerHadBreak) {
             d.breakWins++;
           }
           if (rest === 1) d.clutchWins++;
@@ -393,14 +415,11 @@ self.onmessage = function (e) {
         if (eloRatings[p] > d.maxElo) d.maxElo = Math.round(eloRatings[p]);
 
         // Service thief logic
-        const myTeam = winners.includes(p) ? winners : losers;
-        if (
-          breakerString &&
-          !myTeam.includes(breakerString) &&
-          (winners.includes(breakerString) || losers.includes(breakerString))
-        ) {
+        if (isW && loserHadBreak) {
           d.opponentStartedGames++;
-          if (isW) d.stolenServiceWins++;
+          d.stolenServiceWins++;
+        } else if (!isW && winnerHadBreak) {
+          d.opponentStartedGames++;
         }
 
         // Session gain logic
