@@ -460,6 +460,12 @@ window.doSave = async () => {
     if (durationDisplay) durationDisplay.textContent = "00:00";
     window.matchDurationInMinutes = 0;
     if (typeof window.updateUI === "function") window.updateUI();
+    if (typeof window.recalculateAndRender === "function") {
+      window.recalculateAndRender();
+    }
+    if (typeof window.updateAllViews === "function") {
+      window.updateAllViews();
+    }
 
     const durFormatted = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")} min`;
     if (window.openSuccessModal) {

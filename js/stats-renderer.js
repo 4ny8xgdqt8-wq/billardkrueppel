@@ -1686,7 +1686,8 @@ window.renderBillardStats = function (
   };
 
   if (labels.length > 0) {
-    byId("stat-total").innerText = currentStats.length;
+    const statTotalEl = byId("stat-total");
+    if (statTotalEl) statTotalEl.innerText = currentStats.length;
 
     // --- TAGESSIEGER-BERECHNUNG (Session- und Matchseite) ---
     const dailyWinnerCards = [

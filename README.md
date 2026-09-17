@@ -6,11 +6,17 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
-### 🏷️ Neues Versionsformat (20260917_01)
+### ⚡ Live-Aktualisierung nach Match-Speichern (20260917.02)
+
+- **🏆 Sofortige Aktualisierung der Tagessiegplatzierung & „Duo des Abends“:**
+  - Nach dem Speichern eines Spiels werden die Live-Tagessiegplatzierung und das „Duo des Abends“ auf der Matchseite ab sofort unmittelbar neu berechnet und aktualisiert, ohne dass zuvor in den Tab „Session“ gewechselt werden muss.
+- **Offline-Cache (20260917.02):** Aktualisierung des Service-Worker-Caches auf Version `20260917.02`.
+
+### 🏷️ Neues Versionsformat (20260917.01)
 
 - **📅 Datumsbasiertes Versionsschema:**
-  - Umstellung der Versionsanzeige und des Service-Worker-Caches auf ein transparentes Format bestehend aus Datum und Zähler (`YYYYMMDD_XX`).
-- **Offline-Cache (20260917_01):** Aktualisierung des Service-Worker-Caches auf Version `20260917_01`.
+  - Umstellung der Versionsanzeige und des Service-Worker-Caches auf ein transparentes Format bestehend aus Datum und Zähler (`YYYYMMDD.XX`).
+- **Offline-Cache (20260917.01):** Aktualisierung des Service-Worker-Caches auf Version `20260917.01`.
 
 ### ⚡ 2:2 Anstoß-Erfassung & Break-Statistiken (v26.12)
 
