@@ -405,6 +405,28 @@ window.doSave = async () => {
     if (prevMode === "1:1") {
       const p1El = document.getElementById("p1");
       if (p1El) p1El.value = winnerName;
+
+      // Smarter 3-Spieler Turnus ("King of the Hill"):
+      // Wenn genau 3 Spieler im aktiven Abendpool sind, rückt der pausierende Spieler auf p2 nach!
+      let pool = window.activeEveningPlayers;
+      if (!pool || !Array.isArray(pool) || pool.length !== 3) {
+        try {
+          const saved = localStorage.getItem("bk_active_evening_players");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length === 3) pool = parsed;
+          }
+        } catch (e) {}
+      }
+      if (pool && pool.length === 3) {
+        const nextChallenger = pool.find(
+          (name) => name !== winnerName && name !== loserName,
+        );
+        const p2El = document.getElementById("p2");
+        if (nextChallenger && p2El) {
+          p2El.value = nextChallenger;
+        }
+      }
     } else {
       const names = (winnerName || "").split(" & ").map((n) => n.trim());
       if (names.length === 2) {

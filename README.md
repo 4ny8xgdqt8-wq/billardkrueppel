@@ -6,6 +6,38 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### 🎲 Intelligenter Anwesenheits-Pool & 3-Spieler-Turnus (v26.11)
+
+- **🎲 Fester Anwesenheits-Pool im Dialog „Anwesende Spieler & Startpartie“:**
+  - Die im 🎲-Dialog ausgewählten Spieler werden nun dauerhaft als aktiver Pool für den aktuellen Spielabend gesichert.
+  - Beim erneuten Öffnen bleiben genau die anwesenden Spieler mit Häkchen vorausgewählt.
+  - Geht jemand früher, reicht ein kurzes Abwählen im Dialog – die gegangene Person wird für den restlichen Abend nirgends mehr vorgeschlagen oder hinzugefügt.
+- **🔀 Zuverlässiges „Teams mischen“:**
+  - „Teams mischen“ greift nun **ausschließlich** auf die tatsächlich anwesenden Spieler des aktiven Pools zu. Nicht anwesende Spieler aus der Datenbank werden niemals mehr versehentlich in die Teams gezogen.
+  - Bei weniger als 4 Spielern (z. B. nach dem Weggang eines Spielers) informiert ein klarer Hinweis, statt fremde Spieler herbeizuholen.
+- **👑 Smarter 3-Spieler 1:1-Modus („King of the Hill“):**
+  - Wenn 3 Spieler anwesend sind und 1:1 gespielt wird, rückt nach jedem Spiel automatisch der pausierende Spieler als neuer Herausforderer an den Tisch, während der Sieger stehen bleibt. Kein manuelles Umstellen nötig!
+- **Offline-Cache (v26.11):** Aktualisierung des Service-Worker-Caches auf Version 26.11.
+
+### 🧹 Bereinigte Filter-Leiste in Erfolge & Historie (v26.10)
+
+- **🧹 Entfernung des redundanten „Session“-Filters:**
+  - In den Ansichten **Historie** (Übersicht) und **Erfolge** (Hall of Fame & Shame) wurde der deplatzierte Filter-Button `📅 Session` entfernt.
+  - Für den aktuellen Spielabend steht weiterhin der dedizierte Haupt-Tab **Session** zur Verfügung.
+  - Die Filter-Leiste (Zeitraum) ist nun mit exakt 3 Buttons (`🌐 Gesamt`, `⏳ 30 Tage`, `⚙️ Mehr...`) perfekt symmetrisch und bündig zur Modus-Leiste (`Alle Matches`, `1:1 Einzel`, `2:2 Team`) aufgebaut.
+- **Offline-Cache (v26.10):** Aktualisierung des Service-Worker-Caches auf Version 26.10.
+
+### 🛡️ Hotfix: Stabilität bei 2:2-Matches & Filter-Korrekturen (v26.9)
+
+- **🛡️ 2:2 Team-Berechnung & Statistik-Stabilität wiederhergestellt:**
+  - Behebt ein schwerwiegendes Problem bei der Berechnung von Team-Spielen, durch das bei vorhandenen 2:2-Matches die Statistik- und Session-Ansichten blockiert werden konnten.
+  - Korrektur der Zählweise für Zu-Null-Siege (`teamCleanWins`) und knappe Siege (`teamClutchWins`) im Team-Modus.
+- **🎯 Shot-Clock Leertasten-Steuerung optimiert:**
+  - Der Leertasten-Hotkey für den nächsten Stoß reagiert nun ausschließlich auf der aktiven Matchseite (`Aufzeichnen`), sodass auf anderen Seiten (wie Regeln oder Historie) das normale Scrollen per Leertaste uneingeschränkt möglich ist.
+- **🔍 Spieler-Filterung für 2:2-Matches:**
+  - Beim Filtern nach einem bestimmten Spieler werden nun auch dessen absolvierte 2:2-Doppelspiele korrekt erfasst und angezeigt.
+- **Offline-Cache (v26.9):** Aktualisierung des Service-Worker-Caches auf Version 26.9.
+
 ### ⏱️ Profi Shot-Clock, 2:2 Komplett-Paket & faire Tagessieger-Wertung (v26.8)
 
 - **⏱️ Profi Shot-Clock (Stoppuhr gegen Zeitspiel):**

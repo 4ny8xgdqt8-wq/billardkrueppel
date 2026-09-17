@@ -293,8 +293,6 @@ self.onmessage = function (e) {
                 d.todayTeamMaxStreak = d.todayTeamCurrentStreak;
               d.todayTeamLoseStreak = 0;
             }
-            if (rest >= 5) d.teamCleanWins = (d.teamCleanWins || 0) + 1;
-            if (rest === 1) d.teamClutchWins = (d.teamClutchWins || 0) + 1;
             if (rest >= 5) {
               d.teamCleanWins = (d.teamCleanWins || 0) + 1;
               if (isTodayMatch)
@@ -635,7 +633,7 @@ self.onmessage = function (e) {
     const now = new Date();
     const todayStr = `${String(now.getDate()).padStart(2, "0")}.${String(now.getMonth() + 1).padStart(2, "0")}.${now.getFullYear()}`;
     const beforeToday = sorted.filter(
-      (x) => x.g && !x.g.d.startsWith(todayStr),
+      (x) => x.g && x.g.d && !x.g.d.startsWith(todayStr),
     );
     const careerStatsBeforeToday = processAllStats(beforeToday, spieler, false);
 

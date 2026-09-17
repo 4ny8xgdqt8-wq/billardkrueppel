@@ -297,8 +297,6 @@ window.processData = function (dataArray, todayStr) {
               d.todayTeamMaxStreak = d.todayTeamCurrentStreak;
             d.todayTeamLoseStreak = 0;
           }
-          if (rest >= 5) d.teamCleanWins = (d.teamCleanWins || 0) + 1;
-          if (rest === 1) d.teamClutchWins = (d.teamClutchWins || 0) + 1;
           if (rest >= 5) {
             d.teamCleanWins = (d.teamCleanWins || 0) + 1;
             if (isTodayMatch)
@@ -648,6 +646,7 @@ window.enrichStatsWithAchievements = function (
         : "unknown";
 
     const isTeam = g.m === "2:2" || (g.p1 && String(g.p1).includes(" & "));
+    const isMatchFromToday = Boolean(g.d && g.d.startsWith(todayStr));
     const p1A = (isTeam ? (g.p1 ? g.p1.split(" & ") : []) : [g.p1])
       .map((s) => String(s || "").trim())
       .filter(Boolean);
@@ -691,7 +690,6 @@ window.enrichStatsWithAchievements = function (
 
     // Track break games
     if (breakerString) {
-      const isMatchFromToday = g.d && g.d.startsWith(todayStr);
       if (p1A.includes(breakerString)) {
         p1A.forEach((p) => {
           if (simPData[p]) {
@@ -759,8 +757,6 @@ window.enrichStatsWithAchievements = function (
               d.todayTeamMaxStreak = d.todayTeamCurrentStreak;
             d.todayTeamLoseStreak = 0;
           }
-          if (rest >= 5) d.teamCleanWins = (d.teamCleanWins || 0) + 1;
-          if (rest === 1) d.teamClutchWins = (d.teamClutchWins || 0) + 1;
           if (rest >= 5) {
             d.teamCleanWins = (d.teamCleanWins || 0) + 1;
             if (isMatchFromToday)
@@ -1011,8 +1007,6 @@ window.enrichStatsWithAchievements = function (
       if (!simPData[p]) return;
       const d = simPData[p],
         dBefore = pDataBeforeMatch[p] || { achTracker: {} };
-
-      const isMatchFromToday = g.d && g.d.startsWith(todayStr);
 
       // Zentrale Funktion zum Speichern neuer Erfolge (Daily + Langzeit)
       const recordNewAch = (ach, isDaily = false) => {
@@ -1515,8 +1509,6 @@ window.calculateStatsLocally = function (allMatches, players, todayStr = null) {
               d.todayTeamMaxStreak = d.todayTeamCurrentStreak;
             d.todayTeamLoseStreak = 0;
           }
-          if (rest >= 5) d.teamCleanWins = (d.teamCleanWins || 0) + 1;
-          if (rest === 1) d.teamClutchWins = (d.teamClutchWins || 0) + 1;
           if (rest >= 5) {
             d.teamCleanWins = (d.teamCleanWins || 0) + 1;
             if (isTodayMatch)

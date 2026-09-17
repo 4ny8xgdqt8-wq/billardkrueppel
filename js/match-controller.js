@@ -285,7 +285,8 @@ if (!window._shotClockKeydownBound) {
         return;
       }
 
-      // Nur ausführen, wenn Shot-Clock aktiv und Phase-2/Widget sichtbar ist
+      // Nur ausführen, wenn wir uns auf der Match-Aufzeichnen-Ansicht befinden, Shot-Clock aktiv und Widget sichtbar ist
+      if (window.viewId && window.viewId !== "aufzeichnen") return;
       if (!window.shotClockEnabled) return;
       const widget = document.getElementById("shot-clock-widget");
       if (!widget || widget.style.display === "none") return;
@@ -763,6 +764,26 @@ window.initDropdowns = () => {
   if (typeof window.updateUI === "function") window.updateUI(); // updateUI ruft updateMatchProbability auf, das computeEloRatings braucht
 };
 
+window.getActiveEveningPlayers = () => {
+  if (
+    Array.isArray(window.activeEveningPlayers) &&
+    window.activeEveningPlayers.length > 0
+  ) {
+    return window.activeEveningPlayers;
+  }
+  try {
+    const saved = localStorage.getItem("bk_active_evening_players");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        window.activeEveningPlayers = parsed;
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return [];
+};
+
 window.openTeamModal = () => {
   const mode = document.getElementById("mode").value;
   let currentlySelectedPlayers = [];
@@ -778,10 +799,19 @@ window.openTeamModal = () => {
   }
   currentlySelectedPlayers = currentlySelectedPlayers.filter(Boolean); // Filtert leere Strings heraus
 
+  const activePool = window.getActiveEveningPlayers();
+  const minRequired = mode === "1:1" ? 2 : 4;
+
+  // Wenn ein aktiver Pool gespeichert ist, bevorzuge diesen als Checkbox-Vorauswahl
+  const preSelected =
+    activePool && activePool.length >= minRequired
+      ? activePool
+      : currentlySelectedPlayers;
+
   const container = document.getElementById("teamPlayerList");
-  container.innerHTML = window.spieler
+  container.innerHTML = (window.spieler || [])
     .map((p) => {
-      const isSelected = currentlySelectedPlayers.includes(String(p).trim());
+      const isSelected = preSelected.includes(String(p).trim());
       return `
                     <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding:16px; background:${isSelected ? "rgba(52,199,89,0.12)" : "rgba(255,255,255,0.03)"}; border-radius:18px; cursor: pointer; border: 1px solid ${isSelected ? "#34c759" : "rgba(255,255,255,0.1)"}; transition: all 0.2s ease;">
                         <input type="checkbox" value="${p}" class="team-p-check" style="display:none;" onchange="this.parentElement.style.background=this.checked?'rgba(52,199,89,0.12)':'rgba(255,255,255,0.03)'; this.parentElement.style.borderColor=this.checked?'#34c759':'rgba(255,255,255,0.1)'; this.parentElement.querySelector('.check-mark').style.opacity=this.checked?'1':'0.1';" ${isSelected ? "checked" : ""}>
@@ -812,8 +842,14 @@ window.generateRandomMatch = () => {
   if (mode === "2:2" && selected.length < 4)
     return alert("Bitte mindestens 4 Spieler wählen!");
 
+  // Gewählte anwesende Spieler als aktiven Abend-Pool persistent sichern
+  window.activeEveningPlayers = selected;
+  try {
+    localStorage.setItem("bk_active_evening_players", JSON.stringify(selected));
+  } catch (e) {}
+
   // Shuffle selected players
-  const shuffled = selected.sort(() => 0.5 - Math.random());
+  const shuffled = [...selected].sort(() => 0.5 - Math.random());
 
   if (mode === "1:1") {
     document.getElementById("p1").value = shuffled[0];
@@ -860,45 +896,84 @@ window.shuffleCurrentTeams = () => {
   const elT2p2 = document.getElementById("t2p2");
   if (!elT1p1 || !elT1p2 || !elT2p1 || !elT2p2) return;
 
+  let pool = window.getActiveEveningPlayers();
+
   let current = [
     elT1p1.value ? elT1p1.value.trim() : "",
     elT1p2.value ? elT1p2.value.trim() : "",
     elT2p1.value ? elT2p1.value.trim() : "",
     elT2p2.value ? elT2p2.value.trim() : "",
   ].filter(Boolean);
-
-  // Eindeutige Spieler ermitteln
   current = [...new Set(current)];
 
-  // Wenn weniger als 4 Spieler gewählt sind, mit Spielern aus window.spieler auffüllen
-  if (current.length < 4) {
-    const allPlayers = Array.isArray(window.spieler) ? window.spieler : [];
-    for (const p of allPlayers) {
-      const trimmed = String(p).trim();
-      if (trimmed && !current.includes(trimmed)) {
-        current.push(trimmed);
+  // Wenn 4 Spieler in den Feldern stehen und noch kein Pool gespeichert war:
+  if (current.length === 4 && (!pool || pool.length < 4)) {
+    pool = current;
+    window.activeEveningPlayers = current;
+    try {
+      localStorage.setItem(
+        "bk_active_evening_players",
+        JSON.stringify(current),
+      );
+    } catch (e) {}
+  }
+
+  // Wenn weniger als 4 Spieler im Feld stehen, aber ein Pool aus "Startpartie ermitteln" existiert:
+  if (current.length < 4 && pool && pool.length >= 4) {
+    for (const p of pool) {
+      if (!current.includes(p)) {
+        current.push(p);
       }
       if (current.length === 4) break;
     }
   }
 
-  if (current.length < 4) {
+  // Wenn weniger als 4 Spieler aktiv sind (z.B. weil jemand gegangen ist und nur noch 3 im Pool sind):
+  if (current.length < 4 || (pool && pool.length < 4)) {
+    const msg =
+      pool && pool.length === 3
+        ? "Nur 3 Spieler aktiv – für 2:2 sind mindestens 4 Spieler nötig!"
+        : "Mindestens 4 Spieler für 2:2 nötig! Bitte 'Startpartie ermitteln' 🎲 nutzen.";
     if (typeof window.showAppToast === "function") {
-      window.showAppToast("Mindestens 4 Spieler für 2:2 nötig!");
+      window.showAppToast(msg);
     } else {
-      alert("Mindestens 4 Spieler für 2:2 nötig!");
+      alert(msg);
     }
     return;
   }
 
-  const [p0, p1, p2, p3] = current;
+  // Bestimme verfügbare Spieler: Wenn ein Pool existiert, nutze strikt den Pool
+  const availablePool = pool && pool.length >= 4 ? pool : current;
 
-  // Mathematisch exakt 3 Paarungsmöglichkeiten aus 4 Spielern:
-  const configs = [
-    { t1: [p0, p1], t2: [p2, p3] },
-    { t1: [p0, p2], t2: [p1, p3] },
-    { t1: [p0, p3], t2: [p1, p2] },
-  ];
+  // Mathematische 2:2-Paarungen aus dem verfügbaren Pool erzeugen
+  const configs = [];
+  if (availablePool.length === 4) {
+    const [p0, p1, p2, p3] = availablePool;
+    configs.push(
+      { t1: [p0, p1], t2: [p2, p3] },
+      { t1: [p0, p2], t2: [p1, p3] },
+      { t1: [p0, p3], t2: [p1, p2] },
+    );
+  } else {
+    // Bei mehr als 4 Spielern: alle 4er-Kombinationen aus dem Pool berücksichtigen
+    for (let i = 0; i < availablePool.length; i++) {
+      for (let j = i + 1; j < availablePool.length; j++) {
+        for (let k = j + 1; k < availablePool.length; k++) {
+          for (let l = k + 1; l < availablePool.length; l++) {
+            const p0 = availablePool[i],
+              p1 = availablePool[j],
+              p2 = availablePool[k],
+              p3 = availablePool[l];
+            configs.push(
+              { t1: [p0, p1], t2: [p2, p3] },
+              { t1: [p0, p2], t2: [p1, p3] },
+              { t1: [p0, p3], t2: [p1, p2] },
+            );
+          }
+        }
+      }
+    }
+  }
 
   // Aktuelle Konfiguration prüfen
   const curT1 = [

@@ -47,7 +47,16 @@ window.getFilteredStats = () => {
   if (window.selectedPlayerFilter && window.selectedPlayerFilter !== "all") {
     const pl = window.selectedPlayerFilter;
     baseSet = baseSet.filter((g) => {
-      return g.p1 === pl || g.p2 === pl || g.p1_2 === pl || g.p2_2 === pl;
+      const p1List = (g.p1 || "").split(" & ").map((s) => s.trim());
+      const p2List = (g.p2 || "").split(" & ").map((s) => s.trim());
+      return (
+        p1List.includes(pl) ||
+        p2List.includes(pl) ||
+        g.p1 === pl ||
+        g.p2 === pl ||
+        g.p1_2 === pl ||
+        g.p2_2 === pl
+      );
     });
   }
 
