@@ -297,6 +297,52 @@ if (!window._shotClockKeydownBound) {
   });
 }
 
+// Der Kontext wird während einer Nutzeraktion vorbereitet. So bleibt der
+// Siegesklang auch nach dem asynchronen Cloud-Speichern abspielbar.
+window.prepareVictorySound = () => {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+
+    if (!window.victoryAudioCtx) {
+      window.victoryAudioCtx = new AudioCtx();
+    }
+
+    if (window.victoryAudioCtx.state === "suspended") {
+      window.victoryAudioCtx.resume().catch(() => {});
+    }
+
+    return window.victoryAudioCtx;
+  } catch (e) {
+    return null;
+  }
+};
+
+window.playVictorySound = () => {
+  const ctx = window.prepareVictorySound();
+  if (!ctx) return;
+
+  try {
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+    const startTime = ctx.currentTime + 0.01;
+    notes.forEach((freq, idx) => {
+      const noteStart = startTime + idx * 0.08;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.09, noteStart);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.32);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(noteStart);
+      osc.stop(noteStart + 0.34);
+    });
+  } catch (e) {
+    // Audio ist optional und darf den Speichervorgang nie beeinflussen.
+  }
+};
+
 window.openSuccessModal = (info = {}) => {
   const modal = document.getElementById("successModal");
   if (!modal) return;
@@ -315,31 +361,8 @@ window.openSuccessModal = (info = {}) => {
   const isSweep = rest >= 7;
   const isClutch = rest === 0;
 
-  // Sound Chime via Web Audio API (feierlicher Dreiklang)
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (AudioCtx) {
-      const ctx = new AudioCtx();
-      const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
-      notes.forEach((freq, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.09, ctx.currentTime + idx * 0.08);
-        gain.gain.exponentialRampToValueAtTime(
-          0.001,
-          ctx.currentTime + idx * 0.08 + 0.32,
-        );
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(ctx.currentTime + idx * 0.08);
-        osc.stop(ctx.currentTime + idx * 0.08 + 0.34);
-      });
-    }
-  } catch (e) {
-    // Autoplay-Richtlinie oder Audio nicht verfügbar
-  }
+  // Den beim Speichern freigeschalteten Kontext verwenden.
+  window.playVictorySound();
 
   const quotes = [
     `„Eiskalt abgeräumt – ${loser} hatte heute keine Chance!“`,
@@ -1289,50 +1312,55 @@ window.syncBallTypes = (n) => {
   if (typeof window.updateUI === "function") window.updateUI();
 };
 
-// Sound Synthese via Web Audio API (Profil 4: Casino-Glücksrad / Arcade Clicker)
-function playDiceSound(isLand = false) {
+// Natürlicher Würfelklang auf Billardtuch – ein Kontext pro Sitzung vermeidet
+// abgeschnittene Töne und unnötige AudioContext-Instanzen.
+let diceAudioCtx = null;
+
+function getDiceAudioContext() {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!diceAudioCtx) diceAudioCtx = new AudioCtx();
+  if (diceAudioCtx.state === "suspended") diceAudioCtx.resume().catch(() => {});
+  return diceAudioCtx;
+}
+
+function playDiceTone(ctx, time, frequency, duration, volume, type = "triangle") {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(frequency, time);
+  gain.gain.setValueAtTime(volume, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(time);
+  osc.stop(time + duration + 0.02);
+}
+
+function playDiceSound(isLand = false, isTeam = false) {
   try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    const ctx = getDiceAudioContext();
+    if (!ctx) return;
+    const start = ctx.currentTime + 0.01;
 
     if (isLand) {
-      // Heller Dreiklang bei der Landung (Sieger-Bestätigung)
-      [880, 1174, 1320].forEach((f, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = f;
-        gain.gain.setValueAtTime(0.14, ctx.currentTime + idx * 0.04);
-        gain.gain.exponentialRampToValueAtTime(
-          0.001,
-          ctx.currentTime + idx * 0.04 + 0.18,
-        );
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(ctx.currentTime + idx * 0.04);
-        osc.stop(ctx.currentTime + idx * 0.04 + 0.2);
+      // Erst ein dumpfer Filz-Aufprall, dann die Sieger-Bestätigung.
+      playDiceTone(ctx, start, 150, 0.12, 0.19, "square");
+      playDiceTone(ctx, start + 0.025, 92, 0.16, 0.12, "triangle");
+      const notes = isTeam ? [523.25, 659.25, 783.99] : [659.25, 783.99];
+      notes.forEach((frequency, index) => {
+        playDiceTone(ctx, start + 0.11 + index * 0.07, frequency, 0.3, 0.09, "sine");
       });
       return;
     }
 
-    // Schnelles, befriedigendes Klick-Rattern während des Wirbelns
-    const clicks = 12;
+    // Unregelmäßiges Klackern statt eines gleichförmigen Arcade-Ratterns.
+    const clicks = 10;
     for (let i = 0; i < clicks; i++) {
-      const t = (i / clicks) * 0.95;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(1400 + i * 50, ctx.currentTime + t);
-      gain.gain.setValueAtTime(0.16, ctx.currentTime + t);
-      gain.gain.exponentialRampToValueAtTime(
-        0.001,
-        ctx.currentTime + t + 0.025,
-      );
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + t);
-      osc.stop(ctx.currentTime + t + 0.03);
+      const progress = i / (clicks - 1);
+      const time = start + progress * 0.94;
+      const frequency = 410 - progress * 150 + (i % 2 ? 42 : -24);
+      playDiceTone(ctx, time, frequency, 0.045, 0.11 - progress * 0.035, "triangle");
     }
   } catch (e) {}
 }
@@ -1454,8 +1482,10 @@ window.calcBreak = () => {
     chalkCube.classList.add("rolling");
   }
 
+  const isTeamDuel = m === "2:2";
+
   // Würfelsound starten
-  playDiceSound(false);
+  playDiceSound(false, isTeamDuel);
 
   // Audio-Berechtigung direkt beim Nutzerklick vorbereiten (verhindert Browser-Autoplay Block)
   if (typeof window.prepareSiriCommentator === "function") {
@@ -1483,8 +1513,8 @@ window.calcBreak = () => {
   setTimeout(() => {
     if (chalkCube) chalkCube.classList.remove("rolling");
 
-    // Dumpfer Aufprallklack auf Filz
-    playDiceSound(true);
+    // Dumpfer Aufprallklack auf Filz; Teams erhalten einen eigenen Dreiklang.
+    playDiceSound(true, isTeamDuel);
 
     // Kreidestaub-Wölkchen beim Aufprall
     if (puff) {
@@ -1515,7 +1545,7 @@ window.calcBreak = () => {
 
     // Siri Audio-Kommentator für den Anstoß-Sieger
     if (typeof window.playSiriComment === "function") {
-      window.playSiriComment(winner);
+      window.playSiriComment(isTeamDuel ? "team" : winner);
     }
   }, 1250);
 };

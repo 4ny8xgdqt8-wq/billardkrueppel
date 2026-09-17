@@ -6,6 +6,15 @@ Offizielle Web-App zur Erfassung von Matches, Ranglisten, Statistiken und Erfolg
 
 ## 🚀 Was ist neu (Changelog)
 
+### 🎲 Überarbeitete Würfel- und Team-Sounds (20260917.04)
+
+- Der Anstoß-Würfel klingt jetzt natürlicher mit Rollen und Aufprall auf dem Billardtuch.
+- Bei 2:2-Duellen erhalten Teams einen eigenen Siegerklang und einen passenden Team-Kommentar.
+
+### 🔊 Zuverlässiger Siegesklang nach dem Speichern (20260917.03)
+
+- Der akustische Siegesklang wird nach dem Speichern eines Matches nun auch auf Browsern mit strengen Audio-Freigaben zuverlässiger abgespielt.
+
 ### ⚡ Live-Aktualisierung nach Match-Speichern (20260917.02)
 
 - **🏆 Sofortige Aktualisierung der Tagessiegplatzierung & „Duo des Abends“:**
