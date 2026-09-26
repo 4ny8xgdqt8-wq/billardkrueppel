@@ -618,7 +618,7 @@ setTimeout(() => {
   window.switchV("aufzeichnen", document.querySelector(".tab-item.active"));
 }, 50);
 
-// -- 9. Modus-Verwaltung (Hauptliga vs. Nebenliga) & Geheimer Trigger --
+// -- 9. Modus-Verwaltung (Hauptliga vs. Nebenliga) --
 window.openModeSelectModal = () => {
   const modal = document.getElementById("modeSelectModal");
   if (!modal) return;
@@ -664,6 +664,11 @@ window.selectAppMode = async (mode) => {
 
 window.updateModeVisuals = () => {
   const isDt = window.currentAppMode === "dt";
+  document.querySelectorAll(".league-switch-btn").forEach((button) => {
+    button.textContent = isDt ? "⚔️" : "🏆";
+    button.title = `Liga wechseln (aktuell: ${isDt ? "Nebenliga" : "Hauptliga"})`;
+    button.setAttribute("aria-label", button.title);
+  });
 
   // Diskretes Nebenliga-Badge an jedem Haupttitel
   document.querySelectorAll(".main-title").forEach((t) => {
@@ -728,56 +733,6 @@ window.updateModeVisuals = () => {
   }
 };
 
-// Geheimer Trigger: 3-fach Tap oder Long Press (>1.2s) auf Header-Titel oder linkes Logo
-function initSecretModeTrigger() {
-  let tapCount = 0;
-  let tapTimer = null;
-  let pressTimer = null;
-
-  const trigger = () => {
-    if (navigator.vibrate) {
-      try {
-        navigator.vibrate([30, 40, 30]);
-      } catch (e) {}
-    }
-    window.openModeSelectModal();
-  };
-
-  const handlePointerDown = () => {
-    pressTimer = setTimeout(trigger, 1200);
-  };
-
-  const handlePointerUp = () => {
-    clearTimeout(pressTimer);
-  };
-
-  document
-    .querySelectorAll(".main-title, .header-side:not(.right)")
-    .forEach((el) => {
-      // 3-fach schneller Tap
-      el.addEventListener("click", () => {
-        tapCount++;
-        clearTimeout(tapTimer);
-        if (tapCount >= 3) {
-          tapCount = 0;
-          trigger();
-        } else {
-          tapTimer = setTimeout(() => {
-            tapCount = 0;
-          }, 500);
-        }
-      });
-
-      // Long Press
-      el.addEventListener("touchstart", handlePointerDown, { passive: true });
-      el.addEventListener("touchend", handlePointerUp, { passive: true });
-      el.addEventListener("touchcancel", handlePointerUp, { passive: true });
-      el.addEventListener("mousedown", handlePointerDown);
-      el.addEventListener("mouseup", handlePointerUp);
-      el.addEventListener("mouseleave", handlePointerUp);
-    });
-}
-
 window.updateStatHeaderOffset = () => {
   const statHeader = document.querySelector(
     "#view-statistik .header-container",
@@ -811,10 +766,8 @@ function initStatHeaderObserver() {
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
-    initSecretModeTrigger();
     initStatHeaderObserver();
   });
 } else {
-  initSecretModeTrigger();
   initStatHeaderObserver();
 }
