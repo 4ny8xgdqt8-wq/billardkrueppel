@@ -607,13 +607,22 @@ window.openErrorModal = (
   const btn = modal.querySelector(".btn-save");
   btn.style.background = "var(--error)";
   btn.style.color = "#fff";
-  document.getElementById("errorModalText").style.fontSize = "14px";
+  const textEl = document.getElementById("errorModalText");
+  textEl.style.fontSize = "14px";
+  textEl.style.lineHeight = "1.6";
+  textEl.style.whiteSpace = "pre-line";
+  textEl.style.textAlign = "left";
+  textEl.style.padding = "0 10px";
+  const card = modal.querySelector(".modal-card");
+  card.style.maxWidth = "320px";
+  card.firstElementChild.style.padding = "30px 20px";
+  card.firstElementChild.style.overflowY = "";
+  card.firstElementChild.style.minHeight = "";
 
-  document.getElementById("errorModalText").innerText = msg;
+  textEl.innerText = msg;
   modal.style.display = "flex";
 
   // Shake Animation nur bei echten Fehlern triggern, bei reinen Info-Popups ruhig öffnen
-  const card = modal.querySelector(".modal-card");
   const shouldShake =
     shake !== null
       ? Boolean(shake)
@@ -658,25 +667,63 @@ window.openErrorModal = (
 };
 
 window.showDailyWinnerInfo = () => {
-  const msg =
-    `Der Tagessieger (Session-MVP) wird durch Leistungspunkte ermittelt:\n\n` +
-    `🕹️ Pro Spiel: +1 (Teilnahme)\n` +
-    `🏆 Pro Sieg: +3\n` +
-    `📉 Pro Niederlage: -1\n` +
-    `🎯 Regulärer Sieg: +1\n` +
-    `⚡ Break-Sieg: +3\n` +
-    `🥶 Clutch (Gegner Rest 1): +2\n` +
-    `🕯️ Knappe Niederlage (Du Rest 1): +1\n` +
-    `🔥 Längste Serie: +1 pro Sieg in Serie\n` +
-    `🕵️ Service-Klau: +2 (Sieg bei Gegner-Anstoß)\n` +
-    `🪓 Dominanz: +0.5 pro Ø Restkugel (Sieg)\n\n` +
-    `Abzüge:\n` +
-    `🐀 Sieg durch Foul: -1\n` +
-    `🤦 8er-Fehler: -2\n` +
-    `🧟 Hoher Ø Rest bei Niederlage: -0.25 pro Ø Restkugel\n\n` +
-    `🌟 Duo des Abends (2:2 Champions):\n` +
-    `Score = (Siege × 3) + Netto-Frames + (Winrate% / 10)`;
-  window.openErrorModal(msg, [], "Punkte-Logik", "🏆", false);
+  const plusRows = [
+    ["Match gespielt", "+1"],
+    ["Sieg", "+3"],
+    ["Regulärer Sieg", "+1"],
+    ["Break-Sieg", "+3"],
+    ["Clutch-Sieg · Gegner 1 Kugel", "+2"],
+    ["Knappe Niederlage · du 1 Kugel", "+1"],
+    ["Siegesserie · je Sieg", "+1"],
+    ["Service-Klau · Sieg bei Gegner-Anstoß", "+2"],
+    ["Restkugeln bei Sieg · je Ø Kugel", "+0,5"],
+  ];
+  const minusRows = [
+    ["Niederlage", "−3"],
+    ["Sieg durch Foul", "−1"],
+    ["8er-Fehler", "−2"],
+    ["Restkugeln bei Niederlage · je Ø Kugel", "−0,25"],
+  ];
+  const renderRows = (rows, color, background) =>
+    rows
+      .map(
+        ([label, points]) => `
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; min-height:34px; padding:6px 8px; border-radius:9px; background:rgba(255,255,255,0.045);">
+            <span style="font-size:10px; line-height:1.25; text-align:left; color:#e5e7eb;">${label}</span>
+            <b style="flex-shrink:0; min-width:34px; padding:3px 5px; border-radius:7px; background:${background}; color:${color}; font-size:11px;">${points}</b>
+          </div>`,
+      )
+      .join("");
+
+  window.openErrorModal("", [], "Punkte-Logik", "🏆", false);
+  const card = document.querySelector("#errorModal .modal-card");
+  if (card) {
+    card.style.maxWidth = "360px";
+    card.firstElementChild.style.padding = "20px 16px 14px";
+    card.firstElementChild.style.overflowY = "auto";
+    card.firstElementChild.style.minHeight = "0";
+  }
+  const text = document.getElementById("errorModalText");
+  text.style.fontSize = "12px";
+  text.style.lineHeight = "1.4";
+  text.style.whiteSpace = "normal";
+  text.style.padding = "0";
+  text.innerHTML = `
+    <div style="margin-bottom:12px; color:#a1a1aa; font-size:11px; text-align:center;">
+      Tagespunkte werden zusammengerechnet.
+    </div>
+    <section style="margin-bottom:10px; padding:10px; border:1px solid rgba(100,210,255,0.2); border-radius:13px; background:rgba(100,210,255,0.045);">
+      <div style="margin-bottom:8px; color:#64d2ff; font-size:10px; font-weight:900; letter-spacing:0.8px;">PUNKTE DAZU</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">${renderRows(plusRows, "#64d2ff", "rgba(100,210,255,0.12)")}</div>
+    </section>
+    <section style="margin-bottom:10px; padding:10px; border:1px solid rgba(255,214,10,0.18); border-radius:13px; background:rgba(255,214,10,0.035);">
+      <div style="margin-bottom:8px; color:#ffd60a; font-size:10px; font-weight:900; letter-spacing:0.8px;">PUNKTE ABZIEHEN</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">${renderRows(minusRows, "#ffd60a", "rgba(255,214,10,0.1)")}</div>
+    </section>
+    <section style="padding:10px; border-radius:13px; background:rgba(255,255,255,0.045); text-align:center;">
+      <div style="margin-bottom:5px; color:#ffd60a; font-size:10px; font-weight:900; letter-spacing:0.5px;">🌟 DUO DES ABENDS · 2:2</div>
+      <div style="color:#cbd5e1; font-size:10px; line-height:1.4;">Siege × 3 + Netto-Frames + Siegquote in % ÷ 10</div>
+    </section>`;
   document.getElementById("errorModalTitle").style.color = "var(--accent)";
   document.querySelector("#errorModal .btn-save").style.background =
     "var(--accent)";

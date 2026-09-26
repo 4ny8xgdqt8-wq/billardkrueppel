@@ -180,7 +180,7 @@ window.renderBillardStats = function (
 
     let score = (d.todayGames || 0) * 1; // +1 pro Spiel (Teilnahme)
     score += (d.todayWins || 0) * 3; // +3 pro Sieg
-    score += ((d.todayGames || 0) - (d.todayWins || 0)) * -1; // -1 pro Niederlage
+    score += ((d.todayGames || 0) - (d.todayWins || 0)) * -3; // -3 pro Niederlage
 
     score += (d.todayRegularWins || 0) * 1;
     score += (d.todayBreakWins || 0) * 3;
