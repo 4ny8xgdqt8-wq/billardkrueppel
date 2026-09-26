@@ -32,7 +32,7 @@ const auth = getAuth(app);
 window.db = db;
 window.dbFns = { doc, setDoc, getDoc, updateDoc };
 
-// Aktiver App-Modus ('main' = Hauptliga, 'dt' = D&T Duell)
+// Aktiver App-Modus ('main' = Hauptliga, 'dt' = Nebenliga)
 window.currentAppMode = localStorage.getItem("bk_active_mode") || "main";
 
 window.getDocName = function (baseName) {
@@ -86,8 +86,8 @@ function subscribeToCollections() {
     doc(db, "billard_data", spielerDoc),
     (snap) => {
       let names = snap.exists() ? snap.data().names || [] : [];
-      if (names.length === 0 && window.currentAppMode === "dt") {
-        names = ["Daniel", "Thorsten"];
+      if (window.currentAppMode === "dt") {
+        names = [...new Set([...names, "Daniel", "Thorsten", "Sascha"])];
       }
       window.spieler = names;
       window.flags.spieler = true;
@@ -107,7 +107,7 @@ function subscribeToCollections() {
     (err) => {
       console.error(`Firebase Spieler Fehler (${spielerDoc}):`, err);
       if (window.currentAppMode === "dt") {
-        window.spieler = ["Daniel", "Thorsten"];
+        window.spieler = ["Daniel", "Thorsten", "Sascha"];
         window.flags.spieler = true;
         if (typeof window.initDropdowns === "function") window.initDropdowns();
         if (typeof window.recalculateAndRender === "function")
@@ -139,6 +139,12 @@ window.switchAppMode = async function (newMode) {
 
   window.currentAppMode = newMode;
   localStorage.setItem("bk_active_mode", newMode);
+  if (newMode === "dt") {
+    const p1El = document.getElementById("p1");
+    const p2El = document.getElementById("p2");
+    if (p1El) p1El.value = "";
+    if (p2El) p2El.value = "";
+  }
 
   // Caches & Daten zurücksetzen
   if (window.careerContextCache) window.careerContextCache = {};
@@ -163,7 +169,7 @@ window.switchAppMode = async function (newMode) {
     }
     if (window.updateLoaderStatus) {
       window.updateLoaderStatus(
-        "Lade " + (newMode === "dt" ? "D&T Duell" : "Hauptliga"),
+        "Lade " + (newMode === "dt" ? "Nebenliga" : "Hauptliga"),
         25,
       );
     }
@@ -412,25 +418,33 @@ window.doSave = async () => {
       const p1El = document.getElementById("p1");
       if (p1El) p1El.value = winnerName;
 
-      // Smarter 3-Spieler Turnus ("King of the Hill"):
-      // Wenn genau 3 Spieler im aktiven Abendpool sind, rückt der pausierende Spieler auf p2 nach!
-      let pool = window.activeEveningPlayers;
-      if (!pool || !Array.isArray(pool) || pool.length !== 3) {
-        try {
-          const saved = localStorage.getItem("bk_active_evening_players");
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed) && parsed.length === 3) pool = parsed;
-          }
-        } catch (e) {}
-      }
-      if (pool && pool.length === 3) {
-        const nextChallenger = pool.find(
+      if (window.currentAppMode === "dt") {
+        const nextChallenger = (window.spieler || []).find(
           (name) => name !== winnerName && name !== loserName,
         );
         const p2El = document.getElementById("p2");
-        if (nextChallenger && p2El) {
-          p2El.value = nextChallenger;
+        if (p2El) p2El.value = nextChallenger || "";
+      } else {
+        // Smarter 3-Spieler Turnus ("King of the Hill"):
+        // Wenn genau 3 Spieler im aktiven Abendpool sind, rückt der pausierende Spieler auf p2 nach!
+        let pool = window.activeEveningPlayers;
+        if (!pool || !Array.isArray(pool) || pool.length !== 3) {
+          try {
+            const saved = localStorage.getItem("bk_active_evening_players");
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              if (Array.isArray(parsed) && parsed.length === 3) pool = parsed;
+            }
+          } catch (e) {}
+        }
+        if (pool && pool.length === 3) {
+          const nextChallenger = pool.find(
+            (name) => name !== winnerName && name !== loserName,
+          );
+          const p2El = document.getElementById("p2");
+          if (nextChallenger && p2El) {
+            p2El.value = nextChallenger;
+          }
         }
       }
     } else {

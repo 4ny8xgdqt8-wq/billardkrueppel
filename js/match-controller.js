@@ -54,6 +54,7 @@ window.startMatchTimer = () => {
 
   window.matchStartTime = new Date();
   const display = document.getElementById("matchDurationDisplay");
+  if (display) display.classList.remove("is-over-blitz-time");
 
   if (window.shotClockEnabled && typeof window.resetShotClock === "function") {
     window.resetShotClock(45);
@@ -65,6 +66,29 @@ window.startMatchTimer = () => {
     const minutes = Math.floor(elapsed / 60);
     const seconds = elapsed % 60;
     window.matchDurationInMinutes = minutes + seconds / 60;
+
+    const fastestWinSeconds = (window.stats || []).reduce((fastest, match) => {
+      if (match.w !== 1 && match.w !== 2) return fastest;
+      let duration = Number(match.durationSeconds);
+      if (!Number.isFinite(duration) || duration <= 0) {
+        const formatted = /^\d+:\d{2}$/.exec(match.durationFormatted || "");
+        if (formatted) {
+          const [mins, secs] = match.durationFormatted.split(":").map(Number);
+          duration = mins * 60 + secs;
+        } else {
+          duration = Number(match.duration) * 60;
+        }
+      }
+      return duration > 0 && Number.isFinite(duration)
+        ? Math.min(fastest, duration)
+        : fastest;
+    }, Infinity);
+    if (display) {
+      display.classList.toggle(
+        "is-over-blitz-time",
+        Number.isFinite(fastestWinSeconds) && elapsed > fastestWinSeconds,
+      );
+    }
 
     if (display) {
       display.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
@@ -760,24 +784,6 @@ window.initDropdowns = () => {
       if (typeof window.updateUI === "function") window.updateUI();
     };
   });
-
-  // Im DT-Modus: Daniel & Thorsten automatisch vorselektieren falls noch unbesetzt
-  if (window.currentAppMode === "dt" && Array.isArray(window.spieler)) {
-    const p1El = document.getElementById("p1");
-    const p2El = document.getElementById("p2");
-    const pNames = window.spieler;
-    if (pNames.includes("Daniel") && pNames.includes("Thorsten")) {
-      if (p1El && (!p1El.value || !pNames.includes(p1El.value)))
-        p1El.value = "Daniel";
-      if (p2El && (!p2El.value || !pNames.includes(p2El.value)))
-        p2El.value = "Thorsten";
-    } else if (pNames.length >= 2) {
-      if (p1El && (!p1El.value || !pNames.includes(p1El.value)))
-        p1El.value = pNames[0];
-      if (p2El && (!p2El.value || !pNames.includes(p2El.value)))
-        p2El.value = pNames[1];
-    }
-  }
 
   if (typeof window.updateModeVisuals === "function")
     window.updateModeVisuals();

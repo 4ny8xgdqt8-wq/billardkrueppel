@@ -618,7 +618,7 @@ setTimeout(() => {
   window.switchV("aufzeichnen", document.querySelector(".tab-item.active"));
 }, 50);
 
-// -- 9. Modus-Verwaltung (Hauptliga vs. D&T Duell) & Geheimer Trigger --
+// -- 9. Modus-Verwaltung (Hauptliga vs. Nebenliga) & Geheimer Trigger --
 window.openModeSelectModal = () => {
   const modal = document.getElementById("modeSelectModal");
   if (!modal) return;
@@ -665,7 +665,7 @@ window.selectAppMode = async (mode) => {
 window.updateModeVisuals = () => {
   const isDt = window.currentAppMode === "dt";
 
-  // Diskretes D&T-Badge an jedem Haupttitel
+  // Diskretes Nebenliga-Badge an jedem Haupttitel
   document.querySelectorAll(".main-title").forEach((t) => {
     let badge = t.querySelector(".mode-subtle-badge");
     if (isDt) {
@@ -674,8 +674,8 @@ window.updateModeVisuals = () => {
         badge.className = "mode-subtle-badge";
         badge.style.cssText =
           "font-size: 11px; margin-left: 8px; padding: 2px 7px; border-radius: 8px; background: rgba(255, 204, 0, 0.15); border: 1px solid rgba(255, 204, 0, 0.3); color: var(--accent); font-weight: 800; vertical-align: middle; cursor: pointer; letter-spacing: 0.5px;";
-        badge.innerText = "⚔️ D&T";
-        badge.title = "D&T Duell aktiv (Tippen zum Wechseln)";
+        badge.innerText = "⚔️ Nebenliga";
+        badge.title = "Nebenliga aktiv (Tippen zum Wechseln)";
         badge.onclick = (e) => {
           e.stopPropagation();
           window.openModeSelectModal();
@@ -691,8 +691,8 @@ window.updateModeVisuals = () => {
   const greetingEl = document.getElementById("dynamic-greeting");
   if (greetingEl) {
     if (isDt) {
-      greetingEl.innerText = "D&T Duell · 1 gegen 1";
-    } else if (greetingEl.innerText.startsWith("D&T")) {
+      greetingEl.innerText = "Nebenliga · 1 gegen 1";
+    } else if (greetingEl.innerText.startsWith("Nebenliga")) {
       greetingEl.innerText = "Match erfassen";
     }
   }
