@@ -918,7 +918,16 @@
         <div id="view-statistik" class="view">
           <div class="header-container">
             <div class="header-side">
+              <button
+                type="button"
+                id="session-share-header-btn"
+                class="btn-session-share-header"
+                onclick="window.shareSessionRecap()"
+                style="display: none"
+                aria-label="Session teilen"
+              >↗ <span>Session teilen</span></button>
               <img
+                id="stat-header-logo"
                 loading="lazy"
                 src="logo.png"
                 class="logo-img"
@@ -1249,7 +1258,7 @@
                 "
               >
                 <div class="section-label" style="margin-bottom: 8px">
-                  ⚡ Gespielte Session-Matches
+                  📅 Abend-Timeline · ältestes Spiel zuerst
                 </div>
                 <div id="today-match-list"></div>
               </div>

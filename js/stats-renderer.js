@@ -26,6 +26,270 @@ const safeGetAvatarUrl = (name) => {
 };
 window.safeGetAvatarUrl = safeGetAvatarUrl;
 
+window.shareSessionRecap = async function () {
+  const recap = window.sessionRecapShareData;
+  if (!recap) return;
+  let canShareImage = false;
+  try {
+    const probe = new File([], "billard-rueckblick.png", { type: "image/png" });
+    canShareImage = Boolean(
+      navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({ files: [probe] }),
+    );
+  } catch (error) {
+    canShareImage = false;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 1600;
+  canvas.height = 1000;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const roundedRect = (x, y, width, height, radius) => {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + width, y, x + width, y + height, radius);
+    ctx.arcTo(x + width, y + height, x, y + height, radius);
+    ctx.arcTo(x, y + height, x, y, radius);
+    ctx.arcTo(x, y, x + width, y, radius);
+    ctx.closePath();
+  };
+  const fitText = (text, x, y, maxWidth, fontSize, color, weight = 700) => {
+    let size = fontSize;
+    ctx.font = `${weight} ${size}px system-ui, -apple-system, sans-serif`;
+    while (ctx.measureText(text).width > maxWidth && size > 24) {
+      size -= 2;
+      ctx.font = `${weight} ${size}px system-ui, -apple-system, sans-serif`;
+    }
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+  };
+
+  const bg = ctx.createLinearGradient(0, 0, 1600, 1000);
+  bg.addColorStop(0, "#10231b");
+  bg.addColorStop(0.55, "#09120f");
+  bg.addColorStop(1, "#17231d");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const glow = ctx.createRadialGradient(800, 460, 40, 800, 460, 760);
+  glow.addColorStop(0, "rgba(44,105,72,.22)");
+  glow.addColorStop(1, "rgba(9,18,15,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = "rgba(220,185,100,.4)";
+  ctx.lineWidth = 2;
+  roundedRect(24, 24, 1552, 952, 26);
+  ctx.stroke();
+
+  // Kleine 8er-Kugel als zurückhaltender Markenakzent.
+  const ballGlow = ctx.createRadialGradient(1480, 105, 4, 1480, 105, 42);
+  ballGlow.addColorStop(0, "#fffdf2");
+  ballGlow.addColorStop(0.68, "#d7d2c4");
+  ballGlow.addColorStop(1, "#79776f");
+  ctx.beginPath();
+  ctx.arc(1480, 105, 38, 0, Math.PI * 2);
+  ctx.fillStyle = ballGlow;
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(1480, 105, 15, 0, Math.PI * 2);
+  ctx.fillStyle = "#17211d";
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.textAlign = "center";
+  ctx.font = "800 16px system-ui, -apple-system, sans-serif";
+  ctx.fillText("8", 1480, 111);
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#cfb574";
+  ctx.font = "800 17px system-ui, -apple-system, sans-serif";
+  ctx.fillText("BILLARDKRÜPPEL     •     SPIELTAG", 82, 82);
+  ctx.fillStyle = "#f5f3ea";
+  ctx.font = "900 55px system-ui, -apple-system, sans-serif";
+  ctx.fillText("SESSION-ÜBERSICHT", 78, 153);
+  ctx.fillStyle = "#aab8b2";
+  ctx.font = "600 21px system-ui, -apple-system, sans-serif";
+  ctx.fillText(recap.date || "Spielabend", 82, 190);
+  ctx.textAlign = "right";
+  ctx.fillStyle = "#87978e";
+  ctx.font = "700 15px system-ui, -apple-system, sans-serif";
+  ctx.fillText(`${recap.matches || 0} ${recap.matches === 1 ? "PARTIE" : "PARTIEN"}`, 1498, 190);
+  ctx.strokeStyle = "rgba(255,255,255,.13)";
+  ctx.beginPath();
+  ctx.moveTo(80, 220);
+  ctx.lineTo(1520, 220);
+  ctx.stroke();
+
+  // Das Treppchen bekommt die ganze Breite und bleibt das Hauptmotiv.
+  const podium = recap.podium || [];
+  const avatarImages = new Map();
+  await Promise.all((recap.podium || []).flatMap((place) => place.members || []).map((member) => new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => { avatarImages.set(member.name, image); resolve(); };
+    image.onerror = resolve;
+    image.src = member.avatar || safeGetAvatarUrl(member.name);
+  })));
+  const positions = [
+    { rank: 1, center: 800, top: 360, height: 200, color: "#dfbd65", label: "1. PLATZ" },
+    { rank: 2, center: 370, top: 410, height: 150, color: "#c2c8c5", label: "2. PLATZ" },
+    { rank: 3, center: 1230, top: 440, height: 120, color: "#bc8059", label: "3. PLATZ" },
+  ];
+  positions.forEach(({ rank, center, top, height, color, label }) => {
+    const place = podium[rank - 1];
+    if (!place) return;
+    const width = 310;
+    const x = center - width / 2;
+    ctx.textAlign = "center";
+    ctx.fillStyle = color;
+    ctx.font = "850 17px system-ui, -apple-system, sans-serif";
+    ctx.fillText(label, center, top - 93);
+    fitText(place.players, center, top - 55, width - 20, 26, "#f5f3ea", 900);
+    ctx.fillStyle = color;
+    ctx.font = "850 22px system-ui, -apple-system, sans-serif";
+    ctx.fillText(`${place.score} Pkt.`, center, top - 20);
+
+    const pedestal = ctx.createLinearGradient(x, top, x + width, 560);
+    pedestal.addColorStop(0, `${color}48`);
+    pedestal.addColorStop(1, `${color}12`);
+    roundedRect(x, top, width, height, 18);
+    ctx.fillStyle = pedestal;
+    ctx.fill();
+    ctx.strokeStyle = `${color}88`;
+    ctx.lineWidth = rank === 1 ? 2 : 1;
+    ctx.stroke();
+    const members = place.members || [];
+    const avatarSize = members.length > 1 ? 42 : 54;
+    const avatarGap = 8;
+    const avatarStart = center - ((members.length * avatarSize + Math.max(0, members.length - 1) * avatarGap) / 2);
+    members.slice(0, 4).forEach((member, index) => {
+      const image = avatarImages.get(member.name);
+      const xAvatar = avatarStart + index * (avatarSize + avatarGap);
+      const yAvatar = top + 24;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(xAvatar + avatarSize / 2, yAvatar + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+      ctx.clip();
+      if (image) ctx.drawImage(image, xAvatar, yAvatar, avatarSize, avatarSize);
+      else {
+        ctx.fillStyle = "#26362e";
+        ctx.fillRect(xAvatar, yAvatar, avatarSize, avatarSize);
+        ctx.fillStyle = "#f5f3ea";
+        ctx.font = "800 22px system-ui, -apple-system, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText((member.name || "?").slice(0, 1).toUpperCase(), xAvatar + avatarSize / 2, yAvatar + avatarSize * 0.68);
+      }
+      ctx.restore();
+    });
+    ctx.fillStyle = "#dce3dd";
+    ctx.font = "700 17px system-ui, -apple-system, sans-serif";
+    ctx.fillText(place.record, center, top + (members.length ? 104 : 48));
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.16;
+    ctx.font = "900 86px system-ui, -apple-system, sans-serif";
+    ctx.fillText(String(rank), center, 545);
+    ctx.globalAlpha = 1;
+  });
+  if (!podium.length) {
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#aab8b2";
+    ctx.font = "700 24px system-ui, -apple-system, sans-serif";
+    ctx.fillText("Noch keine Rangliste für diesen Abend", 800, 460);
+  }
+
+  ctx.strokeStyle = "rgba(255,255,255,.12)";
+  ctx.beginPath();
+  ctx.moveTo(80, 600);
+  ctx.lineTo(1520, 600);
+  ctx.stroke();
+  const highlights = [
+    { label: "PARTIEN", value: String(recap.matches || 0), sub: `${recap.stats?.singles || 0} Einzel · ${recap.stats?.doubles || 0} Doppel` },
+    { label: "SPIELER", value: String(recap.stats?.players || 0), sub: "am Tisch" },
+    { label: "VOLLKUGEL-SIEGE", value: String(recap.stats?.fullWins || 0), sub: "gewonnene Partien" },
+    { label: "Ø RESTKUGELN", value: recap.stats?.averageRest ?? "–", sub: "bei erfassten Niederlagen" },
+    { label: "LÄNGSTE SERIE", value: recap.streak || "–", sub: "Siege in Folge" },
+    { label: "ENGSTER SIEG", value: recap.tightest || "–", sub: recap.tightestSub || "" },
+    { label: "DUO DES ABENDS", value: recap.duo || "–", sub: recap.duoSub || "" },
+  ];
+  const columnWidth = 360;
+  highlights.forEach((item, index) => {
+    const column = index % 4;
+    const row = Math.floor(index / 4);
+    const x = 82 + column * 360;
+    const y = row === 0 ? 650 : 800;
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#8f9d94";
+    ctx.font = "800 13px system-ui, -apple-system, sans-serif";
+    ctx.fillText(item.label, x, y);
+    fitText(item.value, x, y + 40, columnWidth - 28, 23, "#f5f3ea", 850);
+    if (item.sub) {
+      ctx.fillStyle = "#aab8b2";
+      ctx.font = "600 14px system-ui, -apple-system, sans-serif";
+      ctx.fillText(item.sub, x, y + 66, columnWidth - 28);
+    }
+    if (column < 3 && index < highlights.length - 1) {
+      ctx.strokeStyle = "rgba(255,255,255,.11)";
+      ctx.beginPath();
+      ctx.moveTo(x + 330, y - 12);
+      ctx.lineTo(x + 330, y + 72);
+      ctx.stroke();
+    }
+  });
+
+  ctx.textAlign = "right";
+  ctx.fillStyle = "#78877f";
+  ctx.font = "600 13px system-ui, -apple-system, sans-serif";
+  ctx.fillText("Gute Kugeln. Guter Abend.", 1498, 920);
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#cfb574";
+  ctx.font = "850 15px system-ui, -apple-system, sans-serif";
+  ctx.fillText("BILLARDKRÜPPEL", 82, 920);
+
+  const whatsappWindow = canShareImage
+    ? null
+    : window.open("about:blank", "_blank");
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+  if (!blob) {
+    if (whatsappWindow) whatsappWindow.close();
+    window.showAppToast("Die Karte konnte nicht erstellt werden.");
+    return;
+  }
+  const fileName = `billard-abend-${(recap.date || "rueckblick").replace(/\./g, "-")}.png`;
+  const file = canShareImage
+    ? new File([blob], fileName, { type: "image/png" })
+    : null;
+  const message = [
+    `🎱 Billardkrüppel · Session (${recap.date || "Spielabend"})`,
+    ...(recap.podium || []).map((place, index) => `${["🥇", "🥈", "🥉"][index]} ${index + 1}. Platz: ${place.players} · ${place.score} Punkte · ${place.record}`),
+    `🔥 Längste Serie: ${recap.streak || "–"}`,
+    recap.tightest ? `🎯 Engster Sieg: ${recap.tightest}${recap.tightestSub ? ` · ${recap.tightestSub}` : ""}` : "",
+    recap.duo ? `🤝 Duo des Abends: ${recap.duo}` : "",
+    `🎱 ${recap.matches} ${recap.matches === 1 ? "Match" : "Matches"}`,
+  ].filter(Boolean).join("\n");
+
+  if (canShareImage) {
+    try {
+      await navigator.share({ files: [file], title: "Billardkrüppel · Session", text: message });
+    } catch (error) {
+      if (error.name !== "AbortError") window.showAppToast("Teilen wurde abgebrochen.");
+    }
+    return;
+  }
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  if (whatsappWindow) {
+    whatsappWindow.location.href = whatsappUrl;
+  } else {
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+  }
+  window.showAppToast("Karte gespeichert. Du kannst sie in WhatsApp anhängen.");
+};
+
 window.showAppToast = function (text) {
   let toast = document.getElementById("app-toast");
   if (!toast) {
@@ -73,6 +337,10 @@ window.renderBillardStats = function (
       ? root.querySelector("#" + id)
       : document.getElementById(id);
   if (!root || typeof root.querySelector !== "function") root = document;
+  const sessionShareButton = document.getElementById("session-share-header-btn");
+  const statHeaderLogo = document.getElementById("stat-header-logo");
+  if (sessionShareButton) sessionShareButton.style.display = "none";
+  if (statHeaderLogo) statHeaderLogo.style.display = "";
 
   // --- DAILY ACHIVS LADEN (falls nicht bereits vorhanden) ---
   if (!window.dailyAchivs) {
@@ -1522,8 +1790,21 @@ window.renderBillardStats = function (
         ? precalculatedCareerStats.matchDeltas
         : {};
 
+    const getMatchTimestamp = (match) => {
+      const parts = String(match.d || "").match(
+        /^(\d{1,2})\.(\d{1,2})\.(\d{4}),?\s*(\d{1,2}):(\d{2})/,
+      );
+      if (!parts) return 0;
+      return new Date(
+        Number(parts[3]),
+        Number(parts[2]) - 1,
+        Number(parts[1]),
+        Number(parts[4]),
+        Number(parts[5]),
+      ).getTime();
+    };
     mList.innerHTML = [...statsToday]
-      .reverse()
+      .sort((a, b) => getMatchTimestamp(a) - getMatchTimestamp(b))
       .map((g, idx) => {
         const i = window.stats.indexOf(g);
         const time = (g.d || "").includes(", ")
@@ -1544,7 +1825,7 @@ window.renderBillardStats = function (
         const isNonRegular = !isRegular;
         const cardAccent = isNonRegular ? "#ff9500" : "#30d158";
         const winnerName = isWin1 ? g.p1 : g.p2;
-        const matchNum = statsToday.length - idx;
+        const matchNum = idx + 1;
 
         const getAv = (pName, isWinner = false, size = 32) => {
           if (!pName) return "";
@@ -2004,6 +2285,106 @@ window.renderBillardStats = function (
         });
         if (statDailyDuoCard) statDailyDuoCard.style.display = "none";
         if (matchDailyDuoCard) matchDailyDuoCard.style.display = "none";
+      }
+
+      if (statsToday.length > 0) {
+        const tiedWinners = playerScores.length
+          ? playerScores.filter((entry) => entry.score === playerScores[0].score)
+          : [];
+        const podium = [...new Set(playerScores.map((entry) => entry.score))]
+          .slice(0, 3)
+          .map((score) => {
+            const players = playerScores.filter((entry) => entry.score === score);
+            return {
+              players: players.map((entry) => entry.player).join(" / "),
+              members: players.map((entry) => ({
+                name: entry.player,
+                avatar: safeGetAvatarUrl(entry.player),
+              })),
+              score,
+              record: players
+                .map((entry) => `${entry.wins}S / ${entry.losses}N`)
+                .join(" · "),
+            };
+          });
+        const recapWinner = tiedWinners.map((entry) => entry.player).join(" / ") || "–";
+        const chronologicalMatches = [...statsToday].sort((a, b) => {
+          const readTime = (match) => {
+            const parts = String(match.d || "").match(
+              /^(\d{1,2})\.(\d{1,2})\.(\d{4}),?\s*(\d{1,2}):(\d{2})/,
+            );
+            return parts
+              ? new Date(+parts[3], +parts[2] - 1, +parts[1], +parts[4], +parts[5]).getTime()
+              : 0;
+          };
+          return readTime(a) - readTime(b);
+        });
+        const streaks = {};
+        let longestStreak = { player: "–", count: 0 };
+        chronologicalMatches.forEach((match) => {
+          const side1 = (match.p1 || "").split(" & ").map((player) => player.trim()).filter(Boolean);
+          const side2 = (match.p2 || "").split(" & ").map((player) => player.trim()).filter(Boolean);
+          const winners = match.w == 1 ? side1 : match.w == 2 ? side2 : [];
+          const losers = match.w == 1 ? side2 : match.w == 2 ? side1 : [];
+          losers.forEach((player) => { streaks[player] = 0; });
+          winners.forEach((player) => {
+            streaks[player] = (streaks[player] || 0) + 1;
+            if (streaks[player] > longestStreak.count) {
+              longestStreak = { player, count: streaks[player] };
+            }
+          });
+        });
+        const tightestMatch = statsToday
+          .filter((match) => Number.isFinite(Number(match.l)))
+          .sort((a, b) => Number(a.l) - Number(b.l))[0];
+        const sessionPlayers = new Set(
+          statsToday.flatMap((match) => [match.p1, match.p2])
+            .flatMap((side) => String(side || "").split(" & "))
+            .map((name) => name.trim())
+            .filter(Boolean),
+        );
+        const recordedLosses = statsToday.filter((match) => Number.isFinite(Number(match.l)));
+        const fullWins = statsToday.filter((match) =>
+          (match.w == 1 ? match.bt1 : match.bt2) === "Voll",
+        ).length;
+        const hasTeamMatch = statsToday.some((match) => match.m === "2:2");
+        const topDuo = hasTeamMatch && window.lastDailyDuos?.length
+          ? window.lastDailyDuos[0]
+          : null;
+        window.sessionRecapShareData = {
+          date: todayStr,
+          podium,
+          winner: recapWinner,
+          winnerSub: tiedWinners.length
+            ? `${tiedWinners[0].wins} Siege · ${tiedWinners[0].score} Punkte`
+            : "",
+          streak: longestStreak.count
+            ? `${longestStreak.player} · ${longestStreak.count} Siege`
+            : "–",
+          tightest: tightestMatch
+            ? `${tightestMatch.p1} – ${tightestMatch.p2}`
+            : "",
+          tightestSub: tightestMatch
+            ? `${tightestMatch.l} Restkugeln beim Verlierer`
+            : "",
+          duo: topDuo?.name || "",
+          duoSub: topDuo ? `${topDuo.w} Siege · ${topDuo.winRate}% Quote` : "",
+          matches: statsToday.length,
+          stats: {
+            singles: statsToday.filter((match) => !match.m || match.m === "1:1").length,
+            doubles: statsToday.filter((match) => match.m === "2:2").length,
+            players: sessionPlayers.size,
+            fullWins,
+            averageRest: recordedLosses.length
+              ? (recordedLosses.reduce((sum, match) => sum + Number(match.l), 0) / recordedLosses.length).toFixed(1)
+              : "–",
+          },
+        };
+
+        if (sessionShareButton && filterToday) {
+          sessionShareButton.style.display = "inline-flex";
+          if (statHeaderLogo) statHeaderLogo.style.display = "none";
+        }
       }
     } else {
       // Nur die Session-Kachel ausblenden. Die Match-Kachel behält ihren letzten Session-Stand.
@@ -4336,6 +4717,7 @@ window.renderBillardStats = function (
       dailyWinnerEls.forEach((el) => {
         el.innerText = "-";
       });
+      window.sessionRecapShareData = null;
     } else {
       const statDailyWinnerCard = document.getElementById(
         "stat-daily-winner-card",
@@ -4436,6 +4818,51 @@ window.openPlayerProfile = (name) => {
             `;
 
   const winRate = d.games > 0 ? Math.round((d.wins / d.games) * 100) : 0;
+
+  // Letzte zehn Partien für eine kompakte Formkurve und Gegnerbilanz.
+  const profileMatches = (window.stats || [])
+    .map((match, index) => ({ match, index }))
+    .filter(({ match }) => {
+      const side1 = (match.p1 || "").split(" & ").map((part) => part.trim());
+      const side2 = (match.p2 || "").split(" & ").map((part) => part.trim());
+      return side1.includes(name) || side2.includes(name);
+    })
+    .sort((a, b) => a.index - b.index);
+  const recentMatches = profileMatches.slice(-10);
+  const getProfileResult = (match) => {
+    const side1 = (match.p1 || "").split(" & ").map((part) => part.trim());
+    const isSide1 = side1.includes(name);
+    return (match.w == 1 && isSide1) || (match.w == 2 && !isSide1);
+  };
+  const formDots = recentMatches.map(({ match }) => {
+    const opponent = (match.p1 || "").split(" & ").map((part) => part.trim()).includes(name) ? match.p2 : match.p1;
+    const won = getProfileResult(match);
+    return `<span title="${won ? "Sieg" : "Niederlage"} gegen ${opponent || "unbekannt"}" style="width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:${won ? "rgba(52,199,89,.2)" : "rgba(255,69,58,.2)"};border:1px solid ${won ? "rgba(52,199,89,.55)" : "rgba(255,69,58,.55)"};color:${won ? "#34c759" : "#ff453a"};font-size:11px;font-weight:900;">${won ? "S" : "N"}</span>`;
+  }).join("");
+  const recentWins = recentMatches.filter(({ match }) => getProfileResult(match)).length;
+  const opponentResults = {};
+  profileMatches.forEach(({ match }) => {
+    const side1 = (match.p1 || "").split(" & ").map((part) => part.trim());
+    const isSide1 = side1.includes(name);
+    const opponent = (isSide1 ? match.p2 : match.p1) || "";
+    if (!opponent) return;
+    opponentResults[opponent] ||= { wins: 0, losses: 0 };
+    opponentResults[opponent][getProfileResult(match) ? "wins" : "losses"]++;
+  });
+  const topOpponent = Object.entries(opponentResults)
+    .map(([opponent, result]) => ({ opponent, ...result, games: result.wins + result.losses }))
+    .filter((result) => result.games >= 2)
+    .sort((a, b) => b.games - a.games || b.wins - a.wins)[0];
+  const formSectionHtml = `
+    <div class="section-label" style="margin-top:0;">🔥 Letzte ${recentMatches.length} Spiele</div>
+    <div style="padding:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">${formDots || '<span style="color:#8e8e93;font-size:12px;">Noch keine Spiele</span>'}</div>
+        <strong style="white-space:nowrap;color:${recentWins >= recentMatches.length / 2 ? "#34c759" : "#ff9f0a"};">${recentWins}S / ${recentMatches.length - recentWins}N</strong>
+      </div>
+      <div style="font-size:10px;color:#8e8e93;margin-top:8px;">Ältestes Spiel links · S = Sieg · N = Niederlage</div>
+      ${topOpponent ? `<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;gap:10px;font-size:12px;"><span style="color:#acacb0;">Häufigster Gegner: <strong style="color:#fff;">${topOpponent.opponent}</strong></span><span style="white-space:nowrap;color:var(--accent);font-weight:800;">${topOpponent.wins}S / ${topOpponent.losses}N</span></div>` : ""}
+    </div>`;
 
   // Bestimme Lieblingskugel basierend auf allen Spielen (Karriere)
   let favBall = "-";
@@ -4601,6 +5028,8 @@ window.openPlayerProfile = (name) => {
                         <div id="prof-winrate" style="font-size:24px; font-weight:900; color:#34c759; text-shadow: 0 0 10px rgba(52,199,89,0.3);">0%</div>
                     </div>
                 </div>
+
+                ${formSectionHtml}
 
                 <!-- Call animateNumber directly after content is set -->
 
