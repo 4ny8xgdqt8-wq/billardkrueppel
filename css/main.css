@@ -4972,3 +4972,612 @@ select option {
   transform: scale(0.96);
   background: rgba(214, 182, 105, 0.24);
 }
+
+/* Statistik & Session: ruhigere Flächen und klarere Filterhierarchie */
+#view-statistik .header-container {
+  border-bottom-color: rgba(214, 182, 105, 0.14);
+}
+
+#view-statistik .btn-session-share-header {
+  background: linear-gradient(145deg, #e4c878, #b99749);
+  border-color: rgba(255, 231, 164, 0.75);
+  color: #191a16;
+  box-shadow: 0 4px 14px rgba(214, 182, 105, 0.18);
+}
+
+#view-statistik .segment-control-group {
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+#view-statistik .segment-row {
+  gap: 5px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+#view-statistik .segment-btn {
+  min-height: 34px;
+  padding: 7px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  letter-spacing: 0.05px;
+}
+
+#view-statistik .segment-btn-mode.active {
+  background: linear-gradient(145deg, rgba(61, 139, 91, 0.38), rgba(37, 92, 62, 0.28)) !important;
+  color: #c1edce !important;
+  box-shadow: inset 0 0 0 1px rgba(117, 195, 143, 0.3);
+}
+
+#view-statistik .segment-btn-time.active-gold {
+  background: linear-gradient(145deg, #ead28b, #c7a853) !important;
+  color: #1a1a15 !important;
+  box-shadow: 0 3px 10px rgba(214, 182, 105, 0.2);
+}
+
+#view-statistik .stat-subtab-bar {
+  gap: 5px;
+  padding: 5px;
+  border-color: rgba(214, 182, 105, 0.16);
+  border-radius: 16px;
+  background: rgba(15, 19, 17, 0.92);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24);
+}
+
+#view-statistik .stat-subtab-btn {
+  flex-direction: row;
+  gap: 6px;
+  min-height: 38px;
+  padding: 7px 5px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  color: #9da69f;
+  font-size: 10px;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+#view-statistik .stat-subtab-btn .subtab-icon {
+  font-size: 14px;
+}
+
+#view-statistik .stat-subtab-btn.active {
+  border-color: rgba(214, 182, 105, 0.26);
+  background: linear-gradient(145deg, rgba(214, 182, 105, 0.16), rgba(214, 182, 105, 0.06));
+  color: #f1d78f;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
+}
+
+#view-statistik .stat-subtab-btn.active span:last-child {
+  color: #f1d78f;
+}
+
+#view-statistik .stat-subtab-btn.active .subtab-icon {
+  filter: none;
+  transform: none;
+}
+
+#view-statistik .stat-card-modern {
+  border-color: color-mix(in srgb, var(--card-accent, #d6b669) 24%, rgba(255, 255, 255, 0.08));
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(27, 35, 31, 0.96), rgba(15, 20, 18, 0.98));
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25), inset 0 1px rgba(255, 255, 255, 0.035);
+}
+
+#view-statistik .stat-card-modern::before {
+  opacity: 0.42;
+}
+
+#view-statistik .stat-card-modern:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 11px 26px rgba(0, 0, 0, 0.32);
+}
+
+#view-statistik .section-label {
+  margin-top: 22px;
+  color: #d9c27f;
+  letter-spacing: 0.7px;
+}
+
+#view-statistik #stat-daily-winner-card {
+  margin-top: 14px;
+  padding: 15px 12px 10px !important;
+  border: 1px solid rgba(214, 182, 105, 0.22) !important;
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(214, 182, 105, 0.11), transparent 62%),
+    linear-gradient(145deg, rgba(24, 34, 29, 0.96), rgba(13, 18, 16, 0.98)) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24), inset 0 1px rgba(255, 255, 255, 0.045) !important;
+}
+
+#view-statistik #stat-daily-winner-card > div:first-child label {
+  color: #f0d88f !important;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.65px;
+  text-transform: uppercase;
+}
+
+#view-statistik .podium-container {
+  max-width: 460px;
+  margin: 14px auto 2px;
+  gap: 8px;
+}
+
+#view-statistik .podium-actor {
+  margin-bottom: 7px;
+}
+
+#view-statistik .podium-column.p-1 .podium-name {
+  color: #f1d78f;
+  text-shadow: none;
+}
+
+#view-statistik .podium-stats-sub {
+  color: #a0aaa3;
+}
+
+#view-statistik #today-match-list .match-card-modern {
+  border-color: color-mix(in srgb, var(--card-accent, #75c38f) 24%, rgba(255, 255, 255, 0.08));
+  border-radius: 17px;
+  background: linear-gradient(145deg, rgba(24, 32, 29, 0.96), rgba(14, 19, 17, 0.98));
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.24), inset 0 1px rgba(255, 255, 255, 0.035);
+}
+
+#view-statistik #today-match-list .match-card-modern::before {
+  opacity: 0.48;
+}
+
+#view-statistik #today-match-list .match-card-modern:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+
+#view-statistik #today-match-list .match-num-tag {
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.075);
+  color: #c4cec7;
+}
+
+#view-statistik #today-match-list .match-vs-badge {
+  border-color: rgba(214, 182, 105, 0.2);
+  background: rgba(214, 182, 105, 0.08);
+  color: #d8c27e;
+}
+
+#view-statistik #today-match-list .match-card-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+#view-statistik #stat-subtab-records .record-showcase-grid {
+  gap: 9px;
+  margin-top: 12px;
+  margin-bottom: 24px;
+}
+
+#view-statistik #stat-subtab-records .record-card {
+  min-height: 126px;
+  padding: 13px 12px;
+  border-radius: 17px;
+  background: linear-gradient(145deg, rgba(25, 33, 29, 0.96), rgba(14, 19, 17, 0.98));
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.24), inset 0 1px rgba(255, 255, 255, 0.035);
+}
+
+#view-statistik #stat-subtab-records .record-card.rec-cyan {
+  border-color: rgba(130, 190, 190, 0.25);
+}
+
+#view-statistik #stat-subtab-records .record-card.rec-orange {
+  border-color: rgba(205, 150, 102, 0.27);
+}
+
+#view-statistik #stat-subtab-records .record-card.rec-gold {
+  border-color: rgba(214, 182, 105, 0.3);
+}
+
+#view-statistik #stat-subtab-records .record-card.rec-green {
+  border-color: rgba(117, 195, 143, 0.25);
+}
+
+#view-statistik #stat-subtab-records .record-card.rec-cyan::before {
+  background: linear-gradient(90deg, transparent, #8ebdb8, transparent);
+  opacity: 0.48;
+}
+
+#view-statistik #stat-subtab-records .record-card.rec-orange::before {
+  background: linear-gradient(90deg, transparent, #c99568, transparent);
+  opacity: 0.48;
+}
+
+#view-statistik #stat-subtab-records .record-card.rec-gold::before {
+  background: linear-gradient(90deg, transparent, #d6b669, transparent);
+  opacity: 0.55;
+}
+
+#view-statistik #stat-subtab-records .record-card.rec-green::before {
+  background: linear-gradient(90deg, transparent, #75c38f, transparent);
+  opacity: 0.48;
+}
+
+#view-statistik #stat-subtab-records .rec-label {
+  color: #a3ada6;
+  letter-spacing: 0.7px;
+}
+
+#view-statistik #stat-subtab-records .rec-badge-icon {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 15px;
+}
+
+#view-statistik #stat-subtab-records .rec-val {
+  margin: 2px 0 5px;
+  color: #f3f2e9;
+  font-size: clamp(14px, 4vw, 17px);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+#view-statistik #stat-subtab-records .rec-holder {
+  margin-top: auto;
+  color: #a8b2aa;
+}
+
+#view-statistik #stat-subtab-records .rec-name {
+  color: #c4ccc5;
+  font-size: 10px;
+}
+
+#view-statistik #stat-content-wrapper {
+  padding-bottom: 24px;
+}
+
+#view-statistik #stat-subtab-ranking .rank-1-card {
+  animation: none !important;
+  border-color: rgba(214, 182, 105, 0.38);
+  background: linear-gradient(145deg, rgba(42, 41, 30, 0.92), rgba(17, 21, 18, 0.98));
+  box-shadow: 0 9px 24px rgba(0, 0, 0, 0.28), inset 0 1px rgba(241, 215, 143, 0.08);
+}
+
+#view-statistik #stat-subtab-ranking .stat-card-badge-top,
+#view-statistik #stat-subtab-duelle .stat-card-badge-top,
+#view-statistik #stat-subtab-balls .stat-card-badge-top {
+  color: #b6c0b8;
+  letter-spacing: 0.55px;
+}
+
+#view-statistik #stat-subtab-ranking .stat-card-sublabel,
+#view-statistik #stat-subtab-duelle .stat-card-sublabel,
+#view-statistik #stat-subtab-balls .stat-card-sublabel {
+  color: #9ba69e;
+  line-height: 1.4;
+}
+
+#view-statistik #stat-subtab-ranking .stat-card-player-label,
+#view-statistik #stat-subtab-duelle .stat-card-player-label,
+#view-statistik #stat-subtab-balls .stat-card-player-label {
+  color: #f2f3ed;
+}
+
+#view-statistik #stat-subtab-duelle .h2h-interactive-card {
+  margin-bottom: 18px;
+  border-color: rgba(214, 182, 105, 0.22);
+  border-radius: 19px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(214, 182, 105, 0.1), transparent 58%),
+    linear-gradient(145deg, rgba(25, 34, 29, 0.97), rgba(14, 19, 17, 0.99));
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28), inset 0 1px rgba(255, 255, 255, 0.04);
+}
+
+#view-statistik #stat-subtab-duelle .h2h-interactive-card::before {
+  background: linear-gradient(90deg, transparent, #d6b669 50%, transparent);
+  opacity: 0.65;
+}
+
+#view-statistik #stat-subtab-duelle .h2h-select {
+  min-height: 42px;
+  border-color: rgba(255, 255, 255, 0.12);
+  border-radius: 11px;
+  background-color: rgba(255, 255, 255, 0.055);
+}
+
+#view-statistik #stat-subtab-duelle .h2h-select:focus {
+  border-color: rgba(214, 182, 105, 0.6);
+  box-shadow: 0 0 0 3px rgba(214, 182, 105, 0.1);
+}
+
+#view-statistik #stat-subtab-duelle .h2h-vs-badge {
+  color: #f1d78f;
+  border-color: rgba(214, 182, 105, 0.25);
+  background: rgba(214, 182, 105, 0.09);
+}
+
+#view-statistik #stat-subtab-balls > .stat-cards-grid {
+  gap: 10px;
+}
+
+#view-statistik #stat-subtab-balls .stat-card-modern {
+  min-height: 88px;
+}
+
+#view-statistik #stat-subtab-balls .stat-hero-pill {
+  border-radius: 12px;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.07);
+}
+
+@media (max-width: 380px) {
+  #view-statistik .stat-subtab-btn {
+    gap: 4px;
+    font-size: 9px;
+  }
+
+  #view-statistik .segment-btn {
+    padding-right: 5px;
+    padding-left: 5px;
+    font-size: 9px;
+  }
+}
+
+/* Übrige Hauptansichten im gleichen Filz-und-Messing-Look */
+.view:not(#view-statistik) .header-container {
+  border-bottom-color: rgba(214, 182, 105, 0.12);
+}
+
+.tab-bar {
+  background: rgba(16, 21, 18, 0.94);
+  border-color: rgba(214, 182, 105, 0.2);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.58);
+}
+
+.tab-indicator {
+  background: linear-gradient(145deg, rgba(214, 182, 105, 0.18), rgba(214, 182, 105, 0.08));
+  border-color: rgba(214, 182, 105, 0.36);
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2);
+}
+
+.tab-item {
+  color: #a1aaa3;
+  font-size: 9px;
+}
+
+.tab-item.active {
+  color: #f2ead1;
+}
+
+.tab-item.active .tab-icon {
+  color: #e3c878;
+  text-shadow: 0 0 10px rgba(214, 182, 105, 0.28);
+}
+
+#view-aufzeichnen .match-mode-card {
+  border-color: rgba(117, 195, 143, 0.25);
+  border-radius: 17px;
+  background: linear-gradient(145deg, rgba(24, 35, 29, 0.97), rgba(14, 19, 17, 0.99));
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25), inset 0 1px rgba(255, 255, 255, 0.035);
+}
+
+#view-aufzeichnen .match-mode-card::before {
+  background: linear-gradient(90deg, transparent, #75c38f 50%, transparent);
+  opacity: 0.5;
+}
+
+#view-aufzeichnen .match-pill-group {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.26);
+  border-radius: 11px;
+}
+
+#view-aufzeichnen .match-pill-btn.active {
+  border-color: rgba(214, 182, 105, 0.36);
+  background: linear-gradient(145deg, rgba(214, 182, 105, 0.19), rgba(214, 182, 105, 0.08));
+  color: #efd991;
+  box-shadow: none;
+}
+
+#view-aufzeichnen .match-dice-hud {
+  border-color: rgba(214, 182, 105, 0.36);
+  background: rgba(214, 182, 105, 0.1);
+  color: #e3c878;
+  box-shadow: none;
+}
+
+#view-aufzeichnen .match-p1-card,
+#view-aufzeichnen .match-p2-card {
+  border-radius: 17px;
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.24), inset 0 1px rgba(255, 255, 255, 0.035);
+}
+
+#view-aufzeichnen .match-p1-card {
+  background: linear-gradient(145deg, rgba(38, 34, 22, 0.94), rgba(18, 19, 16, 0.99));
+  border-color: rgba(214, 182, 105, 0.3);
+}
+
+#view-aufzeichnen .match-p1-card::before {
+  background: linear-gradient(90deg, transparent, #d6b669 50%, transparent);
+  opacity: 0.55;
+}
+
+#view-aufzeichnen .match-p2-card {
+  background: linear-gradient(145deg, rgba(23, 35, 31, 0.96), rgba(14, 19, 17, 0.99));
+  border-color: rgba(117, 195, 143, 0.28);
+}
+
+#view-aufzeichnen .match-p2-card::before {
+  background: linear-gradient(90deg, transparent, #75c38f 50%, transparent);
+  opacity: 0.5;
+}
+
+#view-aufzeichnen .match-p2-card label {
+  color: #9bd2aa !important;
+}
+
+#view-aufzeichnen .match-p2-card .player-sel {
+  border-color: rgba(117, 195, 143, 0.2);
+}
+
+#view-aufzeichnen .match-vs-pill {
+  border-color: rgba(214, 182, 105, 0.2);
+  background: linear-gradient(90deg, rgba(214, 182, 105, 0.1), rgba(117, 195, 143, 0.1)), #111612;
+  color: #e3c878;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+#view-aufzeichnen .match-live-hud {
+  border-color: rgba(117, 195, 143, 0.18) !important;
+  border-radius: 17px;
+  background: linear-gradient(145deg, rgba(24, 34, 29, 0.96), rgba(14, 19, 17, 0.99));
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.25);
+}
+
+#view-uebersicht .segment-control-group,
+#view-erfolge .segment-control-group {
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+#view-uebersicht .segment-row,
+#view-erfolge .segment-row {
+  gap: 5px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+#view-uebersicht .segment-btn,
+#view-erfolge .segment-btn {
+  min-height: 34px;
+  padding: 7px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+}
+
+#view-uebersicht .segment-btn-mode.active,
+#view-erfolge .segment-btn-mode.active {
+  background: linear-gradient(145deg, rgba(61, 139, 91, 0.38), rgba(37, 92, 62, 0.28)) !important;
+  color: #c1edce !important;
+  box-shadow: inset 0 0 0 1px rgba(117, 195, 143, 0.3);
+}
+
+#view-uebersicht .segment-btn-time.active-gold,
+#view-erfolge .segment-btn-time.active-gold {
+  background: linear-gradient(145deg, #ead28b, #c7a853) !important;
+  color: #1a1a15 !important;
+  box-shadow: 0 3px 10px rgba(214, 182, 105, 0.2);
+}
+
+#view-uebersicht .history-date-header {
+  border-bottom-color: rgba(214, 182, 105, 0.14);
+  color: #d9c27f;
+  background: linear-gradient(to bottom, rgba(13, 19, 16, 0.97), rgba(13, 19, 16, 0.86) 80%, transparent);
+}
+
+#view-uebersicht #history-list .match-card-modern {
+  border-color: color-mix(in srgb, var(--card-accent, #75c38f) 24%, rgba(255, 255, 255, 0.08));
+  border-radius: 17px;
+  background: linear-gradient(145deg, rgba(24, 32, 29, 0.96), rgba(14, 19, 17, 0.98));
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.24), inset 0 1px rgba(255, 255, 255, 0.035);
+}
+
+#view-uebersicht #history-list .match-card-modern::before {
+  opacity: 0.48;
+}
+
+#view-uebersicht #history-list .match-card-modern:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+
+#view-uebersicht #history-list .match-vs-badge {
+  border-color: rgba(214, 182, 105, 0.2);
+  background: rgba(214, 182, 105, 0.08);
+  color: #d8c27e;
+}
+
+#view-erfolge .trophy-room-banner {
+  border-color: rgba(214, 182, 105, 0.22);
+  border-radius: 17px;
+  background: linear-gradient(145deg, rgba(35, 34, 25, 0.92), rgba(15, 19, 17, 0.98));
+  box-shadow: 0 7px 19px rgba(0, 0, 0, 0.2);
+}
+
+#view-erfolge .trophy-room-banner:hover {
+  border-color: rgba(214, 182, 105, 0.4);
+  background: linear-gradient(145deg, rgba(43, 41, 29, 0.96), rgba(15, 19, 17, 0.99));
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+}
+
+#view-erfolge .ach-vip-hero {
+  border-color: rgba(214, 182, 105, 0.24);
+  border-radius: 19px;
+  background: linear-gradient(145deg, rgba(31, 37, 30, 0.96), rgba(15, 19, 17, 0.99));
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28), inset 0 1px rgba(255, 255, 255, 0.04);
+}
+
+#view-erfolge .ach-vip-card {
+  border-radius: 15px;
+  background-color: rgba(17, 23, 20, 0.96);
+}
+
+#view-erfolge .ach-vip-card.diamond {
+  border-color: rgba(151, 196, 190, 0.3);
+  background: linear-gradient(135deg, rgba(117, 166, 158, 0.08), rgba(17, 23, 20, 0.98) 62%);
+  box-shadow: none;
+}
+
+#view-erfolge .ach-vip-card.gold {
+  border-color: rgba(214, 182, 105, 0.3);
+  background: linear-gradient(135deg, rgba(214, 182, 105, 0.08), rgba(17, 23, 20, 0.98) 62%);
+}
+
+#view-erfolge .ach-vip-card.fame {
+  border-color: rgba(117, 195, 143, 0.26);
+  background: linear-gradient(135deg, rgba(117, 195, 143, 0.07), rgba(17, 23, 20, 0.98) 62%);
+}
+
+#view-regeln .section-label {
+  color: #d9c27f;
+}
+
+#view-regeln .card-modern {
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(24, 32, 28, 0.94), rgba(14, 19, 17, 0.98));
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.22), inset 0 1px rgba(255, 255, 255, 0.035);
+}
+
+@media (max-width: 380px) {
+  .tab-bar {
+    height: 64px;
+    padding: 0 4px;
+  }
+
+  .tab-item {
+    font-size: 8px;
+  }
+
+  .tab-icon {
+    font-size: 18px;
+  }
+
+  #view-uebersicht .segment-btn,
+  #view-erfolge .segment-btn {
+    padding-right: 5px;
+    padding-left: 5px;
+    font-size: 9px;
+  }
+}
