@@ -418,35 +418,33 @@ window.doSave = async () => {
       const p1El = document.getElementById("p1");
       if (p1El) p1El.value = winnerName;
 
-      if (window.currentAppMode === "dt") {
-        const nextChallenger = (window.spieler || []).find(
+      // Folgespiel nur mit Spielern aus dem ausgewählten Abend-Pool besetzen.
+      // Bei drei oder mehr Anwesenden rückt ein pausierender Spieler nach;
+      // bei nur zwei Anwesenden bleibt der Verlierer als Gegner stehen.
+      let pool =
+        typeof window.getActiveEveningPlayers === "function"
+          ? window.getActiveEveningPlayers()
+          : [];
+      pool = Array.isArray(pool)
+        ? pool.map((name) => String(name).trim()).filter(Boolean)
+        : [];
+
+      let nextChallenger = pool.find(
+        (name) => name !== winnerName && name !== loserName,
+      );
+      if (!nextChallenger && pool.includes(loserName)) {
+        nextChallenger = loserName;
+      }
+
+      // Ohne gepflegten Anwesenheitspool die bisherige Ligalogik beibehalten.
+      if (!pool.length && window.currentAppMode === "dt") {
+        nextChallenger = (window.spieler || []).find(
           (name) => name !== winnerName && name !== loserName,
         );
-        const p2El = document.getElementById("p2");
-        if (p2El) p2El.value = nextChallenger || "";
-      } else {
-        // Smarter 3-Spieler Turnus ("King of the Hill"):
-        // Wenn genau 3 Spieler im aktiven Abendpool sind, rückt der pausierende Spieler auf p2 nach!
-        let pool = window.activeEveningPlayers;
-        if (!pool || !Array.isArray(pool) || pool.length !== 3) {
-          try {
-            const saved = localStorage.getItem("bk_active_evening_players");
-            if (saved) {
-              const parsed = JSON.parse(saved);
-              if (Array.isArray(parsed) && parsed.length === 3) pool = parsed;
-            }
-          } catch (e) {}
-        }
-        if (pool && pool.length === 3) {
-          const nextChallenger = pool.find(
-            (name) => name !== winnerName && name !== loserName,
-          );
-          const p2El = document.getElementById("p2");
-          if (nextChallenger && p2El) {
-            p2El.value = nextChallenger;
-          }
-        }
       }
+
+      const p2El = document.getElementById("p2");
+      if (p2El) p2El.value = nextChallenger || "";
     } else {
       const names = (winnerName || "").split(" & ").map((n) => n.trim());
       if (names.length === 2) {
