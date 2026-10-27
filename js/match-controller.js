@@ -972,44 +972,20 @@ window.shuffleCurrentTeams = () => {
   const elT2p2 = document.getElementById("t2p2");
   if (!elT1p1 || !elT1p2 || !elT2p1 || !elT2p2) return;
 
-  let pool = window.getActiveEveningPlayers();
+  const pool = [
+    ...new Set(
+      (window.getActiveEveningPlayers() || [])
+        .map((name) => String(name).trim())
+        .filter(Boolean),
+    ),
+  ];
 
-  let current = [
-    elT1p1.value ? elT1p1.value.trim() : "",
-    elT1p2.value ? elT1p2.value.trim() : "",
-    elT2p1.value ? elT2p1.value.trim() : "",
-    elT2p2.value ? elT2p2.value.trim() : "",
-  ].filter(Boolean);
-  current = [...new Set(current)];
-
-  // Wenn 4 Spieler in den Feldern stehen und noch kein Pool gespeichert war:
-  if (current.length === 4 && (!pool || pool.length < 4)) {
-    pool = current;
-    window.activeEveningPlayers = current;
-    try {
-      localStorage.setItem(
-        "bk_active_evening_players",
-        JSON.stringify(current),
-      );
-    } catch (e) {}
-  }
-
-  // Wenn weniger als 4 Spieler im Feld stehen, aber ein Pool aus "Startpartie ermitteln" existiert:
-  if (current.length < 4 && pool && pool.length >= 4) {
-    for (const p of pool) {
-      if (!current.includes(p)) {
-        current.push(p);
-      }
-      if (current.length === 4) break;
-    }
-  }
-
-  // Wenn weniger als 4 Spieler aktiv sind (z.B. weil jemand gegangen ist und nur noch 3 im Pool sind):
-  if (current.length < 4 || (pool && pool.length < 4)) {
+  // Teams ausschließlich aus dem explizit ausgewählten Anwesenheitspool bilden.
+  if (pool.length < 4) {
     const msg =
-      pool && pool.length === 3
+      pool.length === 3
         ? "Nur 3 Spieler aktiv – für 2:2 sind mindestens 4 Spieler nötig!"
-        : "Mindestens 4 Spieler für 2:2 nötig! Bitte 'Startpartie ermitteln' 🎲 nutzen.";
+        : "Bitte unter 'Anwesende Spieler' mindestens 4 Spieler auswählen, um Teams zu mischen.";
     if (typeof window.showAppToast === "function") {
       window.showAppToast(msg);
     } else {
@@ -1018,8 +994,7 @@ window.shuffleCurrentTeams = () => {
     return;
   }
 
-  // Bestimme verfügbare Spieler: Wenn ein Pool existiert, nutze strikt den Pool
-  const availablePool = pool && pool.length >= 4 ? pool : current;
+  const availablePool = pool;
 
   // Mathematische 2:2-Paarungen aus dem verfügbaren Pool erzeugen
   const configs = [];

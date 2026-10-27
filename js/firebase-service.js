@@ -445,14 +445,6 @@ window.doSave = async () => {
 
       const p2El = document.getElementById("p2");
       if (p2El) p2El.value = nextChallenger || "";
-    } else {
-      const names = (winnerName || "").split(" & ").map((n) => n.trim());
-      if (names.length === 2) {
-        const t1p1 = document.getElementById("t1p1");
-        const t1p2 = document.getElementById("t1p2");
-        if (t1p1) t1p1.value = names[0];
-        if (t1p2) t1p2.value = names[1];
-      }
     }
 
     const breakPlayerEl = document.getElementById("breakPlayer");
