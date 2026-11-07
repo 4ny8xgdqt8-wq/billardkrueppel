@@ -606,10 +606,19 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  background: #08130d;
+}
+.loader-scene::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  aspect-ratio: 1672 / 941;
   background:
-    linear-gradient(to bottom, #08130d 15%, #08130dc9 55%, #08130d40 100%),
-    url("../assets/match-billardtisch.jpg") center bottom / 100% auto no-repeat,
-    #08130d;
+    linear-gradient(to bottom, #08130dc9, #08130d40),
+    url("../assets/match-billardtisch.jpg") center / cover no-repeat;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 38%);
+  mask-image: linear-gradient(to bottom, transparent, black 38%);
 }
 .loading-overlay .champions-crest-box { width: 108px; height: 108px; margin-bottom: 0; border: 2px solid #d6b66566; border-radius: 50%; box-shadow: 0 0 50px #dfbd5730, inset 0 0 30px #dfbd5712; }
 .loading-overlay .champions-crest-box::before { content: ""; position: absolute; inset: 8px; border: 1px solid #e1c77c55; border-radius: 50%; }
