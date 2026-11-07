@@ -68,16 +68,29 @@ body {
 
 .connection-status {
   flex: 0 0 auto;
+  position: relative;
+  z-index: 2;
   padding: calc(env(safe-area-inset-top, 0px) + 5px) 12px 5px;
-  background: #233b2b;
-  color: #d8ead9;
+  background: #0a0c10;
+  color: #b3d5b9;
   text-align: center;
   font-size: 11px;
+  font-weight: 600;
   line-height: 1.3;
 }
+.connection-status::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  vertical-align: 1px;
+  border-radius: 50%;
+  background: currentColor;
+}
 .connection-status[data-state="offline"],
-.connection-status[data-state="error"] { background: #654826; color: #fff1d1; }
-.connection-status[data-state="syncing"] { background: #354033; color: #eee9d5; }
+.connection-status[data-state="error"] { color: #ffc477; }
+.connection-status[data-state="syncing"] { color: #dbc98f; }
 
 .main-content {
   flex: 1;
@@ -193,7 +206,7 @@ body {
   background: rgba(10, 12, 16, 0.96);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  padding: calc(var(--safe-top, 0px) + 8px) calc(var(--safe-right, 0px) + 16px)
+  padding: 8px calc(var(--safe-right, 0px) + 16px)
     8px calc(var(--safe-left, 0px) + 16px);
   display: flex;
   align-items: center;
@@ -1229,7 +1242,7 @@ select option {
 .history-date-header {
   position: -webkit-sticky;
   position: sticky;
-  top: calc(var(--safe-top) + 55px);
+  top: 55px;
   background: linear-gradient(
     to bottom,
     rgba(11, 15, 25, 0.95) 0%,
@@ -2146,7 +2159,7 @@ select option {
 .stat-subtab-bar {
   position: -webkit-sticky;
   position: sticky;
-  top: calc(var(--stat-header-offset, calc(var(--safe-top, 0px) + 64px)) + 4px);
+  top: calc(var(--stat-header-offset, 64px) + 4px);
   z-index: 850;
   display: flex;
   gap: 6px;
@@ -5382,11 +5395,12 @@ select option {
 .match-background {
   position: absolute;
   inset: auto 0 0;
-  height: min(60vh, 480px);
+  width: 100%;
+  aspect-ratio: 1672 / 941;
   pointer-events: none;
-  background: linear-gradient(to bottom, #0b151000 0%, #08110c20 28%, #08110c38 100%), url("../assets/match-billardtisch.jpg") center bottom / max(100%, 600px) auto no-repeat;
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 32%);
-  mask-image: linear-gradient(to bottom, transparent, #000 32%);
+  background: linear-gradient(to bottom, #08110c33, #08110c38), url("../assets/match-billardtisch.jpg") center bottom / 100% 100% no-repeat;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 55%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 55%);
 }
 .match-background[hidden] { display: none; }
 .main-content { position: relative; z-index: 1; }
