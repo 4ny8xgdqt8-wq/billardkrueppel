@@ -1,9 +1,10 @@
-const CACHE_NAME = "billard-20261107.03";
+const CACHE_NAME = "billard-20261107.07";
 const ASSETS = [
   "./",
   "index.html",
   "manifest.json",
   "logo.png",
+  "assets/match-billardtisch.jpg",
   "logo_html.png",
   "css/main.css",
   "css/animations.css",
