@@ -2,8 +2,6 @@
    Billardkrüppel App Initialization & Core Controller
    ========================================================================== */
 
-import { initFirebaseService } from "./firebase-service.js";
-
 // -- 1. Globale Zustandsvariablen --
 window.stats = [];
 window.spieler = [];
@@ -17,6 +15,23 @@ let workerFinished = false;
 let firebaseDataReady = false;
 let isCalculating = false;
 let isHiding = false;
+let calculationRevision = 0;
+let activeCalculationRevision = 0;
+let calculationPending = false;
+let loaderTimeout;
+let loaderHideTimeout;
+let loaderAnimationTimeout;
+
+function startLoaderTimeout() {
+  clearTimeout(loaderTimeout);
+  loaderTimeout = setTimeout(() => {
+    if (!firebaseDataReady || !workerFinished) {
+      firebaseDataReady = true;
+      workerFinished = true;
+      window.checkAllReadyAndHideLoader();
+    }
+  }, 3000);
+}
 
 // -- 2. Zentraler View-Updater (Sofort verfügbar) --
 window.updateAllViews = function () {
@@ -356,7 +371,7 @@ window.hideLoader = () => {
     }
     l.style.opacity = "0";
     l.style.filter = "blur(10px)";
-    setTimeout(() => (l.style.display = "none"), 500);
+    loaderHideTimeout = setTimeout(() => (l.style.display = "none"), 500);
   }
 };
 
@@ -364,9 +379,15 @@ window.resetLoaderState = () => {
   isHiding = false;
   firebaseDataReady = false;
   workerFinished = false;
-  isCalculating = false;
+  calculationRevision++;
+  calculationPending = false;
   breakTriggered = false;
   crackPlayed = false;
+  clearTimeout(loaderHideTimeout);
+  clearTimeout(loaderAnimationTimeout);
+  document.getElementById("breakArena")?.classList.remove("break-active");
+  document.getElementById("rackTriangle")?.classList.remove("break-exploded");
+  startLoaderTimeout();
 };
 
 window.checkAllReadyAndHideLoader = () => {
@@ -383,13 +404,13 @@ window.checkAllReadyAndHideLoader = () => {
 
   window.updateLoaderStatus("BREAK! Bereit für die Arena!", 100);
 
-  setTimeout(() => {
+  loaderAnimationTimeout = setTimeout(() => {
     if (!crackPlayed && triangle) {
       crackPlayed = true;
       playLoaderBallCrack();
       triangle.classList.add("break-exploded");
     }
-    setTimeout(() => window.hideLoader(), 450);
+    loaderAnimationTimeout = setTimeout(() => window.hideLoader(), 450);
   }, 250);
 };
 
@@ -415,13 +436,7 @@ window.updateLoaderStatus = (msg, percent) => {
 };
 
 // Fallback Timeout für Loader
-setTimeout(() => {
-  if (!firebaseDataReady || !workerFinished) {
-    firebaseDataReady = true;
-    workerFinished = true;
-    window.checkAllReadyAndHideLoader();
-  }
-}, 3000);
+startLoaderTimeout();
 
 // Zufälliger Billard-Tipp im Loader
 const tips = [
@@ -505,6 +520,7 @@ try {
 
 function handleWorkerResult(data) {
   try {
+    if (activeCalculationRevision !== calculationRevision) return;
     const now = new Date();
     const pad = (n) => String(n).padStart(2, "0");
     const todayStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
@@ -533,9 +549,14 @@ function handleWorkerResult(data) {
   } catch (err) {
     console.error("Error processing worker data:", err);
   } finally {
-    workerFinished = true;
     isCalculating = false;
-    window.checkAllReadyAndHideLoader();
+    if (calculationPending) {
+      calculationPending = false;
+      window.recalculateAndRender();
+    } else if (activeCalculationRevision === calculationRevision) {
+      workerFinished = true;
+      window.checkAllReadyAndHideLoader();
+    }
   }
 }
 
@@ -559,13 +580,15 @@ function handleCalculationFallback() {
 }
 
 window.recalculateAndRender = () => {
-  if (
-    window.flags.stats &&
-    window.flags.spieler &&
-    !isCalculating &&
-    typeof window.enrichStatsWithAchievements === "function"
-  ) {
+  if (window.flags.stats && window.flags.spieler && typeof window.enrichStatsWithAchievements === "function") {
+    calculationRevision++;
+    if (isCalculating) {
+      calculationPending = true;
+      return;
+    }
     isCalculating = true;
+    activeCalculationRevision = calculationRevision;
+    firebaseDataReady = true;
     if (!isHiding) window.updateLoaderStatus("Analysiere Billard-Historie", 85);
 
     if (typeof window.populateDateFilter === "function") {
@@ -580,7 +603,6 @@ window.recalculateAndRender = () => {
     } else {
       handleCalculationFallback();
     }
-    firebaseDataReady = true;
   }
 };
 
@@ -611,7 +633,12 @@ document.getElementById("scroll-area")?.addEventListener(
 );
 
 // -- 8. Firebase Service initialisieren --
-initFirebaseService();
+import("./firebase-service.js")
+  .then(({ initFirebaseService }) => initFirebaseService())
+  .catch((err) => {
+    console.error("Firebase konnte nicht geladen werden:", err);
+    window.hideLoader();
+  });
 
 // Init Tab-Indikator & Default Tab
 setTimeout(() => {

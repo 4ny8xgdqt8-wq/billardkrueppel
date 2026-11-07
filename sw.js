@@ -1,4 +1,4 @@
-const CACHE_NAME = "billard-20261107.01";
+const CACHE_NAME = "billard-20261107.02";
 const ASSETS = [
   "./",
   "index.html",
@@ -24,12 +24,19 @@ const ASSETS = [
   "avatars/Peter.webp",
   "avatars/Sascha.webp",
 ];
+const FIREBASE_SDK = [
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js",
+];
 
 // Installation: Dateien in den Cache laden
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
+    caches.open(CACHE_NAME).then(async (cache) => {
+      await cache.addAll(ASSETS);
+      // Ein nicht erreichbares CDN darf die Installation nicht verhindern.
+      await Promise.allSettled(FIREBASE_SDK.map((url) => cache.add(url)));
     }),
   );
   self.skipWaiting();
