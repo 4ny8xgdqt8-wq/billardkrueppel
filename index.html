@@ -70,8 +70,12 @@
   </head>
   <body>
     <div id="loading-overlay" class="loading-overlay">
-      <div class="felt-weave-grid"></div>
-      <div class="champions-ambient-beam"></div>
+      <div class="loader-scene" aria-hidden="true">
+        <div class="loader-table">
+          <div class="loader-table-cue"></div>
+          <div class="loader-chalk"></div>
+        </div>
+      </div>
 
       <div id="loader-content" class="loader-content-wrap">
         <!-- Crest & Logo -->
@@ -86,7 +90,7 @@
         </div>
 
         <div class="brand-title">Billardkrüppel</div>
-        <div class="league-badge">★ Champions Arena ★</div>
+        <div class="league-badge">Champions Arena</div>
 
         <!-- Billardtisch-Break Arena -->
         <div class="break-arena" id="breakArena">
@@ -97,17 +101,10 @@
             <div class="ball ball-p b3" style="top: 36px; left: 30px"></div>
             <div class="ball ball-8 b8" style="top: 36px; left: 52px"></div>
             <div class="ball ball-g b4" style="top: 36px; left: 74px"></div>
-            <div class="ball ball-o b1" style="top: 54px; left: 19px"></div>
-            <div class="ball ball-r b5" style="top: 54px; left: 41px"></div>
-            <div class="ball ball-y b6" style="top: 54px; left: 63px"></div>
-            <div class="ball ball-b b2" style="top: 54px; left: 85px"></div>
           </div>
           <div class="shockwave" id="shockwaveRing"></div>
           <div class="cue-ball" id="cueBall"></div>
         </div>
-
-        <!-- Avatare -->
-        <div id="loader-avatars" class="avatars-gold-row"></div>
 
         <!-- Champions-Ladebalken -->
         <div class="loader-progress-container">
@@ -118,7 +115,6 @@
         <div id="loader-status" class="status-caption">
           Tuch wird vorbereitet...
         </div>
-        <div id="loader-tip" class="pro-tip-box"></div>
         <div
           id="loader-version"
           style="
