@@ -10,6 +10,7 @@ window.viewId = "aufzeichnen";
 window.careerStats = null;
 window.careerStatsBeforeToday = null;
 window.flags = { stats: false, spieler: false };
+window.currentAppMode = localStorage.getItem("bk_active_mode") || "main";
 
 let workerFinished = false;
 let firebaseDataReady = false;
@@ -633,10 +634,31 @@ document.getElementById("scroll-area")?.addEventListener(
 );
 
 // -- 8. Firebase Service initialisieren --
+window.offlineState?.start(localStorage.getItem("bk_active_mode") || "main");
 import("./firebase-service.js")
   .then(({ initFirebaseService }) => initFirebaseService())
   .catch((err) => {
     console.error("Firebase konnte nicht geladen werden:", err);
+    window.offlineState?.error();
+    window.doSave = () => window.offlineState?.canWrite();
+    window.doDeleteMatch = () => window.offlineState?.canWrite();
+    window.syncDailyAchievementsWithHistory = () => window.offlineState?.canWrite();
+    window.switchAppMode = async (newMode) => {
+      if (window.currentAppMode === newMode) return;
+      window.currentAppMode = newMode;
+      localStorage.setItem("bk_active_mode", newMode);
+      window.resetLoaderState();
+      window.stats = [];
+      window.spieler = [];
+      window.dailyAchivs = { days: {} };
+      window.flags = { stats: false, spieler: false };
+      window.careerStats = null;
+      window.careerStatsBeforeToday = null;
+      window.offlineState?.start(newMode);
+      window.offlineState?.error();
+      if (typeof window.updateModeVisuals === "function") window.updateModeVisuals();
+      window.updateAllViews();
+    };
     window.hideLoader();
   });
 

@@ -63,7 +63,10 @@ function subscribeToCollections() {
 
   statsUnsub = onSnapshot(
     doc(db, "billard_data", statsDoc),
+    { includeMetadataChanges: true },
     (snap) => {
+      window.offlineState?.snapshot("stats", snap.exists() ? snap.data().matches || [] : [], snap.metadata);
+      if (snap.metadata.fromCache && window.offlineState?.hasCached("stats")) return;
       window.stats = snap.exists() ? snap.data().matches || [] : [];
       window.flags.stats = true;
       if (typeof window.recalculateAndRender === "function") {
@@ -75,6 +78,7 @@ function subscribeToCollections() {
     },
     (err) => {
       console.error(`Firebase Stats Fehler (${statsDoc}):`, err);
+      window.offlineState?.error();
       window.flags.stats = true;
       if (typeof window.checkAllReadyAndHideLoader === "function") {
         window.checkAllReadyAndHideLoader();
@@ -84,11 +88,14 @@ function subscribeToCollections() {
 
   spielerUnsub = onSnapshot(
     doc(db, "billard_data", spielerDoc),
+    { includeMetadataChanges: true },
     (snap) => {
       let names = snap.exists() ? snap.data().names || [] : [];
       if (window.currentAppMode === "dt") {
         names = [...new Set([...names, "Daniel", "Thorsten", "Sascha"])];
       }
+      window.offlineState?.snapshot("spieler", names, snap.metadata);
+      if (snap.metadata.fromCache && window.offlineState?.hasCached("spieler")) return;
       window.spieler = names;
       window.flags.spieler = true;
       if (window.updateLoaderStatus)
@@ -106,6 +113,7 @@ function subscribeToCollections() {
     },
     (err) => {
       console.error(`Firebase Spieler Fehler (${spielerDoc}):`, err);
+      window.offlineState?.error();
       if (window.currentAppMode === "dt") {
         window.spieler = ["Daniel", "Thorsten", "Sascha"];
         window.flags.spieler = true;
@@ -118,7 +126,9 @@ function subscribeToCollections() {
     },
   );
 
-  dailyUnsub = onSnapshot(doc(db, "billard_data", dailyDoc), (snap) => {
+  dailyUnsub = onSnapshot(doc(db, "billard_data", dailyDoc), { includeMetadataChanges: true }, (snap) => {
+    window.offlineState?.snapshot("daily", snap.exists() ? snap.data() : { days: {} }, snap.metadata);
+    if (snap.metadata.fromCache && window.offlineState?.hasCached("daily")) return;
     if (snap.exists()) {
       window.dailyAchivs = snap.data();
     } else {
@@ -127,6 +137,9 @@ function subscribeToCollections() {
     if (typeof window.recalculateAndRender === "function") {
       window.recalculateAndRender();
     }
+  }, (err) => {
+    console.error(`Firebase Tageserfolge Fehler (${dailyDoc}):`, err);
+    window.offlineState?.error();
   });
 
   if (typeof window.updateModeVisuals === "function") {
@@ -157,6 +170,7 @@ window.switchAppMode = async function (newMode) {
   if (typeof window.resetLoaderState === "function") {
     window.resetLoaderState();
   }
+  window.offlineState?.start(newMode);
   const l = document.getElementById("loading-overlay");
   const content = document.getElementById("loader-content");
   if (l) {
@@ -191,11 +205,13 @@ export function initFirebaseService() {
     })
     .catch((err) => {
       console.error("Firebase Login Fehler:", err);
+      window.offlineState?.error();
       if (typeof window.hideLoader === "function") window.hideLoader();
     });
 }
 
 window.doSave = async () => {
+  if (window.offlineState && !window.offlineState.canWrite()) return;
   const saveBtn = document.querySelector(".btn-save");
   if (saveBtn && saveBtn.disabled) return;
 
@@ -506,6 +522,7 @@ window.doSave = async () => {
 };
 
 window.doDeleteMatch = async () => {
+  if (window.offlineState && !window.offlineState.canWrite()) return;
   if (
     window.matchToDeleteIndex === -1 ||
     window.matchToDeleteIndex === undefined
@@ -537,6 +554,7 @@ window.doRetroSync = () => {
 window.syncDailyAchievementsWithHistory = async function (
   bypassConfirm = false,
 ) {
+  if (window.offlineState && !window.offlineState.canWrite()) return;
   if (
     !window.stats ||
     !window.spieler ||

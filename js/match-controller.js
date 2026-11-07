@@ -2316,6 +2316,7 @@ window.selectEditLeftover = (num) => {
 };
 
 window.saveEditedMatch = async () => {
+  if (window.offlineState && !window.offlineState.canWrite()) return;
   if (window.editingMatchIndex === -1 || window.editingMatchIndex === undefined)
     return;
 
