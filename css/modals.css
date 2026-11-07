@@ -605,52 +605,11 @@
 .loader-scene {
   position: absolute;
   inset: 0;
-  overflow: hidden;
   pointer-events: none;
-  perspective: 440px;
-  background: radial-gradient(ellipse at 50% 17%, #ac935955, transparent 34%), linear-gradient(#111b14, #05130d);
-}
-.loader-scene::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(#04120bba 0%, #061c1160 48%, #03100988 100%);
-}
-.loader-table {
-  position: absolute;
-  top: 39%;
-  left: -10%;
-  width: 120%;
-  height: 74%;
-  transform: rotateX(48deg) rotateZ(-9deg);
-  border: 22px solid #704b2b;
-  border-radius: 26px;
-  background: radial-gradient(ellipse at center, #50976b, #1b5738 76%);
-  box-shadow: inset 0 0 0 5px #e0b977, inset 0 0 25px #09291a, 0 22px 0 #47301b, 0 35px 40px #000b;
-}
-.loader-table::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 10px;
-  background: radial-gradient(circle at 0 0, #050a06 0 13px, transparent 14px), radial-gradient(circle at 100% 0, #050a06 0 13px, transparent 14px), radial-gradient(circle at 0 100%, #050a06 0 13px, transparent 14px), radial-gradient(circle at 100% 100%, #050a06 0 13px, transparent 14px), radial-gradient(circle at 0 50%, #050a06 0 11px, transparent 12px), radial-gradient(circle at 100% 50%, #050a06 0 11px, transparent 12px);
-}
-.loader-table-cue {
-  position: absolute;
-  left: 17%; top: 69%; width: 65%; height: 6px;
-  border-radius: 5px;
-  transform: rotate(-25deg);
-  background: linear-gradient(90deg, #392316 0 22%, #b88043 23% 30%, #dfbb7c 31% 96%, #eee4c7 97% 99%, #366c83 100%);
-  box-shadow: 0 5px 5px #0008;
-}
-.loader-chalk {
-  position: absolute;
-  z-index: 1;
-  top: -17px; right: 22%; width: 14px; height: 13px;
-  border: 2px solid #d4bf8b;
-  border-radius: 2px;
-  background: radial-gradient(circle at 50% 45%, #5fa9c1 0 3px, #28728c 4px 5px, #d4bf8b 6px);
-  box-shadow: 1px 3px 3px #0009;
+  background:
+    linear-gradient(to bottom, #08130d 15%, #08130dc9 55%, #08130d40 100%),
+    url("../assets/match-billardtisch.jpg") center bottom / 100% auto no-repeat,
+    #08130d;
 }
 .loading-overlay .champions-crest-box { width: 108px; height: 108px; margin-bottom: 0; border: 2px solid #d6b66566; border-radius: 50%; box-shadow: 0 0 50px #dfbd5730, inset 0 0 30px #dfbd5712; }
 .loading-overlay .champions-crest-box::before { content: ""; position: absolute; inset: 8px; border: 1px solid #e1c77c55; border-radius: 50%; }
