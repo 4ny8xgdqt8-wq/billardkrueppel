@@ -23,6 +23,17 @@ let loaderTimeout;
 let loaderHideTimeout;
 let loaderAnimationTimeout;
 
+// Wie in Klapsentouren führt ein Tipp auf den Kopfbereich nach oben.
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".header-container, #connection-status")) return;
+  if (event.target.closest("button, a, summary, input, select, textarea")) return;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.getElementById("scroll-area")?.scrollTo({
+    top: 0,
+    behavior: reduceMotion ? "auto" : "smooth",
+  });
+});
+
 function startLoaderTimeout() {
   clearTimeout(loaderTimeout);
   loaderTimeout = setTimeout(() => {
