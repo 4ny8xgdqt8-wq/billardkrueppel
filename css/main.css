@@ -5608,6 +5608,31 @@ select option {
   box-shadow: 0 7px 20px rgba(0, 0, 0, 0.22), inset 0 1px rgba(255, 255, 255, 0.035);
 }
 
+/* Durchscheinende Kacheln über dem gemeinsamen Hintergrund. */
+#scroll-area :is(.card, .card-modern, .match-mode-card, .stat-card-modern,
+  .record-card, .match-card-modern, .h2h-interactive-card, .h2h-detail-tile,
+  .h2h-radar-card, .form-player-card, .hero-card-v1, .vs-arena-card,
+  .achievement-card-hero, .ach-card-tier, .ach-vip-kpi-card, .ach-vip-card,
+  .session-ach-card, .session-player-box, .ach-vip-all-box, .h2h-insight-box,
+  .prob-box, .shot-clock-display-card, .time-filter-card) {
+  background: linear-gradient(145deg, rgba(38, 48, 42, 0.56), rgba(14, 20, 18, 0.62)) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(130%);
+  backdrop-filter: blur(8px) saturate(130%);
+}
+
+#scroll-area #view-aufzeichnen .match-p1-card {
+  background: linear-gradient(145deg, rgba(68, 57, 32, 0.53), rgba(24, 24, 18, 0.62)) !important;
+}
+
+#scroll-area #view-aufzeichnen .match-p2-card {
+  background: linear-gradient(145deg, rgba(35, 57, 44, 0.53), rgba(14, 23, 18, 0.62)) !important;
+}
+
+#scroll-area #view-statistik #stat-daily-winner-card {
+  background: radial-gradient(ellipse at 50% 0%, rgba(214, 182, 105, 0.11), transparent 62%),
+    linear-gradient(145deg, rgba(38, 48, 42, 0.56), rgba(14, 20, 18, 0.62)) !important;
+}
+
 @media (max-width: 380px) {
   .tab-bar {
     height: 64px;
