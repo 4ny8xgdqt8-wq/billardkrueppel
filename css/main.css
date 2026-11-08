@@ -5397,13 +5397,13 @@ select option {
 /* Der Tisch bleibt hinter allen Ansichten am unteren Bildschirmrand. */
 .match-background {
   position: absolute;
-  inset: auto 0 0;
+  inset: auto 0 calc(env(safe-area-inset-bottom, 0px) + 80px);
   width: 100%;
   aspect-ratio: 1672 / 941;
   pointer-events: none;
   background: linear-gradient(to bottom, #08110c33, #08110c38), url("../assets/match-billardtisch-vintage.png") center bottom / 100% 100% no-repeat;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 55%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 55%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 55%, #000 84%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 55%, #000 84%, transparent 100%);
 }
 .match-background[hidden] { display: none; }
 .main-content { position: relative; z-index: 1; }
