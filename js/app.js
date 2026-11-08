@@ -166,8 +166,6 @@ window.switchV = function (id, el, forcedDir) {
   }
 
   window.viewId = id;
-  const matchBackground = document.getElementById("match-background");
-  if (matchBackground) matchBackground.hidden = id !== "aufzeichnen";
   const oldActive = document.querySelector(".view.active");
   document
     .querySelectorAll(".tab-item")

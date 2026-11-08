@@ -5394,7 +5394,7 @@ select option {
   text-shadow: 0 0 10px rgba(214, 182, 105, 0.28);
 }
 
-/* Der Tisch bleibt hinter der Matchansicht am unteren Bildschirmrand. */
+/* Der Tisch bleibt hinter allen Ansichten am unteren Bildschirmrand. */
 .match-background {
   position: absolute;
   inset: auto 0 0;
