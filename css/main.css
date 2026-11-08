@@ -5401,7 +5401,7 @@ select option {
   width: 100%;
   aspect-ratio: 1672 / 941;
   pointer-events: none;
-  background: linear-gradient(to bottom, #08110c33, #08110c38), url("../assets/match-billardtisch.jpg") center bottom / 100% 100% no-repeat;
+  background: linear-gradient(to bottom, #08110c33, #08110c38), url("../assets/match-billardtisch-vintage.png") center bottom / 100% 100% no-repeat;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 55%);
   mask-image: linear-gradient(to bottom, transparent 0%, #000 55%);
 }
