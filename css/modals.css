@@ -616,7 +616,7 @@
   aspect-ratio: 1672 / 941;
   background:
     linear-gradient(to bottom, #08130dc9, #08130d40),
-    url("../assets/match-billardtisch-vintage.png") center / cover no-repeat;
+    url("../assets/billard-hintergrund.png") center / cover no-repeat;
   -webkit-mask-image: linear-gradient(to bottom, transparent, black 38%);
   mask-image: linear-gradient(to bottom, transparent, black 38%);
 }
