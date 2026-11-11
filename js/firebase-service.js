@@ -42,6 +42,13 @@ window.getDocName = function (baseName) {
 let statsUnsub = null;
 let spielerUnsub = null;
 let dailyUnsub = null;
+let firebaseReady = false;
+
+window.addEventListener("online", () => {
+  if (!firebaseReady) return;
+  window.offlineState?.retry();
+  subscribeToCollections();
+});
 
 function subscribeToCollections() {
   if (statsUnsub) {
@@ -199,6 +206,7 @@ export function initFirebaseService() {
 
   signInAnonymously(auth)
     .then(() => {
+      firebaseReady = true;
       if (window.updateLoaderStatus)
         window.updateLoaderStatus("Synchronisiere Daten", 40);
       subscribeToCollections();

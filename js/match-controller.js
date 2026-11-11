@@ -813,10 +813,15 @@ window.selectWinner = (n) => {
   window.openResultModal();
 };
 
+let dropdownMode = null;
 window.initDropdowns = () => {
+  const modeChanged = dropdownMode !== window.currentAppMode;
+  dropdownMode = window.currentAppMode;
   document.querySelectorAll(".player-sel").forEach((s) => {
+    const previousValue = modeChanged ? "" : s.value;
     s.innerHTML = '<option disabled selected value="">Wählen</option>';
     window.spieler.forEach((p) => s.options.add(new Option(p, p)));
+    if (previousValue && window.spieler.includes(previousValue)) s.value = previousValue;
     s.onchange = () => {
       window.breakLocked = false;
       window.winnerNum = 0;
@@ -834,7 +839,7 @@ window.initDropdowns = () => {
 
   if (typeof window.updateModeVisuals === "function")
     window.updateModeVisuals();
-  if (typeof window.initResultUI === "function") window.initResultUI(); // Neue UI initialisieren
+  if (modeChanged && typeof window.initResultUI === "function") window.initResultUI();
   if (typeof window.updateAvatarPreviews === "function")
     window.updateAvatarPreviews();
   if (typeof window.updateUI === "function") window.updateUI(); // updateUI ruft updateMatchProbability auf, das computeEloRatings braucht
@@ -1263,7 +1268,7 @@ window.updateUI = () => {
   document.getElementById("btn-win1").innerText = n1 || "Spieler 1";
   document.getElementById("btn-win2").innerText = n2 || "Spieler 2";
 
-  // Dropdown für Anstoßspieler immer neu befüllen, außer wenn der Anstoß bereits "gelockt" ist.
+  // Anstoßauswahl beim erneuten Befüllen erhalten, solange sie gültig ist.
   const b = document.getElementById("breakPlayer");
   const currentBreakPlayer = b.value; // Wert vor dem Leeren sichern
   b.innerHTML = '<option value="" selected disabled>Wählen</option>';
@@ -1271,7 +1276,7 @@ window.updateUI = () => {
   names.forEach((n) => {
     if (n && !n.includes("undefined")) b.options.add(new Option(n, n));
   });
-  if (window.breakLocked && currentBreakPlayer) b.value = currentBreakPlayer; // Gesicherten Wert wiederherstellen, falls gelockt
+  if (currentBreakPlayer && names.includes(currentBreakPlayer)) b.value = currentBreakPlayer;
 
   // Timer starten, wenn Anstoßspieler feststeht
   if (b.value && !window.matchTimerInterval) {

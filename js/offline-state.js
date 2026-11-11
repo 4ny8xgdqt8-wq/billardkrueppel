@@ -47,6 +47,7 @@
       applyCache(); render();
     },
     hasCached(name) { return !!cached[name]; },
+    retry() { confirmed.clear(); failed = false; render(); },
     snapshot(name, value, metadata) {
       if (metadata.fromCache || metadata.hasPendingWrites) {
         confirmed.delete(name);
@@ -68,5 +69,5 @@
     },
   };
   window.addEventListener("offline", () => { confirmed.clear(); render(); });
-  window.addEventListener("online", () => { confirmed.clear(); failed = false; render(); });
+  window.addEventListener("online", () => { confirmed.clear(); render(); });
 })();
