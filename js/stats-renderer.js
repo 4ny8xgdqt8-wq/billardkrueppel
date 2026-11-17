@@ -5076,6 +5076,11 @@ window.openMatchDetails = (index) => {
   window.currentViewingMatchIndex = index;
   const g = window.stats[index];
   if (!g) return;
+  window.currentViewingMatchTarget = {
+    mode: window.currentAppMode,
+    index,
+    match: JSON.stringify(g),
+  };
 
   // Nutze die bereits vom Worker berechneten globalen Stats
   const matchData =

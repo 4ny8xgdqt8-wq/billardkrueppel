@@ -788,11 +788,15 @@ window.closeErrorModal = () => {
 
 window.openDeleteConfirmModal = (index) => {
   window.matchToDeleteIndex = index;
+  window.matchToDeleteTarget = window.stats?.[index] ? {
+    mode: window.currentAppMode, index, match: JSON.parse(JSON.stringify(window.stats[index])),
+  } : null;
   document.getElementById("deleteConfirmModal").style.display = "flex";
 };
 
 window.closeDeleteConfirmModal = () => {
   window.matchToDeleteIndex = -1;
+  window.matchToDeleteTarget = null;
   document.getElementById("deleteConfirmModal").style.display = "none";
 };
 
@@ -2108,8 +2112,16 @@ window.openEditCurrentMatch = () => {
     typeof window.currentViewingMatchIndex === "number" &&
     window.currentViewingMatchIndex >= 0
   ) {
+    const target = window.currentViewingMatchTarget;
+    if (!target || target.mode !== window.currentAppMode ||
+        target.index !== window.currentViewingMatchIndex ||
+        JSON.stringify(window.stats?.[target.index]) !== target.match) {
+      window.closeMatchDetailsModal();
+      window.openErrorModal?.("Das Spiel wurde zwischenzeitlich geändert. Bitte erneut aus der Liste auswählen.");
+      return;
+    }
     window.closeMatchDetailsModal();
-    window.openEditMatchModal(window.currentViewingMatchIndex);
+    window.openEditMatchModal(target.index);
   }
 };
 
@@ -2124,6 +2136,7 @@ window.openEditMatchModal = (index) => {
   window.editingMatchIndex = index;
   const g = window.stats && window.stats[index];
   if (!g) return;
+  window.editingMatchTarget = { mode: window.currentAppMode, index, match: JSON.parse(JSON.stringify(g)) };
 
   const dateInfoEl = document.getElementById("edit-match-date-info");
   if (dateInfoEl) dateInfoEl.innerText = g.d || "";
@@ -2322,6 +2335,7 @@ window.selectEditLeftover = (num) => {
 
 window.saveEditedMatch = async () => {
   if (window.offlineState && !window.offlineState.canWrite()) return;
+  if (window.matchWriteInProgress) return;
   if (window.editingMatchIndex === -1 || window.editingMatchIndex === undefined)
     return;
 
@@ -2338,6 +2352,20 @@ window.saveEditedMatch = async () => {
     const t2p2 = document.getElementById("edit-t2p2")?.value;
     p1 = [t1p1, t1p2].filter(Boolean).join(" & ");
     p2 = [t2p1, t2p2].filter(Boolean).join(" & ");
+  }
+
+  if (mode === "2:2" && ["edit-t1p1", "edit-t1p2", "edit-t2p1", "edit-t2p2"].some((id) => !document.getElementById(id)?.value)) {
+    window.openErrorModal?.("Bitte für beide Teams jeweils zwei Spieler auswählen.");
+    return;
+  }
+
+  const playerIds = mode === "1:1"
+    ? ["edit-p1", "edit-p2"]
+    : ["edit-t1p1", "edit-t1p2", "edit-t2p1", "edit-t2p2"];
+  const selectedPlayers = playerIds.map((id) => document.getElementById(id)?.value).filter(Boolean);
+  if (new Set(selectedPlayers).size !== selectedPlayers.length) {
+    window.openErrorModal?.("Jeder Spieler darf nur einmal ausgewählt werden.");
+    return;
   }
 
   const breakPlayer = document.getElementById("edit-breakPlayer")?.value;
@@ -2364,7 +2392,12 @@ window.saveEditedMatch = async () => {
     return;
   }
 
-  const oldMatch = window.stats[window.editingMatchIndex] || {};
+  const target = window.editingMatchTarget;
+  if (!target || target.mode !== window.currentAppMode) {
+    window.openErrorModal?.("Die Liga wurde gewechselt. Bitte das Spiel erneut auswählen.");
+    return;
+  }
+  const oldMatch = target.match;
   const updatedMatch = {
     ...oldMatch,
     m: mode,
@@ -2378,19 +2411,10 @@ window.saveEditedMatch = async () => {
     bt2: ballType2,
   };
 
-  window.stats[window.editingMatchIndex] = updatedMatch;
-
+  window.matchWriteInProgress = true;
   try {
-    if (window.db && window.dbFns && window.dbFns.setDoc && window.dbFns.doc) {
-      const statsDoc =
-        typeof window.getDocName === "function"
-          ? window.getDocName("stats")
-          : "stats";
-      await window.dbFns.setDoc(
-        window.dbFns.doc(window.db, "billard_data", statsDoc),
-        { matches: window.stats },
-      );
-    }
+    if (typeof window.changeStoredMatch !== "function") throw new Error("Die Verbindung ist nicht bereit.");
+    await window.changeStoredMatch(target.mode, target.index, target.match, updatedMatch);
 
     if (typeof window.recalculateAndRender === "function") {
       window.recalculateAndRender();
@@ -2409,6 +2433,8 @@ window.saveEditedMatch = async () => {
         "Fehler beim Aktualisieren des Matches:\n" + err.message,
       );
     }
+  } finally {
+    window.matchWriteInProgress = false;
   }
 };
 

@@ -4,6 +4,7 @@
   let confirmed = new Set();
   let failed = false;
   let cached = {};
+  let confirmedValues = {};
   const key = () => `bk_offline_snapshot_${mode}`;
 
   function read() {
@@ -43,16 +44,18 @@
   window.offlineState = {
     start(nextMode) {
       mode = nextMode === "dt" ? "dt" : "main";
-      confirmed = new Set(); failed = false; cached = read();
+      confirmed = new Set(); confirmedValues = {}; failed = false; cached = read();
       applyCache(); render();
     },
     hasCached(name) { return !!cached[name]; },
+    confirmedValue(name) { return confirmedValues[name]; },
     retry() { confirmed.clear(); failed = false; render(); },
     snapshot(name, value, metadata) {
       if (metadata.fromCache || metadata.hasPendingWrites) {
         confirmed.delete(name);
       } else {
         confirmed.add(name);
+        confirmedValues[name] = JSON.parse(JSON.stringify(value));
         const next = { ...cached, [name]: { value, at: Date.now() } };
         try {
           localStorage.setItem(key(), JSON.stringify(next));

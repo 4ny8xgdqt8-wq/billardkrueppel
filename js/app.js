@@ -525,7 +525,11 @@ let statsWorker;
 try {
   statsWorker = new Worker("worker.js");
   statsWorker.onmessage = (e) => handleWorkerResult(e.data);
-  statsWorker.onerror = () => handleCalculationFallback();
+  statsWorker.onerror = () => {
+    statsWorker.terminate();
+    statsWorker = null;
+    handleCalculationFallback();
+  };
 } catch (e) {
   handleCalculationFallback();
 }
@@ -608,10 +612,17 @@ window.recalculateAndRender = () => {
     }
 
     if (statsWorker && statsWorker.postMessage) {
-      statsWorker.postMessage({
-        stats: JSON.parse(JSON.stringify(window.stats)),
-        spieler: Array.from(window.spieler),
-      });
+      try {
+        statsWorker.postMessage({
+          stats: JSON.parse(JSON.stringify(window.stats)),
+          spieler: Array.from(window.spieler),
+        });
+      } catch (err) {
+        console.warn("Worker nicht verfügbar:", err);
+        statsWorker.terminate();
+        statsWorker = null;
+        handleCalculationFallback();
+      }
     } else {
       handleCalculationFallback();
     }
@@ -651,6 +662,20 @@ import("./firebase-service.js")
   .catch((err) => {
     console.error("Firebase konnte nicht geladen werden:", err);
     window.offlineState?.error();
+    // Erneut versuchen, ohne laufende Eingaben durch einen Reload zu verwerfen.
+    const retryFirebaseImport = async () => {
+      try {
+        const { initFirebaseService } = await import(`./firebase-service.js?retry=${Date.now()}`);
+        window.removeEventListener("online", retryFirebaseImport);
+        window.offlineState?.retry();
+        initFirebaseService();
+      } catch (retryError) {
+        console.error("Firebase konnte weiterhin nicht geladen werden:", retryError);
+        window.offlineState?.error();
+        window.openErrorModal?.("Die Verbindung konnte nicht wiederhergestellt werden. Bitte sichere deine Eingaben und lade die Seite anschließend neu.");
+      }
+    };
+    window.addEventListener("online", retryFirebaseImport);
     window.doSave = () => window.offlineState?.canWrite();
     window.doDeleteMatch = () => window.offlineState?.canWrite();
     window.syncDailyAchievementsWithHistory = () => window.offlineState?.canWrite();

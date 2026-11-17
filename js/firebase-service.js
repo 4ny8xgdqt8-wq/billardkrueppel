@@ -12,6 +12,7 @@ import {
   getDoc,
   getFirestore,
   onSnapshot,
+  runTransaction,
   setDoc,
   updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -43,11 +44,41 @@ let statsUnsub = null;
 let spielerUnsub = null;
 let dailyUnsub = null;
 let firebaseReady = false;
+let signingIn = false;
+let retrySignIn = false;
+window.matchWriteInProgress = false;
+
+// Vergleicht Firestore-Daten unabhängig von der Reihenfolge der Objektfelder.
+function stableValue(value) {
+  if (Array.isArray(value)) return value.map(stableValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, stableValue(value[key])]));
+  }
+  return value;
+}
+function sameData(a, b) {
+  return JSON.stringify(stableValue(a)) === JSON.stringify(stableValue(b));
+}
+window.changeStoredMatch = async (mode, index, expected, replacement) => {
+  const ref = doc(db, "billard_data", mode === "dt" ? "stats_DT" : "stats");
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    const matches = snap.exists() ? snap.data().matches || [] : [];
+    if (!expected || !sameData(matches[index], expected)) {
+      throw new Error("Das Spiel wurde zwischenzeitlich geändert. Bitte die Liste aktualisieren und erneut versuchen.");
+    }
+    const next = matches.slice();
+    if (replacement === null) next.splice(index, 1);
+    else next[index] = replacement;
+    tx.set(ref, { matches: next });
+  });
+};
 
 window.addEventListener("online", () => {
-  if (!firebaseReady) return;
   window.offlineState?.retry();
-  subscribeToCollections();
+  if (firebaseReady) subscribeToCollections();
+  else if (signingIn) retrySignIn = true;
+  else initFirebaseService();
 });
 
 function subscribeToCollections() {
@@ -156,6 +187,10 @@ function subscribeToCollections() {
 
 window.switchAppMode = async function (newMode) {
   if (window.currentAppMode === newMode) return;
+  if (window.matchWriteInProgress) {
+    window.openErrorModal?.("Bitte warten, bis der Speichervorgang abgeschlossen ist.");
+    return;
+  }
 
   window.currentAppMode = newMode;
   localStorage.setItem("bk_active_mode", newMode);
@@ -201,6 +236,8 @@ window.switchAppMode = async function (newMode) {
 
 // Firebase Listeners starten
 export function initFirebaseService() {
+  if (signingIn || firebaseReady) return;
+  signingIn = true;
   if (window.updateLoaderStatus)
     window.updateLoaderStatus("Verbinde zur Cloud", 15);
 
@@ -215,13 +252,22 @@ export function initFirebaseService() {
       console.error("Firebase Login Fehler:", err);
       window.offlineState?.error();
       if (typeof window.hideLoader === "function") window.hideLoader();
+    })
+    .finally(() => {
+      signingIn = false;
+      if (retrySignIn && !firebaseReady && navigator.onLine) {
+        retrySignIn = false;
+        initFirebaseService();
+      } else {
+        retrySignIn = false;
+      }
     });
 }
 
 window.doSave = async () => {
   if (window.offlineState && !window.offlineState.canWrite()) return;
   const saveBtn = document.querySelector(".btn-save");
-  if (saveBtn && saveBtn.disabled) return;
+  if (window.matchWriteInProgress || (saveBtn && saveBtn.disabled)) return;
 
   const m = document.getElementById("mode")?.value || "1:1";
   const b = document.getElementById("breakPlayer")?.value || "";
@@ -271,6 +317,13 @@ window.doSave = async () => {
   if (m === "2:2" && p2.split("&").length < 2) {
     missingMessages.push("Team 2 unvollständig");
     missingElements.push("t2p2");
+  }
+
+  const playerIds = m === "1:1" ? ["p1", "p2"] : ["t1p1", "t1p2", "t2p1", "t2p2"];
+  const selectedPlayers = playerIds.map((id) => document.getElementById(id)?.value).filter(Boolean);
+  if (new Set(selectedPlayers).size !== selectedPlayers.length) {
+    missingMessages.push("Jeder Spieler darf nur einmal ausgewählt werden");
+    missingElements.push(...playerIds);
   }
 
   if (!b) {
@@ -323,6 +376,9 @@ window.doSave = async () => {
     return;
   }
 
+  window.matchWriteInProgress = true;
+  const saveMode = window.currentAppMode;
+  const savePlayers = [...window.spieler];
   if (saveBtn) saveBtn.disabled = true;
   const originalText = saveBtn ? saveBtn.innerText : "Speichern";
   if (saveBtn) saveBtn.innerText = "Speichert...";
@@ -357,77 +413,43 @@ window.doSave = async () => {
     durationFormatted: `${pad(mins)}:${pad(secs)}`,
   };
 
+  let saved = false;
   try {
     const isoDay = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
     const todayStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
-    const updatedStats = [...(window.stats || []), data];
-
-    const isSameDay = (dateString, refDate) => {
-      const match = String(dateString || "").match(
-        /^(\d{1,2})\.(\d{1,2})\.(\d{4})/,
-      );
-      if (!match) return false;
-      return (
-        parseInt(match[1], 10) === refDate.getDate() &&
-        parseInt(match[2], 10) === refDate.getMonth() + 1 &&
-        parseInt(match[3], 10) === refDate.getFullYear()
-      );
-    };
-
-    // 1. Match in der Cloud speichern
-    window.stats = updatedStats;
-    await setDoc(doc(db, "billard_data", window.getDocName("stats")), {
-      matches: updatedStats,
-    });
-
-    // 2. Tageserfolge berechnen und mergen
-    try {
-      const todayMatches = updatedStats.filter(
-        (g) => g && g.d && isSameDay(g.d, now),
-      );
-      const procData = window.processAllStatsChronologically(
-        todayMatches,
-        window.spieler,
-        todayStr,
-      );
-      const dayResults = {};
-      const existingDayData =
-        window.dailyAchivs &&
-        window.dailyAchivs.days &&
-        window.dailyAchivs.days[isoDay]
-          ? window.dailyAchivs.days[isoDay]
-          : {};
-
+    const statsRef = doc(db, "billard_data", saveMode === "dt" ? "stats_DT" : "stats");
+    const dailyRef = doc(db, "billard_data", saveMode === "dt" ? "daily_achivs_DT" : "daily_achivs");
+    await runTransaction(db, async (tx) => {
+      const statsSnap = await tx.get(statsRef);
+      const dailySnap = await tx.get(dailyRef);
+      const updatedStats = [...(statsSnap.exists() ? statsSnap.data().matches || [] : []), data];
+      const daily = dailySnap.exists() ? dailySnap.data() : { days: {} };
+      const todayMatches = updatedStats.filter((g) => {
+        const match = String(g?.d || "").match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+        return match && Number(match[1]) === now.getDate() &&
+          Number(match[2]) === now.getMonth() + 1 && Number(match[3]) === now.getFullYear();
+      });
+      const procData = window.processAllStatsChronologically(todayMatches, savePlayers, todayStr);
+      const existingDayData = daily.days?.[isoDay] || {};
+      const dayResults = { ...existingDayData };
       Object.keys(procData.pData).forEach((player) => {
         const d = procData.pData[player];
         const active = [
           ...window.dailyFamePool.filter((ach) => ach.cond(d)),
           ...window.dailyShamePool.filter((ach) => ach.cond(d)),
         ].map((ach) => ach.t);
-
-        const existingForPlayer = existingDayData[player] || [];
-        const merged = Array.from(new Set([...existingForPlayer, ...active]));
-        if (merged.length > 0) dayResults[player] = merged;
+        const merged = Array.from(new Set([...(existingDayData[player] || []), ...active]));
+        if (merged.length) dayResults[player] = merged;
       });
-
-      const finalDayResults = { ...existingDayData, ...dayResults };
-      if (Object.keys(finalDayResults).length > 0) {
-        const newDaily = { days: {}, ...window.dailyAchivs };
-        newDaily.days[isoDay] = finalDayResults;
-        await setDoc(
-          doc(db, "billard_data", window.getDocName("daily_achivs")),
-          newDaily,
-        );
+      tx.set(statsRef, { matches: updatedStats });
+      if (Object.keys(dayResults).length) {
+        tx.set(dailyRef, { ...daily, days: { ...(daily.days || {}), [isoDay]: dayResults } });
       }
-    } catch (achErr) {
-      console.warn(
-        "Erfolge konnten nicht aktualisiert werden, Match wurde aber gespeichert:",
-        achErr,
-      );
-    }
+    });
 
-    const winnerName = window.winnerNum === 1 ? p1 : p2;
-    const loserName = window.winnerNum === 1 ? p2 : p1;
+    saved = true;
+    const winnerName = data.w === 1 ? p1 : p2;
+    const loserName = data.w === 1 ? p2 : p1;
     const prevMode = m;
 
     window.winnerNum = 0;
@@ -515,13 +537,14 @@ window.doSave = async () => {
       window.triggerVictoryFx();
     }
   } catch (err) {
-    console.error("Firebase Save Error:", err);
+    console.error(saved ? "Fehler nach dem Speichern:" : "Firebase Save Error:", err);
     if (window.openErrorModal) {
-      window.openErrorModal(
-        "Fehler beim Speichern:\n" + (err.message || "Unbekannter Fehler"),
-      );
+      window.openErrorModal(saved
+        ? "Das Spiel wurde gespeichert. Die Anzeige konnte nicht vollständig aktualisiert werden. Bitte die Seite neu laden und das Spiel nicht erneut speichern."
+        : "Fehler beim Speichern:\n" + (err.message || "Unbekannter Fehler"));
     }
   } finally {
+    window.matchWriteInProgress = false;
     if (saveBtn) {
       saveBtn.disabled = false;
       saveBtn.innerText = originalText;
@@ -531,17 +554,19 @@ window.doSave = async () => {
 
 window.doDeleteMatch = async () => {
   if (window.offlineState && !window.offlineState.canWrite()) return;
-  if (
-    window.matchToDeleteIndex === -1 ||
-    window.matchToDeleteIndex === undefined
-  )
-    return;
-  window.stats.splice(window.matchToDeleteIndex, 1);
-  await setDoc(doc(db, "billard_data", window.getDocName("stats")), {
-    matches: window.stats,
-  });
-  if (window.closeDeleteConfirmModal) window.closeDeleteConfirmModal();
-  if (typeof window.updateAllViews === "function") window.updateAllViews();
+  if (window.matchWriteInProgress || window.matchToDeleteIndex < 0 || !window.matchToDeleteTarget) return;
+  window.matchWriteInProgress = true;
+  try {
+    const target = window.matchToDeleteTarget;
+    if (target.mode !== window.currentAppMode) throw new Error("Die Liga wurde gewechselt. Bitte das Spiel erneut auswählen.");
+    await window.changeStoredMatch(target.mode, target.index, target.match, null);
+    if (window.closeDeleteConfirmModal) window.closeDeleteConfirmModal();
+  } catch (err) {
+    console.error("Fehler beim Löschen:", err);
+    window.openErrorModal?.("Fehler beim Löschen:\n" + (err.message || "Unbekannter Fehler"));
+  } finally {
+    window.matchWriteInProgress = false;
+  }
 };
 
 window.openSyncConfirmModal = () => {
@@ -582,8 +607,12 @@ window.syncDailyAchievementsWithHistory = async function (
     return;
   }
 
+  if (window.matchWriteInProgress) return;
+  const syncMode = window.currentAppMode;
+  const expectedStats = JSON.parse(JSON.stringify(window.stats));
+  const expectedDaily = window.offlineState?.confirmedValue("daily") || JSON.parse(JSON.stringify(window.dailyAchivs || { days: {} }));
   const matchesByDate = {};
-  window.stats.forEach((g) => {
+  expectedStats.forEach((g) => {
     if (!g.d) return;
     const dateStr = g.d.split(",")[0].trim();
     if (!matchesByDate[dateStr]) matchesByDate[dateStr] = [];
@@ -602,28 +631,37 @@ window.syncDailyAchievementsWithHistory = async function (
     const dd = parts[0].padStart(2, "0");
     const isoDate = `${yyyy}-${mm}-${dd}`;
 
-    const dayProc = window.processData(matches, dateStr);
-
-    Object.keys(dayProc.pData).forEach((player) => {
-      const d = dayProc.pData[player];
-      const earned = [
-        ...window.dailyFamePool.filter((ach) => ach.cond(d)),
-        ...window.dailyShamePool.filter((ach) => ach.cond(d)),
-      ].map((ach) => ach.t);
-
-      if (earned.length > 0) {
-        if (!newDailyDays[isoDate]) newDailyDays[isoDate] = {};
-        const existing = newDailyDays[isoDate][player] || [];
-        newDailyDays[isoDate][player] = Array.from(
-          new Set([...existing, ...earned]),
-        );
-      }
-    });
+    // Erfolge nach jedem Spiel prüfen, damit vorübergehend erreichte Erfolge erhalten bleiben.
+    for (let i = 0; i < matches.length; i++) {
+      const dayProc = window.processData(matches.slice(0, i + 1), dateStr);
+      Object.keys(dayProc.pData).forEach((player) => {
+        const d = dayProc.pData[player];
+        const earned = [
+          ...window.dailyFamePool.filter((ach) => ach.cond(d)),
+          ...window.dailyShamePool.filter((ach) => ach.cond(d)),
+        ].map((ach) => ach.t);
+        if (earned.length) {
+          if (!newDailyDays[isoDate]) newDailyDays[isoDate] = {};
+          const existing = newDailyDays[isoDate][player] || [];
+          newDailyDays[isoDate][player] = Array.from(new Set([...existing, ...earned]));
+        }
+      });
+    }
   }
 
+  window.matchWriteInProgress = true;
   try {
-    await setDoc(doc(db, "billard_data", window.getDocName("daily_achivs")), {
-      days: newDailyDays,
+    const statsRef = doc(db, "billard_data", syncMode === "dt" ? "stats_DT" : "stats");
+    const dailyRef = doc(db, "billard_data", syncMode === "dt" ? "daily_achivs_DT" : "daily_achivs");
+    await runTransaction(db, async (tx) => {
+      const statsSnap = await tx.get(statsRef);
+      const dailySnap = await tx.get(dailyRef);
+      const stats = statsSnap.exists() ? statsSnap.data().matches || [] : [];
+      const daily = dailySnap.exists() ? dailySnap.data() : { days: {} };
+      if (!sameData(stats, expectedStats) || !sameData(daily, expectedDaily)) {
+        throw new Error("Die Daten wurden zwischenzeitlich geändert. Bitte erneut synchronisieren.");
+      }
+      tx.set(dailyRef, { ...daily, days: newDailyDays });
     });
     if (window.openSuccessModal) window.openSuccessModal();
     if (window.recalculateAndRender) window.recalculateAndRender();
@@ -632,6 +670,8 @@ window.syncDailyAchievementsWithHistory = async function (
     if (window.openErrorModal) {
       window.openErrorModal("Fehler bei der Synchronisierung:\n" + err.message);
     }
+  } finally {
+    window.matchWriteInProgress = false;
   }
 };
 

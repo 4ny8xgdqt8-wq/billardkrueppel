@@ -1,4 +1,4 @@
-const CACHE_NAME = "billard-20261111.2";
+const CACHE_NAME = "billard-20261117.2";
 const ASSETS = [
   "./",
   "index.html",
@@ -65,6 +65,12 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   // Nur GET-Requests cachen
   if (event.request.method !== "GET") return;
+
+  // Die Versionsabfrage enthält einen Zeitstempel und darf keinen Cache füllen.
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin === self.location.origin && requestUrl.search &&
+      (requestUrl.pathname.endsWith("/sw.js") ||
+       (requestUrl.pathname.endsWith("/js/firebase-service.js") && requestUrl.searchParams.has("retry")))) return;
 
   // Firebase- und Google-Auth-Anfragen ignorieren (die brauchen Echtzeit-Daten)
   if (
