@@ -1,4 +1,4 @@
-const CACHE_NAME = "billard-20261117.2";
+const CACHE_NAME = "billard-20261118.2";
 const ASSETS = [
   "./",
   "index.html",
@@ -16,7 +16,6 @@ const ASSETS = [
   "js/filters.js",
   "js/stats-renderer.js",
   "js/match-controller.js",
-  "js/commentator-service.js",
   "js/firebase-service.js",
   "js/app.js",
   "js/offline-state.js",

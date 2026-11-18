@@ -337,42 +337,6 @@ fetch("sw.js?t=" + Date.now())
 let breakTriggered = false;
 let crackPlayed = false;
 
-function playLoaderBallCrack() {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    if (ctx.state === "suspended") ctx.resume();
-    const now = ctx.currentTime;
-
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(1900, now);
-    osc.frequency.exponentialRampToValueAtTime(260, now + 0.045);
-
-    gain.gain.setValueAtTime(0.35, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.08);
-
-    const subOsc = ctx.createOscillator();
-    const subGain = ctx.createGain();
-    subOsc.type = "sine";
-    subOsc.frequency.setValueAtTime(140, now);
-    subOsc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
-    subGain.gain.setValueAtTime(0.4, now);
-    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-    subOsc.connect(subGain);
-    subGain.connect(ctx.destination);
-    subOsc.start(now);
-    subOsc.stop(now + 0.13);
-  } catch (e) {}
-}
-
 window.hideLoader = () => {
   const l = document.getElementById("loading-overlay");
   const content = document.getElementById("loader-content");
@@ -419,7 +383,6 @@ window.checkAllReadyAndHideLoader = () => {
   loaderAnimationTimeout = setTimeout(() => {
     if (!crackPlayed && triangle) {
       crackPlayed = true;
-      playLoaderBallCrack();
       triangle.classList.add("break-exploded");
     }
     loaderAnimationTimeout = setTimeout(() => window.hideLoader(), 450);
@@ -442,7 +405,6 @@ window.updateLoaderStatus = (msg, percent) => {
   }
   if (percent >= 95 && !crackPlayed && triangle) {
     crackPlayed = true;
-    playLoaderBallCrack();
     triangle.classList.add("break-exploded");
   }
 };

@@ -383,12 +383,6 @@ window.doSave = async () => {
   const originalText = saveBtn ? saveBtn.innerText : "Speichern";
   if (saveBtn) saveBtn.innerText = "Speichert...";
 
-  // Noch innerhalb des Speichern-Klicks freischalten, bevor Firebase asynchron
-  // arbeitet. Nach dem await würde der Browser den Siegesklang teils blockieren.
-  if (typeof window.prepareVictorySound === "function") {
-    window.prepareVictorySound();
-  }
-
   const now = new Date();
   const pad = (n) => String(n).padStart(2, "0");
   const dStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}`;
@@ -448,6 +442,7 @@ window.doSave = async () => {
     });
 
     saved = true;
+    window.currentSessionDate = todayStr;
     const winnerName = data.w === 1 ? p1 : p2;
     const loserName = data.w === 1 ? p2 : p1;
     const prevMode = m;
